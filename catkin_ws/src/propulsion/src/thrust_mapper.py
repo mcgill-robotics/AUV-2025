@@ -19,7 +19,6 @@ w = rospy.get_param("distance_thruster_thruster_width")
 alpha = rospy.get_param("angle_thruster")
 a = rospy.get_param("distance_thruster_middle_length")
 
-thruster_mount_dirs = [1, -1, 1, 1, 1, 1, 1, 1]
 
 
 T = np.array(
