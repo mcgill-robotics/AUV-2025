@@ -116,15 +116,19 @@ class Controller:
 
         print("Controller waiting to receive state information...")
 
-        while None in [
-            self.x,
-            self.y,
-            self.z,
-            self.theta_x,
-            self.theta_y,
-            self.theta_z,
-            self.orientation,
-        ] and not rospy.is_shutdown():
+        while (
+            None
+            in [
+                self.x,
+                self.y,
+                self.z,
+                self.theta_x,
+                self.theta_y,
+                self.theta_z,
+                self.orientation,
+            ]
+            and not rospy.is_shutdown()
+        ):
             debug_str = "Missing state information for "
             for state_axis, state_axis_name in [
                 (self.x, "x"),
@@ -136,7 +140,7 @@ class Controller:
                 (self.orientation, "quat."),
             ]:
                 if state_axis is None:
-                    debug_str += state_axis_name + ", " 
+                    debug_str += state_axis_name + ", "
             print(debug_str)
             rospy.sleep(1)
 

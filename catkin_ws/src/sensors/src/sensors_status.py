@@ -53,7 +53,8 @@ class Sensor:
             return 0
         else:
             if not self.is_active:
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
+                # rospy.loginfo("{} has become active.".format(self.sensor_name))
+                i = 0
             self.is_active = True
             return 1
 
