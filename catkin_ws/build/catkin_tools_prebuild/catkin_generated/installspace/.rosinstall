@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/tommy/AUV-2020/catkin_ws/install/setup.sh
