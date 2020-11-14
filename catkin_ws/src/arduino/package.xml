@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>arduino</name>
+  <version>0.0.0</version>
+  <description>AUV arduino microcontroller package</description>
+
+  <maintainer email="vasily.fedotov@mail.mcgill.ca">Vasily Fedotov</maintainer>
+  <license>GPLv2</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
