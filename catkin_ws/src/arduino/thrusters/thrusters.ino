@@ -1,6 +1,10 @@
 #include <Arduino.h>
+#include <auv_msgs/ThrusterCommands.h>
 #include <ros.h>
 #include <Servo.h> 
+
+
+#define SERVO_RESET_VALUE 1500
 
 //#define THRUSTER_COUNT 4
 #define SERVO_COUNT 2
@@ -22,7 +26,7 @@ Servo servos[SERVO_COUNT]; //HS-311 servo motors
  */
 void resetServos(){
     for(uint8_t i = 0; i < SERVO_COUNT; i++){
-        servos[i].writeMicroseconds(1500);
+        servos[i].writeMicroseconds(SERVO_RESET_VALUE);
     }
 }
 
@@ -34,18 +38,35 @@ void servosInit(){
     for(uint8_t i = 0; i < SERVO_COUNT; i++){
         servos[i].attach(servo_pins[i]);
     }
-
 }
+
+
+void thrusterCommandsMsgCallback( const auv_msgs::ThrusterCommands& msg){
+    for(uint8_t i = 0; i < SERVO_COUNT; i++){
+        int16_t servo_command = msg.servo_commands[i];
+        servos[i].writeMicroseconds(SERVO_RESET_VALUE + servo_command);
+    }
+}
+
+
+ros::NodeHandle nodeHandle;
+ros::Subscriber<auv_msgs::ThrusterCommands> thrusterCommandsSub("servo_pos", &thrusterCommandsMsgCallback );
 
 void setup(){
     servosInit();
+    nodeHandle.init();
+    nodeHandle.subscribe(thrusterCommandsSub);
 }
 
 void loop(){
-    servos[0].writeMicroseconds(1000);
-    delay(5000);
-    servos[1].writeMicroseconds(1900);
-    delay(5000);
-    resetServos();
-    delay(5000);
+    nodeHandle.spinOnce();
+    delay(1);
 }
+
+/* create custom message to pass PWM to arduino -> [1444, 1300, ...]
+
+topic: servo_pos
+
+# in the .ino we want to read the published messages from the topic, get the PWM 
+# value and set the servo control pin to output a signal with that pulse width
+*/
