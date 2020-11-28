@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.5.0)
 project(arduino)
 
 find_package(catkin REQUIRED COMPONENTS
-    rosserial_arduino
-    rosserial_client
+  auv_msgs
+  rosserial_arduino
+  rosserial_client
 )
 
-catkin_package()
+catkin_package(CATKIN_DEPENDS
+  auv_msgs
+)
 
 rosserial_generate_ros_lib(
   PACKAGE rosserial_arduino
