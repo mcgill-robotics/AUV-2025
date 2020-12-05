@@ -54,7 +54,7 @@ ros::Subscriber<auv_msgs::ThrusterCommands> thrusterCommandsSub("servo_pos", &th
 
 void setup(){
     servosInit();
-    nodeHandle.init();
+    nodeHandle.initNode();
     nodeHandle.subscribe(thrusterCommandsSub);
 }
 
