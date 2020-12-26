@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometery_msgs
   auv_msgs
   python-numpy
+  python3-scipy
   roscpp
   rospy
 )

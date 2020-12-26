@@ -17,4 +17,5 @@
 
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>python-numpy</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
 </package>
