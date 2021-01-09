@@ -3,6 +3,7 @@ project(controls)
 
 find_package(catkin REQUIRED COMPONENTS
   geometery_msgs
+  std_msgs
   auv_msgs
   python-numpy
   python3-scipy
