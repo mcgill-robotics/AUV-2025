@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+  <name>nucleo</name>
+  <version>0.1.0</version>
+  <description>
+      This ROS package communicates with the STM32f3 Nucleo development board
+      which samples the hydrophones audio signals.
+  </description>
+  <maintainer email="mr@anassinator.com">anassinator</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gcc-arm-none-eabi</build_depend>
+</package>
