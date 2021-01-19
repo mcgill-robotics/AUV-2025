@@ -23,36 +23,26 @@ Servo thruster_esc[THRUSTER_COUNT]; //T200 motors (thrusters)
 Servo servos[SERVO_COUNT]; //HS-311 servo motors
 
 
-/**
- * Bring all servos back to unrotated position
- */
-void resetServos(){
-    for(uint8_t i = 0; i < SERVO_COUNT; i++){
-        servos[i].writeMicroseconds(SERVO_RESET_VALUE);
-    }
-}
 /*
- *  Bring all thrusters to a stop
+ * Attaches corresponding pin (and sets pinMode OUTPUT) defined in servo_pins and thruster_esc_pins
+ * to each Servo object in servos and thruster_esc respectively
+ * Brings all servos back to unrotated position
+ * Brings all thrusters to stop
  */
-void resetThrusters(){
-  for(uint8_t i = 0; i< THRUSTER_COUNT; i++){
-    thrusters_esc[i].writeMicroseconds(THRUSTER_RESET_VALUE);
-  }
-}
 
-/**
- * Attaches corresponding pin (and sets pinMode OUTPUT) defined in servo_pins
- * to each Servo object in servos
- */
-void servosInit(){
+ void init(){
     for(uint8_t i = 0; i < SERVO_COUNT; i++){
         servos[i].attach(servo_pins[i]);
+        servos[i].writeMicroseconds(SERVO_RESET_VALUE);
     }
-}
-/**
- * Attaches corresponding pin (and sets pinMode OUTPUT) defined in thruster_esc_pins
- * to each Servo object in thruster_esc
- */
+    for(uint8_t i = 0; i < THRUSTER_COUNT; i++){
+        thruster_esc[i].attach(thruster_esc_pins[i]);
+        thrusters_esc[i].writeMicroseconds(THRUSTER_RESET_VALUE);
+    }
+    
+
+ }
+
 
 
 void thrustersInit(){
@@ -79,7 +69,7 @@ ros::NodeHandle nodeHandle;
 ros::Subscriber<auv_msgs::ThrusterCommands> thrusterCommandsSub("servo_pos", &thrusterCommandsMsgCallback );
 
 void setup(){
-    servosInit();
+    init();
     nodeHandle.initNode();
     nodeHandle.subscribe(thrusterCommandsSub);
 }
