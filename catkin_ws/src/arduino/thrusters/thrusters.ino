@@ -39,17 +39,7 @@ Servo servos[SERVO_COUNT]; //HS-311 servo motors
         thruster_esc[i].attach(thruster_esc_pins[i]);
         thrusters_esc[i].writeMicroseconds(THRUSTER_RESET_VALUE);
     }
-    
-
- }
-
-
-
-void thrustersInit(){
-   for(uint8_t i = 0; i < THRUSTER_COUNT; i++){
-        thruster_esc[i].attach(thruster_esc_pins[i]);
-    }
-}
+  }
 
 
 void thrusterCommandsMsgCallback( const auv_msgs::ThrusterCommands& msg){
