@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(auv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
+  # roscpp
+  # rospy
   std_msgs
   message_generation
 )
@@ -19,6 +19,6 @@ generate_messages(DEPENDENCIES
 )
 
 catkin_package(CATKIN_DEPENDS 
-std_msgs 
-message_runtime
+  std_msgs 
+  message_runtime
 )
