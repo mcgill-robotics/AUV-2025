@@ -5,7 +5,7 @@ import numpy as np
 import scipy as sp
 from geometry_msgs.msg import Wrench
 from auv_msgs.msg import ThrusterCommands
-from dimensions.py import D
+from dimensions import D
 
 
 current_state = 0, 0, 0, 0, 0, 0, 0, 0 # order is t1, t2, t3, t4, s1, s2, s3, s4
@@ -18,7 +18,7 @@ current_state = 0, 0, 0, 0, 0, 0, 0, 0 # order is t1, t2, t3, t4, s1, s2, s3, s4
 
 
 def create_equations(wrench):
-     fx, fy, fz, mx, my, mz = wrench
+    fx, fy, fz, mx, my, mz = wrench
 
     def equations(p):
         t1, t2, t3, t4, s1, s2, s3, s4 = p
@@ -69,14 +69,14 @@ def thrust_mapper():
     rospy.init_node('thrust_mapper')
 
     rospy.Subscriber('/controls/wrench', Wrench, wrench_callback)
-    pub = rospy.Publisher('/servo_pos', ThrusterCommands)
+    pub = rospy.Publisher('/servo_pos', ThrusterCommands, queue_size=10)
 
     rospy.spin()
 
 
 
 if __name__ == '__main__':
-       try:
-           thrust_mapper()
-        except rospy.ROSInterruptException:
-           pass
+    try:
+        thrust_mapper()
+    except rospy.ROSInterruptException:
+        pass

@@ -2,12 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 project(controls)
 
 find_package(catkin REQUIRED COMPONENTS
+  auv_msgs
   geometry_msgs
   std_msgs
-  auv_msgs
-  python-numpy
-  python3-scipy
-  roscpp
+  #roscpp
   rospy
 )
 
