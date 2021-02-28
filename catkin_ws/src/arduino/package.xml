@@ -9,11 +9,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>auv_msgs</build_depend>
   <build_depend>roscpp</build_depend>
-  <!--<build_depend>message_generation</build_depend>-->
   <build_depend>rosserial_arduino</build_depend>
   <build_depend>rosserial_client</build_depend>
-  <build_depend>auv_msgs</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>rosserial_python</exec_depend>
