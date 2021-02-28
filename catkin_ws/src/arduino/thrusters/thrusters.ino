@@ -1,7 +1,11 @@
 #include <Arduino.h>
-#include <auv_msgs/ThrusterCommands.h>
+
+
 #include <ros.h>
+#include <auv_msgs/ThrusterCommands.h>
+
 #include <Servo.h>
+
 
 
 #define SERVO_RESET_VALUE 1500
@@ -11,7 +15,7 @@
 #define SERVO_COUNT 4
 
 /*[STAR, STERN, PORT, BOW]*/
-const uint8_t thruster_esc_pins[THRUSTER_COUNT] = {1, 3, 5, 7}
+const uint8_t thruster_esc_pins[THRUSTER_COUNT] = {1, 3, 5, 7};
 const uint8_t servo_pins[SERVO_COUNT] = {2, 4, 6, 8};
 
 /*
@@ -30,14 +34,14 @@ Servo servos[SERVO_COUNT]; //HS-311 servo motors
  * Brings all thrusters to stop
  */
 
- void init(){
+ void initialize(){
     for(uint8_t i = 0; i < SERVO_COUNT; i++){
         servos[i].attach(servo_pins[i]);
         servos[i].writeMicroseconds(SERVO_RESET_VALUE);
     }
     for(uint8_t i = 0; i < THRUSTER_COUNT; i++){
         thruster_esc[i].attach(thruster_esc_pins[i]);
-        thrusters_esc[i].writeMicroseconds(THRUSTER_RESET_VALUE);
+        thruster_esc[i].writeMicroseconds(THRUSTER_RESET_VALUE);
     }
   }
 
@@ -59,7 +63,7 @@ ros::NodeHandle nodeHandle;
 ros::Subscriber<auv_msgs::ThrusterCommands> thrusterCommandsSub("servo_pos", &thrusterCommandsMsgCallback );
 
 void setup(){
-    init();
+    initialize();
     nodeHandle.initNode();
     nodeHandle.subscribe(thrusterCommandsSub);
 }

@@ -69,7 +69,7 @@ def thrust_mapper():
     rospy.init_node('thrust_mapper')
 
     rospy.Subscriber('/controls/wrench', Wrench, wrench_callback)
-    pub = rospy.Publisher('/servo_pos', ThrusterCommands, queue_size=10)
+    pub = rospy.Publisher('/servo_pos', ThrusterCommands, queue_size=10) #TODO - rename /servo_pos
 
     rospy.spin()
 

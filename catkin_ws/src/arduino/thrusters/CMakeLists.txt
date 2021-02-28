@@ -1,5 +1,6 @@
 
 cmake_minimum_required(VERSION 3.5.0)
+project(firmware)
 
 include_directories(${ROS_LIB_DIR})
 
