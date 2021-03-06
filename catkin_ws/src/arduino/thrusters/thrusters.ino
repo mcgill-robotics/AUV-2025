@@ -1,11 +1,7 @@
 #include <Arduino.h>
-
-
 #include <ros.h>
 #include <auv_msgs/ThrusterCommands.h>
-
 #include <Servo.h>
-
 
 
 #define SERVO_RESET_VALUE 1500
@@ -33,7 +29,6 @@ Servo servos[SERVO_COUNT]; //HS-311 servo motors
  * Brings all servos back to unrotated position
  * Brings all thrusters to stop
  */
-
  void initialize(){
     for(uint8_t i = 0; i < SERVO_COUNT; i++){
         servos[i].attach(servo_pins[i]);
@@ -58,6 +53,35 @@ void thrusterCommandsMsgCallback( const auv_msgs::ThrusterCommands& msg){
 
 }
 
+/*
+ * Sweeps servos/thrusters to test code is correctly uploaded
+ * this is not mission critical code, it should not be called during 
+ * mission operation
+ */
+void smoketest(){
+    while(true){
+
+         // forwards
+        for(uint8_t i = 0; i < THRUSTER_COUNT; i++){
+            thruster_esc[i].write(0);
+        }
+        for(uint8_t i = 0; i < SERVO_COUNT; i++){
+            servos[i].write(0);
+        }
+        delay(5000);
+
+        // backwards
+        for(uint8_t i = 0; i < THRUSTER_COUNT; i++){
+            thruster_esc[i].write(180);
+        }
+        for(uint8_t i = 0; i < SERVO_COUNT; i++){
+            servos[i].write(180);
+        }
+        delay(5000);
+    }
+   
+}
+
 
 ros::NodeHandle nodeHandle;
 ros::Subscriber<auv_msgs::ThrusterCommands> thrusterCommandsSub("servo_pos", &thrusterCommandsMsgCallback );
@@ -69,14 +93,7 @@ void setup(){
 }
 
 void loop(){
+    // smoketest();
     nodeHandle.spinOnce();
     delay(1);
 }
-
-/* create custom message to pass PWM to arduino -> [1444, 1300, ...]
-
-topic: servo_pos
-
-# in the .ino we want to read the published messages from the topic, get the PWM
-# value and set the servo control pin to output a signal with that pulse width
-*/
