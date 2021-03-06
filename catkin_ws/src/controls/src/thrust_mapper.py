@@ -1,14 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 import rospy
 import numpy as np
-import scipy as sp
+#import scipy as sp
+from scipy.optimize import fsolve
 from geometry_msgs.msg import Wrench
 from auv_msgs.msg import ThrusterCommands
-from dimensions.py import D
+from dimensions import D
 
 
 current_state = 0, 0, 0, 0, 0, 0, 0, 0 # order is t1, t2, t3, t4, s1, s2, s3, s4
+pub = None
 
 '''
 - superimposer will publish message (type Wrench) onto topic /controls/wrench
@@ -18,7 +20,7 @@ current_state = 0, 0, 0, 0, 0, 0, 0, 0 # order is t1, t2, t3, t4, s1, s2, s3, s4
 
 
 def create_equations(wrench):
-     fx, fy, fz, mx, my, mz = wrench
+    fx, fy, fz, mx, my, mz = wrench
 
     def equations(p):
         t1, t2, t3, t4, s1, s2, s3, s4 = p
@@ -28,7 +30,9 @@ def create_equations(wrench):
                 t1*np.sin(s1) + t2*np.sin(s2) + t3*np.sin(s3) + t4*np.sin(s4) - fz,
                 D*t2*np.sin(s2) - D*t4*np.sin(s4) - mx,
                 -D*t1*np.sin(s1) + D*t3*np.sin(s3) - my,
-                 D*t1*np.cos(s1) + D*t2*np.cos(s2) + D*t3*np.cos(s3) + D*t4*np.cos(s4) - mz
+                 D*t1*np.cos(s1) + D*t2*np.cos(s2) + D*t3*np.cos(s3) + D*t4*np.cos(s4) - mz,
+                 s1,
+                 s3
                  )
     return equations
 
@@ -53,7 +57,7 @@ maps the wrench onto PWM voltages and publishes them to /servo_pos
 '''
 
 def wrench_callback(data):
-
+    
     wrench = (data.force.x, data.force.y, data.force.z,
                     data.torque.x, data.torque.y, data.torque.z)
     next_state = solve_state(wrench)
@@ -66,17 +70,18 @@ def wrench_callback(data):
 main point of execution
 '''
 def thrust_mapper():
+    global pub
     rospy.init_node('thrust_mapper')
-
+    pub = rospy.Publisher('/thruster_pwm', ThrusterCommands, queue_size = 10)
     rospy.Subscriber('/controls/wrench', Wrench, wrench_callback)
-    pub = rospy.Publisher('/servo_pos', ThrusterCommands)
+    
 
     rospy.spin()
 
 
 
 if __name__ == '__main__':
-       try:
-           thrust_mapper()
-        except rospy.ROSInterruptException:
-           pass
+    try:
+        thrust_mapper()
+    except rospy.ROSInterruptException:
+        pass

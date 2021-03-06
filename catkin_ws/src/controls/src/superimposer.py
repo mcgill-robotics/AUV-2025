@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import rospy
 from geometry_msgs.msg import Wrench, Vector3
@@ -66,7 +66,7 @@ class SuperImposer:
     def set_heave(self, heave):
         self.force.z = heave
 
-        #TODO - is this necessary (check with Tommy)
+  
         # Positive buonancy eliminates the need for this
         if self.force.z < 0:
             self.force.z = 0.0
