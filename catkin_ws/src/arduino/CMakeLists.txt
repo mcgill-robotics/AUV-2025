@@ -24,6 +24,10 @@ rosserial_configure_client(
 rosserial_add_client_target(thrusters firmware ALL)
 rosserial_add_client_target(thrusters firmware-upload)
 
+# the rest of this has to do with applying patches, it mey not be necessary in the
+# future as fixes are currently awaiting release
+# patching Arduino.cmake requires sudo so it should be done manually
+
 # workaround to https://github.com/ros-drivers/rosserial/issues/518
 # msg.h includes code that refers to c++ standard library, however this is not
 # standard for arduino (avr). This patches portions of the code to use the C
@@ -31,9 +35,12 @@ rosserial_add_client_target(thrusters firmware-upload)
 # A dependency heirarchy is created as follows:
 # ros_lib <- APPLY_ROS_LIB_PATCH <- thursters <- thrusters_firmware, thrusters_firmware-upload
 add_custom_target(${PROJECT_NAME}_APPLY_ROS_LIB_PATCH
-  COMMAND patch --verbose ${CMAKE_CURRENT_BINARY_DIR}/ros_lib/ros/msg.h ${CMAKE_CURRENT_SOURCE_DIR}/patch/msg.h.patch
+
+  # the execution of an external script seems like a bit of a hack
+  # need to make sure the (existing) file is patched prior to building firmware
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/patch/safe_patch.bash  ${CMAKE_CURRENT_BINARY_DIR}/ros_lib/ros/msg.h ${CMAKE_CURRENT_SOURCE_DIR}/patch/msg.h.patch
   COMMENT "applying patch to ros_lib/ros/msg.h"
-  ) 
+) 
 
 add_dependencies(${PROJECT_NAME}_APPLY_ROS_LIB_PATCH
   ${PROJECT_NAME}_ros_lib
