@@ -3,15 +3,18 @@
 
 int main(void)
 {
+  // Initialize HAL (Hardware Abstraction Layer)
   HAL_Init();
 
-  // Configure the system clock.
+  // Configure the system clock. Defined later in this file.
   SystemClock_Config();
 
-  // Initialize LED on board.
+  // Initialize LED on board. (Which board?)
   BSP_LED_Init(LED2);
 
-  // Initialize UART.
+  // Initialize UART (Universal Asynchronous Receiver-Transmitter)
+    // My understanding is that this is what receives data and retransmits it in in a given rhythm
+    // Seems to be piece of hardware on the robot
   UART_Init();
   write_buffer("\n", 1);  // Force clear communication channel.
   write_buffer("[BOOTUP]\n", 9);  // Send bootup command.
@@ -28,22 +31,27 @@ int main(void)
   sprintf(clock_buff, "Running at %u Hz", SystemCoreClock);
   log_debug(clock_buff);
 
-  // Initialize GPIO.
+  // Initialize GPIO (General-Purpose Input/Output)
+    // Definition in this file
+    // Seems to be a piece of hardware on the robot, don't know what it's for though
   log_debug("Initializing GPIO...");
   GPIO_Init();
 
-  // Initialize DMA.
+  // Initialize DMA (Direct Memory Access)
   log_debug("Initializing DMA...");
   DMA_Init();
 
-  // Intialize ADCs.
+  // Intialize ADCs (Analog to Digital Converters)
+    // Definition in adc.c
   log_debug("Initializing ADCs...");
-  ADC_Config(&hadc1, ADC1);
+  ADC_Config(&hadc1, ADC1); // I don't know where these variables are declared...
   ADC_Config(&hadc2, ADC2);
   ADC_Config(&hadc3, ADC3);
   ADC_Config(&hadc4, ADC4);
 
   // Configure ADC channels.
+    // I am assuming this is where the ADCs receiving their data
+    // Definition in adc.c
   log_debug("Configuring ADC channels...");
   Add_ADC_Channel(&hadc1, ADC_CHANNEL_14, 1);
   Add_ADC_Channel(&hadc2, ADC_CHANNEL_12, 1);
@@ -51,6 +59,7 @@ int main(void)
   Add_ADC_Channel(&hadc4, ADC_CHANNEL_5, 1);
 
   // Calibrate ADCs.
+    // Definition in adc.c
   log_debug("Calibrating ADCs...");
   Calibrate_ADC(&hadc1);
   Calibrate_ADC(&hadc2);
@@ -58,6 +67,7 @@ int main(void)
   Calibrate_ADC(&hadc4);
 
   // Start ADC conversions by DMA.
+    // Definition in adc.c
   log_debug("Starting ADCs...");
   Start_ADC(&hadc1, (uint32_t*) data_1);
   // Start_ADC(&hadc2, (uint32_t*) data_2);
