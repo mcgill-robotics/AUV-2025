@@ -1,20 +1,38 @@
 import rospy
 import smach
 
+# Navigation Target coordinates 
+# X     : DVL
+# Y     : DVL
+# z     : Depth Senesor
+# roll  : IMU
+# Yaw   : IMU
+# Pitch : IMU
+
+#
 # define state GateState
+
+
 class GateState(smach.State):
+    '''
+    The gate state
+    '''
     def __init__(self):
         smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
         self.counter = 0
-
     def execute(self, userdata):
         rospy.loginfo('Trying to pass through the gate')
+        # publish PID setpoint?
+        # Check if we are stable at the setpoint? 
+        # 
         if self.counter < 3:
             return 'gatePassed'
         
         else:
             rospy.loginfo("We missed the gate")
             return 'gateMissed'
+
+
 
 
 # define state LaneDetector
@@ -24,6 +42,7 @@ class LaneDetector(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state LaneDetector')
+
         if seeingLane: # !!! this condition is not defined
             return 'pointingToNextTask'
         

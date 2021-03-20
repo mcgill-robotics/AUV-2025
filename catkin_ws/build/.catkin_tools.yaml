@@ -1,6 +1,6 @@
-devel_space: /home/tommy/AUV-2020/catkin_ws/devel
+devel_space: /home/tommy/robotics/AUV-2020/catkin_ws/devel
 install: false
-install_space: /home/tommy/AUV-2020/catkin_ws/install
+install_space: /home/tommy/robotics/AUV-2020/catkin_ws/install
 profile: default
-source_space: /home/tommy/AUV-2020/catkin_ws/src
-workspace: /home/tommy/AUV-2020/catkin_ws
+source_space: /home/tommy/robotics/AUV-2020/catkin_ws/src
+workspace: /home/tommy/robotics/AUV-2020/catkin_ws
