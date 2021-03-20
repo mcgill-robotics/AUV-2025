@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """Nucleo deserializer."""
-
+import os
+print(os.environ["PYTHONPATH"])
 import rospy
 import bitstring
 from serial import Serial, SerialException
-from auv_msgs.msg import Signals
+from nucleo.msg import Signals, Debug_Signals
 
 __author__ = "Anass Al-Wohoush"
 
@@ -15,6 +16,7 @@ BOOTUP_HEADER = "[BOOTUP]"
 
 # Define logging headers.
 DEBUG_HEADER = "[DEBUG]"
+DEBUG_SIGNAL_HEADER = "[DEBUG_SIGNAL]"
 FATAL_HEADER = "[FATAL]"
 
 # Define all available headers.
@@ -24,6 +26,7 @@ headers = (
     "[DATA 3]",
     "[DATA 4]",
     DEBUG_HEADER,
+    DEBUG_SIGNAL_HEADER ,
     FATAL_HEADER,
     BOOTUP_HEADER
 )
@@ -77,6 +80,10 @@ def get_data(ser, header):
 
     return (quadrant, data)
 
+def get_debug_signal_values(string):
+    print(string)
+    values = string.split(" ")
+    return int(values[0]), int(values[1])
 
 def iter_data(ser):
     """Iterate through data.
@@ -89,15 +96,18 @@ def iter_data(ser):
     Yields:
         Tuple of (quadrant, data).
     """
-    while ser.readable() and not rospy.is_shutdown():
+    while ser.readable() and (not rospy.is_shutdown()):
         header = get_header(ser)
-        rospy.loginfo("This is the header: " + header)
         if "DATA" in header:
             yield get_data(ser, header)
         else:
             payload = ser.readline().strip()
             if header == DEBUG_HEADER:
                 rospy.logdebug(payload)
+            elif header == DEBUG_SIGNAL_HEADER:
+                values = get_debug_signal_values(payload)
+                debugSignalPub.publish(values[0], values[1])
+# Add publishing statement here                
             elif header == FATAL_HEADER:
                 rospy.logfatal(payload)
             elif header == BOOTUP_HEADER:
@@ -106,7 +116,10 @@ def iter_data(ser):
 
 if __name__ == "__main__":
     rospy.init_node("nucleo", log_level=rospy.DEBUG)
-    pub = rospy.Publisher("~signals", Signals, queue_size=1)
+    # Publishes signals when there is ping
+    signalPub = rospy.Publisher("~signals", Signals, queue_size=1)
+    # Publishes max and min recorded values when there is no ping
+    debugSignalPub = rospy.Publisher("debug_signals", Debug_Signals, queue_size=1)
 
     # Get baudrate.
     baudrate = int(rospy.get_param("~baudrate", 230400))
@@ -180,7 +193,7 @@ if __name__ == "__main__":
 
             # Send data if all packets were received.
             if all(q == 1 for q in received):
-                pub.publish(signals)
+                signalPub.publish(signals)
                 rospy.loginfo("Received ping")
                 received = [0 for i in received]
 
