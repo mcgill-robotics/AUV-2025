@@ -1,0 +1,10 @@
+#goal definition
+int32 xtarget
+int32 ytarget
+int32 ztarget
+---
+#result definition
+int32[] sequence
+---
+#feedback
+int32[] sequence

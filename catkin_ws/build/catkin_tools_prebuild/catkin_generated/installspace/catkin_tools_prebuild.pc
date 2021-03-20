@@ -1,4 +1,4 @@
-prefix=/home/tommy/AUV-2020/catkin_ws/install
+prefix=/home/tommy/robotics/AUV-2020/catkin_ws/install
 
 Name: catkin_tools_prebuild
 Description: Description of catkin_tools_prebuild
