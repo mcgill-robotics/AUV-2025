@@ -91,6 +91,7 @@ def iter_data(ser):
     """
     while ser.readable() and not rospy.is_shutdown():
         header = get_header(ser)
+        rospy.loginfo("This is the header: " + header)
         if "DATA" in header:
             yield get_data(ser, header)
         else:
