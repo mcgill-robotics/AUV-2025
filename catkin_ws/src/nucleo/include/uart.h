@@ -15,6 +15,7 @@ void write_string(char*);
 void write_buffer(uint8_t*, uint16_t);
 
 void log_debug(char*);
+void log_debug_signal(uint8_t, uint8_t);
 void log_fatal(char*);
 
 #endif

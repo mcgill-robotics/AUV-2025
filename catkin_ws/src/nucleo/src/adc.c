@@ -21,6 +21,7 @@ static const uint8_t PING_LOWER_THRESHOLD = 5;
 static const uint8_t PING_UPPER_THRESHOLD = 200;
 
 uint8_t in_ping = 0;
+uint16_t counterComplete = 0;
 
 void ADC_Config(ADC_HandleTypeDef* hadc, ADC_TypeDef* adc)
 {
@@ -147,21 +148,22 @@ void Stop_ADC(ADC_HandleTypeDef* hadc)
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   // Treated as booleans
-  uint8_t minAchieved = 0;
-  uint8_t maxAchieved = 0; 
+  uint8_t lowThreshAchieved = 0;
+  uint8_t highThreshAchieved = 0; 
 
-  // For debugging purposes
+  // Debugging variables
   uint8_t maxRecorded = 0;
   uint8_t minRecorded = 255; // Upper bound of 8bit int
 
   for (uint8_t i = 0; i < 30; i++) {
     if (data_1[i] > PING_UPPER_THRESHOLD) {
-      maxAchieved = 1;
+      highThreshAchieved = 1;
     }
     if (data_1[i] < PING_LOWER_THRESHOLD) {
-      minAchieved = 1;
+      lowThreshAchieved = 1;
     }
 
+    // Debugging : recording the max and min values
     if (data_1[i] > maxRecorded) {
       maxRecorded = data_1[i];
     }
@@ -170,7 +172,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     }
   }
 
-  if (minAchieved && maxAchieved) {
+  if (lowThreshAchieved && highThreshAchieved) {
     Stop_ADC(&hadc1);
     in_ping = 1;
     Start_ADC(&hadc1, (uint32_t*) data_1);
@@ -179,9 +181,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     Start_ADC(&hadc4, (uint32_t*) data_4);
   }
 
-  char* minMaxDebugMsg;
-  sprintf(minMaxDebugMsg, "In HAL_ADC_ConvCpltCallback, minimum recorded value: %d\t maximum recodred value: %d", minRecorded, maxRecorded);
-  log_debug(minMaxDebugMsg);
+  counterComplete++;
+
+  if (counterComplete % 1000 == 0)
+  {
+    counterComplete = 0;
+  // Debugging: sending max and min recorded values in as debug messages
+  char minMaxDebugMsg[128];
+  sprintf(minMaxDebugMsg, "HAL_ADC_ConvCpltCallback: minRecorded = %d maxRecorded = %d", minRecorded, maxRecorded);
+  // log_debug(minMaxDebugMsg);
+  log_debug_signal(minRecorded, maxRecorded);
+  }
 }
 
 

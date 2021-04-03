@@ -47,6 +47,14 @@ void log_debug(char* data) {
 #endif
 }
 
+void log_debug_signal(uint8_t minRecorded, uint8_t maxRecorded) {
+#ifdef DEBUG
+  char buff[128];
+  sprintf(buff, "[DEBUG_SIGNAL]\n%d %d\n", minRecorded, maxRecorded);
+  HAL_UART_Transmit(&uart, buff, strlen(buff), 1000);
+#endif
+}
+
 
 /**
  * Writes fatal log to UART.
