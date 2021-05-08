@@ -16,22 +16,67 @@ from std_msgs.msg import Bool, Float64
 
 class GateState(smach.State):
     '''
-    The gate state
+    The gate state : ded reckoning
+    0) Read the depth 
+    1) Submerge to a known depth
+    2) Check for stability at this depth
+    3) surge forward for an empircally determined amount of time. (yikes.)
+    4) Transitions to the next state
+
     '''
     def __init__(self):
+        #Define the state transitions!
         smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
-        self.counter = 0
-    def execute(self, userdata):
-        rospy.loginfo('Trying to pass through the gate')
-        # publish PID setpoint?
-        # Check if we are stable at the setpoint? 
-        # 
-        if self.counter < 3:
-            return 'gatePassed'
-        
+
+        #Define parameters and variables
+        self.DEPTH_SETPOINT      = 2.5 # units of meters
+        self.DEPTH_THRESHOLD     = 0.2 # meters
+        self.STABLE_COUNTS       = 25
+        self.SURGE_MAGNITUDE     = 1   # one day I'll know what these units are. Start small and increment in pool testing.
+        self.SURGE_DURATION      = 10  # units of seconds
+
+        self.current_count       = 0   # the counter variable to determine if we are stable at the setpoint.
+        self.stable_at_depth     = False
+        self.depth_achieved_time = None 
+
+        #Defining the subscriber to read the current Depth
+        self.depth_sub = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
+
+        #Define the publishers to set depth setpoint and publish to surge
+        self.depth_enable_pub      = rospy.Publisher('/controls/depth_pid/pid_enable' , Bool    , queue_size=1)
+        self.depth_setpoint_pub    = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
+        self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
+
+        #Turn on the Depth PID
+        self.depth_setpoint_pub.publish(self.DEPTH_SETPOINT)
+        self.depth_enable_pub(True) 
+
+    def depth_cb(self, msg):
+        self.depth = msg # takes the depth float 64 from the subscriber and sets it to a variable
+
+        # Check for stability at depth
+        if self.depth < self.DEPTH_THRESHOLD :
+            self.current_count += 1
         else:
-            rospy.loginfo("We missed the gate")
-            return 'gateMissed'
+            self.current_count   = 0
+
+        if self.current_count > self.STABLE_COUNT : # We are at depth! 
+            self.stable_at_depth = True   # I am assuming this never needs to be set false. Danger danger. 
+
+    def execute(self, userdata):
+        rospy.loginfo('Inside Gate State')
+        # Check if we are stable at the setpoint? 
+        if self.stable_at_depth == True:
+            #Get the timestamp of the first moment the robot is at depth
+            if self.depth_achieved_time is None: 
+                self.depth_achieved_time = rospy.get_time()
+
+            # Surge for a known duration, then exit the state
+            if ( rospy.get_time() - depth_achieved_time < self.SURGE_DURATION ):
+                self.surge_magnitude_pub.pub(self.SURGE_MAGNITUDE)
+            else:
+                self.surge_magnitude_pub.pub(0)
+                return 'gatePassed'
 
 
 
