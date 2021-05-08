@@ -67,20 +67,21 @@ class SwimStraight(smach.State):
 class NavitageToSurfacingTask(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=['atNextTask', 'notAtNextTask'])
+        smach.State.__init__(self, outcomes=['missionSuceeded'])
 
         #Defining the subscriber to read the current Hydrophones Heading
         self.hydrophones_sub = rospy.Subscriber('/hydrophones/heading', Float64, self.hydrophones_cb) 
         
         #TODO Stub values, Needs pool testing
-        self.YAW_THRESHOLD     = 20 * 3.14/180 # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
-        self.ARRIVAL_THRESHOLD = 50 * 3.14/180 #  Threshold for checking if the pinger is "behind" us and we have arrived 
-        self.STABLE_COUNT      = 5             # This defines the number of measurements we need to take within the yaw threshold to be stable
-        self.alignment_count   = 0
-        self.arrival_count     = 0
-        self.ever_aligned      = False         # A check if we have ever been aligned to the pinger.
-        self.YAW_TARGET        = 0             # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
-        self.SURGE_MAGNITUDE   = 1             # I have no idea what the units are, be careful.
+        self.YAW_THRESHOLD      = 20 * 3.14/180 # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
+        self.ARRIVAL_THRESHOLD  = 50 * 3.14/180 #  Threshold for checking if the pinger is "behind" us and we have arrived 
+        self.STABLE_COUNT       = 5             # This defines the number of measurements we need to take within the yaw threshold to be stable
+        self.alignment_count    = 0
+        self.arrival_count      = 0
+        self.ever_aligned       = False         # A check if we have ever been aligned to the pinger.
+        self.YAW_TARGET         = 0             # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
+        self.SURGE_MAGNITUDE    = 1             # I have no idea what the units are, be careful.
+        self.successful_surface = False
 
         #Set up all of the publishers I will use later
         self.yaw_enable_pub      = rospy.Publisher('/controls/yaw_pid/pid_enable' , Bool    , queue_size=1)
@@ -155,9 +156,9 @@ class NavitageToSurfacingTask(smach.State):
             if arrival_count > STABLE_COUNT :
                 #If it is stable, surface!
                 self.depth_enable_pub(0)
+                self.successful_surface = True
 
        
-
 
     def execute(self, userdata):
         #Use the Hydrophones to align the AUV to the pinger
@@ -173,32 +174,44 @@ class NavitageToSurfacingTask(smach.State):
 
         # Turn the Depth PID off to surface
 
-        rospy.loginfo('Executing state SwimStraight')
-        if atTask: # !!! this condition is not defined
-            return 'pointingToNextTask'
-        
+        rospy.loginfo('Executing state Navigateto surfacing task')
+        if successful_surface: # !!! this condition is not defined
+            return 'missionSuceeded'
         else:
-            return 'notSeeingLane'
+            pass
 
 # main
 def main():
     rospy.init_node('mock-mission-planner')
 
     # Create a SMACH state machine
-    sm = smach.StateMachine(outcomes=['missionFailed'])
+    sm = smach.StateMachine(outcomes=['missionFailed', 'missionSuceeded'])
 
     # Open the container
     with sm:
         # Add states to the container
+        '''
         smach.StateMachine.add('GateState', GateState(), 
                                transitions={'gatePassed':'LaneDetector',
                                             'gateMissed':'missionFailed'})
+
         smach.StateMachine.add('LaneDetector', LaneDetector(), 
                                transitions={'pointingToNextTask':'SwimStraight',
                                             'notSeeingLane':'missionFailed'})
+
         smach.StateMachine.add('SwimStraight', SwimStraight(), 
                                transitions={'atNextTask':'',
                                             'notAtNextTask':'missionFailed'})
+        '''
+
+        smach.StateMachine.add('GateState', GateState(), 
+                               transitions={'gatePassed':'NavitageToSurfacingTask',
+                                            'gateMissed':'missionFailed'})
+
+        smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
+                        transitions={'surfaced':'missionSuceeded'})
+
+
 
     # Execute SMACH plan
     outcome = sm.execute()
