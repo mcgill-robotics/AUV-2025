@@ -31,13 +31,14 @@ class GateState(smach.State):
         #Define parameters and variables
         self.DEPTH_SETPOINT      = 2.5 # units of meters
         self.DEPTH_THRESHOLD     = 0.2 # meters
-        self.STABLE_COUNTS       = 25
+        self.STABLE_COUNTS       = 1
         self.SURGE_MAGNITUDE     = 1   # one day I'll know what these units are. Start small and increment in pool testing.
         self.SURGE_DURATION      = 10  # units of seconds
 
         self.current_count       = 0   # the counter variable to determine if we are stable at the setpoint.
         self.stable_at_depth     = False
         self.depth_achieved_time = None 
+        self.done_surging        = False
 
         #Defining the subscriber to read the current Depth
         self.depth_sub = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
@@ -49,34 +50,43 @@ class GateState(smach.State):
 
         #Turn on the Depth PID
         self.depth_setpoint_pub.publish(self.DEPTH_SETPOINT)
-        self.depth_enable_pub(True) 
+        self.depth_enable_pub.publish(True) 
 
     def depth_cb(self, msg):
-        self.depth = msg # takes the depth float 64 from the subscriber and sets it to a variable
-
+        self.depth = msg.data # takes the depth float 64 from the subscriber and sets it to a variable
+        print('inside callback. Current depth: {} '.format(self.depth))
         # Check for stability at depth
-        if self.depth < self.DEPTH_THRESHOLD :
+        if abs(self.depth-self.DEPTH_SETPOINT) < self.DEPTH_THRESHOLD :
+            #print('recieved a stable count')
             self.current_count += 1
         else:
             self.current_count   = 0
 
-        if self.current_count > self.STABLE_COUNT : # We are at depth! 
+        if self.current_count > self.STABLE_COUNTS : # We are at depth! 
             self.stable_at_depth = True   # I am assuming this never needs to be set false. Danger danger. 
 
     def execute(self, userdata):
         rospy.loginfo('Inside Gate State')
         # Check if we are stable at the setpoint? 
-        if self.stable_at_depth == True:
-            #Get the timestamp of the first moment the robot is at depth
-            if self.depth_achieved_time is None: 
-                self.depth_achieved_time = rospy.get_time()
+        while ( not self.done_surging): # Loop inside here untill we are ready to move to the next state
+            #print out the number of counts we are waiting for
+            self.remaining_counts = self.STABLE_COUNTS - self.current_count
+            if self.remaining_counts > 0 :
+                rospy.loginfo_throttle(1, 'Attaining Depth: Need {} more stable readings'.format(self.remaining_counts))      
 
-            # Surge for a known duration, then exit the state
-            if ( rospy.get_time() - depth_achieved_time < self.SURGE_DURATION ):
-                self.surge_magnitude_pub.pub(self.SURGE_MAGNITUDE)
-            else:
-                self.surge_magnitude_pub.pub(0)
-                return 'gatePassed'
+            if self.stable_at_depth == True:
+                #Get the timestamp of the first moment the robot is at depth
+                if self.depth_achieved_time is None: 
+                    self.depth_achieved_time = rospy.get_time()
+                # Surge for a known duration, then exit the state
+                self.time_remaining = self.SURGE_DURATION - (rospy.get_time() - self.depth_achieved_time)
+                if ( self.time_remaining >0):
+                    self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE)
+                    rospy.loginfo_throttle(1, 'Surging: Time left is {} seconds'.format(self.time_remaining))
+                else:
+                    self.surge_magnitude_pub.publish(0)
+                    self.done_surging = True
+                    return 'gatePassed'
 
 
 
@@ -118,13 +128,15 @@ class NavitageToSurfacingTask(smach.State):
         self.hydrophones_sub = rospy.Subscriber('/hydrophones/heading', Float64, self.hydrophones_cb) 
         
         #TODO Stub values, Needs pool testing
-        self.YAW_THRESHOLD      = 20 * 3.14/180 # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
-        self.ARRIVAL_THRESHOLD  = 50 * 3.14/180 #  Threshold for checking if the pinger is "behind" us and we have arrived 
+        self.YAW_THRESHOLD      = Float64()
+        self.YAW_THRESHOLD.data = 20 * 3.14/180 # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
+        self.ARRIVAL_THRESHOLD  = Float64() #  Threshold for checking if the pinger is "behind" us and we have arrived 
+        self.ARRIVAL_THRESHOLD.data = 50 * 3.14/180       
         self.STABLE_COUNT       = 5             # This defines the number of measurements we need to take within the yaw threshold to be stable
         self.alignment_count    = 0
         self.arrival_count      = 0
         self.ever_aligned       = False         # A check if we have ever been aligned to the pinger.
-        self.YAW_TARGET         = 0             # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
+        self.YAW_TARGET         = 0.0           # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
         self.SURGE_MAGNITUDE    = 1             # I have no idea what the units are, be careful.
         self.successful_surface = False
 
@@ -137,8 +149,8 @@ class NavitageToSurfacingTask(smach.State):
         self.depth_enable_pub    = rospy.Publisher('/controls/depth_pid/pid_enable' , Float64 , queue_size=1)
         
         #Enable the yaw PID, try to align to the pinger.
-        yaw_setpoint_pub(YAW_TARGET)  
-        yaw_enable_pub.publish(1)
+        self.yaw_setpoint_pub.publish(self.YAW_TARGET)  
+        self.yaw_enable_pub.publish(True)
 
     ''' Considering doing this in an encapsulated manner to improve readability. I think it might get....less readable this way.
 
@@ -180,26 +192,29 @@ class NavitageToSurfacingTask(smach.State):
     def hydrophones_cb(self, msg):
         self.heading = msg # takes the heading float 64 from the subscriber and sets it to a variable
         # Check if we are stable! If we are outside the threshold, restart the counter.
-
         #------------------------------------- Checking for alignment to the pinger -------------------------------------
-        if self.heading < self.YAW_THRESHOLD :
+        if abs(self.heading - self.YAW_TARGET) < self.YAW_THRESHOLD :
             self.alignment_count += 1
         else:
             self.alignment_count  = 0
 
         if self.alignment_count > self.STABLE_COUNT : # We are aligned, go forward
-            surge_magnitude_pub.publish(SURGE_MAGNITUDE) 
+            self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE) 
+            rospy.loginfo('Aligned. Turning on the Thrusters')
         else :
-            surge_magnitude_pub.publish(0) # We are very unaligned. Stop and re-align.
+            self.surge_magnitude_pub.publish(0) # We are very unaligned. Stop and re-align.
+            rospy.loginfo('Misaligned. Turning off the Thrusters')
 
         #------------------------------------- Checking for arrival at the pinger -------------------------------------
         # If ever aligned and now outside the arrival threshold?
-        if (self.ever_aligned & self.heading > ARRIVAL_THRESHOLD) :
+        if (self.ever_aligned and (self.heading > self.ARRIVAL_THRESHOLD)):
             # Check if this is stable
-            surge_magnitude_pub.publish(0) #First, turn off thrusters
+            self.surge_magnitude_pub.publish(0) #First, turn off thrusters
             self.arrival_count +=1
+            rospy.loginfo('Arrived?. Waiting for {} more stable counts'.format(self.STABLE_COUNT-self.arrival_count))
             if arrival_count > STABLE_COUNT :
                 #If it is stable, surface!
+                rospy.loginfo('Arrived, surfacing')
                 self.depth_enable_pub(0)
                 self.successful_surface = True
 
@@ -218,8 +233,11 @@ class NavitageToSurfacingTask(smach.State):
                # IF it is stable, surface !
 
         # Turn the Depth PID off to surface
+        rospy.loginfo('Executing state Navigate to surfacing task')
+        while not self.successful_surface:
+            rospy.loginfo_throttle(1 ,'Alignment count : {} | arrival count: {}'.format(self.alignment_count , self.arrival_count) )
 
-        rospy.loginfo('Executing state Navigateto surfacing task')
+
         if successful_surface: # !!! this condition is not defined
             return 'missionSuceeded'
         else:
@@ -227,7 +245,7 @@ class NavitageToSurfacingTask(smach.State):
 
 # main
 def main():
-    rospy.init_node('mock-mission-planner')
+    rospy.init_node('mockMissionPlanner', anonymous=True)
 
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['missionFailed', 'missionSuceeded'])
@@ -235,6 +253,7 @@ def main():
     # Open the container
     with sm:
         # Add states to the container
+        # This is where the  transitions are defined!
         '''
         smach.StateMachine.add('GateState', GateState(), 
                                transitions={'gatePassed':'LaneDetector',
@@ -247,16 +266,15 @@ def main():
         smach.StateMachine.add('SwimStraight', SwimStraight(), 
                                transitions={'atNextTask':'',
                                             'notAtNextTask':'missionFailed'})
-        '''
-
+        
+        # Gate task. Transitions Directly to pinger task...for now.
         smach.StateMachine.add('GateState', GateState(), 
                                transitions={'gatePassed':'NavitageToSurfacingTask',
                                             'gateMissed':'missionFailed'})
-
+        '''
+        # The surface task. Finishes up the mission.
         smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
-                        transitions={'surfaced':'missionSuceeded'})
-
-
+                        transitions={'missionSuceeded':'missionSuceeded'})
 
     # Execute SMACH plan
     outcome = sm.execute()
