@@ -136,7 +136,7 @@ class NavitageToSurfacingTask(smach.State):
         self.alignment_count    = 0
         self.arrival_count      = 0
         self.ever_aligned       = False         # A check if we have ever been aligned to the pinger.
-        self.YAW_TARGET         = 0.0           # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
+        self.YAW_TARGET         = Float64()          # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
         self.SURGE_MAGNITUDE    = 1             # I have no idea what the units are, be careful.
         self.successful_surface = False
 
@@ -151,43 +151,6 @@ class NavitageToSurfacingTask(smach.State):
         #Enable the yaw PID, try to align to the pinger.
         self.yaw_setpoint_pub.publish(self.YAW_TARGET)  
         self.yaw_enable_pub.publish(True)
-
-    ''' Considering doing this in an encapsulated manner to improve readability. I think it might get....less readable this way.
-
-    def is_aligned(self):
-        return self.heading < self.YAW_THRESHOLD
-
-    def is_stable(self):
-        return self.current_count > self.alignment_counts
-
-    def is_arrived(self):
-         return (self.ever_aligned and self.heading > ARRIVAL_THRESHOLD)
-
-    def is_stable_at_arrival(self):
-        return self.arrival_count > self.STABLE_COUNT
-                
-    def hydrophones_cb(self, msg):
-        self.heading = msg # takes the heading float 64 from the subscriber and sets it to a variable
-
-        if self.is_aligned():
-            if self.is_stable():
-                surge_magnitude_pub.publish(SURGE_MAGNITUDE)
-                self.ever_aligned = True # We've been aligned once. Now if we get unaligned it may be due to arrival
-            else:
-                #aligned but not yet stable
-                self.alignment_count += 1
-        else:
-            #not aligned
-            self.alignment_count = 0
-            surge_magnitude_pub.publish(0) # We are very unaligned. Stop and re-align.
-
-            # if we're not aligned, we might have arrived! Check for this
-            if self.is_arrived():
-                if self.is_stable_at_arrival():
-                    self.depth_enable_pub(0) 
-                else:
-                    self.arrival_count +=1 
-    '''
 
     def hydrophones_cb(self, msg):
         self.heading = msg # takes the heading float 64 from the subscriber and sets it to a variable
