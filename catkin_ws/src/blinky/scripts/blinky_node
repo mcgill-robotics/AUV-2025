@@ -9,7 +9,7 @@ to the state of the robot by calling the blinky service proxy.
 """
 
 import rospy
-from auv_msgs.msg import TaskStatus
+from blinky.msg import TaskStatus
 from blinky.srv import UpdatePlannerLights
 from blinky.msg import RGB
 
