@@ -1,0 +1,107 @@
+#!/usr/bin/env python
+
+# -*- coding: utf-8 -*-
+
+""" BlinkyNode object.
+
+This listens to /task node and change the blinky tapes color according
+to the state of the robot by calling the blinky service proxy.
+"""
+
+import rospy
+from auv_msgs.msg import TaskStatus
+from blinky.srv import UpdatePlannerLights
+from blinky.msg import RGB
+
+__author__ = "Yichi Zhang"
+
+
+class BlinkyNode(object):
+
+    def __init__(self):
+        rospy.init_node('blinky_listener')
+
+        self.blinky_sub = rospy.Subscriber('/task', TaskStatus,
+                                           self.update_blinky_colors,
+                                           queue_size=1)
+
+        self.blinky_proxy     = rospy.ServiceProxy('update_planner_lights', UpdatePlannerLights)
+        self.last_task        = TaskStatus()
+        self.last_task.action = TaskStatus.ACTION_IDLE
+        self.last_task.task   = TaskStatus.TASK_IDLE
+
+    def update_blinky_colors(self, task_msg):
+        """ Choose a color for the blinky tapes depending on the
+        robot status (can be an action or a task).
+
+        Args:
+            task_msg: auv_msgs/TaskStatus
+        """
+        # For testing only
+        rospy.loginfo("ID = {}. Action is {}. Task is {}".format(
+            rospy.get_caller_id(), task_msg.action, task_msg.task))
+
+        if self.last_task.task != task_msg.task and self.last_task.task != TaskStatus.INITIALIZE:
+            self.transition()
+
+        if task_msg.action == TaskStatus.MOVE:
+            self.blinky_proxy_call(RGB(255, 0, 255))  # Magenta , Action # 0
+
+        elif task_msg.action == TaskStatus.SHOOT:
+            self.blinky_proxy_call(RGB(255, 215, 0))  # Gold    , Action #1
+
+        elif task_msg.action == TaskStatus.VISUAL_SERVO:
+            self.blinky_proxy_call(RGB(0, 255, 0))  # Green     , Action #2
+
+        elif task_msg.action == TaskStatus.ACOUSTIC_SERVO:     #, Action #3
+            self.blinky_proxy_call(RGB(0, 0, 255))  # Blue
+
+        elif task_msg.action == TaskStatus.INITIALIZE:
+            pass
+
+        elif task_msg.action == TaskStatus.ACTION_IDLE:
+            self.blinky_proxy_call(RGB(0, 0, 0))
+
+        else:
+            rospy.logerr("{} is not a known type.".format(task_msg.action))
+
+        self.last_task = task_msg
+
+    def transition(self):
+        self.blinky_proxy_call(RGB(255, 0, 0))
+        rospy.sleep(0.5)
+        self.blinky_proxy_call(RGB(0, 0, 0))
+        rospy.sleep(0.3)
+        self.blinky_proxy_call(RGB(255, 0, 0))
+        rospy.sleep(0.5)
+        self.blinky_proxy_call(RGB(0, 0, 0))
+        rospy.sleep(0.3)
+        self.blinky_proxy_call(RGB(255, 0, 0))
+        rospy.sleep(0.5)
+
+    def blinky_proxy_call(self, color):
+
+        """Color three center blinky tapes stripes
+
+        Args:
+            color: RGB(red, green, blue)
+        """
+        rospy.loginfo("Send color: {}".format(color))  # For testing only
+        colors = []
+        for i in range(25):
+            colors.append(color)
+
+        try:
+            result = self.blinky_proxy(colors)
+
+            if result.success != 0:
+                rospy.logerr(
+                    'Blinky call unsuccessful for {}. Error: {}'.format(self.previousStatus, result)
+                )
+
+        except Exception as e:
+            rospy.logerr('Blinky exception: {}'.format(e))
+
+if __name__ == '__main__':
+    BlinkyNode()
+    rospy.spin()
