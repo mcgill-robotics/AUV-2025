@@ -1,6 +1,7 @@
 import rospy
 import smach
 from std_msgs.msg import Bool, Float64
+from blinky.msg import TaskStatus
 
 # Navigation Target coordinates 
 # X     : DVL
@@ -48,6 +49,12 @@ class GateState(smach.State):
         self.depth_setpoint_pub    = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
         self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
 
+        # Define the publisher for blinky, publish a task...just a random one for now
+        self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
+        self.taskmsg        = TaskStatus()
+        self.taskmsg.action = 1
+        self.taskmsg.task   = 1
+        self.blinky_pub.publish (taskmsg)
         #Turn on the Depth PID
         self.depth_setpoint_pub.publish(self.DEPTH_SETPOINT)
         self.depth_enable_pub.publish(True) 
@@ -88,15 +95,16 @@ class GateState(smach.State):
                     self.done_surging = True
                     return 'gatePassed'
 
-
-
-
-# define state LaneDetector
-class LaneDetector(smach.State):
+class GridSearch(smach.State):
     def __init__(self):
+        # This Executes a raster scan to search for something, probably a lane
+        # 1) Surge for a predetermined time (long)
+        # 2) Turn 90 degrees using the IMU
+        # 3) S
         smach.State.__init__(self, outcomes=['pointingToNextTask', 'notSeeingLane'])
 
     def execute(self, userdata):
+        #
         rospy.loginfo('Executing state LaneDetector')
 
         if seeingLane: # !!! this condition is not defined
@@ -105,8 +113,31 @@ class LaneDetector(smach.State):
         else:
             return 'notSeeingLane'
 
-class SwimStraight(smach.State):
+
+# define state LaneDetector
+class LaneDetector(smach.State):
     def __init__(self):
+        # 1)
+        smach.State.__init__(self, outcomes=['pointingToNextTask', 'notSeeingLane'])
+
+    def execute(self, userdata):
+        #
+        rospy.loginfo('Executing state LaneDetector')
+
+        if seeingLane: # !!! this condition is not defined
+            return 'pointingToNextTask'
+        
+        else:
+            return 'notSeeingLane'
+
+class BuoyTask(smach.State):
+    def __init__(self):
+        # 1) Center the Buoy in the field of view using a PID on the convex hull
+        # 2) Use the CV detector to report a probability that the current image in frame is the one we want at regular intervals
+        # 3) If the probability exceeds a threshold, begin surging
+        # 4) Continue surging untill the convex hull takes up the whole field of vision, then continue for a hardcoded time (test!) to actually touch it
+        # 5) Transition into the next task
+
         smach.State.__init__(self, outcomes=['atNextTask', 'notAtNextTask'])
 
     def execute(self, userdata):
@@ -129,14 +160,15 @@ class NavitageToSurfacingTask(smach.State):
         
         #TODO Stub values, Needs pool testing
         self.YAW_THRESHOLD      = Float64()
-        self.YAW_THRESHOLD.data = 20 * 3.14/180 # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
-        self.ARRIVAL_THRESHOLD  = Float64() #  Threshold for checking if the pinger is "behind" us and we have arrived 
+        self.YAW_THRESHOLD.data = 20 * 3.14/180   # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
+        self.ARRIVAL_THRESHOLD  = Float64()       #  Threshold for checking if the pinger is "behind" us and we have arrived 
         self.ARRIVAL_THRESHOLD.data = 50 * 3.14/180       
         self.STABLE_COUNT       = 5             # This defines the number of measurements we need to take within the yaw threshold to be stable
         self.alignment_count    = 0
         self.arrival_count      = 0
         self.ever_aligned       = False         # A check if we have ever been aligned to the pinger.
         self.YAW_TARGET         = Float64()          # This will depend on how the hydrophones are mounted, I am guessing 0 for now. 
+        self.YAW_TARGET.data    = 0
         self.SURGE_MAGNITUDE    = 1             # I have no idea what the units are, be careful.
         self.successful_surface = False
 
@@ -144,19 +176,25 @@ class NavitageToSurfacingTask(smach.State):
         self.yaw_enable_pub      = rospy.Publisher('/controls/yaw_pid/pid_enable' , Bool    , queue_size=1)
         self.yaw_setpoint_pub    = rospy.Publisher('/controls/yaw_pid/setpoint'   , Float64 , queue_size=1)
         
-        self.surge_magnitude_pub = rospy.Publisher('/controls/superimposer/surge' , Float64 , queue_size=1)
-
+        self.surge_magnitude_pub = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
         self.depth_enable_pub    = rospy.Publisher('/controls/depth_pid/pid_enable' , Float64 , queue_size=1)
         
         #Enable the yaw PID, try to align to the pinger.
         self.yaw_setpoint_pub.publish(self.YAW_TARGET)  
         self.yaw_enable_pub.publish(True)
 
+        # Define the publisher for blinky, publish a task...just a random one for now
+        self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
+        self.taskmsg        = TaskStatus()
+        self.taskmsg.action = 2
+        self.taskmsg.task   = 2
+        self.blinky_pub.publish (taskmsg)
+
     def hydrophones_cb(self, msg):
         self.heading = msg # takes the heading float 64 from the subscriber and sets it to a variable
         # Check if we are stable! If we are outside the threshold, restart the counter.
         #------------------------------------- Checking for alignment to the pinger -------------------------------------
-        if abs(self.heading - self.YAW_TARGET) < self.YAW_THRESHOLD :
+        if abs(self.heading.data - self.YAW_TARGET.data) < self.YAW_THRESHOLD.data :
             self.alignment_count += 1
         else:
             self.alignment_count  = 0
@@ -164,13 +202,14 @@ class NavitageToSurfacingTask(smach.State):
         if self.alignment_count > self.STABLE_COUNT : # We are aligned, go forward
             self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE) 
             rospy.loginfo('Aligned. Turning on the Thrusters')
+            self.ever_aligned = True
         else :
             self.surge_magnitude_pub.publish(0) # We are very unaligned. Stop and re-align.
             rospy.loginfo('Misaligned. Turning off the Thrusters')
 
         #------------------------------------- Checking for arrival at the pinger -------------------------------------
         # If ever aligned and now outside the arrival threshold?
-        if (self.ever_aligned and (self.heading > self.ARRIVAL_THRESHOLD)):
+        if (self.ever_aligned and (self.heading.data > self.ARRIVAL_THRESHOLD)):
             # Check if this is stable
             self.surge_magnitude_pub.publish(0) #First, turn off thrusters
             self.arrival_count +=1

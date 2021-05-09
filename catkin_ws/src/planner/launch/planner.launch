@@ -1,0 +1,17 @@
+<launch>
+    <node name="navigate"
+          pkg="planner"
+          type="navigate.py"
+          respawn="false"
+          output="screen">
+    </node>
+
+    <node name="planner"
+          pkg="planner"
+          type="planner_node.py"
+          respawn="false"
+          output="screen">
+        <rosparam command="load" file="$(find planner)/config/planner.yaml" />
+        <param name="angle_thresh" value="0.175" />
+    </node>
+</launch>
