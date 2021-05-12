@@ -50,11 +50,12 @@ class GateState(smach.State):
         self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
 
         # Define the publisher for blinky, publish a task...just a random one for now
-        self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
-        self.taskmsg        = TaskStatus()
-        self.taskmsg.action = 1
-        self.taskmsg.task   = 1
-        self.blinky_pub.publish (taskmsg)
+        #self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
+        #self.taskmsg        = TaskStatus()
+        #self.taskmsg.action = 1
+        #self.taskmsg.task   = 1
+        #self.blinky_pub.publish (taskmsg)
+        
         #Turn on the Depth PID
         self.depth_setpoint_pub.publish(self.DEPTH_SETPOINT)
         self.depth_enable_pub.publish(True) 
@@ -117,7 +118,9 @@ class GridSearch(smach.State):
 # define state LaneDetector
 class LaneDetector(smach.State):
     def __init__(self):
-        # 1)
+        # 1) Center the lane in the viewframe
+        # 2) derive a new heading from the lane detector
+        # 3) Set the Yaw PID setpoint to 
         smach.State.__init__(self, outcomes=['pointingToNextTask', 'notSeeingLane'])
 
     def execute(self, userdata):
@@ -184,11 +187,12 @@ class NavitageToSurfacingTask(smach.State):
         self.yaw_enable_pub.publish(True)
 
         # Define the publisher for blinky, publish a task...just a random one for now
-        self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
-        self.taskmsg        = TaskStatus()
-        self.taskmsg.action = 2
-        self.taskmsg.task   = 2
-        self.blinky_pub.publish (taskmsg)
+        
+        #self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
+        #self.taskmsg        = TaskStatus()
+        #self.taskmsg.action = 2
+        #self.taskmsg.task   = 2
+        #self.blinky_pub.publish (taskmsg)
 
     def hydrophones_cb(self, msg):
         self.heading = msg # takes the heading float 64 from the subscriber and sets it to a variable
@@ -268,12 +272,13 @@ def main():
         smach.StateMachine.add('SwimStraight', SwimStraight(), 
                                transitions={'atNextTask':'',
                                             'notAtNextTask':'missionFailed'})
-        
+        '''
+
         # Gate task. Transitions Directly to pinger task...for now.
         smach.StateMachine.add('GateState', GateState(), 
                                transitions={'gatePassed':'NavitageToSurfacingTask',
                                             'gateMissed':'missionFailed'})
-        '''
+        
         # The surface task. Finishes up the mission.
         smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
                         transitions={'missionSuceeded':'missionSuceeded'})
