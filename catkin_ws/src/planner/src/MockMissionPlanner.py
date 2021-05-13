@@ -166,7 +166,7 @@ class NavitageToSurfacingTask(smach.State):
         self.YAW_THRESHOLD.data = 20 * 3.14/180   # 20 degrees, but converted to Radians, threshold for being "aligned" to the pinger
         self.ARRIVAL_THRESHOLD  = Float64()       #  Threshold for checking if the pinger is "behind" us and we have arrived 
         self.ARRIVAL_THRESHOLD.data = 50 * 3.14/180       
-        self.STABLE_COUNT       = 5             # This defines the number of measurements we need to take within the yaw threshold to be stable
+        self.STABLE_COUNT       = 2             # This defines the number of measurements we need to take within the yaw threshold to be stable
         self.alignment_count    = 0
         self.arrival_count      = 0
         self.ever_aligned       = False         # A check if we have ever been aligned to the pinger.
@@ -213,15 +213,17 @@ class NavitageToSurfacingTask(smach.State):
 
         #------------------------------------- Checking for arrival at the pinger -------------------------------------
         # If ever aligned and now outside the arrival threshold?
-        if (self.ever_aligned and (self.heading.data > self.ARRIVAL_THRESHOLD)):
+        print("everaligned {}  Arrival Threshold {}".format(self.ever_aligned, abs(self.heading.data)))
+        if (self.ever_aligned and (abs(self.heading.data) > self.ARRIVAL_THRESHOLD.data)):
+            print("Inside the if statement")
             # Check if this is stable
             self.surge_magnitude_pub.publish(0) #First, turn off thrusters
             self.arrival_count +=1
             rospy.loginfo('Arrived?. Waiting for {} more stable counts'.format(self.STABLE_COUNT-self.arrival_count))
-            if arrival_count > STABLE_COUNT :
+            if self.arrival_count > self.STABLE_COUNT :
                 #If it is stable, surface!
                 rospy.loginfo('Arrived, surfacing')
-                self.depth_enable_pub(0)
+                self.depth_enable_pub.publish(0)
                 self.successful_surface = True
 
        
@@ -244,7 +246,7 @@ class NavitageToSurfacingTask(smach.State):
             rospy.loginfo_throttle(1 ,'Alignment count : {} | arrival count: {}'.format(self.alignment_count , self.arrival_count) )
 
 
-        if successful_surface: # !!! this condition is not defined
+        if self.successful_surface: # !!! this condition is not defined
             return 'missionSuceeded'
         else:
             pass
@@ -275,9 +277,9 @@ def main():
         '''
 
         # Gate task. Transitions Directly to pinger task...for now.
-        smach.StateMachine.add('GateState', GateState(), 
-                               transitions={'gatePassed':'NavitageToSurfacingTask',
-                                            'gateMissed':'missionFailed'})
+        # smach.StateMachine.add('GateState', GateState(), 
+        #                        transitions={'gatePassed':'NavitageToSurfacingTask',
+        #                                     'gateMissed':'missionFailed'})
         
         # The surface task. Finishes up the mission.
         smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
