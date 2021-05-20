@@ -1,8 +1,9 @@
 import rospy
 import smach
+import Math
 from std_msgs.msg import Bool, Float64
 from blinky.msg import TaskStatus
-from geometry_msgs.msg import Vector3Stamped
+from geometry_msgs.msg import Vector3Stamped, Point
 
 # Navigation Target coordinates 
 # X     : DVL
@@ -113,24 +114,24 @@ class GridSearch(smach.State):
         # 9) Change sign of 90 degrees turn
         
         smach.State.__init__(self, outcomes=['missionSucceeded'])
-        self.SHORT_TIME = 1
+        self.SHORT_TIME               = 1
         self.NUMBER_OF_SHORT_PER_LONG = 5 
-        self.MAX_ITERATION = 5
-        self.YAW_THRESHOLD = 0.1*3.14/2
-        self.SURGE_MAGNITUDE = 1
-        self.STABLE_COUNTS = 1
+        self.MAX_ITERATION            = 5
+        self.YAW_THRESHOLD            = 0.1 * 3.14 / 2
+        self.SURGE_MAGNITUDE          = 1
+        self.STABLE_COUNTS            = 1
 
-        self.turn_angle = 90
-        self.current_yaw = None 
-        self.current_yaw = 0  
-        self.stable_at_yaw = False   
-        self.done_surging = False   
-        self.current_count = 0
+        self.turn_angle          = 90
+        self.current_yaw         = None 
+        self.current_yaw         = 0  
+        self.stable_at_yaw       = False   
+        self.done_surging        = False   
+        self.current_count       = 0
         self.angle_achieved_time = None 
 
-        self.current_pose_sub = rospy.Subscriber('/robot_state', Vector3Stamped, self.IMU_cb)
-        self.yaw_enable_pub      = rospy.Publisher('/controls/yaw_pid/pid_enable' , Bool    , queue_size=1)
-        self.yaw_setpoint_pub    = rospy.Publisher('/controls/yaw_pid/setpoint'   , Float64 , queue_size=1)
+        self.current_pose_sub      = rospy.Subscriber('/robot_state', Vector3Stamped, self.IMU_cb)
+        self.yaw_enable_pub        = rospy.Publisher('/controls/yaw_pid/pid_enable' , Bool    , queue_size=1)
+        self.yaw_setpoint_pub      = rospy.Publisher('/controls/yaw_pid/setpoint'   , Float64 , queue_size=1)
         self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
 
 
@@ -205,13 +206,66 @@ class GridSearch(smach.State):
 # define state LaneDetector
 class LaneDetector(smach.State):
     def __init__(self):
-        # 1) Center the lane in the viewframe
-        # 2) derive a new heading from the lane detector
-        # 3) Set the Yaw PID setpoint to 
+        # 0) Assume we see a little bit of the lanes when we enter the state
+        # 1) Move towards the centroid of the lane(s) detetected.
+        #    If we do not see the entirety of the lanes, the centroid will be self-correcting and 
+        #    we will eventually reach the ultimate stable centroid of the 2 lanes.
+        # 2) Derive a new heading from the lane detector (new heading should be towards the next task)
+        # 3) Set the Yaw PID setpoint to 0 degrees with respect to the lane/new heading
+        # 4) Enable the Yaw PID and wait until we reach a stable state
+        # 5) Move on to next smach state which will be to surge forward
         smach.State.__init__(self, outcomes=['pointingToNextTask', 'notSeeingLane'])
 
-    def execute(self, userdata):
-        #
+        self.VIEWFRAME_PIXEL_WIDTH             = # TODO: Image resolution
+        self.VIEWFRAME_PIXEL_HEIGHT            = # TODO: Image resolution
+        self.VIEWFRAME_CENTER_X                = self.VIEWFRAME_PIXEL_WIDTH / 2.0
+        self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
+        self.VIEWFRAME_CENTER_RADIAL_THRESHOLD = 0.05 * VIEWFRAME_PIXEL_HEIGHT # in pixels
+        self.COUNTS_FOR_STABILITY              = 2 # This should be higher, but we are testing...
+
+        self.distance_centroid_to_center = None
+        self.current_stable_counts       = 0
+        self.stable_at_centroid          = False
+
+        self.centroid_sub = rospy.Subscriber('/lane_detector/centroid', Point, self.centroid_loc_cb)
+
+        # Publishers of distance to target
+        self.centroid_delta_y_pub = ropsy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
+        self.centroid_delta_x_pub = ropsy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
+
+        # Publishers to PIDs (we need a different PID for every direction (x, y))
+        self.centroid_surge_pid_enable_pub   = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        self.centroid_surge_pid_setpoint_pub = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        self.centroid_sway_pid_enable_pub    = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
+        self.centroid_sway_pid_setpoint_pub  = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
+
+    def centroid_loc_cb(self, point):
+        center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
+        center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
+        self.distance_centroid_to_center = Math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
+                                                    + center_x_dist_to_centroid * center_x_dist_to_centroid)
+
+        self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
+        self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
+
+        if (self.distance_centroid_to_center < self.VIEWFRAME_CENTER_RADIAL_THRESHOLD):
+                self.current_stable_counts += 1
+            else:
+                self.current_stable_counts = 0
+
+    def execute(self, userdata): 
+
+        self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
+        self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
+
+        self.centroid_surge_pid_enable_pub.publish(True)
+        self.centroid_sway_pid_enable_pub.publish(True)
+
+        while not (self.current_stable_counts >= self.COUNTS_FOR_STABILITY):
+            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts
+            rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
+            pass
+
         rospy.loginfo('Executing state LaneDetector')
 
         if seeingLane: # !!! this condition is not defined
