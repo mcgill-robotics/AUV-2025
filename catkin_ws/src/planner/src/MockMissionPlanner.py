@@ -1,6 +1,6 @@
 import rospy
 import smach
-import Math
+import math
 from std_msgs.msg import Bool, Float64
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
@@ -214,13 +214,13 @@ class LaneDetector(smach.State):
         # 3) Set the Yaw PID setpoint to 0 degrees with respect to the lane/new heading
         # 4) Enable the Yaw PID and wait until we reach a stable state
         # 5) Move on to next smach state which will be to surge forward
-        smach.State.__init__(self, outcomes=['pointingToNextTask', 'notSeeingLane'])
+        smach.State.__init__(self, outcomes=['missionSucceeded'])
 
-        self.VIEWFRAME_PIXEL_WIDTH             = # TODO: Image resolution
-        self.VIEWFRAME_PIXEL_HEIGHT            = # TODO: Image resolution
+        self.VIEWFRAME_PIXEL_WIDTH             = 1280 # testing
+        self.VIEWFRAME_PIXEL_HEIGHT            = 1024 # testing
         self.VIEWFRAME_CENTER_X                = self.VIEWFRAME_PIXEL_WIDTH / 2.0
         self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
-        self.VIEWFRAME_CENTER_RADIAL_THRESHOLD = 0.05 * VIEWFRAME_PIXEL_HEIGHT # in pixels
+        self.VIEWFRAME_CENTER_RADIAL_THRESHOLD = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
         self.COUNTS_FOR_STABILITY              = 2 # This should be higher, but we are testing...
 
         self.distance_centroid_to_center = None
@@ -228,10 +228,10 @@ class LaneDetector(smach.State):
         self.stable_at_centroid          = False
 
         self.centroid_sub = rospy.Subscriber('/lane_detector/centroid', Point, self.centroid_loc_cb)
-
+        print('Passed first subscriber declaration')
         # Publishers of distance to target
-        self.centroid_delta_y_pub = ropsy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
-        self.centroid_delta_x_pub = ropsy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
+        self.centroid_delta_y_pub = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
+        self.centroid_delta_x_pub = rospy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
 
         # Publishers to PIDs (we need a different PID for every direction (x, y))
         self.centroid_surge_pid_enable_pub   = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
@@ -240,17 +240,19 @@ class LaneDetector(smach.State):
         self.centroid_sway_pid_setpoint_pub  = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
 
     def centroid_loc_cb(self, point):
+        print('Reached callback')
         center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
         center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
-        self.distance_centroid_to_center = Math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
+        self.distance_centroid_to_center = math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
                                                     + center_x_dist_to_centroid * center_x_dist_to_centroid)
 
         self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
         self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
 
         if (self.distance_centroid_to_center < self.VIEWFRAME_CENTER_RADIAL_THRESHOLD):
+                print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
                 self.current_stable_counts += 1
-            else:
+        else:
                 self.current_stable_counts = 0
 
     def execute(self, userdata): 
@@ -421,11 +423,13 @@ def main():
         # smach.StateMachine.add('GateState', GateState(), 
         #                        transitions={'gatePassed':'NavitageToSurfacingTask',
         #                                     'gateMissed':'missionFailed'})
-        smach.StateMachine.add('GridSearch', GridSearch(), 
-                        transitions={'missionSucceeded':'missionSucceeded'})
+        # smach.StateMachine.add('GridSearch', GridSearch(), 
+          #              transitions={'missionSucceeded':'missionSucceeded'})
         # The surface task. Finishes up the mission.
         #smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
         #                transitions={'missionSucceeded':'missionSucceeded'})
+        smach.StateMachine.add('LaneDetector',LaneDetector(),
+                            transitions={'missionSucceeded':'missionSucceeded'})
 
     # Execute SMACH plan
     outcome = sm.execute()
