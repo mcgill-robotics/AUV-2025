@@ -222,10 +222,12 @@ class LaneDetector(smach.State):
         self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
         self.VIEWFRAME_CENTER_RADIAL_THRESHOLD = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
         self.COUNTS_FOR_STABILITY              = 2 # This should be higher, but we are testing...
+        self.YAW_ALIGNMENT_THRESHOLD = 5 * math.pi / 180
 
         self.distance_centroid_to_center = None
-        self.current_stable_counts       = 0
-        self.stable_at_centroid          = False
+        self.current_stable_counts_centroid     = 0
+        self.current_stable_counts_heading = 0
+
 
         self.centroid_sub = rospy.Subscriber('/lane_detector/centroid', Point, self.centroid_loc_cb)
         print('Passed first subscriber declaration')
@@ -238,7 +240,10 @@ class LaneDetector(smach.State):
         self.centroid_surge_pid_setpoint_pub = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
         self.centroid_sway_pid_enable_pub    = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
         self.centroid_sway_pid_setpoint_pub  = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
-
+        self.heading_lane_detector_yaw_enable_pub = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
+        self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
+    
+        self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
     def centroid_loc_cb(self, point):
         print('Reached callback')
         center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
@@ -251,24 +256,46 @@ class LaneDetector(smach.State):
 
         if (self.distance_centroid_to_center < self.VIEWFRAME_CENTER_RADIAL_THRESHOLD):
                 print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
-                self.current_stable_counts += 1
+                self.current_stable_counts_centroid += 1
         else:
-                self.current_stable_counts = 0
+                self.current_stable_counts_centroid = 0
+    
+    def heading_align_cb(self, angle_from_setpoint):
+        print('Heading callback')
+        if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD):
+            print('Angle from alignment: {}'.format(angle_from_setpoint))
+            self.current_stable_counts_heading +=1
+
+        else:
+            self.current_stable_counts_heading = 0
 
     def execute(self, userdata): 
-
+        rospy.loginfo('Executing state LaneDetector')
+        # Centering on the lane
         self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
         self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
 
         self.centroid_surge_pid_enable_pub.publish(True)
         self.centroid_sway_pid_enable_pub.publish(True)
 
-        while not (self.current_stable_counts >= self.COUNTS_FOR_STABILITY):
-            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts
+      
+
+        while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
+            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
             rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
             pass
-
-        rospy.loginfo('Executing state LaneDetector')
+        # Aligning to the lane heading
+        self.heading_lane_detector_yaw_setpoint_pub.publish(0)
+        self.heading_lane_detector_yaw_enable_pub.publish(True)
+        self.current_stable_counts_centroid = 0 # Set current_count to 0
+        
+        while not (self.current_stable_counts_heading >= self.COUNTS_FOR_STABILITY):
+            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_heading
+            rospy.loginfo_throttle(1, 'Aligning to new heading: Need {} more stable readings'.format(remaining_counts))
+            pass
+       
+        self.current_stable_counts_heading = 0 # Set current_count to 0
+    
 
         if seeingLane: # !!! this condition is not defined
             return 'pointingToNextTask'
