@@ -297,11 +297,7 @@ class LaneDetector(smach.State):
         self.current_stable_counts_heading = 0 # Set current_count to 0
     
 
-        if seeingLane: # !!! this condition is not defined
-            return 'pointingToNextTask'
-        
-        else:
-            return 'notSeeingLane'
+        return 'AlignmentSuccess'
 
 class BuoyTask(smach.State):
     def __init__(self):
@@ -432,31 +428,38 @@ def main():
     with sm:
         # Add states to the container
         # This is where the  transitions are defined!
+
+        # Overall plan for state transitions
+        # 1) Gate State - done
+        # 2) Grid Search - done
+        # 3) Lane Detector - done
+        # 4) Surge To Buoy
+        # 5) Buoy Task
+        # 6) Grid Search - done
+        # 7) Lane Detector - done
+        # 8) Surge To Garlic
+        # 9) Garlic Task
+        # 10) Pinger To Torpedo
+        # 11) Torpedo Task
+        # 12) Pinger To Surface
+        # 13) JOLLY GOOD
+        
         '''
+        Gate task. Transitions Directly to pinger task...for now.
         smach.StateMachine.add('GateState', GateState(), 
-                               transitions={'gatePassed':'LaneDetector',
+                                transitions={'gatePassed':'NavitageToSurfacingTask',
                                             'gateMissed':'missionFailed'})
 
-        smach.StateMachine.add('LaneDetector', LaneDetector(), 
-                               transitions={'pointingToNextTask':'SwimStraight',
-                                            'notSeeingLane':'missionFailed'})
+        smach.StateMachine.add('GridSearch', GridSearch(), 
+                                transitions={'missionSucceeded':'missionSucceeded'})
 
-        smach.StateMachine.add('SwimStraight', SwimStraight(), 
-                               transitions={'atNextTask':'',
-                                            'notAtNextTask':'missionFailed'})
+        The surface task. Finishes up the mission.
+        smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
+                                transitions={'missionSucceeded':'missionSucceeded'})
         '''
 
-        # Gate task. Transitions Directly to pinger task...for now.
-        # smach.StateMachine.add('GateState', GateState(), 
-        #                        transitions={'gatePassed':'NavitageToSurfacingTask',
-        #                                     'gateMissed':'missionFailed'})
-        # smach.StateMachine.add('GridSearch', GridSearch(), 
-          #              transitions={'missionSucceeded':'missionSucceeded'})
-        # The surface task. Finishes up the mission.
-        #smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
-        #                transitions={'missionSucceeded':'missionSucceeded'})
-        smach.StateMachine.add('LaneDetector',LaneDetector(),
-                            transitions={'missionSucceeded':'missionSucceeded'})
+        smach.StateMachine.add('LaneDetectorForBuoy',LaneDetector(),
+                                transitions={'AlignmentSuccess':'BuoyState'})
 
     # Execute SMACH plan
     outcome = sm.execute()
