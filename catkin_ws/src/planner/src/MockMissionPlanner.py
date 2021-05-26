@@ -216,13 +216,13 @@ class LaneDetector(smach.State):
         # 5) Move on to next smach state which will be to surge forward
         smach.State.__init__(self, outcomes=['missionSucceeded'])
 
-        self.VIEWFRAME_PIXEL_WIDTH             = 1280 # testing
-        self.VIEWFRAME_PIXEL_HEIGHT            = 1024 # testing
-        self.VIEWFRAME_CENTER_X                = self.VIEWFRAME_PIXEL_WIDTH / 2.0
-        self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
-        self.VIEWFRAME_CENTER_RADIAL_THRESHOLD = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
-        self.COUNTS_FOR_STABILITY              = 2 # This should be higher, but we are testing...
-        self.YAW_ALIGNMENT_THRESHOLD = 5 * math.pi / 180
+        self.VIEWFRAME_PIXEL_WIDTH                         = 1280 # testing
+        self.VIEWFRAME_PIXEL_HEIGHT                        = 1024 # testing
+        self.VIEWFRAME_CENTER_X                            = self.VIEWFRAME_PIXEL_WIDTH / 2.0
+        self.VIEWFRAME_CENTER_Y                            = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
+        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
+        self.COUNTS_FOR_STABILITY                          = 2 # This should be higher, but we are testing...
+        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK          = 5 * math.pi / 180
 
         self.distance_centroid_to_center = None
         self.current_stable_counts_centroid     = 0
@@ -254,7 +254,7 @@ class LaneDetector(smach.State):
         self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
         self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
 
-        if (self.distance_centroid_to_center < self.VIEWFRAME_CENTER_RADIAL_THRESHOLD):
+        if (self.distance_centroid_to_center < self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER):
                 print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
                 self.current_stable_counts_centroid += 1
         else:
@@ -262,7 +262,7 @@ class LaneDetector(smach.State):
     
     def heading_align_cb(self, angle_from_setpoint):
         print('Heading callback')
-        if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD):
+        if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
             print('Angle from alignment: {}'.format(angle_from_setpoint))
             self.current_stable_counts_heading +=1
 
@@ -301,11 +301,19 @@ class LaneDetector(smach.State):
 
 class BuoyTask(smach.State):
     def __init__(self):
+        # 0) Assume we are aligned with the lane right below us. The front camera should be able to see the buoy since it is white and big.
         # 1) Center the Buoy in the field of view using a PID on the convex hull
         # 2) Use the CV detector to report a probability that the current image in frame is the one we want at regular intervals
         # 3) If the probability exceeds a threshold, begin surging
         # 4) Continue surging untill the convex hull takes up the whole field of vision, then continue for a hardcoded time (test!) to actually touch it
         # 5) Transition into the next task
+
+        self.VIEWFRAME_PIXEL_WIDTH             = #TODO
+        self.VIEWFRAME_PIXEL_HEIGHT            = #TODO
+        self.VIEWFRAME_CENTER_X                = self.VIEWFRAME_PIXEL_WIDTH / 2.0
+        self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
+
+
 
         smach.State.__init__(self, outcomes=['atNextTask', 'notAtNextTask'])
 
