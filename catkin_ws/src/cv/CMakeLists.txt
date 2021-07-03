@@ -32,12 +32,12 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 ## Generate messages in the 'msg' folder
-#add_message_files(
-#  FILES
-#  CvTarget.msg
-#)
+add_message_files(
+  FILES
+  CvTarget.msg
+)
 
-catkin_python_setup()
+#catkin_python_setup()
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -74,6 +74,6 @@ include_directories(
 )
 
 
-add_executable(lane_detector src/cv/shapeAndColorDetectors/lane_detector.cpp)
-target_link_libraries(lane_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(lane_detector src/cv/shapeAndColorDetectors/lane_detector.cpp)
+#target_link_libraries(lane_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
