@@ -1,0 +1,4 @@
+<launch>
+    <node name="blinky" pkg="blinky" type="blinky_server" respawn="true"/>
+    <node name="blinky_listener" pkg="blinky" type="blinky_node" respawn ="true"/>
+</launch>

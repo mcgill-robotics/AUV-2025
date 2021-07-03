@@ -1,0 +1,239 @@
+#!/usr/bin/env python
+import rospy
+
+# For the Lock object
+import threading
+
+# To measure elapsed time during warning displays
+import time
+
+# Get access to the blinky services and messages
+from std_msgs.msg import Float32
+from blinky.msg import *
+from blinky.srv import *
+from auv_msgs.msg import MotorCommands
+
+import BlinkyTape as bt
+
+import math
+
+# number of leds per blinky segment
+NUM_LED_PER_SIDE = 75
+NUM_LED_PER_STRIP = 25
+NUM_LED_STRIP = 7
+
+# COLORS
+BLACK = RGB(0, 0, 0)
+CYAN = RGB(0, 189, 189)
+GREEN = RGB(0, 255, 0)
+ORANGE = RGB(255, 80, 0)
+RED = RGB(255, 0, 0)
+WHITE = RGB(255, 255, 255)
+YELLOW = RGB(255, 200, 0)
+LIGHT_GREEN = RGB(0, 127, 0)
+
+# blinky tape class handle (accesses 2 segments)
+# change first argument with usb serial port
+# where the tape is found
+blt = bt.BlinkyTape("/dev/blinky", NUM_LED_STRIP * NUM_LED_PER_STRIP,
+                    buffered=False)
+
+# Color to separate subsections in the planner segment
+separation_color = RGB(0, 0, 0)
+
+# Request received for planner colors
+original_planner_colorList = []
+
+# The two blinky tape segments
+colorList = []
+
+# Warning displayed on both segments
+warning_colorList = []
+
+# Frequency of the warning display in Hz
+warning_freq = 0.0
+
+# Flags indicating whether to display a warning
+warning_on = False
+
+# Speed animation for the middle strip
+animation_index = 0.0
+surge_cmd = 0
+
+# set all leds to (0,0,0)
+
+
+def initialize_blinkies():
+    global colorList  # across function calls
+    global original_planner_colorList
+    colors = []
+
+    # store the initial states
+    original_planner_colorList = [BLACK]
+    for i in range(NUM_LED_PER_STRIP):
+        colorList.append(ORANGE)
+
+    for i in range(NUM_LED_PER_STRIP):
+        colorList.append(CYAN)
+
+    for i in range(NUM_LED_PER_STRIP):
+        colorList.append(BLACK)
+
+    # set all leds off
+    for i in range(2 * NUM_LED_PER_SIDE):
+        blt.sendPixel(0, 0, 0)
+
+    blt.show()
+
+# callback methods during service request from client
+# req is a request containing the service arguments
+# as fields accessible with the '.'
+
+# Update Planner segment
+# req.colors: list of RGB colors to display
+
+# This method divides the planner segment into n subsections,
+# where n is the number of colors passed in the req array.
+# Each color indicates the color of one of these subsections,
+# and the subsections are separated by a black led.
+# The planner segment consists of two parallel
+# strips of 15 leds each (totaling 30). The second strip is
+# the reverse of the first.
+
+
+def update_planner(req):
+    global colorList
+    lock = threading.Lock()
+
+    if len(req.colors) != NUM_LED_PER_STRIP:
+        return UpdatePlannerLightsResponse(1)
+
+    with lock:
+        for i in range(NUM_LED_PER_STRIP):
+            colorList[2 * NUM_LED_PER_STRIP + i] = req.colors[i]
+    return UpdatePlannerLightsResponse(0)
+
+# Update Battery1 segment
+# req.colors: list of RGB colors to display
+
+
+def update_computer_battery(req):
+    global colorList
+    lock = threading.Lock()
+
+    if len(req.colors) != NUM_LED_PER_STRIP:
+        return UpdateComputerBatteryLightsResponse(1)
+
+    with lock:
+        for i in range(NUM_LED_PER_STRIP):
+            colorList[2 * NUM_LED_PER_STRIP - 1 - i] = req.colors[i]
+
+    return UpdateComputerBatteryLightsResponse(0)
+
+# Update Battery2 segment
+# The colors are reversed.
+
+
+def update_motor_battery(req):
+    global colorList
+    lock = threading.Lock()
+
+    if len(req.colors) != NUM_LED_PER_STRIP:
+        return UpdateMotorBatteryLightsResponse(1)
+
+    with lock:
+        for i in range(NUM_LED_PER_STRIP):
+            colorList[i] = req.colors[i]
+
+    return UpdateMotorBatteryLightsResponse(0)
+
+# Display a warning on the planner and battery segments
+# req.colors: list of colors to display
+# req.frequency: frequency at which to flash the warning (in Hz)
+# req.on: activate warning or stop it
+
+
+def warn_lights(req):
+    global warning_colorList
+    global warning_freq
+    global warning_on
+    lock = threading.Lock()
+
+    with lock:
+        warning_on = req.on
+        warning_colorList = req.colors
+        warning_freq = req.frequency
+
+    return WarningLightsResponse(0)
+
+
+def motorcommands(cmd):
+    global surge_cmd
+
+    lock = threading.Lock()
+
+    with lock:
+        surge_cmd = cmd.port_surge + cmd.starboard_surge
+
+
+def BlinkyTapeServer():
+    global animation_index
+    global surge_cmd
+
+    initialize_blinkies()
+    time.sleep(0.01)
+    rospy.init_node('blinky')
+
+    upl = rospy.Service('update_planner_lights',
+                        UpdatePlannerLights, update_planner)
+    ub1l = rospy.Service('update_motor_battery_lights',
+                         UpdateMotorBatteryLights, update_motor_battery)
+    ub2l = rospy.Service('update_computer_battery_lights',
+                         UpdateComputerBatteryLights, update_computer_battery)
+    wl = rospy.Service('warning_lights', WarningLights, warn_lights)
+
+    rospy.Subscriber('/electrical_interface/motor',
+                     MotorCommands, motorcommands, queue_size=1)
+
+    lock = threading.Lock()
+    edge_time = time.time()
+    state = 0   # alternates between 0 (normal display) and 1 (warning display)
+
+    # Print the current state
+    while not rospy.is_shutdown():
+        # get stable copies of the (volatile) lists
+        # get current warning state. Keep a copy to avoid the risk
+        # of warning_freq changing to 0 while testing the if condition
+        # thereby causing a division by zero.
+
+        # publish all color lists
+        # send the rgb colors in the display buffer
+        # the n-th call to sendPixel before show() sets the n-th led.
+        # repeat the same pattern until it fills up all leds
+        for m in range(NUM_LED_PER_SIDE):
+            rgb = colorList[m]
+            blt.sendPixel(rgb.r, rgb.g, rgb.b)
+
+        for n in range(NUM_LED_PER_STRIP):
+            rgb = colorList[74-n]
+            blt.sendPixel(rgb.r, rgb.g, rgb.b)
+
+        for n in range(NUM_LED_PER_STRIP):
+            rgb = colorList[50+n]
+            blt.sendPixel(rgb.r, rgb.g, rgb.b)
+
+        for n in range(NUM_LED_PER_STRIP):
+            rgb = colorList[25+n]
+            blt.sendPixel(rgb.r, rgb.g, rgb.b)
+
+        for n in range(NUM_LED_PER_STRIP):
+            rgb = colorList[n]
+            blt.sendPixel(rgb.r, rgb.g, rgb.b)
+
+        # actually print the led colors on the tape
+        blt.show()
+        time.sleep(0.05)
+
+
+if __name__ == "__main__":
+    BlinkyTapeServer()
