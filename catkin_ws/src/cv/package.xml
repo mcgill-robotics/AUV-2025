@@ -12,7 +12,7 @@
   <depend>actionlib</depend>
   <depend>actionlib_msgs</depend>
   <depend>angles</depend>
-  <depend>auv_msgs</depend>
+  <!--<depend>auv_msgs</depend>-->
   <depend>boost</depend>
   <depend>cmake_modules</depend>
   <depend>cv_bridge</depend>
@@ -22,7 +22,7 @@
   <depend>message_generation</depend>
   <depend>message_runtime</depend>
   <depend>nav_msgs</depend>
-  <depend>pointgrey_camera_driver</depend> 
+  <!--<depend>pointgrey_camera_driver</depend> -->
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>std_msgs</depend>
