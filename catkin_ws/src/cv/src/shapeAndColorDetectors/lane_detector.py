@@ -48,7 +48,7 @@ class LaneDetector():
         self.pubPIDy              = rospy.Publisher('cv/down_cam_PIDy', Float64 , queue_size=1)  
             
         self.bridge               = CvBridge()
-        self.sub                  = rospy.Subscriber("/camera/image", Image, self.callback)
+        self.sub                  = rospy.Subscriber("/image_raw", Image, self.callback)
         self.angle_top_lane       = None
         self.laneFound            = False
         self.smoothQueue          = deque([])
@@ -118,7 +118,7 @@ class LaneDetector():
         self.display_debug_image(self.debugimgs,img_bounds,'Colormask bounds',0.5,-6000,6000)
 
         # Filter by Color to obtain a colormask
-        MIN_CONTOUR_SIZE = rospy.get_param("/cv/lanes/orange_cnt_size", 20000)
+        MIN_CONTOUR_SIZE = rospy.get_param("/cv/lanes/orange_cnt_size", 10000)
         mask             = cv2.inRange(img_hvt, lower_cm_bound, upper_cm_bound)
         self.display_debug_image(self.debugimgs,mask,'Colormask Output',0.5,-6000,6000)
 
@@ -401,7 +401,11 @@ class LaneDetector():
         #### Next, the headings ########################################
         self.pubHeadingCentroid.publish(thetaCentroid) 
         self.pubHeadingFit.publish(np.arctan(vy/vx)) 
-        self.pubHeadingHoughLines.publish(self.angle_top_lane) 
+
+        #Only publish something to the Hough Lines topic if the hough lines algorithm has actually been run!
+        if self.angle_top_lane != None:
+            print('Publishing to the Hough Lines topic!')
+            self.pubHeadingHoughLines.publish(self.angle_top_lane) 
 
 
         
