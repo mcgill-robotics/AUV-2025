@@ -392,10 +392,7 @@ class LaneDetector():
         msgCentroid.gravity.y        = yCentroid
         msgCentroid.gravity.z        = 0
         msgCentroid.probability.data = 1.0
-        
-        self.pubTargetCentroid.publish(msgCentroid)   
-        self.pubPIDx.publish(xCentroid)
-        self.pubPIDy.publish(yCentroid)   
+          
         
         ## (The other one is published above in the code where it is generated)
         #### Next, the headings ########################################
@@ -406,7 +403,10 @@ class LaneDetector():
         if self.angle_top_lane != None:
             print('Publishing to the Hough Lines topic!')
             self.pubHeadingHoughLines.publish(self.angle_top_lane) 
-
+            # Also publish the centroid! 
+            self.pubTargetCentroid.publish(msgCentroid)   
+            #self.pubPIDx.publish(xCentroid)
+            #self.pubPIDy.publish(yCentroid) 
 
         
 
