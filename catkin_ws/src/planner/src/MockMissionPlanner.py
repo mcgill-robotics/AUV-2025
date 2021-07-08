@@ -1,9 +1,11 @@
 import rospy
 import smach
 import math
+from cv.msg import CvTarget
 from std_msgs.msg import Bool, Float64
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
+from threading import Thread
 
 # Navigation Target coordinates 
 # X     : DVL
@@ -214,38 +216,41 @@ class LaneDetector(smach.State):
         # 3) Set the Yaw PID setpoint to 0 degrees with respect to the lane/new heading
         # 4) Enable the Yaw PID and wait until we reach a stable state
         # 5) Move on to next smach state which will be to surge forward
-        smach.State.__init__(self, outcomes=['missionSucceeded'])
+        smach.State.__init__(self, outcomes=['AlignmentSuccess'])
 
-        self.VIEWFRAME_PIXEL_WIDTH                         = 1280 # testing
-        self.VIEWFRAME_PIXEL_HEIGHT                        = 1024 # testing
+        self.VIEWFRAME_PIXEL_WIDTH                         = 720 # testing
+        self.VIEWFRAME_PIXEL_HEIGHT                        = 420 # testing
         self.VIEWFRAME_CENTER_X                            = self.VIEWFRAME_PIXEL_WIDTH / 2.0
         self.VIEWFRAME_CENTER_Y                            = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
-        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
-        self.COUNTS_FOR_STABILITY                          = 2 # This should be higher, but we are testing...
-        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK          = 5 * math.pi / 180
+        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
+        self.COUNTS_FOR_STABILITY                          = 30 # This should be higher, but we are testing...
+        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK          = 10 * math.pi / 180
 
-        self.distance_centroid_to_center = None
-        self.current_stable_counts_centroid     = 0
-        self.current_stable_counts_heading = 0
+        self.distance_centroid_to_center    = None
+        self.current_stable_counts_centroid = 0
+        self.current_stable_counts_heading  = 0
 
 
-        self.centroid_sub = rospy.Subscriber('/lane_detector/centroid', Point, self.centroid_loc_cb)
+        self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
+
         print('Passed first subscriber declaration')
         # Publishers of distance to target
-        self.centroid_delta_y_pub = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
-        self.centroid_delta_x_pub = rospy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
+        self.centroid_delta_y_pub = rospy.Publisher('cv/down_cam_PIDy', Float64, queue_size = 1)
+        self.centroid_delta_x_pub = rospy.Publisher('cv/down_cam_PIDx', Float64, queue_size = 1)
 
         # Publishers to PIDs (we need a different PID for every direction (x, y))
-        self.centroid_surge_pid_enable_pub   = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
-        self.centroid_surge_pid_setpoint_pub = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
-        self.centroid_sway_pid_enable_pub    = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
-        self.centroid_sway_pid_setpoint_pub  = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
-        self.heading_lane_detector_yaw_enable_pub = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
+        self.centroid_surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        self.centroid_surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        self.centroid_sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
+        self.centroid_sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
+        self.heading_lane_detector_yaw_enable_pub   = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
         self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
     
         self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
-    def centroid_loc_cb(self, point):
-        print('Reached callback')
+
+    def centroid_loc_cb(self, cvmsg):
+        point = cvmsg.gravity
+        #print('Reached callback')
         center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
         center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
         self.distance_centroid_to_center = math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
@@ -253,17 +258,17 @@ class LaneDetector(smach.State):
 
         self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
         self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
+        #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
 
         if (self.distance_centroid_to_center < self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER):
-                print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
                 self.current_stable_counts_centroid += 1
         else:
                 self.current_stable_counts_centroid = 0
     
     def heading_align_cb(self, angle_from_setpoint):
-        print('Heading callback')
+        #print('Heading callback')
         if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
-            print('Angle from alignment: {}'.format(angle_from_setpoint))
+            rospy.loginfo_throttle(1, 'Angle from alignment: {}'.format(angle_from_setpoint))
             self.current_stable_counts_heading +=1
 
         else:
@@ -284,6 +289,7 @@ class LaneDetector(smach.State):
             remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
             rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
             pass
+
         # Aligning to the lane heading
         self.heading_lane_detector_yaw_setpoint_pub.publish(0)
         self.heading_lane_detector_yaw_enable_pub.publish(True)
@@ -309,8 +315,8 @@ class NavigateToBuoyTask(smach.State):
         # 4) Continue surging untill the convex hull takes up the whole field of vision, then continue for a hardcoded time (test!) to actually touch it
         # 5) Transition into the next task
 
-        self.VIEWFRAME_PIXEL_WIDTH             = #TODO
-        self.VIEWFRAME_PIXEL_HEIGHT            = #TODO
+        self.VIEWFRAME_PIXEL_WIDTH             = 720 #TODO
+        self.VIEWFRAME_PIXEL_HEIGHT            = 420 #TODO
         self.VIEWFRAME_CENTER_X                = self.VIEWFRAME_PIXEL_WIDTH / 2.0
         self.VIEWFRAME_CENTER_Y                = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
         self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.05 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
@@ -319,7 +325,7 @@ class NavigateToBuoyTask(smach.State):
         self.COUNTS_FOR_STABILITY = 2
 
 
-        smach.State.__init__(self, outcomes=['atNextTask', 'notAtNextTask'])
+        smach.State.__init__(self, outcomes=['BuoyReached'])
 
         self.navigate_to_buoy_sway_pid_enable_pub = rospy.Publisher('/buoy_sway_pid/enable', Bool, queue_size = 1)
         self.navigate_to_buoy_sway_pid_setpoint_pub = rospy.Publisher('/buoy_sway_pid/setpoint', Float64, queue_size = 1)
@@ -330,10 +336,10 @@ class NavigateToBuoyTask(smach.State):
         self.distance_to_buoy_pid_enable_pub = rospy.Publisher('/buoy_distance_pid/enable', Bool, queue_size = 1)
         self.distance_to_buoy_pid_setpoint_pub = rospy.Publisher('/buoy_distance_pid/setpoint', Float64, queue_size = 1)
 
-        self.distance_to_buoy_sub = rospy.Subscriber('/cv/buoy_distance', Float64, distance_cb)
+        self.distance_to_buoy_sub = rospy.Subscriber('/cv/buoy_distance', Float64, self.distance_cb)
 
 
-        self.target_sub = rospy.Subscriber('/cv/front_cam_target', Point, target_cb)
+        self.target_sub = rospy.Subscriber('/cv/front_cam_target', Point, self.target_cb)
 
         self.current_stable_counts_centroid = 0
         self.current_stable_counts_distance = 0
@@ -551,10 +557,22 @@ def main():
                                 transitions={'AlignmentSuccess':'NavigateToBuoyTask'})
 
         smach.StateMachine.add('NavigateToBuoyTask',NavigateToBuoyTask(),
-                                transitions={'BuoyReached':'BuoyTask'})
+                                transitions={'BuoyReached':'missionSucceeded'})
+
+    # In order to get smach to respond to ctrl+c we run it in a different
+    # thread and request a preempt on ctrl+c.
+    smach_thread = Thread(target=lambda: sm.execute())
+    smach_thread.start()
+
+    # It is necessary to use the on_shutdown method to request the preempt
+    # rather than waiting until after rospy spin to do so. Otherwise, the
+    # state machine will not respond to ctrl+c.
+    rospy.on_shutdown(sm.request_preempt)
+    rospy.spin()
+    smach_thread.join()
 
     # Execute SMACH plan
-    outcome = sm.execute()
+    #outcome = sm.execute()
 
 
 if __name__ == '__main__':
