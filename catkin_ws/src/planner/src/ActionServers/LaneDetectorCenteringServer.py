@@ -1,32 +1,46 @@
 import rospy
 import actionlib
 import math
-from planner.msg import LaneDetectorCenteringFeedback, LaneDetectorCenteringResult
+from std_msgs.msg import Bool, Float64
+from cv.msg import CvTarget
+from planner.msg import LaneDetectorCenteringAction
 
-class LaneDetectorCenteringAction():
-    feedback = LaneDetectorCenteringFeedback();
-    result = LaneDetectorCenteringResult();
+class LaneDetectorCenteringServer():
 
     def __init__(self):
+        # Define all of the publishers that we're going to need later on
+        # Publishers to PIDs (we need a different PID for every direction (x, y))
+        self.centroid_surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        self.centroid_surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        self.centroid_sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
+        self.centroid_sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
+        self.heading_lane_detector_yaw_enable_pub   = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
+        self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
 
-        self._action_name = 'LaneDetectorCenteringServer'
+        #Define the action server, and start iot
+        self._action_name = 'LDCentering'
         self._as = actionlib.SimpleActionServer(self._action_name, LaneDetectorCenteringAction,
                                                      execute_cb=self.execute_cb, auto_start = False)
         
-        self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
+        #self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
         self._as.start()
         
 
     def execute_cb(self, goal):
-        rospy.loginfo('Executing state LaneDetector')
+        rospy.loginfo('Executing Lane Detector Centering Server')
+
+        #Set a variable that will remain true unless the server is pre-empted
         success = True
+        
+        print(goal)
+        #Unpack the goal message into its components
         self.VIEWFRAME_CENTER_X = goal.image_center_point.x
         self.VIEWFRAME_CENTER_Y = goal.image_center_point.y
 
-        # Centering on the lane
+        # Set the setpoints for the surge and sway PIDs
         self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
         self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
-
+        #Then enable the pids!
         self.centroid_surge_pid_enable_pub.publish(True)
         self.centroid_sway_pid_enable_pub.publish(True)
 
@@ -64,5 +78,5 @@ class LaneDetectorCenteringAction():
 
 if __name__ == '__main__':
     rospy.init_node('LaneDetectorCenteringServer')
-    server = LaneDetectorCenteringAction()
+    server = LaneDetectorCenteringServer()
     rospy.spin()   

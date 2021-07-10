@@ -257,23 +257,7 @@ class LaneDetector(smach.State):
     
         self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
 
-    # def centroid_loc_cb(self, cvmsg):
-    #     point = cvmsg.gravity
-    #     #print('Reached callback')
-    #    center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
-    #     center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
-    #     self.distance_centroid_to_center = math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
-    #                                                 + center_x_dist_to_centroid * center_x_dist_to_centroid)
-
-    #     self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
-    #     self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
-    #     #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
-
-    #     if (self.distance_centroid_to_center < self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER):
-    #             self.current_stable_counts_centroid += 1
-    #     else:
-    #             self.current_stable_counts_centroid = 0
-    
+ 
     def heading_align_cb(self, angle_from_setpoint):
         if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
             #rospy.loginfo_throttle(1, 'Angle from alignment: {}'.format(angle_from_setpoint))
@@ -286,6 +270,7 @@ class LaneDetector(smach.State):
         client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
         client.wait_for_server()
         goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT);
+        print(goal)
         client.send_goal(goal)
         return client.get_result()
 
