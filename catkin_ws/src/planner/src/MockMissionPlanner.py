@@ -266,9 +266,8 @@ class LaneDetector(smach.State):
                 self.current_stable_counts_centroid = 0
     
     def heading_align_cb(self, angle_from_setpoint):
-        #print('Heading callback')
         if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
-            rospy.loginfo_throttle(1, 'Angle from alignment: {}'.format(angle_from_setpoint))
+            #rospy.loginfo_throttle(1, 'Angle from alignment: {}'.format(angle_from_setpoint))
             self.current_stable_counts_heading +=1
 
         else:
