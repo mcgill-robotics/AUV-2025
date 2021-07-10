@@ -1,11 +1,14 @@
 import rospy
 import smach
 import math
+import actionlib
 from cv.msg import CvTarget
 from std_msgs.msg import Bool, Float64
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
 from threading import Thread
+
+from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal
 
 # Navigation Target coordinates 
 # X     : DVL
@@ -207,6 +210,8 @@ class GridSearch(smach.State):
 
 # define state LaneDetector
 class LaneDetector(smach.State):
+
+
     def __init__(self):
         # 0) Assume we see a little bit of the lanes when we enter the state
         # 1) Move towards the centroid of the lane(s) detetected.
@@ -216,6 +221,7 @@ class LaneDetector(smach.State):
         # 3) Set the Yaw PID setpoint to 0 degrees with respect to the lane/new heading
         # 4) Enable the Yaw PID and wait until we reach a stable state
         # 5) Move on to next smach state which will be to surge forward
+    
         smach.State.__init__(self, outcomes=['AlignmentSuccess'])
 
         self.VIEWFRAME_PIXEL_WIDTH                         = 720 # testing
@@ -230,8 +236,11 @@ class LaneDetector(smach.State):
         self.current_stable_counts_centroid = 0
         self.current_stable_counts_heading  = 0
 
+        self.IMAGE_CENTER_POINT = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y);
 
-        self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
+        # self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
+
+        
 
         print('Passed first subscriber declaration')
         # Publishers of distance to target
@@ -248,22 +257,22 @@ class LaneDetector(smach.State):
     
         self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
 
-    def centroid_loc_cb(self, cvmsg):
-        point = cvmsg.gravity
-        #print('Reached callback')
-        center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
-        center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
-        self.distance_centroid_to_center = math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
-                                                    + center_x_dist_to_centroid * center_x_dist_to_centroid)
+    # def centroid_loc_cb(self, cvmsg):
+    #     point = cvmsg.gravity
+    #     #print('Reached callback')
+    #    center_y_dist_to_centroid = point.y - self.VIEWFRAME_CENTER_Y
+    #     center_x_dist_to_centroid = point.x - self.VIEWFRAME_CENTER_X
+    #     self.distance_centroid_to_center = math.sqrt(center_y_dist_to_centroid * center_y_dist_to_centroid\
+    #                                                 + center_x_dist_to_centroid * center_x_dist_to_centroid)
 
-        self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
-        self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
-        #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
+    #     self.centroid_delta_y_pub.publish(center_y_dist_to_centroid)
+    #     self.centroid_delta_x_pub.publish(center_x_dist_to_centroid)
+    #     #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
 
-        if (self.distance_centroid_to_center < self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER):
-                self.current_stable_counts_centroid += 1
-        else:
-                self.current_stable_counts_centroid = 0
+    #     if (self.distance_centroid_to_center < self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER):
+    #             self.current_stable_counts_centroid += 1
+    #     else:
+    #             self.current_stable_counts_centroid = 0
     
     def heading_align_cb(self, angle_from_setpoint):
         if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
@@ -272,24 +281,33 @@ class LaneDetector(smach.State):
 
         else:
             self.current_stable_counts_heading = 0
+            
+    def LaneDetectorCenteringClient(self):
+        client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
+        client.wait_for_server()
+        goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT);
+        client.send_goal(goal)
+        return client.get_result()
 
     def execute(self, userdata): 
-        rospy.loginfo('Executing state LaneDetector')
-        # Centering on the lane
-        self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
-        self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
+        # rospy.loginfo('Executing state LaneDetector')
+        # # Centering on the lane
+        # self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
+        # self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
 
-        self.centroid_surge_pid_enable_pub.publish(True)
-        self.centroid_sway_pid_enable_pub.publish(True)
+        # self.centroid_surge_pid_enable_pub.publish(True)
+        # self.centroid_sway_pid_enable_pub.publish(True)
 
-      
+        self.LaneDetectorCenteringClient()
 
-        while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
-            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
-            rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
-            pass
+        # while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
+        #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
+        #     rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
+        #     pass
 
         # Aligning to the lane heading
+
+
         self.heading_lane_detector_yaw_setpoint_pub.publish(0)
         self.heading_lane_detector_yaw_enable_pub.publish(True)
         self.current_stable_counts_centroid = 0 # Set current_count to 0
@@ -303,6 +321,8 @@ class LaneDetector(smach.State):
     
 
         return 'AlignmentSuccess'
+
+    
 
 class NavigateToBuoyTask(smach.State):
     def __init__(self):
