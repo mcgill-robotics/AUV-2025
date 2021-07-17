@@ -236,7 +236,7 @@ class LaneDetector(smach.State):
         self.current_stable_counts_centroid = 0
         self.current_stable_counts_heading  = 0
 
-        self.IMAGE_CENTER_POINT = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y);
+        self.IMAGE_CENTER_POINT = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y)
 
         # self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
 
@@ -269,9 +269,10 @@ class LaneDetector(smach.State):
     def LaneDetectorCenteringClient(self):
         client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
         client.wait_for_server()
-        goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT);
+        goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
         print(goal)
         client.send_goal(goal)
+        client.wait_for_result()
         return client.get_result()
 
     def execute(self, userdata): 
