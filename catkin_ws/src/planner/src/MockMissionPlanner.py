@@ -3,12 +3,12 @@ import smach
 import math
 import actionlib
 from cv.msg import CvTarget
-from std_msgs.msg import Bool, Float64
+from std_msgs.msg import Bool, Float64, Float32
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
 from threading import Thread
 
-from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal
+from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal,  LaneDetectorAlignmentAction, LaneDetectorAlignmentGoal
 
 # Navigation Target coordinates 
 # X     : DVL
@@ -230,6 +230,7 @@ class LaneDetector(smach.State):
         self.VIEWFRAME_CENTER_Y                            = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
         self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
         self.COUNTS_FOR_STABILITY                          = 30 # This should be higher, but we are testing...
+        self.TARGET_ANGLE = 0.0
         self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK          = 10 * math.pi / 180
 
         self.distance_centroid_to_center    = None
@@ -275,6 +276,18 @@ class LaneDetector(smach.State):
         client.wait_for_result()
         return client.get_result()
 
+    def LaneDetectorAlignmentClient(self):
+        client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
+        client.wait_for_server()
+        goal = LaneDetectorAlignmentGoal(image_angle_target = Float32(data= self.TARGET_ANGLE))
+        print(goal)
+        print("1")
+        client.send_goal(goal)
+        print("2")
+        client.wait_for_result()
+        print("3")
+        return client.get_result()
+
     def execute(self, userdata): 
         # rospy.loginfo('Executing state LaneDetector')
         # # Centering on the lane
@@ -284,7 +297,8 @@ class LaneDetector(smach.State):
         # self.centroid_surge_pid_enable_pub.publish(True)
         # self.centroid_sway_pid_enable_pub.publish(True)
 
-        self.LaneDetectorCenteringClient()
+        #self.LaneDetectorCenteringClient()
+        self.LaneDetectorAlignmentClient()
 
         # while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
         #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
@@ -294,16 +308,16 @@ class LaneDetector(smach.State):
         # Aligning to the lane heading
 
 
-        self.heading_lane_detector_yaw_setpoint_pub.publish(0)
-        self.heading_lane_detector_yaw_enable_pub.publish(True)
-        self.current_stable_counts_centroid = 0 # Set current_count to 0
+        # self.heading_lane_detector_yaw_setpoint_pub.publish(0)
+        # self.heading_lane_detector_yaw_enable_pub.publish(True)
+        # self.current_stable_counts_centroid = 0 # Set current_count to 0
         
-        while not (self.current_stable_counts_heading >= self.COUNTS_FOR_STABILITY):
-            remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_heading
-            rospy.loginfo_throttle(1, 'Aligning to new heading: Need {} more stable readings'.format(remaining_counts))
-            pass
+        # while not (self.current_stable_counts_heading >= self.COUNTS_FOR_STABILITY):
+        #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_heading
+        #     rospy.loginfo_throttle(1, 'Aligning to new heading: Need {} more stable readings'.format(remaining_counts))
+        #     pass
        
-        self.current_stable_counts_heading = 0 # Set current_count to 0
+        # self.current_stable_counts_heading = 0 # Set current_count to 0
     
 
         return 'AlignmentSuccess'
