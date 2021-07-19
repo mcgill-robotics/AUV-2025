@@ -3,7 +3,7 @@ import smach
 import math
 import actionlib
 from cv.msg import CvTarget
-from std_msgs.msg import Bool, Float64, Float32
+from std_msgs.msg import Bool, Float64
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
 from threading import Thread
@@ -243,20 +243,20 @@ class LaneDetector(smach.State):
 
         
 
-        print('Passed first subscriber declaration')
-        # Publishers of distance to target
-        self.centroid_delta_y_pub = rospy.Publisher('cv/down_cam_PIDy', Float64, queue_size = 1)
-        self.centroid_delta_x_pub = rospy.Publisher('cv/down_cam_PIDx', Float64, queue_size = 1)
+        # print('Passed first subscriber declaration')
+        # # Publishers of distance to target
+        # self.centroid_delta_y_pub = rospy.Publisher('cv/down_cam_PIDy', Float64, queue_size = 1)
+        # self.centroid_delta_x_pub = rospy.Publisher('cv/down_cam_PIDx', Float64, queue_size = 1)
 
-        # Publishers to PIDs (we need a different PID for every direction (x, y))
-        self.centroid_surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
-        self.centroid_surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
-        self.centroid_sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
-        self.centroid_sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
-        self.heading_lane_detector_yaw_enable_pub   = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
-        self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
+        # # Publishers to PIDs (we need a different PID for every direction (x, y))
+        # self.centroid_surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        # self.centroid_surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        # self.centroid_sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
+        # self.centroid_sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
+        # self.heading_lane_detector_yaw_enable_pub   = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
+        # self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
     
-        self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
+        # self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
 
  
     def heading_align_cb(self, angle_from_setpoint):
@@ -273,13 +273,15 @@ class LaneDetector(smach.State):
         goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
         print(goal)
         client.send_goal(goal)
+        print("1")
         client.wait_for_result()
+        print("2")
         return client.get_result()
 
     def LaneDetectorAlignmentClient(self):
         client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
         client.wait_for_server()
-        goal = LaneDetectorAlignmentGoal(image_angle_target = Float32(data= self.TARGET_ANGLE))
+        goal = LaneDetectorAlignmentGoal(image_angle_target = Float64(data= self.TARGET_ANGLE))
         print(goal)
         print("1")
         client.send_goal(goal)
@@ -297,7 +299,7 @@ class LaneDetector(smach.State):
         # self.centroid_surge_pid_enable_pub.publish(True)
         # self.centroid_sway_pid_enable_pub.publish(True)
 
-        #self.LaneDetectorCenteringClient()
+        self.LaneDetectorCenteringClient()
         self.LaneDetectorAlignmentClient()
 
         # while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
@@ -323,7 +325,6 @@ class LaneDetector(smach.State):
         return 'AlignmentSuccess'
 
     
-
 class NavigateToBuoyTask(smach.State):
     def __init__(self):
         # 0) Assume we are aligned with the lane right below us. The front camera should be able to see the buoy since it is white and big.
@@ -427,10 +428,6 @@ class NavigateToBuoyTask(smach.State):
                 remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
                 rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
                 self.distance_to_buoy_pid_enable_pub.publish(False)
-            
-        
-        
-
 
 
 class NavitageToSurfacingTask(smach.State):
