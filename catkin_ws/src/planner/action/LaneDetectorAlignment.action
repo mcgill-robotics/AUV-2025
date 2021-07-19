@@ -1,5 +1,5 @@
 # Define the goal
-std_msgs/Float32 image_angle_target
+std_msgs/Float64 image_angle_target
 ---
 # Define the result
 std_msgs/Float32 current_angle
