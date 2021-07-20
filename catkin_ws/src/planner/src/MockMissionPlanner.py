@@ -103,6 +103,7 @@ class GateState(smach.State):
                     self.done_surging = True
                     return 'gatePassed'
 
+
 class GridSearch(smach.State):
     def __init__(self):
         # This Executes a raster scan to search for something, probably a lane
@@ -208,9 +209,7 @@ class GridSearch(smach.State):
             return 'notSeeingLane'
 
 
-# define state LaneDetector
 class LaneDetector(smach.State):
-
 
     def __init__(self):
         # 0) Assume we see a little bit of the lanes when we enter the state
@@ -222,118 +221,88 @@ class LaneDetector(smach.State):
         # 4) Enable the Yaw PID and wait until we reach a stable state
         # 5) Move on to next smach state which will be to surge forward
     
+        # Initialize class as state
         smach.State.__init__(self, outcomes=['AlignmentSuccess'])
 
-        self.VIEWFRAME_PIXEL_WIDTH                         = 720 # testing
-        self.VIEWFRAME_PIXEL_HEIGHT                        = 420 # testing
-        self.VIEWFRAME_CENTER_X                            = self.VIEWFRAME_PIXEL_WIDTH / 2.0
-        self.VIEWFRAME_CENTER_Y                            = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
-        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
-        self.COUNTS_FOR_STABILITY                          = 30 # This should be higher, but we are testing...
-        self.TARGET_ANGLE = 0.0
-        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK          = 10 * math.pi / 180
+        # Global constants (maybe this should be a constant even outside of the class)
+        self.COUNTS_FOR_STABILITY                           = 30 # This can still change, we are testing...
 
-        self.distance_centroid_to_center    = None
-        self.current_stable_counts_centroid = 0
-        self.current_stable_counts_heading  = 0
+        # Centering constants
+        self.VIEWFRAME_PIXEL_WIDTH                          = 720 # testing # in pixels
+        self.VIEWFRAME_PIXEL_HEIGHT                         = 420 # testing # in pixels
+        self.VIEWFRAME_CENTER_X                             = self.VIEWFRAME_PIXEL_WIDTH / 2.0
+        self.VIEWFRAME_CENTER_Y                             = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
+        self.IMAGE_CENTER_POINT                             = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y)
+        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER  = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
 
-        self.IMAGE_CENTER_POINT = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y)
+        # Alignment constants
+        self.TARGET_ANGLE                                   = 0.0
+        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK           = 10 * math.pi / 180
 
-        # self.centroid_sub = rospy.Subscriber('cv/down_cam_target_centroid', CvTarget, self.centroid_loc_cb)
 
-        
-
-        # print('Passed first subscriber declaration')
-        # # Publishers of distance to target
-        # self.centroid_delta_y_pub = rospy.Publisher('cv/down_cam_PIDy', Float64, queue_size = 1)
-        # self.centroid_delta_x_pub = rospy.Publisher('cv/down_cam_PIDx', Float64, queue_size = 1)
-
-        # # Publishers to PIDs (we need a different PID for every direction (x, y))
-        # self.centroid_surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
-        # self.centroid_surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
-        # self.centroid_sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
-        # self.centroid_sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
-        # self.heading_lane_detector_yaw_enable_pub   = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
-        # self.heading_lane_detector_yaw_setpoint_pub = rospy.Publisher('/lane_yaw_pid/setpoint', Float64, queue_size = 1)
-    
-        # self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough', Float64, self.heading_align_cb)
-
- 
-    def heading_align_cb(self, angle_from_setpoint):
-        if(abs(angle_from_setpoint.data) < self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK):
-            #rospy.loginfo_throttle(1, 'Angle from alignment: {}'.format(angle_from_setpoint))
-            self.current_stable_counts_heading +=1
-
-        else:
-            self.current_stable_counts_heading = 0
-            
     def LaneDetectorCenteringClient(self):
+
         print("Starting centering client")
+        
         print("Creating client...")
         client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
+        
         print("Client created, waiting for server...")
         client.wait_for_server()
+        
         print("Found server, creating goal...")
         goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
+        
         print("Goal created, sending goal...")
         print(goal)
         client.send_goal(goal)
+        
         print("Goal sent, waiting for result...")
         client.wait_for_result()
+        
         print("Result received")
         print(client.get_result())
+        
         return client.get_result()
+
 
     def LaneDetectorAlignmentClient(self):
+        
         print("Starting alignment client")
+        
         print("Creating client...")
         client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
+        
         print("Client created, waiting for server...")
         client.wait_for_server()
+        
         print("Found server, creating goal...")
         goal = LaneDetectorAlignmentGoal(image_angle_target = Float64(data= self.TARGET_ANGLE))
+        
         print("Goal created, sending goal...")
         print(goal)
         client.send_goal(goal)
+        
         print("Goal sent, waiting for result...")
         client.wait_for_result()
+        
         print("Result received")
         print(client.get_result())
+        
         return client.get_result()
 
-    def execute(self, userdata): 
-        # rospy.loginfo('Executing state LaneDetector')
-        # # Centering on the lane
-        # self.centroid_surge_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_Y)
-        # self.centroid_sway_pid_setpoint_pub.publish(self.VIEWFRAME_CENTER_X)
 
-        # self.centroid_surge_pid_enable_pub.publish(True)
-        # self.centroid_sway_pid_enable_pub.publish(True)
+    def execute(self, userdata):
+
+        # rospy.loginfo('Executing state LaneDetector')
 
         self.LaneDetectorCenteringClient()
         print("Exited centering ActionServer")
+
         self.LaneDetectorAlignmentClient()
         print("Exited centering ActionServer")
 
-        # while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
-        #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid
-        #     rospy.loginfo_throttle(1, 'Moving towards centroid: Need {} more stable readings'.format(remaining_counts))
-        #     pass
-
-        # Aligning to the lane heading
-
-
-        # self.heading_lane_detector_yaw_setpoint_pub.publish(0)
-        # self.heading_lane_detector_yaw_enable_pub.publish(True)
-        # self.current_stable_counts_centroid = 0 # Set current_count to 0
-        
-        # while not (self.current_stable_counts_heading >= self.COUNTS_FOR_STABILITY):
-        #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_heading
-        #     rospy.loginfo_throttle(1, 'Aligning to new heading: Need {} more stable readings'.format(remaining_counts))
-        #     pass
-       
-        # self.current_stable_counts_heading = 0 # Set current_count to 0
-    
+        # We should probably add timeout and logic handling "failure"    
 
         return 'AlignmentSuccess'
 
