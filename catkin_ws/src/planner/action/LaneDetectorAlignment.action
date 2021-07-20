@@ -2,7 +2,7 @@
 std_msgs/Float64 image_angle_target
 ---
 # Define the result
-std_msgs/Float32 current_angle
+std_msgs/Float64 current_angle
 ---
 # Define a feedback message
 int32 stable_count_angle_remaining

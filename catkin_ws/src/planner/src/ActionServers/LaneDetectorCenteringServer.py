@@ -79,7 +79,10 @@ class LaneDetectorCenteringServer():
             rospy.loginfo('%s: Succeeded' % self._action_name)
             self._as.set_succeeded(result = LaneDetectorCenteringResult(Point(x=0, y=0))) # This is awful and hardcoded, please do what you want with it
 
+        return
+
     def centroid_loc_cb(self, cvmsg):
+        
         point = cvmsg.gravity
         #print('Reached callback')
         y_dist_to_center = point.y - self.VIEWFRAME_CENTER_Y
@@ -95,6 +98,8 @@ class LaneDetectorCenteringServer():
                 self.current_stable_counts += 1
         else:
                 self.current_stable_counts = 0
+
+        return
 
 if __name__ == '__main__':
     rospy.init_node('LaneDetectorCenteringServer')
