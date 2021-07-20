@@ -268,26 +268,37 @@ class LaneDetector(smach.State):
             self.current_stable_counts_heading = 0
             
     def LaneDetectorCenteringClient(self):
+        print("Starting centering client")
+        print("Creating client...")
         client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
+        print("Client created, waiting for server...")
         client.wait_for_server()
+        print("Found server, creating goal...")
         goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
+        print("Goal created, sending goal...")
         print(goal)
         client.send_goal(goal)
-        print("1")
+        print("Goal sent, waiting for result...")
         client.wait_for_result()
-        print("2")
+        print("Result received")
+        print(client.get_result())
         return client.get_result()
 
     def LaneDetectorAlignmentClient(self):
+        print("Starting alignment client")
+        print("Creating client...")
         client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
+        print("Client created, waiting for server...")
         client.wait_for_server()
+        print("Found server, creating goal...")
         goal = LaneDetectorAlignmentGoal(image_angle_target = Float64(data= self.TARGET_ANGLE))
+        print("Goal created, sending goal...")
         print(goal)
-        print("1")
         client.send_goal(goal)
-        print("2")
+        print("Goal sent, waiting for result...")
         client.wait_for_result()
-        print("3")
+        print("Result received")
+        print(client.get_result())
         return client.get_result()
 
     def execute(self, userdata): 
@@ -300,7 +311,9 @@ class LaneDetector(smach.State):
         # self.centroid_sway_pid_enable_pub.publish(True)
 
         self.LaneDetectorCenteringClient()
+        print("Exited centering ActionServer")
         self.LaneDetectorAlignmentClient()
+        print("Exited centering ActionServer")
 
         # while not (self.current_stable_counts_centroid >= self.COUNTS_FOR_STABILITY):
         #     remaining_counts = self.COUNTS_FOR_STABILITY - self.current_stable_counts_centroid

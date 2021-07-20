@@ -19,7 +19,7 @@ class LaneDetectorAlignmentServer():
 
         # self.down_cam_heading_Hough = rospy.Subscriber('/cv/down_cam_heading_Hough',
             # Float64, self.heading_align_cb) -> subscriber set in execute_cb() because only want it
-            # to start after self.TARGET_ANGLE is set
+            # to start after self.TARGET_ANGLE is set. Only used for stable counts
 
         # Enabling PID
         self.yaw_pid_enable_pub     = rospy.Publisher('/lane_yaw_pid/enable', Bool, queue_size = 1)
@@ -68,9 +68,11 @@ class LaneDetectorAlignmentServer():
             self._as.publish_feedback(LaneDetectorAlignmentFeedback(stable_count_angle_remaining = remaining_counts))
 
         if success:
-            
+
             rospy.loginfo('%s: Succeeded' % self._action_name)
-            self._as.set_succeeded(result = LaneDetectorAlignmentResult(0.0)) # This is awful and hardcoded, please do what you want with it
+            self._as.set_succeeded(result = LaneDetectorAlignmentResult(Float64(0.0))) # This is awful and hardcoded, please do what you want with it
+
+        return
 
     def heading_align_cb(self, cvmsg):
 
@@ -80,7 +82,8 @@ class LaneDetectorAlignmentServer():
                 self.current_stable_counts += 1
         else:
                 self.current_stable_counts = 0
-
+        
+        return
 
 if __name__ == '__main__':
     rospy.init_node('LaneDetectorAlignmentServer')
