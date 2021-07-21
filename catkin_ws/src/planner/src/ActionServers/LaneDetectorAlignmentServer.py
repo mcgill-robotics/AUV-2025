@@ -83,6 +83,10 @@ class LaneDetectorAlignmentServer():
         else:
                 self.current_stable_counts = 0
         
+        # We should turn off PID no matter if we succeed or not
+        print("Turning off yaw PID")
+        self.yaw_pid_enable_pub.publish(False)
+
         return
 
 if __name__ == '__main__':

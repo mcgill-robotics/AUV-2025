@@ -18,30 +18,29 @@ from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal, 
 # Yaw   : IMU
 # Pitch : IMU
 
-#
-# define state GateState
+# Global variables
+Global COUNTS_FOR_STABILITY = 2
 
 
 class GateState(smach.State):
-    '''
-    The gate state : ded reckoning
-    0) Read the depth 
-    1) Submerge to a known depth
-    2) Check for stability at this depth
-    3) surge forward for an empircally determined amount of time. (yikes.)
-    4) Transitions to the next state
+    # The gate state : ded reckoning
+    # 0) Read the depth 
+    # 1) Submerge to a known depth
+    # 2) Check for stability at this depth
+    # 3) surge forward for an empircally determined amount of time. (yikes.)
+    # 4) Transitions to the next state
 
-    '''
     def __init__(self):
-        #Define the state transitions!
+
+        # Initialize class as state and define transitions
         smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
 
         #Define parameters and variables
-        self.DEPTH_SETPOINT      = 2.5 # units of meters
+        self.DEPTH_SETPOINT      = 2.5 # meters
         self.DEPTH_THRESHOLD     = 0.2 # meters
-        self.STABLE_COUNTS       = 1
+        # self.STABLE_COUNTS       = 1 TODO remove?
         self.SURGE_MAGNITUDE     = 1   # one day I'll know what these units are. Start small and increment in pool testing.
-        self.SURGE_DURATION      = 10  # units of seconds
+        self.SURGE_DURATION      = 10  # seconds
 
         self.current_count       = 0   # the counter variable to determine if we are stable at the setpoint.
         self.stable_at_depth     = False
@@ -221,86 +220,62 @@ class LaneDetector(smach.State):
         # 4) Enable the Yaw PID and wait until we reach a stable state
         # 5) Move on to next smach state which will be to surge forward
     
-        # Initialize class as state
+        # Initialize class as state and define transitions
         smach.State.__init__(self, outcomes=['AlignmentSuccess'])
 
         # Global constants (maybe this should be a constant even outside of the class)
         self.COUNTS_FOR_STABILITY                           = 30 # This can still change, we are testing...
 
         # Centering constants
-        self.VIEWFRAME_PIXEL_WIDTH                          = 720 # testing # in pixels
-        self.VIEWFRAME_PIXEL_HEIGHT                         = 420 # testing # in pixels
+        self.VIEWFRAME_PIXEL_WIDTH                          = 720 # testing # pixels
+        self.VIEWFRAME_PIXEL_HEIGHT                         = 420 # testing # pixels
         self.VIEWFRAME_CENTER_X                             = self.VIEWFRAME_PIXEL_WIDTH / 2.0
         self.VIEWFRAME_CENTER_Y                             = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
         self.IMAGE_CENTER_POINT                             = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y)
-        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER  = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # in pixels
+        self.VIEWFRAME_CENTROID_RADIAL_THRESHOLD_TO_CENTER  = 0.3 * self.VIEWFRAME_PIXEL_HEIGHT # pixels
 
         # Alignment constants
         self.TARGET_ANGLE                                   = 0.0
-        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK           = 10 * math.pi / 180
-
-
-    def LaneDetectorCenteringClient(self):
-
-        print("Starting centering client")
-        
-        print("Creating client...")
-        client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
-        
-        print("Client created, waiting for server...")
-        client.wait_for_server()
-        
-        print("Found server, creating goal...")
-        goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
-        
-        print("Goal created, sending goal...")
-        print(goal)
-        client.send_goal(goal)
-        
-        print("Goal sent, waiting for result...")
-        client.wait_for_result()
-        
-        print("Result received")
-        print(client.get_result())
-        
-        return client.get_result()
-
-
-    def LaneDetectorAlignmentClient(self):
-        
-        print("Starting alignment client")
-        
-        print("Creating client...")
-        client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
-        
-        print("Client created, waiting for server...")
-        client.wait_for_server()
-        
-        print("Found server, creating goal...")
-        goal = LaneDetectorAlignmentGoal(image_angle_target = Float64(data= self.TARGET_ANGLE))
-        
-        print("Goal created, sending goal...")
-        print(goal)
-        client.send_goal(goal)
-        
-        print("Goal sent, waiting for result...")
-        client.wait_for_result()
-        
-        print("Result received")
-        print(client.get_result())
-        
-        return client.get_result()
+        self.YAW_ALIGNMENT_THRESHOLD_TO_NEXT_TASK           = 10 * 3.14 / 180
 
 
     def execute(self, userdata):
 
         # rospy.loginfo('Executing state LaneDetector')
 
-        self.LaneDetectorCenteringClient()
-        print("Exited centering ActionServer")
+        # Centering ActionServer
+        print("Starting centering client")
+        print("Creating client...")
+        client = actionlib.SimpleActionClient('LDCentering', LaneDetectorCenteringAction)
+        print("Client created, waiting for server...")
+        client.wait_for_server()
+        print("Found server, creating goal...")
+        goal = LaneDetectorCenteringGoal(image_center_point = self.IMAGE_CENTER_POINT)
+        print("Goal created, sending goal...")
+        print(goal)
+        client.send_goal(goal)
+        print("Goal sent, waiting for result...")
+        client.wait_for_result()
+        print("Result received")
+        print(client.get_result())
+        print("Stop centering ActionServer")
 
-        self.LaneDetectorAlignmentClient()
-        print("Exited centering ActionServer")
+        # Alignment ActionServer
+        print("Starting alignment client")
+        print("Creating client...")
+        client = actionlib.SimpleActionClient('LDAlignment', LaneDetectorAlignmentAction)
+        print("Client created, waiting for server...")
+        client.wait_for_server()
+        print("Found server, creating goal...")
+        goal = LaneDetectorAlignmentGoal(image_angle_target = Float64(data= self.TARGET_ANGLE))
+        print("Goal created, sending goal...")
+        print(goal)
+        client.send_goal(goal)
+        print("Goal sent, waiting for result...")
+        client.wait_for_result()
+        print("Result received")
+        print(client.get_result())
+        print("Stop centering ActionServer")
 
         # We should probably add timeout and logic handling "failure"    
 

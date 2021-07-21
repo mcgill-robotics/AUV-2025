@@ -79,6 +79,11 @@ class LaneDetectorCenteringServer():
             rospy.loginfo('%s: Succeeded' % self._action_name)
             self._as.set_succeeded(result = LaneDetectorCenteringResult(Point(x=0, y=0))) # This is awful and hardcoded, please do what you want with it
 
+        # We should turn off PIDs no matter if we succeed or not
+        print("Turning off surge and sway PIDs")
+        self.surge_pid_enable_pub.publish(False)
+        self.sway_pid_enable_pub.publish(False)
+
         return
 
     def centroid_loc_cb(self, cvmsg):
