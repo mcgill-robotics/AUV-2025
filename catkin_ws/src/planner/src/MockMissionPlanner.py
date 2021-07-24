@@ -1,9 +1,11 @@
 import rospy
+import roslaunch
 import smach
 import math
 import actionlib
+import time
 from cv.msg import CvTarget
-from std_msgs.msg import Bool, Float64
+from std_msgs.msg import Bool, Float64, Float32MultiArray
 from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
 from threading import Thread
@@ -19,7 +21,7 @@ from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal, 
 # Pitch : IMU
 
 # Global variables
-Global COUNTS_FOR_STABILITY = 2
+#Global COUNTS_FOR_STABILITY = 2
 
 
 class GateState(smach.State):
@@ -387,6 +389,95 @@ class NavigateToBuoyTask(smach.State):
                 self.distance_to_buoy_pid_enable_pub.publish(False)
 
 
+class TouchBuoyTask(smach.State):
+    '''
+    This state assumes that we have already navigated to the BUOY, and it is centered 
+    in the viewframe. 
+    The 'lateral' (heave and sway) PIDs from the previous state will still be running, such that the
+    buoy will be maintined in the center of the viewframe. 
+
+    This state is responsible for
+        1. launching the KNN detector from the cv package
+        2. Listening to the output topics of this package to await image detections
+        3. Upon recognition of the target, surging to touch it
+        4. Transitioning into the next task ('navigate to the surface') 
+    
+    This state is making some...potentially nasty assumptions. THe one that I am worried about is
+       1. If the "wrong" image is on the BUOY, we will need to wait untill the buoy rotates. 
+          Its not clear to me that just leaving the PIDS on will robustly handle this . We'll see in pool testing 
+    
+    The syntax for launching the launch file comes from
+    http://wiki.ros.org/roslaunch/API%20Usage 
+
+    '''
+    def __init__(self):
+        #Define the smach transitions that are possible
+        smach.State.__init__(self, outcomes=['TouchedTheBuoy'])
+
+        self.SURGE_TIME       = 10    # Units of seconds
+        self.SURGE_STRENGTH   = 1     # A small number, to be changed during pool testing
+        self.initial_time     = None  # To be overwritten when the target is recognized for the first time
+        self.target_acquired  = False # To know if we need to start the timer!
+        self.finished_surging = False
+
+        self.knn_sub               = rospy.Subscriber('/objects', Float32MultiArray, self.knn_cb)
+        self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
+        
+    def knn_cb(self):
+        '''
+        WE shouuuuuuld already have the buoy in the center of the viewframe due to the
+        Colour thresholding PIDs. all we need to do is surge.
+        As of now, this does NOT wait for several consecutive counts, and surges immediately 
+        upon recognizing a target.
+        '''
+        if not self.target_aquired: 
+            self.initial_time = time.time()
+            self.surge_toward_target()
+            self.target_aquired = True
+        if self.target_acuired == True:
+            # The surge function hangs, and does all the surging! 
+            # If we're already surging, we just want this to do nothing!
+            return
+
+    def surge_toward_target(self):
+        while time.time()- self.initial_time < self.SURGE_TIME : 
+            self.surge_magnitude_pub(self.SURGE_STRENGTH)
+        self.finished_surging = True
+        return
+
+
+    def execute(self, userdata):
+        # Launch the knn Detector Launch file
+        # This wild magic is from the link in the comment above
+
+        rospy.init_node('knn_launcher_en_Mapping', anonymous=True)
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        knn_launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/haier/catkin_ws/src/testapi/launch/test_node.launch"])
+        knn_launch.start()
+        rospy.loginfo("knn launcher started")
+        
+        '''
+        package = 'cv'
+        executable = 'knnDetector'
+        node = roslaunch.core.Node(package, executable)
+
+        launch = roslaunch.scriptapi.ROSLaunch()
+        launch.start()
+
+        knnDetector_process = launch.launch(node)
+        print(knnDetector_process.is_alive())
+        '''
+        #Wait untill surging is finished
+        while not self.finished_surging:
+            #do nothing! Wait for the KNN detector to publish something on the /objects topic!
+            pass
+        
+        #knnDetector_process.stop()
+        knn_launch.shutdown()
+        return 'TouchedTheBuoy'
+        
+
 class NavitageToSurfacingTask(smach.State):
 
     def __init__(self):
@@ -525,12 +616,17 @@ def main():
         smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
                                 transitions={'missionSucceeded':'missionSucceeded'})
         '''
+        smach.StateMachine.add('TouchBuoyTask',TouchBuoyTask(),
+                                transitions={'TouchedTheBuoy':'missionSucceeded'})
+                                #In competition this will transision into NavigateToSurfacingTask
 
+        '''
         smach.StateMachine.add('LaneDetectorForBuoy',LaneDetector(),
                                 transitions={'AlignmentSuccess':'NavigateToBuoyTask'})
 
         smach.StateMachine.add('NavigateToBuoyTask',NavigateToBuoyTask(),
                                 transitions={'BuoyReached':'missionSucceeded'})
+        '''
 
     # In order to get smach to respond to ctrl+c we run it in a different
     # thread and request a preempt on ctrl+c.
