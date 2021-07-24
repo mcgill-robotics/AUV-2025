@@ -414,8 +414,8 @@ class TouchBuoyTask(smach.State):
         #Define the smach transitions that are possible
         smach.State.__init__(self, outcomes=['TouchedTheBuoy'])
 
-        self.SURGE_TIME       = 10    # Units of seconds
-        self.SURGE_STRENGTH   = 1     # A small number, to be changed during pool testing
+        self.SURGE_TIME       = 2    # Units of seconds
+        self.SURGE_STRENGTH   = 2     # A small number, to be changed during pool testing
         self.initial_time     = None  # To be overwritten when the target is recognized for the first time
         self.target_acquired  = False # To know if we need to start the timer!
         self.finished_surging = False
@@ -423,25 +423,29 @@ class TouchBuoyTask(smach.State):
         self.knn_sub               = rospy.Subscriber('/objects', Float32MultiArray, self.knn_cb)
         self.surge_magnitude_pub   = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
         
-    def knn_cb(self):
+    def knn_cb(self, objectArray):
         '''
         WE shouuuuuuld already have the buoy in the center of the viewframe due to the
         Colour thresholding PIDs. all we need to do is surge.
         As of now, this does NOT wait for several consecutive counts, and surges immediately 
         upon recognizing a target.
         '''
-        if not self.target_aquired: 
-            self.initial_time = time.time()
-            self.surge_toward_target()
-            self.target_aquired = True
-        if self.target_acuired == True:
-            # The surge function hangs, and does all the surging! 
-            # If we're already surging, we just want this to do nothing!
-            return
+        print('Data on topic : {}'.format(objectArray))
+        #Only do something if the data on the topic isn't empty
+        if len(objectArray.data)> 0:
+            if not self.target_acquired: 
+                self.initial_time = time.time()
+                self.surge_toward_target()
+                self.target_acquired = True
+            if self.target_acquired == True:
+                # The surge function hangs, and does all the surging! 
+                # If we're already surging, we just want this to do nothing!
+                return
 
     def surge_toward_target(self):
         while time.time()- self.initial_time < self.SURGE_TIME : 
-            self.surge_magnitude_pub(self.SURGE_STRENGTH)
+            self.surge_magnitude_pub.publish(self.SURGE_STRENGTH)
+            rospy.sleep(0.1)
         self.finished_surging = True
         return
 
@@ -450,24 +454,13 @@ class TouchBuoyTask(smach.State):
         # Launch the knn Detector Launch file
         # This wild magic is from the link in the comment above
 
-        rospy.init_node('knn_launcher_en_Mapping', anonymous=True)
+        #rospy.init_node('en_Mapping', anonymous=True)
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        knn_launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/haier/catkin_ws/src/testapi/launch/test_node.launch"])
+        knn_launch = roslaunch.parent.ROSLaunchParent(uuid, 
+                    ["/home/tommy/robotics/AUV-2020/catkin_ws/src/cv/launch/knnDetector.launch"])
         knn_launch.start()
         rospy.loginfo("knn launcher started")
-        
-        '''
-        package = 'cv'
-        executable = 'knnDetector'
-        node = roslaunch.core.Node(package, executable)
-
-        launch = roslaunch.scriptapi.ROSLaunch()
-        launch.start()
-
-        knnDetector_process = launch.launch(node)
-        print(knnDetector_process.is_alive())
-        '''
         #Wait untill surging is finished
         while not self.finished_surging:
             #do nothing! Wait for the KNN detector to publish something on the /objects topic!
@@ -628,6 +621,12 @@ def main():
                                 transitions={'BuoyReached':'missionSucceeded'})
         '''
 
+
+    '''
+    # This threading syntax is from the old repository, and I'm not sure 
+    # Where it came from originally. The threading is causing an error when trying to 
+    # Call launch files, I'm removing it for now.
+
     # In order to get smach to respond to ctrl+c we run it in a different
     # thread and request a preempt on ctrl+c.
     smach_thread = Thread(target=lambda: sm.execute())
@@ -639,10 +638,10 @@ def main():
     rospy.on_shutdown(sm.request_preempt)
     rospy.spin()
     smach_thread.join()
-
+    '''
+    
     # Execute SMACH plan
-    #outcome = sm.execute()
-
+    outcome = sm.execute()
 
 if __name__ == '__main__':
     main()
