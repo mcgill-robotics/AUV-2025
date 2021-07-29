@@ -1,10 +1,10 @@
 import rospy
 import actionlib
-import math
+
 from std_msgs.msg import Bool, Float64
+from geometry_msgs.msg import Point
 from cv.msg import CvTarget
 from planner.msg import LaneDetectorAlignmentAction, LaneDetectorAlignmentFeedback, LaneDetectorAlignmentResult
-from geometry_msgs.msg import Point
 
 class LaneDetectorAlignmentServer():
 

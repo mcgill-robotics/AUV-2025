@@ -1,10 +1,11 @@
 import rospy
 import actionlib
 import math
+
 from std_msgs.msg import Bool, Float64
+from geometry_msgs.msg import Point
 from cv.msg import CvTarget
 from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringFeedback, LaneDetectorCenteringResult
-from geometry_msgs.msg import Point
 
 class LaneDetectorCenteringServer():
 
@@ -19,26 +20,47 @@ class LaneDetectorCenteringServer():
         # Data variables
         self.current_stable_counts  = 0
 
-        # Define all of the publishers that we're going to need later on
         # Publishers to PIDs (we need a different PID for every direction (x, y))
 
-        # Enabling PIDs
-        self.surge_pid_enable_pub          = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
-        self.sway_pid_enable_pub           = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
-        # Setpoints for PIDs
-        self.surge_pid_setpoint_pub        = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
-        self.sway_pid_setpoint_pub         = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
-        # Publishing "data" to PIDs
-        self.delta_y_pub = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
-        self.delta_x_pub = rospy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
+        # Surge PID
+        self.surge_pid_enable_pub    = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        self.surge_pid_setpoint_pub  = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        self.delta_y_pub             = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
+        # delta_y is "data" for surge PID
 
-       
+        # Sway PID
+        self.sway_pid_enable_pub     = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
+        self.sway_pid_setpoint_pub   = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
+        self.delta_x_pub             = rospy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
+        # delta_x is "data" for sway PID
 
         # Define the action server, and start it
         self._action_name = 'LDCentering'
         self._as = actionlib.SimpleActionServer(self._action_name, LaneDetectorCenteringAction,
                                                      execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
+
+
+    def centroid_loc_cb(self, cvmsg):
+        
+        point = cvmsg.gravity
+        #print('Reached callback')
+        y_dist_to_center = point.y - self.VIEWFRAME_CENTER_Y
+        x_dist_to_center = point.x - self.VIEWFRAME_CENTER_X
+        self.distance_centroid_to_center = math.sqrt(y_dist_to_center * y_dist_to_center
+                                                    + x_dist_to_center * x_dist_to_center)
+
+        self.delta_y_pub.publish(y_dist_to_center)
+        self.delta_x_pub.publish(x_dist_to_center)
+        #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
+
+        if (self.distance_centroid_to_center < self.RADIAL_THRESHOLD):
+                self.current_stable_counts += 1
+        else:
+                self.current_stable_counts = 0
+
+        return
+
 
     def execute_cb(self, goal):
         rospy.loginfo('Executing Lane Detector Centering Server')
@@ -86,25 +108,6 @@ class LaneDetectorCenteringServer():
 
         return
 
-    def centroid_loc_cb(self, cvmsg):
-        
-        point = cvmsg.gravity
-        #print('Reached callback')
-        y_dist_to_center = point.y - self.VIEWFRAME_CENTER_Y
-        x_dist_to_center = point.x - self.VIEWFRAME_CENTER_X
-        self.distance_centroid_to_center = math.sqrt(y_dist_to_center * y_dist_to_center
-                                                    + x_dist_to_center * x_dist_to_center)
-
-        self.delta_y_pub.publish(y_dist_to_center)
-        self.delta_x_pub.publish(x_dist_to_center)
-        #print('Centroid distance from center: {}'.format(self.distance_centroid_to_center))
-
-        if (self.distance_centroid_to_center < self.RADIAL_THRESHOLD):
-                self.current_stable_counts += 1
-        else:
-                self.current_stable_counts = 0
-
-        return
 
 if __name__ == '__main__':
     rospy.init_node('LaneDetectorCenteringServer')

@@ -2,7 +2,9 @@ import rospy
 import smach
 import actionlib # No ActionServer implemented yet, we might want TODO this eventually
 import time
+
 from blinky.msg import TaskStatus # Blinky commented out for now TODO
+from std_msgs.msg import Bool, Float64
 
 class GateTask(smach.State):
     # The gate state : ded reckoning
@@ -37,9 +39,10 @@ class GateTask(smach.State):
         # Depth subscriber
         self.depth_sub            = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
 
-        # Depth PID publisher
+        # Depth PID publishers
         self.depth_enable_pub     = rospy.Publisher('/controls/depth_pid/pid_enable' , Bool    , queue_size=1)
         self.depth_setpoint_pub   = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
+        # Depth PID gets "data" from depth sensor, no need to publish from here
 
         # Surge publisher
         self.surge_magnitude_pub  = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
