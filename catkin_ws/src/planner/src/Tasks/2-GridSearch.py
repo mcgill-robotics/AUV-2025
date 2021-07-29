@@ -2,6 +2,9 @@ import rospy
 import smach
 import actionlib # No ActionServer implemented yet, we might want TODO this eventually
 
+from std_msgs.msg import Bool, Float64
+from geometry_msgs.msg import Vector3Stamped
+
 '''
 !!! This task needs work !!!
 '''
@@ -47,11 +50,12 @@ class GridSearch(smach.State):
         # IMU subscriber
         self.current_pose_sub     = rospy.Subscriber('/robot_state', Vector3Stamped, self.IMU_cb)
 
-        # Yaw PID publisher
+        # Yaw PID publishers
         self.yaw_enable_pub       = rospy.Publisher('/controls/yaw_pid/pid_enable', Bool   , queue_size=1)
         self.yaw_setpoint_pub     = rospy.Publisher('/controls/yaw_pid/setpoint'  , Float64, queue_size=1)
+        # Yaw PID gets "data" from IMU, no need to pulish from here
 
-        # Surge publisher
+        # Surge publisher - publishes magnitude at which we want to surge
         self.surge_magnitude_pub  = rospy.Publisher('/controls/superimposer/surge', Float64, queue_size=1)
 
 

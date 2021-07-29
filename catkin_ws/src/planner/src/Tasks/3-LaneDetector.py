@@ -1,4 +1,11 @@
+import rospy
+import smach
+import actionlib
 
+from std_msgs.msg import Bool, Float64
+from geometry_msgs.msg import Point
+from cv.msg import CvTarget
+from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal,  LaneDetectorAlignmentAction, LaneDetectorAlignmentGoal
 
 class LaneDetector(smach.State):
     # 0) Assume we see a little bit of the lanes when we enter the state
@@ -19,8 +26,8 @@ class LaneDetector(smach.State):
         self.COUNTS_FOR_STABILITY                           = 30 # This can still change, we are testing...
 
         # Centering constants
-        self.VIEWFRAME_PIXEL_WIDTH                          = 720 # testing # pixels
-        self.VIEWFRAME_PIXEL_HEIGHT                         = 420 # testing # pixels
+        self.VIEWFRAME_PIXEL_WIDTH                          = 720 # TODO testing # pixels
+        self.VIEWFRAME_PIXEL_HEIGHT                         = 420 # TODO testing # pixels
         self.VIEWFRAME_CENTER_X                             = self.VIEWFRAME_PIXEL_WIDTH / 2.0
         self.VIEWFRAME_CENTER_Y                             = self.VIEWFRAME_PIXEL_HEIGHT / 2.0
         self.IMAGE_CENTER_POINT                             = Point(x = self.VIEWFRAME_CENTER_X, y = self.VIEWFRAME_CENTER_Y)
