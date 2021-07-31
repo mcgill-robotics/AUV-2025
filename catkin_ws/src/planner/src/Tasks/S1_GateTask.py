@@ -20,7 +20,7 @@ class GateTask(smach.State):
         smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
 
         # Abstract constants
-        self.COUNTS_FOR_STABILITY  = 1
+        self.COUNTS_FOR_STABILITY  = 2
 
         # Depth constants
         self.DEPTH_SETPOINT        = 2.5 # meters
@@ -71,7 +71,7 @@ class GateTask(smach.State):
         else:
             self.stable_counts   = 0
 
-        if self.stable_counts > self.COUNTS_FOR_STABILITY : # We are at depth! 
+        if self.stable_counts >= self.COUNTS_FOR_STABILITY : # We are at depth! 
             self.stable_at_depth = True   # I am assuming this never needs to be set false. Danger danger. TODO
 
 
