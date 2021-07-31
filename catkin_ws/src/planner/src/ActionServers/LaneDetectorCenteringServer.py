@@ -22,17 +22,17 @@ class LaneDetectorCenteringServer():
 
         # Publishers to PIDs (we need a different PID for every direction (x, y))
 
-        # Surge PID
-        self.surge_pid_enable_pub    = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
-        self.surge_pid_setpoint_pub  = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
-        self.delta_y_pub             = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
-        # delta_y is "data" for surge PID
-
         # Sway PID
         self.sway_pid_enable_pub     = rospy.Publisher('/centroid_x_pid/enable', Bool, queue_size = 1)
         self.sway_pid_setpoint_pub   = rospy.Publisher('/centroid_x_pid/setpoint', Float64, queue_size = 1)
         self.delta_x_pub             = rospy.Publisher('/lane_detector/centroid_delta_x', Float64, queue_size = 1)
-        # delta_x is "data" for sway PID
+        # delta_x is "state data" for sway PID
+
+        # Surge PID
+        self.surge_pid_enable_pub    = rospy.Publisher('/centroid_y_pid/enable', Bool, queue_size = 1)
+        self.surge_pid_setpoint_pub  = rospy.Publisher('/centroid_y_pid/setpoint', Float64, queue_size = 1)
+        self.delta_y_pub             = rospy.Publisher('/lane_detector/centroid_delta_y', Float64, queue_size = 1)
+        # delta_y is "state data" for surge PID
 
         # Define the action server, and start it
         self._action_name = 'LDCentering'
