@@ -1,0 +1,11 @@
+<launch>
+    <arg name="thrusters_port" default="/dev/thrusters" />
+    <arg name="depth_port" default="/dev/depth" />
+
+    <node pkg="rosserial_python" type="serial_node.py"
+        name="electrical_interface" args="$(arg thrusters_port)"  output="screen"
+        respawn="true" respawn_delay="5" />
+    <node pkg="rosserial_python" type="serial_node.py" name="depth_sensor"
+        args="$(arg depth_port)" output="screen" respawn="true"
+        respawn_delay="5" />
+</launch>
