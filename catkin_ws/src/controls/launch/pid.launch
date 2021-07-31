@@ -1,0 +1,156 @@
+<launch>
+
+	<!--HEAVE-->
+	<node name="controller" pkg="pid" type="controller" ns="depth_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/heave" />
+	  	<param name="topic_from_plant" value="/state_estimation/depth" />
+	</node>
+
+
+	<!--SURGE-->
+	<node name="controller" pkg="pid" type="controller" ns="depth_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/surge" />
+	  	<param name="topic_from_plant" value="/state_estimation/depth" />
+	</node>
+
+
+	<!--SWAY-->
+	<node name="controller" pkg="pid" type="controller" ns="depth_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/sway" />
+	  	<param name="topic_from_plant" value="/state_estimation/depth" />
+	</node>
+
+
+	
+	<!--PITCH-->
+	<node name="controller" pkg="pid" type="controller" ns="pitch_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--IMPORTANT: This allows the pid to wrap values (i.e on [+pi,-pi])-->
+	    <param name="angle_error" value="true" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="5.0" />
+	    <param name="Ki" value="0.5" />
+	    <param name="Kd" value="0.1" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="10" />
+	    <param name="lower_limit" value="-10" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/pitch" />
+	  	<param name="topic_from_plant" value="/state_estimation/pitch" />
+	</node>
+	
+	
+	<!--ROLL-->
+	<node name="controller" pkg="pid" type="controller" ns="roll_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--IMPORTANT: This allows the pid to wrap values (i.e on [+pi,-pi])-->
+	    <param name="angle_error" value="true" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="5.0" />
+	    <param name="Ki" value="0.5" />
+	    <param name="Kd" value="0.1" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="10" />
+	    <param name="lower_limit" value="-10" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/roll" />
+	  	<param name="topic_from_plant" value="/state_estimation/roll" />
+	</node>
+
+
+	<!--YAW-->
+	<node name="controller" pkg="pid" type="controller" ns="yaw_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--IMPORTANT: This allows the pid to wrap values (i.e on [+pi,-pi])-->
+	    <param name="angle_error" value="true" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="5.0" />
+	    <param name="Ki" value="0.5" />
+	    <param name="Kd" value="0.1" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="10" />
+	    <param name="lower_limit" value="-10" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/yaw" />
+	  	<param name="topic_from_plant" value="/state_estimation/yaw" />
+	</node>
+
+</launch>

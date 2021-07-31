@@ -1,0 +1,15 @@
+<launch>
+    <arg name="joy_dev" default="/dev/input/js0"/>
+    <!-- Teleop node with custom config file. -->
+    <include file="$(find teleop_twist_joy)/launch/teleop.launch">
+        <arg name="config_filepath" value="$(find controls)/config/joystick.config.yaml" />
+        <arg name="joy_config" value="atk3" />
+        <arg name="joy_dev" value="$(arg joy_dev)" />
+    </include>
+    <!-- Joystick node. -->
+    <node name="joystick" pkg="controls" type="joystick" respawn="false" output="screen"/>
+    <!-- Thrust mapper. -->
+    <node name="thrust_mapper" pkg="controls" type="thrust_mapper" respawn="false" output="screen">
+      <remap from="thrust_cmds" to="electrical_interface/motor"/>
+    </node>
+</launch>

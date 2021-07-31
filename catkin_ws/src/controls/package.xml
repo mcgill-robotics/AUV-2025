@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>controls</name>
+  <version>2.0.0</version>
+  <description>The controls package</description>
+
+  <maintainer email="jeremy.mallette@mail.mcgill.ca">Jeremy</maintainer>
+  <author>Justin Bell</author>
+
+  <!-- <url type="website">TODO</url> -->
+
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>auv_msgs</depend>
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>genmsg</depend>
+  <depend>geometry_msgs</depend>
+  <depend>pid</depend>
+  <depend>python-numpy</depend>
+  <depend>python-rospkg</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+  <depend>teleop_twist_joy</depend>
+
+  <exec_depend>cv</exec_depend>
+  <exec_depend>message_generation</exec_depend>
+
+  <!-- <test_depend>gtestM/test_depend> -->
+  <!-- <doc_depend>doxygen</doc_depend> -->
+
+</package>
