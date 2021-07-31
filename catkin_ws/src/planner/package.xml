@@ -14,7 +14,10 @@
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>TODO</license>
-
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
@@ -50,12 +53,12 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
+  <!-- <build_depend>actionlib_msgs</build_depend> -->
   <build_export_depend>rospy</build_export_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>message_generation</exec_depend>
-  <exec_depend>actionlib_msgs</exec_depend>
+  <!-- <exec_depend>actionlib_msgs</exec_depend> -->
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
