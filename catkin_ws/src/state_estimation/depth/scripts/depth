@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Depth sensor filter."""
+
+import tf
+import rospy
+import numpy as np
+from std_msgs.msg import Float32, Float64
+
+__author__ = "Anass Al-Wohoush"
+
+# Constants.
+MBAR_AT_SURFACE = 1013.25  # 1 atm.
+METERS_PER_MBAR = 0.0101974428892
+
+# Filter window.
+window = []
+window_size = None
+
+# Depth offset in meters.
+depth_offset = None
+
+def mbar_to_depth(pressure):
+    """Converts millibars of pressure to depth in meters.
+
+    Args:
+        pressure: Barometric pressure in mbar.
+
+    Returns:
+        Depth of water in meters.
+    """
+    return ((pressure - MBAR_AT_SURFACE) * METERS_PER_MBAR + depth_offset) / 10.0
+
+
+def get_mean_depth(current_depth):
+    """Gets the mean depth from the past window.
+
+    Args:
+        current_depth: Latest depth reading in meters.
+
+    Returns:
+        Median depth in meters.
+    """
+    # Remove oldest if full.
+    while len(window) >= window_size:
+        window.pop(0)
+
+    # Add latest reading.
+    window.append(current_depth)
+
+    return np.median(window)
+
+
+def update_parameters():
+    """Updates ROS parameters."""
+    # Update depth offset.
+    global depth_offset, window
+    previous_depth_offset = depth_offset
+    depth_offset = float(rospy.get_param("~offset"))
+    if depth_offset != previous_depth_offset:
+        window = []  # Reset window: previous values are no longer valid.
+        rospy.loginfo("Using a depth offset of %f m", depth_offset)
+
+    # Update window size.
+    global window_size
+    previous_window_size = window_size
+    window_size = max(1, int(rospy.get_param("~window")))
+    if window_size != previous_window_size:
+        rospy.loginfo("Using a window size of %d", window_size)
+
+
+def pressure_callback(msg):
+    """Callback for barometric pressure readings.
+
+    Args:
+        msg: Float32 of barometric pressure data.
+    """
+    # Update ROS parameters.
+    update_parameters()
+
+    # Publish raw depth.
+    raw_depth = mbar_to_depth(msg.data)
+    raw_pub.publish(raw_depth)
+
+    # Publish filtered depth.
+    filtered_depth = get_mean_depth(raw_depth)
+    filtered_pub.publish(filtered_depth)
+
+if __name__ == "__main__":
+    rospy.init_node("depth")
+    raw_pub = rospy.Publisher(
+        "/state_estimation/raw_depth",
+        Float64, queue_size=10)
+    filtered_pub = rospy.Publisher(
+        "/state_estimation/depth",
+        Float64, queue_size=10)
+    rospy.Subscriber(
+        "/depth_sensor/pressure",
+        Float32, pressure_callback)
+    rospy.spin()
