@@ -19,7 +19,7 @@ from Tasks.S1_GateTask            import GateTask
 from Tasks.S2_GridSearch          import GridSearch
 from Tasks.S3_LaneDetector        import LaneDetector
 from Tasks.S4_NavigateToBuoy      import NavigateToBuoy
-from Tasks.S5_TouchBuoy           import TouchBuoy
+from Tasks.S5_TouchBuoyTask       import TouchBuoy
 from Tasks.S6_NavigateToSurfacing import NavigateToSurfacing
 
 # Navigation Target coordinates 
@@ -57,7 +57,7 @@ def planner_all_tasks():
         # 13) JOLLY GOOD
         
         # Gate task. Transitions Directly to pinger task...for now.
-        smach.StateMachine.add('GateState', GateState(), 
+        smach.StateMachine.add('GateState', GateTask(), 
                                 transitions={'gatePassed':'NavitageToSurfacingTask',
                                             'gateMissed':'missionFailed'})
         
@@ -65,17 +65,17 @@ def planner_all_tasks():
                                 transitions={'missionSucceeded':'missionSucceeded'})
 
         # The surface task. Finishes up the mission.
-        smach.StateMachine.add('NavitageToSurfacingTask', NavitageToSurfacingTask(), 
+        smach.StateMachine.add('NavitageToSurfacingTask', NavigateToSurfacing(), 
                                 transitions={'missionSucceeded':'missionSucceeded'})
         
-        smach.StateMachine.add('TouchBuoyTask',TouchBuoyTask(),
+        smach.StateMachine.add('TouchBuoyTask',TouchBuoy(),
                                 transitions={'TouchedTheBuoy':'missionSucceeded'})
                                 #In competition this will transision into NavigateToSurfacingTask
 
         smach.StateMachine.add('LaneDetectorForBuoy',LaneDetector(),
                                 transitions={'AlignmentSuccess':'NavigateToBuoyTask'})
 
-        smach.StateMachine.add('NavigateToBuoyTask',NavigateToBuoyTask(),
+        smach.StateMachine.add('NavigateToBuoyTask',NavigateToBuoy(),
                                 transitions={'BuoyReached':'missionSucceeded'})
 
 

@@ -4,7 +4,7 @@ import actionlib # No ActionServer implemented yet, we might want TODO this even
 
 from std_msgs.msg import Bool, Float64
 
-class NavitageToSurfacing(smach.State):
+class NavigateToSurfacing(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['missionSucceeded'])
