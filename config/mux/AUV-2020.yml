@@ -1,31 +1,30 @@
-# ~/.tmuxinator/auv.yml
+#! ~/.tmuxinator/AUV-2020.yml
 
 name: MAIN
-root: /home/robotics/AUV-2020
+root: /home/osboxes/Robotics/AUV-2020
 
 pre: export SHELL=/bin/zsh && export PATH=/usr/local/sbin/:/usr/local/bin/:/usr/sbin:${PATH}:/sbin:/usr/games:/usr/local/games
 
 windows:
-    - core:
-        layout: main-vertical
-        panes:
-          - roscore
-          - roslaunch state_estimation state_estimation.launch --wait
-          - roslaunch controls controls.launch --wait
-    - serial:
-        layout: tiled
-        panes:
-          - roslaunch arduino teensy.launch --wait
-          - roslaunch hydrophones hydrophones.launch --wait
-    - cameras:
-        panes:
-          - roslaunch auv_base camera_front.launch --wait
-          - roslaunch auv_base camera_down.launch --wait
-    - status:
-        panes:
-          - roslaunch status status.launch --wait --screen
-          - rosrun status auto_shutdown
-    - planner:
-        panes:
-          - roslaunch planner planner.launch --wait
-          - roslaunch taskr taskr.launch --wait
+  - core:
+      panes:
+        - roscore
+  - state estimation:
+      layout: tiled
+      panes:
+        - roslaunch state_estimation state_estimation.launch
+        - roslaunch arduino arduino.launch
+  - controls:
+      panes:
+        - roslaunch controls controls.launch
+  - cameras:
+      panes:
+        - roslaunch cv camera_all.launch
+  - hydrophones & nucleo:
+      layout: tiled
+      panes:
+        - roslaunch hydrophones hydrophones.launch
+        - roslaunch nucleo nucleo.launch
+  - mission planner:
+      panes:
+        - roslaunch planner planner.launch
