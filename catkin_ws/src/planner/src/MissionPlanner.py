@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 import roslaunch
 import smach
