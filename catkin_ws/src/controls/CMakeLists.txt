@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(controls)
 
 find_package(catkin REQUIRED COMPONENTS
-  auv_msgs
+  message_generation
   actionlib
   actionlib_msgs
   genmsg
@@ -15,15 +15,18 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-# generate_messages(DEPENDENCIES
+add_message_files(
+  FILES
+  ThrusterCommands.msg
+)
+generate_messages(DEPENDENCIES
 #     geometry_msgs
-#     std_msgs
+     std_msgs
 #     actionlib_msgs
-# )
+ )
 
 catkin_package(
   CATKIN_DEPENDS
-  auv_msgs
   actionlib
   actionlib_msgs
   genmsg
@@ -37,4 +40,3 @@ catkin_package(
 # catkin_install_python(PROGRAMS none
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-add_subdirectory(test)

@@ -2,7 +2,7 @@
 #define MAIN_H
 #include <Arduino.h>
 #include <Servo.h>
-#include <auv_msgs/ThrusterCommands.h>
+#include <controls/ThrusterCommands.h>
 #include <avr/wdt.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
