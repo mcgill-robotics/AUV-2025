@@ -37,6 +37,10 @@ catkin_package(
   teleop_twist_joy
 )
 
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
 # catkin_install_python(PROGRAMS none
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
