@@ -13,7 +13,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>auv_msgs</depend>
   <depend>actionlib</depend>
   <depend>actionlib_msgs</depend>
   <depend>genmsg</depend>
@@ -26,7 +25,6 @@
   <depend>tf</depend>
   <depend>teleop_twist_joy</depend>
 
-  <exec_depend>cv</exec_depend>
   <exec_depend>message_generation</exec_depend>
 
   <!-- <test_depend>gtestM/test_depend> -->
