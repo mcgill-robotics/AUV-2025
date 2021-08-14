@@ -9,8 +9,6 @@ class GateDepthServer():
 
     def __init__(self):
 
-        print("Hello")
-
         # Constants
         self.COUNTS_FOR_STABILITY   = 2 # This should be higher, but we are testing...
         self.TARGET_DEPTH           = 0 # meters
@@ -19,6 +17,7 @@ class GateDepthServer():
         # Data variables
         self.stable_counts          = 0
         self.stable_at_depth        = False
+        self.current_depth          = 0
 
         # Depth subscriber
         self.depth_sub              = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
@@ -28,16 +27,12 @@ class GateDepthServer():
         self.depth_pid_setpoint_pub     = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
         # Depth PID gets "data" from depth sensor, no need to publish from here
 
-        print("Hello 2")
-
         # Define the action server, and start it
-        self._action_name = 'GateDepth'
+        self._action_name = 'Depth'
         self._as = actionlib.SimpleActionServer(self._action_name, DepthAction,
                                                      execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
-
-        print("Hello 3")
-
+        
 
     def depth_cb(self, depth_msg):
         
