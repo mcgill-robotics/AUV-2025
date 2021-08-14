@@ -5,6 +5,7 @@ import time
 
 from blinky.msg import TaskStatus # Blinky commented out for now TODO
 from std_msgs.msg import Bool, Float64
+from planner.msg import DepthAction, DepthGoal, DepthResult
 
 class GateTask(smach.State):
     # The gate state : ded reckoning
@@ -94,27 +95,28 @@ class GateTask(smach.State):
         print(client.get_result())
         print("Stop centering ActionServer")
 
+        print("Task succeeded")
+        return
 
+        # rospy.loginfo('Inside Gate State')
 
-        rospy.loginfo('Inside Gate State')
+        # # Check if we are stable at the setpoint? 
+        # while (not self.done_surging): # Loop inside here untill we are ready to move to the next state
+        #     #print out the number of counts we are waiting for
+        #     self.remaining_counts = self.COUNTS_FOR_STABILITY - self.stable_counts
+        #     if self.remaining_counts > 0 :
+        #         rospy.loginfo_throttle(1, 'Attaining Depth: Need {} more stable readings'.format(self.remaining_counts))      
 
-        # Check if we are stable at the setpoint? 
-        while (not self.done_surging): # Loop inside here untill we are ready to move to the next state
-            #print out the number of counts we are waiting for
-            self.remaining_counts = self.COUNTS_FOR_STABILITY - self.stable_counts
-            if self.remaining_counts > 0 :
-                rospy.loginfo_throttle(1, 'Attaining Depth: Need {} more stable readings'.format(self.remaining_counts))      
-
-            if self.stable_at_depth == True:
-                #Get the timestamp of the first moment the robot is at depth
-                if self.depth_achieved_time is None: 
-                    self.depth_achieved_time = rospy.get_time()
-                # Surge for a known duration, then exit the state
-                self.time_remaining = self.SURGE_DURATION - (rospy.get_time() - self.depth_achieved_time)
-                if (self.time_remaining > 0):
-                    self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE)
-                    rospy.loginfo_throttle(1, 'Surging: Time left is {} seconds'.format(self.time_remaining))
-                else:
-                    self.surge_magnitude_pub.publish(0)
-                    self.done_surging = True
-                    return 'gatePassed'
+        #     if self.stable_at_depth == True:
+        #         #Get the timestamp of the first moment the robot is at depth
+        #         if self.depth_achieved_time is None: 
+        #             self.depth_achieved_time = rospy.get_time()
+        #         # Surge for a known duration, then exit the state
+        #         self.time_remaining = self.SURGE_DURATION - (rospy.get_time() - self.depth_achieved_time)
+        #         if (self.time_remaining > 0):
+        #             self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE)
+        #             rospy.loginfo_throttle(1, 'Surging: Time left is {} seconds'.format(self.time_remaining))
+        #         else:
+        #             self.surge_magnitude_pub.publish(0)
+        #             self.done_surging = True
+        #             return 'gatePassed'
