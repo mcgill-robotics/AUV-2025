@@ -45,7 +45,7 @@ generate_messages(
   #actionlib_msgs
   geometry_msgs
   std_msgs
-  sensor_msgs
+  #sensor_msgs
 )
 
 generate_dynamic_reconfigure_options(
