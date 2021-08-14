@@ -67,6 +67,7 @@ add_action_files(
   FILES
   LaneDetectorCentering.action
   LaneDetectorAlignment.action
+  Depth.action
 )
 
 ## Generate added messages and services with any dependencies listed here

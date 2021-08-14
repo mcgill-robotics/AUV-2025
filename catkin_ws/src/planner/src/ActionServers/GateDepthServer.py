@@ -3,11 +3,13 @@ import actionlib
 import math
 
 from std_msgs.msg import Float64, Bool
-from planner.msg import GateDepthAction, GateDepthFeedback, GateDepthResult
+from planner.msg import DepthAction, DepthFeedback, DepthResult
 
 class GateDepthServer():
 
     def __init__(self):
+
+        print("Hello")
 
         # Constants
         self.COUNTS_FOR_STABILITY   = 2 # This should be higher, but we are testing...
@@ -26,11 +28,15 @@ class GateDepthServer():
         self.depth_pid_setpoint_pub     = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
         # Depth PID gets "data" from depth sensor, no need to publish from here
 
+        print("Hello 2")
+
         # Define the action server, and start it
         self._action_name = 'GateDepth'
-        self._as = actionlib.SimpleActionServer(self._action_name, GateDepthAction,
+        self._as = actionlib.SimpleActionServer(self._action_name, DepthAction,
                                                      execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
+
+        print("Hello 3")
 
 
     def depth_cb(self, depth_msg):
@@ -78,7 +84,7 @@ class GateDepthServer():
 
         if success:
             rospy.loginfo('%s: Succeeded' % self._action_name)
-            self._as.set_succeeded(result = GateResult(current_depth = Float64(self.current_depth)))
+            self._as.set_succeeded(result = DepthResult(current_depth = Float64(self.current_depth)))
 
         # We should turn off PIDs no matter if we succeed or not
         print("Turning off heave PID")
