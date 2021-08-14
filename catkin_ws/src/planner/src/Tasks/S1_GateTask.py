@@ -95,8 +95,9 @@ class GateTask(smach.State):
         print(client.get_result())
         print("Stop centering ActionServer")
 
-        print("Task succeeded")
-        return
+        print("Successfully reached depth")
+
+        return 'gatePassed'# TODO Still need to implement the surging ActionServer
 
         # rospy.loginfo('Inside Gate State')
 
