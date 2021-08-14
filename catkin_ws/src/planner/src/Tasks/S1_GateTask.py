@@ -77,6 +77,25 @@ class GateTask(smach.State):
 
     def execute(self, userdata):
 
+        # Depth Action
+        print("Starting depth client")
+        print("Creating client...")
+        client = actionlib.SimpleActionClient('Depth', DepthAction)
+        print("Client created, waiting for server...")
+        client.wait_for_server()
+        print("Found server, creating goal...")
+        goal = DepthGoal(depth_target = Float64(self.DEPTH_SETPOINT))
+        print("Goal created, sending goal...")
+        print(goal)
+        client.send_goal(goal)
+        print("Goal sent, waiting for result...")
+        client.wait_for_result()
+        print("Result received")
+        print(client.get_result())
+        print("Stop centering ActionServer")
+
+
+
         rospy.loginfo('Inside Gate State')
 
         # Check if we are stable at the setpoint? 
