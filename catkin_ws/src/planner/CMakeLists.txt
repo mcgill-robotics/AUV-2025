@@ -68,6 +68,7 @@ add_action_files(
   LaneDetectorCentering.action
   LaneDetectorAlignment.action
   Depth.action
+  GatePassThrough.action
 )
 
 ## Generate added messages and services with any dependencies listed here

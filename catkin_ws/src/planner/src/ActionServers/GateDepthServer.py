@@ -11,6 +11,8 @@ class GateDepthServer():
 
         # Constants
         self.COUNTS_FOR_STABILITY   = 2 # This should be higher, but we are testing...
+
+        # Constants from goal
         self.TARGET_DEPTH           = 0 # meters
         self.DEPTH_THRESHOLD        = 0 # meters
 
@@ -23,8 +25,8 @@ class GateDepthServer():
         self.depth_sub              = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
 
         # Depth PID publishers
-        self.depth_pid_enable_pub       = rospy.Publisher('/controls/depth_pid/pid_enable' , Bool    , queue_size=1)
-        self.depth_pid_setpoint_pub     = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
+        self.depth_pid_enable_pub   = rospy.Publisher('/controls/depth_pid/pid_enable' , Bool    , queue_size=1)
+        self.depth_pid_setpoint_pub = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
         # Depth PID gets "data" from depth sensor, no need to publish from here
 
         # Define the action server, and start it
@@ -47,11 +49,12 @@ class GateDepthServer():
 
 
     def execute_cb(self, goal):
-        rospy.loginfo('Achieveing depth')
+        rospy.loginfo('Achieving depth')
 
         # Set a variable that will remain true unless the server is pre-empted
         success = True
         
+        print("Goal:")
         print(goal)
 
         # Unpack the goal message into its components
