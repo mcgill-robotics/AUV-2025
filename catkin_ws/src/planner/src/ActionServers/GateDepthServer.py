@@ -83,10 +83,10 @@ class GateDepthServer():
         if success:
             rospy.loginfo('%s: Succeeded' % self._action_name)
             self._as.set_succeeded(result = DepthResult(current_depth = Float64(self.current_depth)))
-
-        # We should turn off PIDs no matter if we succeed or not
-        print("Turning off heave PID")
-        self.depth_pid_enable_pub.publish(False)
+        else:
+            # We should turn off PIDs only if we do not succeed (PID will keep running in the background and we can publish new setpoints as we please)
+            print("Did not reach depth, turning off heave PID")
+            self.depth_pid_enable_pub.publish(False)
 
         return
 
