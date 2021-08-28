@@ -20,7 +20,7 @@ class LaneDetector(smach.State):
     def __init__(self):
     
         # Initialize class as state and define transitions
-        smach.State.__init__(self, outcomes=['AlignmentSuccess'])
+        smach.State.__init__(self, outcomes=['alignmentSuccess', 'alignmentFailure', 'laneDetectorPreempted'])
 
         # Abstract constants
         self.COUNTS_FOR_STABILITY                           = 30 # This can still change, we are testing...

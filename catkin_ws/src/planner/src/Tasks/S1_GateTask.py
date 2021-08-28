@@ -17,7 +17,7 @@ class GateTask(smach.State):
     def __init__(self):
 
         # Initialize class as state and define transitions
-        smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
+        smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed', 'gatePreempted'])
 
         # Abstract constants
         self.COUNTS_FOR_STABILITY  = 2
@@ -81,6 +81,10 @@ class GateTask(smach.State):
 
         # Check if we are stable at the setpoint? 
         while (not self.done_surging): # Loop inside here untill we are ready to move to the next state
+
+            if self.preempt_requested():
+                return 'gatePreempted'
+
             #print out the number of counts we are waiting for
             self.remaining_counts = self.COUNTS_FOR_STABILITY - self.stable_counts
             if self.remaining_counts > 0 :

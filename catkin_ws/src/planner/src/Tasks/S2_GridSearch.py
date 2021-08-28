@@ -26,7 +26,7 @@ class GridSearch(smach.State):
     def __init__(self):
 
         # Initialize class as state and define transitions
-        smach.State.__init__(self, outcomes=['missionSucceeded'])
+        smach.State.__init__(self, outcomes=['laneFound', 'laneNotFound', 'gridSearchPreempted'])
 
         # Abstract constants
         self.COUNTS_FOR_STABILITY      = 1
@@ -117,7 +117,7 @@ class GridSearch(smach.State):
         self.turn_90_degrees('left')
     
         self.move_forward()
-        return 'missionSucceeded'
+        return 'foundLane'
     
 
         if seeingLane: # !!! this condition is not defined
