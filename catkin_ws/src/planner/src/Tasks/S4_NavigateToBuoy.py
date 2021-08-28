@@ -18,7 +18,7 @@ class NavigateToBuoy(smach.State):
     def __init__(self):
 
         # Initialize class as state and define transitions
-        smach.State.__init__(self, outcomes=['BuoyReached'])
+        smach.State.__init__(self, outcomes=['buoyReached', 'buoyLost', 'navigateToBuoyPreempted'])
 
         # Abstract constants
         self.COUNTS_FOR_STABILITY = 2
