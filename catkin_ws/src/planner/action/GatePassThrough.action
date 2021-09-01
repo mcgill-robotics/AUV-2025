@@ -1,0 +1,10 @@
+# Define the goal
+std_msgs/Bool search_for_gate
+std_msgs/Float64 surge_magnitude
+std_msgs/Int32 surge_time
+---
+# Define the result
+std_msgs/Float64 distance_traveled
+---
+# Define a feedback message
+std_msgs/String current_action # Either: "Looking for gate..." OR "Surging for x more seconds..."

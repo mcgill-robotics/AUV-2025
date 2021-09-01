@@ -12,6 +12,7 @@ from blinky.msg import TaskStatus
 from geometry_msgs.msg import Vector3Stamped, Point
 from threading import Thread
 from planner.msg import LaneDetectorCenteringAction, LaneDetectorCenteringGoal,  LaneDetectorAlignmentAction, LaneDetectorAlignmentGoal
+from planner.msg import DepthAction, DepthGoal
 
 '''
 I think we should put 2-3 and 4-5 in the same file because they belong to thew same task
@@ -120,6 +121,6 @@ def planner_gate():
 
 if __name__ == '__main__':
 
-    planner_all_tasks()
-    # planner_gate()
+    # planner_all_tasks()
+    planner_gate()
     # ...
