@@ -1,0 +1,2 @@
+uint8 minValue
+uint8 maxValue
