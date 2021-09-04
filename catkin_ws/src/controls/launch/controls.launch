@@ -1,7 +1,7 @@
 <launch>
     <!-- Effort Controllers -->
     <node name="controls" pkg="controls" type="superimposer.py" respawn="false" output="screen">
-        <param name="thrust_decay" value="1.0" />
+        <param name="thrust_decay" value="0.99" />
     </node>
 
     <node name="thrust_mapper" pkg="controls" type="thrust_mapper.py" respawn="false" output="screen">
