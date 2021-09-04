@@ -25,8 +25,8 @@ const uint8_t thruster_pins[THRUSTER_COUNT] = {A3, A2, A0, A1, 3, 2, 4, 5};
 int16_t last_thruster_commands[THRUSTER_COUNT] = {0};
 Servo thrusters[THRUSTER_COUNT];
 
-void thrustersCallback(const auv_msgs::ThrusterCommands& msg);
-ros::Subscriber<auv_msgs::ThrusterCommands> thrusters_sub("~thrusters",
+void thrustersCallback(const controls::ThrusterCommands& msg);
+ros::Subscriber<controls::ThrusterCommands> thrusters_sub("~thrusters",
                                                           &thrustersCallback);
 
 unsigned long vacuum_reset_schedule = 0;

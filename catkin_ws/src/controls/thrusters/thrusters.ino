@@ -14,7 +14,7 @@ int thrusterSlopeCheck(int last_input, int new_input) {
   return output;
 }
 
-void thrustersCallback(const auv_msgs::ThrusterCommands& msg) {
+void thrustersCallback(const controls::ThrusterCommands& msg) {
   if (mission_enabled) {
     thrusters_reset_schedule = millis() + THRUSTER_TIMEOUT;
 
