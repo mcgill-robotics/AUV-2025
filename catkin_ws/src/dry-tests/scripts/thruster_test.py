@@ -10,7 +10,7 @@ confirm functionality.
 import rospy
 from rospy import Publisher
 
-from ...controls.msg import ThrusterCommands
+from controls.msg import ThrusterCommands
 from console_format import format
 
 
@@ -50,7 +50,7 @@ class ThrusterTest:
 
         rate = rospy.Rate(self.freq)
 
-        for i in range(0, len(self.thrusters)):
+        for i in range(len(self.thrusters)):
             answer = 'n'
             is_working = False
 
