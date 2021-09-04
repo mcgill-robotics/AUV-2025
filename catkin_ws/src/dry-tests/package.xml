@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tools</name>
+  <version>0.0.0</version>
+  <description>The AUV Tools Package</description>
+
+  <maintainer email="jeremy.mallette@mail.mcgill.ca">Jeremy</maintainer>
+
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>auv_msgs</depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>controls</depend>
+
+  <!--   <test_depend>gtest</test_depend> -->
+  <!--   <doc_depend>doxygen</doc_depend> -->
+
+</package>
