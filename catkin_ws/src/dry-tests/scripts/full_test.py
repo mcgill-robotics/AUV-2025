@@ -22,7 +22,8 @@ if __name__ == "__main__":
           '\n>>>>>>>>>>>> Starting Drytest' + format.ENDC)
 
     print(format.RED + format.BOLD +
-          '\n  #########################\n'
+          '\n'
+          '  #########################\n'
           '  ##                     ##\n'
           '  ## ' + format.WHITE + '  McGill Robotics  ' + format.RED + ' ##\n'
           '  ## ' + format.WHITE + '    AUV Drytest    ' + format.RED + ' ##\n'
