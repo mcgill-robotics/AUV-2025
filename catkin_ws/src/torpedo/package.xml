@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>torpedo</name>
+  <version>0.1.0</version>
+  <description>Firmware running on the microcontroller onboard the torpedo</description>
+  <author email="vasily.fedotov@mail.mcgill.ca">Vasily Fedotov</author>
+  <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
+  <license>TODO</license>
+  <url type="repository">https://github.com/mcgill-robotics/AUV-2020</url>
+
+  <build_depend>arduino-core</build_depend>
+</package>
