@@ -14,7 +14,7 @@ add_definitions(-DUSB_CON)
 
 # See https://github.com/queezythegreat/arduino-cmake for documentation
 generate_arduino_firmware(${PROJECT_NAME}
-  SKETCH thrusters.ino
+  SKETCH thrusters
 
   # this is needed for node_handle
   # avoids error: undefined reference to `ros::normalizeSecNSec(unsigned long&, unsigned long&)'
