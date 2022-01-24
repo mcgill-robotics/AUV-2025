@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 ) 
 
 add_message_files(FILES
-	ThrusterCommands.msg
+	ThrusterCommand.msg
 )
 
 generate_messages(DEPENDENCIES

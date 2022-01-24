@@ -9,4 +9,4 @@ uint8 HEAVE_STERN_STAR=6
 uint8 HEAVE_STERN_PORT=7
 
 # Thruster command array
-uint16[8] thruster_commands
+uint16[8] command

@@ -1,46 +1,59 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(controls)
+project(propulsion)
+
+# set of packages whose message types are used
+set(MSG_DEP_SET propulsion_msgs) # no dependencies
 
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
-  actionlib
-  actionlib_msgs
-  genmsg
-  geometry_msgs
-  rospy
-  std_msgs
-  tf
-  teleop_twist_joy
+	# ${MSG_DEP_SET}
+	propulsion_msgs
+	message_generation
+	roscpp
+	# rospy
+	rosserial_arduino
+	rosserial_client
 )
 
-catkin_python_setup()
+# catkin_python_setup()
 
-add_message_files(
-  FILES
-  ThrusterCommands.msg
+
+# add_message_files(FILES
+# 	ThrusterCommand.msg
+# )
+
+# generate_messages(DEPENDENCIES
+# 	${MSG_DEP_SET}
+# )
+
+catkin_package(CATKIN_DEPENDS 
+	# ${MSG_DEP_SET}
+	propulsion_msgs
+	message_runtime
+	# roscpp
+	# rospy
+	# rosserial_arduino
 )
-generate_messages(DEPENDENCIES
-#     geometry_msgs
-     std_msgs
-#     actionlib_msgs
- )
 
-catkin_package(
-  CATKIN_DEPENDS
-  actionlib
-  actionlib_msgs
-  genmsg
-  geometry_msgs
-  rospy
-  std_msgs
-  tf
-  teleop_twist_joy
+rosserial_generate_ros_lib(
+	PACKAGE rosserial_arduino
+	SCRIPT make_libraries.py
+)
+
+rosserial_configure_client(
+	DIRECTORY embedded
+	TOOLCHAIN_FILE ${ROSSERIAL_ARDUINO_TOOLCHAIN}
+)
+
+rosserial_add_client_target(
+	embedded
+	thrusters
+	ALL
+)
+rosserial_add_client_target(
+	embedded
+	thrusters-upload
 )
 
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+	${catkin_INCLUDE_DIRS}
 )
-
-# catkin_install_python(PROGRAMS none
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
