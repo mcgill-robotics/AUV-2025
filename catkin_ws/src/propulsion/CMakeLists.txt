@@ -8,28 +8,18 @@ find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	message_generation
 	roscpp
-	# rospy
+	rospy
 	rosserial_arduino
 	rosserial_client
 )
 
-# catkin_python_setup()
-
-
-# add_message_files(FILES
-# 	ThrusterCommand.msg
-# )
-
-# generate_messages(DEPENDENCIES
-# 	${MSG_DEP_SET}
-# )
-
 catkin_package(CATKIN_DEPENDS 
 	${MSG_DEP_SET}
 	message_runtime
-	# roscpp
+	roscpp
 	rospy
-	# rosserial_arduino
+	rosserial_arduino
+	rosserial_client
 )
 
 rosserial_generate_ros_lib(

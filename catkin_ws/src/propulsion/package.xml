@@ -6,10 +6,11 @@
 	  Package for moving the AUV. Designed to abstract away the mechanical 
 	  implementation details of the propulsion mechanism.
   </description>
-  <author email="vasily.fedotov@mail.mcgill.ca">Vasily Fedotov</author>
+	  
   <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
   <license>MIT</license>
   <url type="repository">https://github.com/mcgill-robotics/AUV-2020</url>
+  <author email="vasily.fedotov@mail.mcgill.ca">Vasily Fedotov</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
@@ -25,4 +26,5 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>rosserial_arduino</exec_depend>
+
 </package>
