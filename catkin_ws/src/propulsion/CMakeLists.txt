@@ -5,8 +5,7 @@ project(propulsion)
 set(MSG_DEP_SET propulsion_msgs) # no dependencies
 
 find_package(catkin REQUIRED COMPONENTS
-	# ${MSG_DEP_SET}
-	propulsion_msgs
+	${MSG_DEP_SET}
 	message_generation
 	roscpp
 	# rospy
@@ -26,11 +25,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 catkin_package(CATKIN_DEPENDS 
-	# ${MSG_DEP_SET}
-	propulsion_msgs
+	${MSG_DEP_SET}
 	message_runtime
 	# roscpp
-	# rospy
+	rospy
 	# rosserial_arduino
 )
 
@@ -52,8 +50,4 @@ rosserial_add_client_target(
 rosserial_add_client_target(
 	embedded
 	thrusters-upload
-)
-
-include_directories(
-	${catkin_INCLUDE_DIRS}
 )
