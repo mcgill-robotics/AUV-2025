@@ -1,0 +1,3 @@
+<launch>
+	<node name="thrust_mapper" pkg="propulsion" type="thrust_mapper.py" respawn="true" ns="propulsion"/>
+</launch>
