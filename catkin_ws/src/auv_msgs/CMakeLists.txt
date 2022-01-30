@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(propulsion_msgs)
+project(auv_msgs)
 
 # set of packages whose message types are used
-set(MSG_DEP_SET) # no dependencies
+set(MSG_DEP_SET std_msgs actionlib_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
@@ -11,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(FILES
 	ThrusterCommand.msg
+)
+
+add_action_files(FILES
+	PursueTarget.action
 )
 
 generate_messages(DEPENDENCIES
