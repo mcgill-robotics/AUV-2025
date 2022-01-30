@@ -1,0 +1,8 @@
+# Define the goal
+std_msgs/Float64 dishwasher_id
+---
+# Define the result
+std_msgs/Float64 total_dishes_cleaned
+---
+# Define a feedback message
+std_msgs/Float64 percent_complete
