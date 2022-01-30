@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from propulsion_msgs.msg import ThrusterCommand
+from auv_msgs.msg import ThrusterCommand
 from geometry_msgs.msg import Wrench
 
 def wrench_to_thrust():

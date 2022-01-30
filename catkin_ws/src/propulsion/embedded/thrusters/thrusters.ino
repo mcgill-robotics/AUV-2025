@@ -1,6 +1,6 @@
 #include <ros.h>
 #include <Servo.h>
-#include <propulsion_msgs/ThrusterCommand.h>
+#include <auv_msgs/ThrusterCommand.h>
 
 #define SRG_P_PIN 	4
 #define SRG_S_PIN	5
@@ -12,18 +12,18 @@
 #define HVE_ST_P_PIN 	11
 
 /* less verbose identifiers */
-const uint8_t SRG_P 	= propulsion_msgs::ThrusterCommand::SURGE_PORT;
-const uint8_t SRG_S 	= propulsion_msgs::ThrusterCommand::SURGE_STAR;
-const uint8_t SWY_BW 	= propulsion_msgs::ThrusterCommand::SWAY_BOW;
-const uint8_t SWY_ST 	= propulsion_msgs::ThrusterCommand::SWAY_STERN;
-const uint8_t HVE_BW_P 	= propulsion_msgs::ThrusterCommand::HEAVE_BOW_PORT;
-const uint8_t HVE_BW_S 	= propulsion_msgs::ThrusterCommand::HEAVE_BOW_STAR;
-const uint8_t HVE_ST_S 	= propulsion_msgs::ThrusterCommand::HEAVE_STERN_STAR;
-const uint8_t HVE_ST_P 	= propulsion_msgs::ThrusterCommand::HEAVE_STERN_PORT;
+const uint8_t SRG_P 	= auv_msgs::ThrusterCommand::SURGE_PORT;
+const uint8_t SRG_S 	= auv_msgs::ThrusterCommand::SURGE_STAR;
+const uint8_t SWY_BW 	= auv_msgs::ThrusterCommand::SWAY_BOW;
+const uint8_t SWY_ST 	= auv_msgs::ThrusterCommand::SWAY_STERN;
+const uint8_t HVE_BW_P 	= auv_msgs::ThrusterCommand::HEAVE_BOW_PORT;
+const uint8_t HVE_BW_S 	= auv_msgs::ThrusterCommand::HEAVE_BOW_STAR;
+const uint8_t HVE_ST_S 	= auv_msgs::ThrusterCommand::HEAVE_STERN_STAR;
+const uint8_t HVE_ST_P 	= auv_msgs::ThrusterCommand::HEAVE_STERN_PORT;
 
 Servo thrusters[8];
 
-void commandCb(const propulsion_msgs::ThrusterCommand& thrusterCmd){
+void commandCb(const auv_msgs::ThrusterCommand& thrusterCmd){
 	const uint16_t *command = thrusterCmd.command;
 
 	thrusters[SRG_P].writeMicroseconds(command[SRG_P_PIN]);
@@ -51,7 +51,7 @@ void initThrusters(){
 
 
 ros::NodeHandle nh;
-ros::Subscriber<propulsion_msgs::ThrusterCommand> sub("propulsion/thruster_cmd", &commandCb);
+ros::Subscriber<auv_msgs::ThrusterCommand> sub("propulsion/thruster_cmd", &commandCb);
 
 void setup() {
 	initThrusters();
