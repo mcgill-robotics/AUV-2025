@@ -1,0 +1,3 @@
+<launch>
+	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" ns="controls"/>
+</launch>
