@@ -8,14 +8,14 @@ from std_msgs.msg import Float64
 class Superimposer:
     def __init__(self):
         # force
-        self.heave = self.Degree_Of_Freedom('heave')
-        self.surge = self.Degree_Of_Freedom('surge')
-        self.sway = self.Degree_Of_Freedom('sway')
+        self.heave = Superimposer.Degree_Of_Freedom('heave')
+        self.surge = Superimposer.Degree_Of_Freedom('surge')
+        self.sway = Superimposer.Degree_Of_Freedom('sway')
 
         # torque
-        self.pitch = self.Degree_Of_Freedom('pitch')
-        self.roll = self.Degree_Of_Freedom('roll')
-        self.yaw = self.Degree_Of_Freedom('yaw')
+        self.pitch = Superimposer.Degree_Of_Freedom('pitch')
+        self.roll = Superimposer.Degree_Of_Freedom('roll')
+        self.yaw = Superimposer.Degree_Of_Freedom('yaw')
 
         self.pub = rospy.Publisher('effort', Wrench, queue_size=50)
 

@@ -7,7 +7,7 @@ The controls package is responsible for determining the effort the AUV should ex
 Currently, only the depth is controlled.
 ### License
 
-The source code is released under a [MIT license](propulsion/LICENSE).
+The source code is released under a [MIT license](controls/LICENSE).
 
 The controls package has been tested under [ROS] Noetic opropulsionn Ubuntu 20.04.
 
@@ -41,12 +41,12 @@ This package implements a PursueTarget action server as specified in auv_msgs.
 
 ### Dependencies
 
+- `auv_msgs`
 - `catkin`
 - `geometry_msgs`
-- `auv_msgs`
-- `std_msgs`
-- `rospy`
 - `pid`
+- `rospy`
+- `std_msgs`
 
 ### Building
 
@@ -66,12 +66,26 @@ Launch all package nodes
 	
 ### Usage
 
-Publishing a `std_msgs/Float64` message onto `/pursueTarget/goal` topic:
-
-	rostopic pub -1 /pursueTarget/goal std_msgs/Float64 4.0
-  
  Publishing a `std_msgs/Float64` message onto `/state` topic:
 
-	rostopic pub -1 /state std_msgs/Float64 0.0
-  
+	rostopic pub -r 1 /state std_msgs/Float64 "data: 1.0" 
+
+Publishing a `std_msgs/Float64` message onto `/pursueTarget/goal` topic:
+
+	rostopic pub -1 /pursueTarget/goal auv_msgs/PursueTargetActionGoal "header:
+	  seq: 0
+	  stamp:
+	    secs: 0
+	    nsecs: 0
+	  frame_id: ''
+	goal_id:
+	  stamp:
+	    secs: 0
+	    nsecs: 0
+	  id: ''
+	goal:
+	  target_depth: 
+	    data: 4.0
+	" 
+ 
  Look for messages published on /effort
