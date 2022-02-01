@@ -8,7 +8,7 @@ The propulsion package is responsible for moving the AUV and provides a hardware
 
 ### License
 
-The source code is released under a [MIT license](propulsion/LICENSE).
+The source code is released under a [MIT license](../../../LICENSE).
 
 The propulsion package has been tested under [ROS] Noetic opropulsionn Ubuntu 20.04.
 
@@ -23,7 +23,7 @@ The propulsion package has been tested under [ROS] Noetic opropulsionn Ubuntu 20
 
 | Topic | Message | description |
 | ------ | ------- | ---------- |
-| `\effort` | `geometry_msgs/Twist` | Force and torque, relative to the robot's frame of reference to be applied at a given moment |
+| `\effort` | `geometry_msgs/Wrench` | Force and torque, relative to the robot's frame of reference to be applied at a given moment |
 
 
 ## Installation
@@ -34,6 +34,7 @@ The propulsion package has been tested under [ROS] Noetic opropulsionn Ubuntu 20
 - `geometry_msgs`
 - `propulsion_msgs`
 - `rosserial_arduino`
+- `rosserial_client`
 
 ### Building
 
@@ -59,10 +60,5 @@ Launch all package nodes
 
 Publishing a `geometry_msgs/Twist` message onto `/effort` topic:
 
-	rospub /effort geometry_msgs/Twist.msg "[1, 1, 1], [0, 0, 0]"
+	rostopic pub -1 /effort geometry_msgs/Wrench.msg "force: {x: 1.0, y: 0.0, z: -0.5}, torque: {x: 1.0, y: -0.5, z: -2.0}"
 	
----
-
-## Implementation Details
-
-TODO
