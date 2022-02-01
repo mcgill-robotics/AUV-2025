@@ -3,11 +3,13 @@
 ## Overview
 
 
-The controls package is responsible for determining the effort the AUV should exert at a given moment in time based on a target and the current state
+The controls package is responsible for determining the effort the AUV should exert at a given moment in time based on a target and the current state.
+
 Currently, only the depth is controlled.
+
 ### License
 
-The source code is released under a [MIT license](controls/LICENSE).
+The source code is released under a [MIT license](LICENSE.md).
 
 The controls package has been tested under [ROS] Noetic opropulsionn Ubuntu 20.04.
 
@@ -88,4 +90,4 @@ Publishing a `std_msgs/Float64` message onto `/pursueTarget/goal` topic:
 	    data: 4.0
 	" 
  
- Look for messages published on /effort
+ Look for messages published on `/effort`.
