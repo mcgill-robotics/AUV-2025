@@ -58,7 +58,7 @@ Launch all package nodes
 	
 ### Usage
 
-Publishing a `geometry_msgs/Twist` message onto `/effort` topic:
+Publishing a `geometry_msgs/Wrench` message onto `/effort` topic:
 
-	rostopic pub -1 /effort geometry_msgs/Wrench.msg "force: {x: 1.0, y: 0.0, z: -0.5}, torque: {x: 1.0, y: -0.5, z: -2.0}"
 	
+	rostopic pub -1 /effort geometry_msgs/Wrench "{force: {x: 1.0, y: 0.0, z: -0.5}, torque: {x: 1.0, y: -0.5, z: -2.0}}"
