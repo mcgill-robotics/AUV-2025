@@ -7,6 +7,7 @@ set(MSG_DEP_SET
 	std_msgs 
 )
 
+
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	message_generation
