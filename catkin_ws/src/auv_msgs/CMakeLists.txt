@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.0.2)
 project(auv_msgs)
 
 # set of packages whose message types are used
-set(MSG_DEP_SET std_msgs actionlib_msgs)
+set(MSG_DEP_SET 
+	actionlib_msgs
+	std_msgs 
+)
+
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
