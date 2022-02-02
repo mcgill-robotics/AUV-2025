@@ -11,6 +11,10 @@
 #define HVE_ST_S_PIN 	10
 #define HVE_ST_P_PIN 	11
 
+/* thrusters operate in range 1500 +/- 500 */
+#define STOP 1500
+#define MAX_DELTA 500
+
 /* less verbose identifiers */
 const uint8_t SRG_P 	= auv_msgs::ThrusterCommand::SURGE_PORT;
 const uint8_t SRG_S 	= auv_msgs::ThrusterCommand::SURGE_STAR;
@@ -22,9 +26,26 @@ const uint8_t HVE_ST_S 	= auv_msgs::ThrusterCommand::HEAVE_STERN_STAR;
 const uint8_t HVE_ST_P 	= auv_msgs::ThrusterCommand::HEAVE_STERN_PORT;
 
 Servo thrusters[8];
+const float offCommand[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
 
-void commandCb(const auv_msgs::ThrusterCommand& thrusterCmd){
-	const uint16_t *command = thrusterCmd.command;
+uint16_t* convertToMicroseconds(const float intensities[8]){
+	double intensity; 
+	static uint16_t res[8];
+
+	for(uint8_t i = 0; i < 8; i++){
+		intensity = intensities[i];
+		if(intensity < -1){
+			intensity = -1;
+		} else if(intensity > 1){
+			intensity = 1;	
+		}
+		res[i] = static_cast<int>(STOP + intensity*MAX_DELTA);
+	}
+	return res;
+}
+
+void updateThrusters(const float intensities[8]){
+	uint16_t* command = convertToMicroseconds(intensities);
 
 	thrusters[SRG_P].writeMicroseconds(command[SRG_P_PIN]);
 	thrusters[SRG_S].writeMicroseconds(command[SRG_S_PIN]);
@@ -36,6 +57,14 @@ void commandCb(const auv_msgs::ThrusterCommand& thrusterCmd){
 	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S_PIN]);
 }
 
+void thrustersOff(){
+	updateThrusters(offCommand);
+}
+
+void commandCb(const auv_msgs::ThrusterCommand& tc){
+	const float* intensities = tc.intensities;
+	updateThrusters(intensities);
+}
 
 void initThrusters(){
 	thrusters[SRG_P].attach(SRG_P_PIN);
@@ -46,7 +75,9 @@ void initThrusters(){
 	thrusters[HVE_BW_S].attach(HVE_BW_S_PIN);
 	thrusters[HVE_ST_S].attach(HVE_ST_S_PIN);
 	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
-	//TODO - set initial thruster effort (OFF)
+
+	//set initial thruster effort (OFF)
+	thrustersOff();
 }
 
 
