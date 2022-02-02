@@ -16,6 +16,7 @@
 
   <build_depend>auv_msgs</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>python-numpy</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>rosserial_arduino</build_depend>
@@ -24,6 +25,7 @@
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>rosserial_arduino</exec_depend>
