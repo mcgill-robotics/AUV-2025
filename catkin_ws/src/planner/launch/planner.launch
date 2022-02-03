@@ -6,6 +6,7 @@
           output="screen">
         <param name="angle_thresh" value="0.175" />
     </node>	
+
 	<!--LANE_DETECTOR_YAW-->
 	<node name="controller" pkg="pid" type="controller" ns="lane_yaw_pid" output="screen">
 	    <param name="node_name" value="pid" />
@@ -52,8 +53,8 @@
 	  	<param name="topic_from_plant" value="/navigate_to_buoy/centroid_delta_x'" />
 	</node>
 
-	<!--NAVIGATE_TO_BUOY_HEAVE-->
-	<node name="controller" pkg="pid" type="controller" ns="buoy_heave_pid" output="screen">
+	<!-- Heave PID -->
+	<node name="controller" pkg="pid" type="controller" ns="heave_pid" output="screen">
 	    <param name="node_name" value="pid" />
 
 	    <!--Default PID Gains (Should load from file eventually)-->

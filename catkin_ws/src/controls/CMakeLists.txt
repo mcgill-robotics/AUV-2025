@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.3)
 project(controls)
 
@@ -37,6 +38,9 @@ catkin_package(
   teleop_twist_joy
 )
 
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
 # catkin_install_python(PROGRAMS none
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
