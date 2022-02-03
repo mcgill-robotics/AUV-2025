@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+import rospy
+from blinky.srv import UpdatePlannerLights
+
+
+def fake_update_planner_lights():
+    rospy.init_node('hello')
+    planner_srv = rospy.Service('/update_planner_lights', 
+            UpdatePlannerLights, callback)
+    rospy.spin()
+
+def callback(data):
+    return 0
+
+if __name__== "__main__":
+    fake_update_planner_lights()

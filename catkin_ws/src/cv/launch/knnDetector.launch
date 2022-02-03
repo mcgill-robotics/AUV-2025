@@ -1,0 +1,21 @@
+<launch>
+	<!-- 
+	This currently relies on the camera being launched separately
+	I'm not 100% sure if this is desirable or not, given that this launch files is 
+	programmatically shut down by the mission planner when the buoy state terminates
+	 -->
+	
+	<!-- arguments for the find_object_2d Knn detector -->
+    <arg name="gui" default="true"/>
+    <arg name="image_topic" default="image_raw"/>
+    <arg name="objects_path" default="$(env ROS_WORKSPACE)/src/cv/config/KNN_target_images"/>
+    <arg name="settings_path" default="~/.ros/find_object_2d.ini"/>
+
+	<!--Nodes for the find_object_2d Knn detector -->
+	<node name="find_object_2d" pkg="find_object_2d" type="find_object_2d" output="screen">
+		<remap from="image" to="$(arg image_topic)"/>
+		<param name="gui" value="$(arg gui)" type="bool"/>
+		<param name="objects_path" value="$(arg objects_path)" type="str"/>
+		<param name="settings_path" value="$(arg settings_path)" type="str"/>
+	</node>
+</launch>

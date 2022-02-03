@@ -1,0 +1,101 @@
+<launch>
+    <node name="planner"
+          pkg="planner"
+          type="MissionPlanner.py"
+          respawn="false"
+          output="screen">
+        <param name="angle_thresh" value="0.175" />
+    </node>	
+
+	<!--LANE_DETECTOR_YAW-->
+	<node name="controller" pkg="pid" type="controller" ns="lane_yaw_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/yaw" />
+	  	<param name="topic_from_plant" value="/cv/down_cam_heading_Hough" />
+	</node>
+
+	<!--NAVIGATE_TO_BUOY_SWAY-->
+	<node name="controller" pkg="pid" type="controller" ns="buoy_sway_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/sway" />
+	  	<param name="topic_from_plant" value="/navigate_to_buoy/centroid_delta_x'" />
+	</node>
+
+	<!-- Heave PID -->
+	<node name="controller" pkg="pid" type="controller" ns="heave_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/heave" />
+	  	<param name="topic_from_plant" value="/navigate_to_buoy/centroid_delta_y" />
+	</node>
+
+	<!--NAVIGATE_TO_BUOY_DISTANCE-->
+	<node name="controller" pkg="pid" type="controller" ns="buoy_distance_pid" output="screen">
+	    <param name="node_name" value="pid" />
+
+	    <!--Default PID Gains (Should load from file eventually)-->
+	    <param name="Kp" value="10" />
+	    <param name="Ki" value="0.0" />
+	    <param name="Kd" value="0.0" />
+
+	    <!--Effort Limits-->
+	    <param name="upper_limit" value="1000" />
+	    <param name="lower_limit" value="-1000" />
+
+	    <!--Integral Factor Limit-->
+	    <param name="windup_limit" value="10" />
+
+	    <!--Set Topics-->
+	  	<!--Setpoint will be "/<ns>/setpoint"-->
+	  	<!--Enable will be "/<ns>/pid_enable"-->
+	  	<param name="topic_from_controller" value="/controls/superimposer/surge" />
+	  	<param name="topic_from_plant" value="/cv/buoy_distance" />
+	</node>
+</launch>

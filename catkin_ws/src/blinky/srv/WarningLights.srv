@@ -1,0 +1,5 @@
+RGB[] colors
+float32 frequency 
+bool on
+---
+int8 success
