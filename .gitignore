@@ -1,0 +1,30 @@
+# ROS
+catkin_ws/build
+catkin_ws/devel
+catkin_ws/logs
+.catkin_tools/
+
+# Python
+*.py[cod]
+
+# C extensions
+*.so
+
+# Temporary files
+*~
+*.swo
+*.swp
+.DS_Store
+
+# Compiled files
+*.o
+*.d
+*.bin
+*.map
+*.elf
+
+# pycharm
+.idea/
+
+# rosbags
+*.bag
