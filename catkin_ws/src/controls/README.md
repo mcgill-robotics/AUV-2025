@@ -70,7 +70,7 @@ Launch all package nodes
 
  Publishing a `std_msgs/Float64` message onto `/state` topic:
 
-	rostopic pub -r 1 /state std_msgs/Float64 "data: 1.0" 
+	rostopic pub -1 /state std_msgs/Float64 "data: 1.0" 
 
 Publishing a `std_msgs/Float64` message onto `/pursueTarget/goal` topic:
 
@@ -90,4 +90,4 @@ Publishing a `std_msgs/Float64` message onto `/pursueTarget/goal` topic:
 	    data: 4.0
 	" 
  
- Look for messages published on `/effort`.
+ Look for messages published on `/effort`, `/pursueTarget/feedback` and `/pursueTarget/result`.
