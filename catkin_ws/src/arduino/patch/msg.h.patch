@@ -1,0 +1,12 @@
+40c40
+< #include <cstring>
+---
+> #include <string.h>
+68c68
+<     std::memcpy(&val, &f, sizeof(val));
+---
+>     memcpy(&val, &f, sizeof(val));
+182c182
+<     std::memcpy(f, &val, sizeof(val));
+---
+>     memcpy(f, &val, sizeof(val));
