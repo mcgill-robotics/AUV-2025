@@ -1,0 +1,32 @@
+sensors:
+  - name: 'Depth Sensor'
+    topics:
+      - name: '/state_estimation/raw_depth'
+        type: 'Float64'
+      - name: '/depth_sensor/pressure'
+        type: 'Float32'
+  - name: 'IMU'
+    topics:
+      - name: '/state_estimation/raw'
+        type: 'Imu'
+  - name: 'Sonar'
+    topics:
+      - name: '/tritech_micron/scan'
+        type: 'PointCloud'
+      - name: '/sonar_proc/full_scan'
+        type: 'PointCloud'
+  - name: 'Hydrophones'
+    topics:
+      - name: '/hydrophones/heading'
+        type: 'Float64'
+
+thrusters:
+  topic: 'electrical_interface/thrusters'
+
+cameras:
+  - name: 'Front Camera 1'
+    topic: '/camera_front_1/image_raw'
+  - name: 'Front Camera 2'
+    topic: '/camera_front_2/image_raw'
+  - name: 'Down Camera'
+    topic: '/camera_down/image_raw'

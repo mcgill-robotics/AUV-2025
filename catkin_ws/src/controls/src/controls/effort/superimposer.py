@@ -5,7 +5,7 @@ from geometry_msgs.msg import Wrench, Vector3
 from std_msgs.msg import Float64
 
 
-thrust_decay = rospy.get_param('controls/thrust_decay', 1.0)
+thrust_decay = rospy.get_param('controls/thrust_decay', 0.99)
 
 
 class SuperImposer:

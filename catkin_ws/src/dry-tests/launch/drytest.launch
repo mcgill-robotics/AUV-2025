@@ -1,0 +1,5 @@
+<launch>
+	<node name="drytest" pkg="tools" type="full_test.py" output="screen">
+        <rosparam command="load" file="$(find tools)/config/drytest.yaml" />
+	</node>
+</launch>

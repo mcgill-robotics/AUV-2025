@@ -3,7 +3,7 @@
 import rospy
 from rospkg import RosPack
 from geometry_msgs.msg import Wrench
-from auv_msgs.msg import ThrusterCommands
+from controls.msg import ThrusterCommands
 from numpy import matrix, interp, genfromtxt
 from numpy.linalg import pinv
 
