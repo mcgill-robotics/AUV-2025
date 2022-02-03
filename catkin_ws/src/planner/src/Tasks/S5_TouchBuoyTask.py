@@ -1,6 +1,8 @@
 import rospy
 import smach
 import actionlib # No ActionServer implemented yet, we might want TODO this eventually
+import time
+import roslaunch
 
 from std_msgs.msg import Float64, Float32MultiArray
 
@@ -27,7 +29,7 @@ class TouchBuoy(smach.State):
     '''
     def __init__(self):
         #Define the smach transitions that are possible
-        smach.State.__init__(self, outcomes=['TouchedTheBuoy'])
+        smach.State.__init__(self, outcomes=['touchedTheBuoy', 'missedTheBuoy', 'touchBuoyPreempted'])
 
         self.SURGE_TIME       = 2    # Units of seconds
         self.SURGE_STRENGTH   = 2     # A small number, to be changed during pool testing

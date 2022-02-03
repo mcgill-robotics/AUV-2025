@@ -18,7 +18,7 @@ class GateTask(smach.State):
     def __init__(self):
 
         # Initialize class as state and define transitions
-        smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed'])
+        smach.State.__init__(self, outcomes=['gatePassed', 'gateMissed', 'gatePreempted'])
 
         # Abstract constants
         self.COUNTS_FOR_STABILITY  = 2
@@ -41,6 +41,33 @@ class GateTask(smach.State):
 
     def execute(self, userdata):
 
+        rospy.loginfo('Inside Gate State')
+
+        # Check if we are stable at the setpoint? 
+        while (not self.done_surging): # Loop inside here untill we are ready to move to the next state
+
+            if self.preempt_requested():
+                return 'gatePreempted'
+
+            #print out the number of counts we are waiting for
+            self.remaining_counts = self.COUNTS_FOR_STABILITY - self.stable_counts
+            if self.remaining_counts > 0 :
+                rospy.loginfo_throttle(1, 'Attaining Depth: Need {} more stable readings'.format(self.remaining_counts))      
+
+            if self.stable_at_depth == True:
+                #Get the timestamp of the first moment the robot is at depth
+                if self.depth_achieved_time is None: 
+                    self.depth_achieved_time = rospy.get_time()
+                # Surge for a known duration, then exit the state
+                self.time_remaining = self.SURGE_DURATION - (rospy.get_time() - self.depth_achieved_time)
+                if (self.time_remaining > 0):
+                    self.surge_magnitude_pub.publish(self.SURGE_MAGNITUDE)
+                    rospy.loginfo_throttle(1, 'Surging: Time left is {} seconds'.format(self.time_remaining))
+                else:
+                    self.surge_magnitude_pub.publish(0)
+                    self.done_surging = True
+                    return 'gatePassed'
+'''
         # Depth Action
         print("Starting depth client")
         print("Creating client...")
@@ -78,3 +105,4 @@ class GateTask(smach.State):
         print("Stop centering ActionServer")
 
         return 'gatePassed'
+'''

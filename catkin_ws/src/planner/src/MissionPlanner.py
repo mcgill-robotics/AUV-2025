@@ -5,6 +5,7 @@ import smach
 import math
 import actionlib
 import time
+import threading
 
 from cv.msg import CvTarget
 from std_msgs.msg import Bool, Float64, Float32MultiArray
@@ -36,7 +37,7 @@ def planner_all_tasks():
     rospy.init_node('mockMissionPlanner', anonymous=True)
 
     # Create a SMACH state machine
-    sm = smach.StateMachine(outcomes=['missionFailed', 'missionSucceeded'])
+    sm = smach.StateMachine(outcomes=['MissionSucceeded', 'MissionFailed', 'MissionPreempted'])
 
     # Open the container
     with sm:
@@ -60,26 +61,37 @@ def planner_all_tasks():
         
         # Gate task. Transitions Directly to pinger task...for now.
         smach.StateMachine.add('GateState', GateTask(), 
-                                transitions={'gatePassed':'NavitageToSurfacingTask',
-                                            'gateMissed':'missionFailed'})
+                                transitions={'gatePassed':'GridSearch',
+                                            'gateMissed':'MissionFailed',
+                                            'gatePreempted':'MissionPreempted'})
         
         smach.StateMachine.add('GridSearch', GridSearch(), 
-                                transitions={'missionSucceeded':'missionSucceeded'})
-
-        # The surface task. Finishes up the mission.
-        smach.StateMachine.add('NavitageToSurfacingTask', NavigateToSurfacing(), 
-                                transitions={'missionSucceeded':'missionSucceeded'})
-        
-        smach.StateMachine.add('TouchBuoyTask',TouchBuoy(),
-                                transitions={'TouchedTheBuoy':'missionSucceeded'})
-                                #In competition this will transision into NavigateToSurfacingTask
+                                transitions={'laneFound':'LaneDetectorForBuoy',
+                                            'laneNotFound':'MissionFailed',
+                                            'gridSearchPreempted':'MissionPreempted'})
 
         smach.StateMachine.add('LaneDetectorForBuoy',LaneDetector(),
-                                transitions={'AlignmentSuccess':'NavigateToBuoyTask'})
+                                transitions={'alignmentSuccess':'NavigateToBuoyTask',
+                                            'alignmentFailure':'MissionFailed',
+                                            'laneDetectorPreempted':'MissionPreempted'})
 
         smach.StateMachine.add('NavigateToBuoyTask',NavigateToBuoy(),
-                                transitions={'BuoyReached':'missionSucceeded'})
+                                transitions={'buoyReached':'TouchBuoyTask',
+                                            'buoyLost':'MissionFailed',
+                                            'navigateToBuoyPreempted':'MissionPreempted'})
 
+        smach.StateMachine.add('TouchBuoyTask',TouchBuoy(),
+                                transitions={'touchedTheBuoy':'NavigateToSurfacingTask',
+                                            'missedTheBuoy':'MissionFailed',
+                                            'touchBuoyPreempted':'MissionPreempted'})
+
+        # The surface task. Finishes up the mission.
+        smach.StateMachine.add('NavigateToSurfacingTask', NavigateToSurfacing(), 
+                                transitions={'successfulSurface':'MissionSucceeded',
+                                            'unsuccessfulSurface':'MissionFailed',
+                                            'surfacingPreempted':'MissionPreempted'})
+
+    return sm
 
     '''
     # This threading syntax is from the old repository, and I'm not sure 
@@ -106,7 +118,7 @@ def planner_gate():
     rospy.init_node('mockMissionPlanner', anonymous=True)
 
     # Create a SMACH state machine
-    sm = smach.StateMachine(outcomes=['missionFailed', 'missionSucceeded'])
+    sm = smach.StateMachine(outcomes=['MissionFailed', 'MissionPreempted', 'MissionSucceeded'])
 
     # Open the container
     with sm:
@@ -115,12 +127,31 @@ def planner_gate():
         smach.StateMachine.add('GateTask', GateTask(), 
                                 transitions={'gatePassed':'missionSucceeded',
                                             'gateMissed':'missionFailed'})
-        
+
+    return sm    
     # Execute SMACH plan
-    outcome = sm.execute()
+    # outcome = sm.execute()
 
 if __name__ == '__main__':
 
-    # planner_all_tasks()
-    planner_gate()
+    sm = planner_all_tasks()
+    # sm = planner_gate()
     # ...
+
+    #########################################
+    # Preemption code
+    #########################################
+    
+    smach_thread = threading.Thread(target=sm.execute)
+    smach_thread.start()
+    print("Tread started")
+    # Wait for ctrl-c
+    rospy.spin()
+    print("Keyboard interrupt")
+    # Request the container to preempt
+    sm.request_preempt()
+    print("State machine preempted")
+    # Block until everything is preempted 
+    # (you could do something more complicated to get the execution outcome if you want it)
+    smach_thread.join()
+    print("State machine joined")

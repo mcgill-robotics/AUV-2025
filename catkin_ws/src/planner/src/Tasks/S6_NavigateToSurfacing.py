@@ -7,7 +7,7 @@ from std_msgs.msg import Bool, Float64
 class NavigateToSurfacing(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=['missionSucceeded'])
+        smach.State.__init__(self, outcomes=['successfulSurface', 'unsuccessfulSurface', 'surfacingPreempted'])
 
         #Defining the subscriber to read the current Hydrophones Heading
         self.hydrophones_sub = rospy.Subscriber('/hydrophones/heading', Float64, self.hydrophones_cb) 
@@ -98,6 +98,6 @@ class NavigateToSurfacing(smach.State):
 
 
         if self.successful_surface: # !!! this condition is not defined
-            return 'missionSucceeded'
+            return 'successfulSurface'
         else:
-            pass
+            return 'unsuccessfulSurface'
