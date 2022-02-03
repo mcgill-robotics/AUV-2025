@@ -5,6 +5,7 @@ import time
 
 from blinky.msg import TaskStatus # Blinky commented out for now TODO
 from std_msgs.msg import Bool, Float64
+from planner.msg import DepthAction, DepthGoal, DepthResult, GatePassThroughAction, GatePassThroughGoal, GatePassThroughResult
 
 class GateTask(smach.State):
     # The gate state : ded reckoning
@@ -30,49 +31,12 @@ class GateTask(smach.State):
         self.SURGE_MAGNITUDE       = 1   # one day I'll know what these units are. Start small and increment in pool testing.
         self.SURGE_DURATION        = 10  # seconds
 
-        # Variables
-        self.stable_counts         = 0   # counter variable to determine if we are stable at the setpoint
-        self.stable_at_depth       = False
-        self.depth_achieved_time   = None 
-        self.done_surging          = False
-
-        # Depth subscriber
-        self.depth_sub            = rospy.Subscriber('/state_estimation/depth', Float64, self.depth_cb)
-
-        # Depth PID publishers
-        self.depth_enable_pub     = rospy.Publisher('/controls/depth_pid/pid_enable' , Bool    , queue_size=1)
-        self.depth_setpoint_pub   = rospy.Publisher('/controls/depth_pid/setpoint'   , Float64 , queue_size=1)
-        # Depth PID gets "data" from depth sensor, no need to publish from here
-
-        # Surge publisher
-        self.surge_magnitude_pub  = rospy.Publisher('/controls/superimposer/surge'   , Float64 , queue_size=1)
-
         # Define the publisher for blinky, publish a task...just a random one for now
         #self.blinky_pub            = rospy.Publisher('/task'   , TaskStatus , queue_size=1)
         #self.taskmsg        = TaskStatus()
         #self.taskmsg.action = 1
         #self.taskmsg.task   = 1
         #self.blinky_pub.publish (taskmsg)
-        
-        # Turn on depth PID
-        self.depth_setpoint_pub.publish(self.DEPTH_SETPOINT)
-        self.depth_enable_pub.publish(True) 
-
-
-    def depth_cb(self, msg):
-
-        self.depth = msg.data # takes the depth float 64 from the subscriber and sets it to a variable
-        print('inside callback. Current depth: {} '.format(self.depth))
-
-        # Check for stability at depth
-        if abs(self.depth - self.DEPTH_SETPOINT) < self.DEPTH_THRESHOLD :
-            #print('recieved a stable count')
-            self.stable_counts += 1
-        else:
-            self.stable_counts   = 0
-
-        if self.stable_counts >= self.COUNTS_FOR_STABILITY : # We are at depth! 
-            self.stable_at_depth = True   # I am assuming this never needs to be set false. Danger danger. TODO
 
 
     def execute(self, userdata):
@@ -103,3 +67,42 @@ class GateTask(smach.State):
                     self.surge_magnitude_pub.publish(0)
                     self.done_surging = True
                     return 'gatePassed'
+'''
+        # Depth Action
+        print("Starting depth client")
+        print("Creating client...")
+        client = actionlib.SimpleActionClient('Depth', DepthAction)
+        print("Client created, waiting for server...")
+        client.wait_for_server()
+        print("Found server, creating goal...")
+        goal = DepthGoal(depth_target = Float64(self.DEPTH_SETPOINT))
+        print("Goal created, sending goal...")
+        print(goal)
+        client.send_goal(goal)
+        print("Goal sent, waiting for result...")
+        client.wait_for_result()
+        print("Result received")
+        print(client.get_result())
+        print("Stop centering ActionServer")
+
+        print("Successfully reached depth")
+
+        # GatePassThrough Action
+        print("Starting GatePassThrough client")
+        print("Creating client...")
+        client = actionlib.SimpleActionClient('GatePassThrough_Action', GatePassThroughAction)
+        print("Client created, waiting for server...")
+        client.wait_for_server()
+        print("Found server, creating goal...")
+        goal = GatePassThroughGoal(search_for_gate = Bool(False), surge_magnitude = Float64(self.SURGE_MAGNITUDE), surge_time = Float64(self.SURGE_DURATION))
+        print("Goal created, sending goal...")
+        print(goal)
+        client.send_goal(goal)
+        print("Goal sent, waiting for result...")
+        client.wait_for_result()
+        print("Result received")
+        print(client.get_result())
+        print("Stop centering ActionServer")
+
+        return 'gatePassed'
+'''
