@@ -1,0 +1,8 @@
+# Define the goal
+geometry_msgs/Point image_center_point
+---
+# Define the result
+geometry_msgs/Point current_position
+---
+# Define a feedback message
+int32 stable_count_centroid_remaining

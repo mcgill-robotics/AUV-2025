@@ -1,0 +1,8 @@
+# Define the goal
+std_msgs/Float64 depth_target
+---
+# Define the result
+std_msgs/Float64 current_depth
+---
+# Define a feedback message
+std_msgs/Float64 current_depth

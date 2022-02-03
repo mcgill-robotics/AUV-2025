@@ -1,0 +1,13 @@
+<launch>
+    <node
+		name="XimuPublisher"
+		type="XimuPublisher"
+		pkg="state_estimation"
+    respawn="true" respawn_delay="5">
+	</node>
+
+    <node name="depth" type="depth" pkg="state_estimation">
+        <param name="offset" value="-92.6" />
+        <param name="window" value="10" />
+    </node>
+</launch>
