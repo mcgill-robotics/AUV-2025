@@ -6,7 +6,6 @@ set(MSG_DEP_SET auv_msgs) # no dependencies
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
-	message_generation
 	roscpp
 	rospy
 	rosserial_arduino
@@ -15,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(CATKIN_DEPENDS 
 	${MSG_DEP_SET}
-	message_runtime
 	roscpp
 	rospy
 	rosserial_arduino
