@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(torpedo)
 
 # set of packages whose message types are used
-set(MSG_DEP_SET auv_msgs) # no dependencies
+set(MSG_DEP_SET std_msgs) # no dependencies
 
 find_package(catkin REQUIRED COMPONENTS
 		${MSG_DEP_SET}
