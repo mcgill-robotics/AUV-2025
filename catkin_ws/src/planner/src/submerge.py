@@ -4,6 +4,7 @@ import actionlib
 import smach
 
 from auv_msgs.msg import PursueTargetAction, PursueTargetGoal
+from std_msgs.msg import Float64
 
 class SubmergingState(smach.State):
     def __init__(self):
@@ -13,13 +14,14 @@ class SubmergingState(smach.State):
         self.client.wait_for_server()
         print('state detected')
 
-    def execute(self, target_depth):
+    def execute(self, ud):
+        target_depth = Float64(4.0)
         print("submerging to", target_depth)
         goal = PursueTargetGoal(target_depth)
         self.client.send_goal(goal)
-        res = client.wait_for_result()
+        res = self.client.wait_for_result()
         print("finished submerging, result:", res)
 
         if res == 'fail':#TODO
-            return 'failure'
-        return 'success'
+            return 'submerging_failure'
+        return 'submerging_success'
