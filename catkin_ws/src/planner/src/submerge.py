@@ -6,8 +6,8 @@ import smach
 from auv_msgs.msg import PursueTargetAction, PursueTargetGoal
 
 class SubmergingState(smach.State):
-    def __init__(self, outcomes=['success', 'failure']):
-        super().__init__(self, outcomes)
+    def __init__(self):
+        super().__init__(self, outcomes=['submerging_success', 'submerging_failure'])
         self.client = actionlib.SimpleActionClient('pursueTarget', PursueTargetAction)
         self.client.wait_for_server()
 
