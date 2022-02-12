@@ -10,7 +10,7 @@ if __name__ == '__main__':
     with smach.StateMachine(outcomes=['success', 'failure']) as sm:
 
         smach.StateMachine.add('submerging', SubmergingState(), 
-                transitions={'success': 'success', 'failure':'failure'})
+                transitions={'submmerging_success': 'success', 'submerging_failure':'failure'})
 
     res = sm.execute()
     print("mission complete, result: ", res)
