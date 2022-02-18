@@ -35,15 +35,18 @@ Ubuntu 20 this is ROS Noetic.
 
 - Ubuntu 20.04 (Focal)
 - ROS Noetic
+- Catkin
 
 *+ package specific dependecies*
 
 
 ## Installation 
 
-Installing ROS (the general-purpose version):
+To Install ROS (desktop-full version) follow instructions on the ROS [wiki](http://wiki.ros.org/noetic/Installation/Ubuntu).
 
-    sudo apt-get install ros-noetic-desktop-full
+We recommend using the catkin command line tools as opposed to whatever is bundled with ROS:
+
+    sudo apt-get install python3-catkin-tools
 
 To get these project files onto your computer using git navigate to a desired folder and do:
 
@@ -57,9 +60,9 @@ time (**recommended**):
 
 ## Building ROS Packages
 
-*To build/launch/test and individual package, see the README.md in the respective package.*
+*To build/launch/test an individual package, see the README.md in the respective package.*
 
-The build the currently functional packages:
+To build the currently functional packages:
 
 	source /opt/ros/noetic/setup.bash
 	cd <AUV-2020>/catkin_ws/src
@@ -80,7 +83,7 @@ the generated make target:
 
 ## Running (on local machine)
 
-Due to potential issues with start-up, enter each of the following commands  individually and wait for all processes for 
+Due to potential issues with start-up, enter each of the following commands individually and wait for all processes for 
 the package to be running prior to entering the next command.
 
     roslaunch controls controls.launch & 
