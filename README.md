@@ -12,9 +12,11 @@ A number of ROS packages were included as git submodules (and thus fall under th
 
 # License
 
+Since we are using GPLv2 dependancies, the project as a whole falls 
+under GPLv2. The full license is provided inside [LICENSE](LICENSE).
+
 Individual ROS packages (not submodules mentioned above) are under the MIT license. Other packages are subject to licenses set 
-out by their respective maintainers (including GPLv2, BSD). Since we are using GPLv2 dependancies, the project as a whole falls 
-under GPLv2.
+out by their respective maintainers (including GPLv2, BSD). 
 
 
 # Getting Started
