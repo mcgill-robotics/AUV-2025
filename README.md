@@ -10,7 +10,7 @@ A number of ROS packages were included as git submodules (and thus fall under th
 - The `pointgrey_camera_driver` package is maintained by Mike Purvis, original repo [here](https://github.com/ros-drivers/pointgrey_camera_driver) (BSD)
 
 
-# License
+## License
 
 Since we are using GPLv2 dependancies, the project as a whole falls 
 under GPLv2. The full license is provided inside [LICENSE](LICENSE).
@@ -19,7 +19,7 @@ Individual ROS packages (not submodules mentioned above) are under the MIT licen
 out by their respective maintainers (including GPLv2, BSD). 
 
 
-# Getting Started
+## Getting Started
 
 ROS requires Linux to run, the target operating system is Ubuntu 20.04 (LTS). For development it is sufficient to run a VM however, 
 for testing it may be easier to use a native Ubuntu installation. For this we recommend having Ubuntu on an external drive (such as a USB) 
@@ -31,7 +31,7 @@ easily integrate software other people made into our project. Make sure you are 
 Ubuntu 20 this is ROS Noetic.
 
 
-## Dependencies
+### Dependencies
 
 - Ubuntu 20.04 (Focal)
 - ROS Noetic
