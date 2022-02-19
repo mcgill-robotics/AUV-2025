@@ -54,7 +54,7 @@ Flash arduino
 
 Launch all package nodes
 
-	roslaunch propulson propulsion.launch
+	roslaunch propulsion propulsion.launch
 	
 ### Usage
 
