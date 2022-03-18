@@ -10,45 +10,37 @@ class DeadReckonMotion(smach.State):
         super().__init__(outcomes=['done'])
         self.effort = Float64(effort)
         self.duration = duration
-        self.pub = rospy.Publisher(topic, Float64, queue=50)
+        self.pub = rospy.Publisher(topic, Float64, queue_size=50)
     
     def execute(self, ud):
-        rospy.Timer(0.1, self.update)
+        rospy.Timer(rospy.Duration(0.1), self.update)
         rospy.sleep(self.duration)
         return 'done'
 
-    def update():
+    def update(self, _):
         self.pub.publish(self.effort) 
 
         
 class Pause(smach.State):
+    off = Float64(0.0)
+    pub_heave = rospy.Publisher('heave', Float64, queue_size=50)    
+    pub_sway = rospy.Publisher('sway', Float64, queue_size=50)    
+    pub_surge = rospy.Publisher('surge', Float64, queue_size=50)    
+    pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)    
+    pub_roll = rospy.Publisher('roll', Float64, queue_size=50)    
+    pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)    
+
     def __init__(self, duration=0.0):
         super().__init__(outcomes=['done'])
         self.duration = duration
 
     def execute(self, ud):
+        Pause.pub_heave.publish(Pause.off)
+        Pause.pub_sway.publish(Pause.off)
+        Pause.pub_surge.publish(Pause.off)
+        Pause.pub_yaw.publish(Pause.off)
+        Pause.pub_roll.publish(Pause.off)
+        Pause.pub_pitch.publish(Pause.off)
+
         rospy.sleep(self.duration)
         return 'done'
-
-
-class Heave(DeadReckonMotion):
-    def __init__(self, effort, duration=2.0):
-        super().__init__('heave', effort, duration)
-
-
-if __name__ == '__main__':
-    rospy.init_node('pool_testing')
-    sm = smach.StateMachine(outcomes=['finished']) 
-    with sm:
-        smach.StateMachine.add('submerge', Heave(effort=-0.20, duration=3.0), 
-                transitions={'done':'pause'})
-        smach.StateMachine.add('pause', Pause(duration=2.0), 
-                transitions={'done':'ascend'})
-        smach.StateMachine.add('ascend', Heave(effort=0.20), 
-                transitions={'done':'descend'})
-        smach.StateMachine.add('descend', Heave(effort=-0.20), 
-                transitions={'done':'off'})
-        smach.StateMachine.add('off', Pause(), 
-                transitions={'done':'finished'})
-
-    res = sm.execute()
