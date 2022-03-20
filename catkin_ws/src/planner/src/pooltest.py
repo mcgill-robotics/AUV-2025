@@ -20,7 +20,6 @@ class DeadReckonMotion(smach.State):
     def update(self, _):
         self.pub.publish(self.effort) 
 
-        
 class Pause(smach.State):
     off = Float64(0.0)
     pub_heave = rospy.Publisher('heave', Float64, queue_size=50)    
