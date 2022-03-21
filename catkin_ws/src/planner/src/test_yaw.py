@@ -2,8 +2,6 @@
 
 import rospy
 import smach
-import smach_ros
-import roslib
 from pooltest import Pause
 from std_msgs.msg import Float64
 
