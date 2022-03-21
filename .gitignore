@@ -5,3 +5,9 @@ catkin_ws/logs/
 
 # catkin tools
 catkin_ws/.catkin_tools/
+
+# swap files
+**/*.swp
+
+# cached files
+**/__pycache__/
