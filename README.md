@@ -83,15 +83,15 @@ the generated make target:
 
 ## Running (on local machine)
 
-Due to potential issues with start-up, enter each of the following commands individually and wait for all processes for 
-the package to be running prior to entering the next command.
+This starts a demo mission meant to run on a local machine for testing purposes, it does not launch the state_estimation
+package - you may publish to `/state` using rostopic pub (see controls package for example)
 
-    roslaunch bringup bringup.launch & 
+    roslaunch bringup stub.launch & 
 
 
 ## Running (on AUV)
  
-¯\\_(ツ)_/¯
+    roslaunch bringup bringup.launch & 
 
 
 ## Contributing
