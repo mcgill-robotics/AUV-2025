@@ -16,6 +16,7 @@ class Pursue_Target_Server:
     def __init__(self):
         self.pub_setpoint = rospy.Publisher('setpoint', Float64, queue_size=50)
         self.server = actionlib.SimpleActionServer('pursueTarget', PursueTargetAction, self.execute_cb, False)
+        rospy.sleep(1.0) # hack to avoid bringup issues 
         self.server.start()
 
     def execute_cb(self, goal):
