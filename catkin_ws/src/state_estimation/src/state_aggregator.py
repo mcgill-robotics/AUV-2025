@@ -2,20 +2,20 @@
 
 import rospy
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, Vector3
 from state_variables import *
 
 class State_Aggregator:
     def __init__(self):
         # position
-        self.x = X('x')
-        self.y = Y('y')
-        self.z = Z('z')
+        self.x = X()
+        self.y = Y()
+        self.z = Z()
 
         # orientation
-        self.theta_x = Theta_X('theta_x')
-        self.theta_y = Theta_Y('theta_y')
-        self.theta_z = Theta_Z('theta_z')
+        self.theta_x = Theta_X()
+        self.theta_y = Theta_Y()
+        self.theta_z = Theta_Z()
 
         self.pub = rospy.Publisher('state', Pose, queue_size=50)
 
