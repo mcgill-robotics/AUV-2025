@@ -1,3 +1,0 @@
-<launch>
-    <include file="$(find state_estimation)/launch/depth.launch" />
-</launch>
