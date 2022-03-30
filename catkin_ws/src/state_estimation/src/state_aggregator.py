@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import rospy
+import tf
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Pose, Vector3
+from geometry_msgs.msg import Point, Pose, Quaternion
 from state_variables import *
+
 
 class State_Aggregator:
     def __init__(self):
@@ -21,14 +23,19 @@ class State_Aggregator:
 
     def update_state(self, _):
         # TODO - make better use of second param
-        position = Vector3(
+        position = Point(
                 self.x.get(), 
                 self.y.get(), 
                 self.z.get())
-        orientation = Vector3(
+        quaternion = tf.transformations.quaternion_from_euler(
                 self.theta_x.get(), 
                 self.theta_y.get(), 
                 self.theta_z.get())
+        orientation = Quaternion(
+                quaternion[0], 
+                quaternion[1],
+                quaternion[2],
+                quaternion[3])
         pose  = Pose(position, orientation)
         self.pub.publish(pose)
 
