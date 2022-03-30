@@ -3,11 +3,18 @@
 import rospy
 import tf
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Point, Pose, Quaternion
 from state_variables import *
 
 
 class State_Aggregator:
+    pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
+    pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
+    pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
+    pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
+    pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
+    pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+
+
     def __init__(self):
         # position
         self.x = X()
@@ -19,26 +26,14 @@ class State_Aggregator:
         self.theta_y = Theta_Y()
         self.theta_z = Theta_Z()
 
-        self.pub = rospy.Publisher('state', Pose, queue_size=50)
 
     def update_state(self, _):
-        # TODO - make better use of second param
-        position = Point(
-                self.x.get(), 
-                self.y.get(), 
-                self.z.get())
-        quaternion = tf.transformations.quaternion_from_euler(
-                self.theta_x.get(), 
-                self.theta_y.get(), 
-                self.theta_z.get())
-        orientation = Quaternion(
-                quaternion[0], 
-                quaternion[1],
-                quaternion[2],
-                quaternion[3])
-        pose  = Pose(position, orientation)
-        self.pub.publish(pose)
-
+        State_Aggregator.pub_x.publish(Float64(self.x.get())) 
+        State_Aggregator.pub_y.publish(Float64(self.y.get())) 
+        State_Aggregator.pub_z.publish(Float64(self.z.get())) 
+        State_Aggregator.pub_theta_x.publish(Float64(self.theta_x.get())) 
+        State_Aggregator.pub_theta_y.publish(Float64(self.theta_y.get())) 
+        State_Aggregator.pub_theta_z.publish(Float64(self.theta_z.get())) 
 
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')

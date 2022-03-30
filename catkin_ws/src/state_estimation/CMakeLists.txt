@@ -7,12 +7,10 @@ find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	depth_sensor
 	rospy
-	tf
 )
 
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
 	depth_sensor
 	rospy
-	tf
 )
