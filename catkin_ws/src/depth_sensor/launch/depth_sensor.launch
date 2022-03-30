@@ -1,0 +1,6 @@
+<launch>
+	<node name="depth_sensor_serial_server" pkg="rosserial_python" type="serial_node.py" respawn="true">
+		<param name="port" value="/dev/ttyACM0"/>
+		<param name="baud" value="115200"/>
+	</node>
+</launch>
