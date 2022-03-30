@@ -5,7 +5,7 @@ from std_msgs.msg import Float64
 
 class _State_Var:
     def __init__(self, init_val=0.0):
-        self.val = Float64(init_val)
+        self.val = init_val
     
     def get(self):
         return self.val
@@ -24,7 +24,7 @@ class Z(_State_Var):
         rospy.Subscriber('depth', Float64, self.depth_sensor_cb)
 
     def depth_sensor_cb(self, depth):
-        self.val = depth 
+        self.val = depth.data 
 
 class Theta_X(_State_Var):
     def __init__(self):
