@@ -3,7 +3,6 @@ project(depth_sensor)
 
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
-	rospy	
 	rosserial_arduino
 	rosserial_client
 	std_msgs	
@@ -11,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package( CATKIN_DEPENDS
 	roscpp
-	rospy
 	rosserial_arduino
 	rosserial_client
 	std_msgs
