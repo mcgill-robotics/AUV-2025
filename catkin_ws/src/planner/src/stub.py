@@ -4,7 +4,6 @@ import rospy
 import smach
 
 from states import *
-from std_msgs.msg import Float64
 
 if __name__ == '__main__':
     rospy.init_node('stub')
