@@ -2,7 +2,6 @@
 
 import rospy
 import tf
-from std_msgs.msg import Float64
 from geometry_msgs.msg import Point, Pose, Quaternion
 from state_variables import *
 
@@ -22,7 +21,6 @@ class State_Aggregator:
         self.pub = rospy.Publisher('state', Pose, queue_size=50)
 
     def update_state(self, _):
-        # TODO - make better use of second param
         position = Point(
                 self.x.get(), 
                 self.y.get(), 

@@ -7,7 +7,6 @@ from auv_msgs.msg import WaypointAction, WaypointFeedback, WaypointResult
 from geometry_msgs.msg import Pose, Quaternion
 from state import Setpoint_State, Perceived_State
 from std_msgs.msg import Float64, Bool
-from tf import quaternion_multiply
 
 # set up PID for rotation
 # - the 'position variable' being controlled with the pid
@@ -72,9 +71,9 @@ class Waypoint_Server:
         dtheta = abs(self.target_state.orientation.theta 
                     - self.curr_state.orientation.theta)
 
-        return dx <= Waypoint_Server.epsilon_x 
-                and dy <= Waypoint_Server.epsilon_y
-                and dz <= Waypoint_Server.epsilon_z
+        return dx <= Waypoint_Server.epsilon_x \
+                and dy <= Waypoint_Server.epsilon_y \
+                and dz <= Waypoint_Server.epsilon_z \
                 and dtheta <= Waypoint_Server.epsilon_theta
 
 

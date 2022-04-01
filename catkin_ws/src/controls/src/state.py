@@ -1,8 +1,9 @@
 import rospy
 
 from math import acos, asin
-from std_msgs.mg import Float64
+from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose, Point, Quaternion
+from tf.transformations import quaternion_multiply
 
 class AUV_State:
     def __init__(self, pose_msg):
@@ -101,7 +102,7 @@ class Orientation:
         self.w = w
         self.theta = acos(self.w*2)
 
-    def inverse(self)
+    def inverse(self):
         return Orientation(-self.x, -self.y, -self.z, self.w)
 
 
@@ -109,7 +110,10 @@ class Orientation:
     quaternion multiplication q1*q2
     '''
     def mult(self, q2):
-        return # TODO
+        q1_list = [self.x, self.y, self.z, self.w]
+        q2_list = [q2.x, q2.y, q2.z, q2.w]
+        q3 = quaternion_multiply(q1_list, q2_list)
+        return Orientation(*q3)
 
     '''
     returns an Orientation that
