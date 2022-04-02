@@ -3,7 +3,7 @@
 ## Overview
 
 The planner package is responsible for making the high-level decision regarding what the AUV 
-will depending on its current 'operational state'
+will do depending on its current 'operational state'
 
 ### License
 
@@ -16,13 +16,13 @@ The planner package has been tested under [ROS] Noetic on Ubuntu 20.04.
 
 ### Actions
 
-This package has a PursueTarget action client (as specified in auv_msgs).
+This package has a Waypoint action client (as specified in auv_msgs).
 
 | Action part | Message | description |
 | ------ | ------- | ---------- |
-| target | `Float64` | The desired depth (m) |
-| feedback | `Float64` | The current depth (m) of the AUV |
-| result | `Float64` | The final depth (m) of the AUV - should be within permissible range of target |
+| target | `geometry_msgs/Pose` | Pose (global ref. frame) you want the AUV to assume |
+| feedback | `geometry_msgs/Pose` | Current pose of AUV (global ref. frame)|
+| result | `geometry_msgs/Pose` | The final resulting pose of the AUV following the action - should be within permissible range of target |
 
 
 ## Installation
@@ -31,6 +31,7 @@ This package has a PursueTarget action client (as specified in auv_msgs).
 
 - `auv_msgs`
 - `catkin`
+- `geometry_msgs`
 - `rospy`
 - `smach`
 - `std_msgs`
@@ -53,59 +54,75 @@ The planner package has several 'plans' depending on the context in which the AU
 
 	roslaunch planner mission.launch
   
-This will block waiting on a PursueTarget action server to publish the first target to.
+This will block waiting on a Waypoint action server to publish the first target to.
 The most convenient way to get around this is to also launch the controls package which
-provides the PursueTarget server.
+provides the Waypoint server.
 
 As of now, the mission comprises of submerging the AUV to a depth of 4.0 m.
 	
 ### Usage
 
-Stubbing/publishing a feedback message (std_msgs/Float64) from the action server
-specifying the current depth of the AUV:
+Stubbing/publishing a feedback message (geometry_msgs/Pose) from the action server
+specifying the current state of the AUV:
 
-	rostopic pub -1 /pursueTarget/feedback auv_msgs/PursueTargetActionFeedback "header:
+	rostopic pub -1 /waypoint_server/feedback auv_msgs/WaypointActionFeedback \
+	"header:
 	  seq: 0
 	  stamp:
 	    secs: 0
 	    nsecs: 0
 	  frame_id: ''
-	goal_id:
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  id: ''
+	status:
+	  goal_id:
+	    stamp:
+	      secs: 0
+	      nsecs: 0
+	    id: ''
+	  status: 1
+	  text: 'still goin'
 	feedback:
-	  curr_depth: 
-	    data: 1.0
+	  curr_state: 
+	    position:
+	      x: 0.0
+	      y: 0.0
+	      z: -1.0
+	    orientation:
+	      x: 0.0
+	      y: 0.0
+	      z: 0.0
+	      w: 1.0
 	" 
  
- Stubbing/publishing a result message (std_msgs/Float64) from the action server
-specifying the final depth of the AUV (completion of action):
+Stubbing/publishing a result message (geometry_msgs/Pose) from the action server
+specifying the final state of the AUV (completion of action):
 
-	rostopic pub -1 /pursueTarget/result auv_msgs/PursueTargetActionResult "header:
+	rostopic pub -1 /waypoint_server/result auv_msgs/WaypointActionResult \
+	"header:
 	  seq: 0
 	  stamp:
 	    secs: 0
 	    nsecs: 0
 	  frame_id: ''
-	goal_id:
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  id: ''
+	status:
+	  goal_id:
+	    stamp:
+	      secs: 0
+	      nsecs: 0
+	    id: ''
+	  status: 1
+	  text: 'success'
 	result:
-	  final_depth: 
-	    data: 3.95
+	  result_state: 
+	    position:
+	      x: 0.0
+	      y: 0.0
+	      z: -3.97
+	    orientation:
+	      x: 0.0
+	      y: 0.0
+	      z: 0.0
+	      w: 1.0
 	" 
   
  Look for debug messages indicating current state of operation. After mission completion, the 
  mission node should exit.
- 
- ### Issues
- 
- - There are some issues having to do with timing the bringup of resources when launching planner followed by controls:
- The pid server is constantly waiting on the first setpoint even though this should be published following the first 
- action client request (immediately upon server start). After a bit of experimenting, adding a small time delay in the 
- controls action server constructor after creating setpoint publisher, before starting the server resolves this issue. 
- A less hacky solution is desireable. 
