@@ -7,6 +7,14 @@ from state_variables import *
 
 
 class State_Aggregator:
+    pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
+    pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
+    pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
+    pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
+    pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
+    pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+
+
     def __init__(self):
         # position
         self.x = X()
@@ -18,7 +26,6 @@ class State_Aggregator:
         self.theta_y = Theta_Y()
         self.theta_z = Theta_Z()
 
-        self.pub = rospy.Publisher('state', Pose, queue_size=50)
 
     def update_state(self, _):
         position = Point(
