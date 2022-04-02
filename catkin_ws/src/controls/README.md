@@ -83,9 +83,9 @@ Launch all package nodes
 	  w: 1.0
 	" 
 
-Publishing a `geometry_msgs/Pose` message onto `/waypoint/goal` topic:
+Publishing a `geometry_msgs/Pose` message onto `/waypoint_server/goal` topic:
 
-	rostopic pub -1 /waypoint/goal auv_msgs/WaypointActionGoal \
+	rostopic pub -1 /waypoint_server/goal auv_msgs/WaypointActionGoal \
 	"header:
 	  seq: 0
 	  stamp:
@@ -110,4 +110,4 @@ Publishing a `geometry_msgs/Pose` message onto `/waypoint/goal` topic:
 	      w: 1.0
 	" 
  
- Look for messages published on `/effort`, `/waypoint/feedback` and `/waypoint/result`.
+ Look for messages published on `/effort`, `/waypoint_server/feedback` and `/waypoint_server/result`.
