@@ -58,7 +58,7 @@ class Waypoint_Server:
                 'enable', Bool, queue_size=50)
         rospy.Subscriber('state', Pose, self.state_cb, queue_size=50)
         self.server = actionlib.SimpleActionServer(
-                'waypoint', WaypointAction, self.execute_cb, False)
+                'waypoint_server', WaypointAction, self.execute_cb, False)
 
 
     '''
@@ -108,7 +108,7 @@ class Waypoint_Server:
         self.pid_enable_pub.publish(enable)
         
         # give feedback to action client
-        feedback_timer = rospy.Timer(rospy.Duration(0.1), self.feedback_cb)
+        feedback_timer = rospy.Timer(rospy.Duration(5.0), self.feedback_cb)
        
         # wait to reach target
         while not self.is_target_reached():
@@ -123,9 +123,8 @@ class Waypoint_Server:
 
 
 if __name__ == '__main__':
-    rospy.init_node('waypoint_server')
+    rospy.init_node('waypoint')
     ws = Waypoint_Server()
-    rospy.sleep(1.0)
     ws.server.start()
     rospy.spin()
 
