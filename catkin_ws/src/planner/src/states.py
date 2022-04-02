@@ -2,6 +2,7 @@
 
 import actionlib
 import smach
+import rospy
 
 from auv_msgs.msg import WaypointAction, WaypointGoal
 from geometry_msgs.msg import Pose, Point, Quaternion
@@ -11,7 +12,7 @@ class DepthState(smach.State):
     def __init__(self, target_depth):
         super().__init__(outcomes=['success', 'failure'])
 
-        target_pos = Point(x=0.0, y=0.0, z=-4.0)
+        target_pos = Point(x=0.0, y=0.0, z=target_depth)
         q = quaternion_from_euler(0.0, 0.0, 0.0) 
         target_orient = Quaternion(*q) 
         self.target_state = Pose(target_pos, target_orient)
