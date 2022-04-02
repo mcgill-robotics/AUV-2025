@@ -51,7 +51,7 @@
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
-		<param name="topic_from_controller" value="axial" />
+		<param name="topic_from_controller" value="axial_effort" />
 		<param name="topic_from_plant" value="dtheta_state" />
 		<param name="setpoint_topic" value="dtheta_setpoint" />
 	</node>

@@ -1,8 +1,8 @@
 import rospy
 
-from math import acos, asin
+from math import acos, sin
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, Vector3
 from tf.transformations import quaternion_multiply
 
 class AUV_State:
@@ -31,6 +31,8 @@ class Setpoint_State(AUV_State):
         self.y_pub = rospy.Publisher("y_setpoint", Float64, queue_size=50)
         self.z_pub = rospy.Publisher("z_setpoint", Float64, queue_size=50)
         self.theta_pub = rospy.Publisher("theta_setpoint", Float64, queue_size=50)
+        self.axis_pub = rospy.Publisher("theta_setpoint_axis", Vector3, queue_size=50)
+        # TODO - publishes static value (0.0) 
         self.dtheta_pub = rospy.Publisher("dtheta_setpoint", Float64, queue_size=50)
 
     def update(self, pose_msg):
@@ -43,13 +45,8 @@ class Setpoint_State(AUV_State):
         self.y_pub.publish(Float64(self.position.y))
         self.z_pub.publish(Float64(self.position.z))
         self.theta_pub.publish(Float64(self.orientation.theta))
-
-
-    def publish_angle_diff(self, curr_state):
-        # dtheta is angle between this and the current state
-        q3 = curr_state.orientation.transform_to(self.orientation)
-        self.dtheta_pub.publish(Float64(q3.theta))
-
+        self.axis_pub.publish(Vector3(*self.orientation.axis_of_rotation()))
+        self.dtheta_pub.publish(Float64(0.0))
 
 
 '''
@@ -63,6 +60,10 @@ class Perceived_State(AUV_State):
         self.y_pub = rospy.Publisher("y_state", Float64, queue_size=50)
         self.z_pub = rospy.Publisher("z_state", Float64, queue_size=50)
         self.theta_pub = rospy.Publisher("theta_state", Float64, queue_size=50)
+        self.t_axis_pub = rospy.Publisher("theta_state_axis", Vector3, queue_size=50)
+
+        self.dtheta_pub = rospy.Publisher("dtheta_state", Float64, queue_size=50)
+        self.dt_axis_pub = rospy.Publisher("dtheta_state_axis", Vector3, queue_size=50)
 
 
     def publish(self):
@@ -70,6 +71,14 @@ class Perceived_State(AUV_State):
         self.y_pub.publish(Float64(self.position.y))
         self.z_pub.publish(Float64(self.position.z))
         self.theta_pub.publish(Float64(self.orientation.theta))
+        self.t_axis_pub.publish(Vector3(*self.orientation.axis_of_rotation()))
+
+
+    def publish_axial(self, target_state):
+        # dtheta is angle between this and the current state
+        q3 = self.orientation.transform_to(target_state.orientation)
+        self.dt_axis_pub.publish(Vector3(*q3.axis_of_rotation()))
+        self.dtheta_pub.publish(Float64(q3.theta))
 
 
 '''
@@ -134,6 +143,7 @@ class Orientation:
     def transform_to(self, q2):
         return q2.mult(self.inverse())
 
+    # TODO - find better solution for edge cases (ie. 0, 0, 0, 1)
     def axis_of_rotation(self):
-        a = asin(self.theta)*2
-        return [a*self.x, a*self.y, a*self.z]
+        a = sin(self.theta/2)
+        return [self.x/a, self.y/a, self.z/a] if a != 0 else [0.0, 0.0, 1.0]
