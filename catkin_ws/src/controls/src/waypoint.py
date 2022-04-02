@@ -93,19 +93,24 @@ class Waypoint_Server:
         self.server.publish_feedback(feedback)
 
 
+    # TODO - use callbacks, do not keep thread open stalled waiting for resolution
     def execute_cb(self, goal):
-        self.target_state = goal
+        self.target_state = Setpoint_State(goal.target_state)
+        
+        # wait on first state message
+        while self.curr_state is None:
+            continue
 
         # make sure target update is atomic
         self.pid_enable_pub.publish(disable)
         self.target_state.publish()
-        if self.curr_state is not None:
-            self.target_state.publish_angle_diff(self.curr_state)
+        self.target_state.publish_angle_diff(self.curr_state)
         self.pid_enable_pub.publish(enable)
         
         # give feedback to action client
         feedback_timer = rospy.Timer(rospy.Duration(0.1), self.feedback_cb)
-        
+       
+        # wait to reach target
         while not self.is_target_reached():
             continue
         
@@ -120,6 +125,7 @@ class Waypoint_Server:
 if __name__ == '__main__':
     rospy.init_node('waypoint_server')
     ws = Waypoint_Server()
+    rospy.sleep(1.0)
     ws.server.start()
     rospy.spin()
 
