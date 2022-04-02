@@ -65,8 +65,8 @@ time (**recommended**):
 To build the currently functional packages:
 
 	source /opt/ros/noetic/setup.bash
-	cd <AUV-2020>/catkin_ws/src
-	catkin build planner controls propulsion
+	cd <AUV-2020>/catkin_ws
+	catkin build bringup
 
 After build is complete, update ROS environment so that packages are 'visible':
 
@@ -83,17 +83,15 @@ the generated make target:
 
 ## Running (on local machine)
 
-Due to potential issues with start-up, enter each of the following commands individually and wait for all processes for 
-the package to be running prior to entering the next command.
+This starts a demo mission meant to run on a local machine for testing purposes, it does not launch the state_estimation
+package - you may publish to `/state` using rostopic pub (see controls package for example)
 
-    roslaunch controls controls.launch & 
-    roslaunch propulsion propulsion.launch & 
-    roslaunch planner mission.launch &
+    roslaunch bringup stub.launch & 
 
 
 ## Running (on AUV)
  
-¯\\_(ツ)_/¯
+    roslaunch bringup bringup.launch & 
 
 
 ## Contributing
@@ -103,7 +101,4 @@ To learn how to contribute to the project and how to get started see CONTRIBUTIN
 
 ## Known Issues
 
-We (try) to keep track of current existing issues in `docs/known_issues.md`.
-
-If you find something not-quite-right please create a new Github Issue outlining the problem or 
-add it directly to `docs/known_issues.md` (**TODO**) and make a pull request to `noetic` branch.
+If you find something not-quite-right please create a new Github Issue outlining the problem and make a pull request to `noetic` branch.

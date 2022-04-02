@@ -1,3 +1,0 @@
-<launch>
-	<node name="depth" pkg="state_estimation" type="depth.py" respawn="true" />
-</launch>
