@@ -1,3 +1,0 @@
-<launch>
-	<node name="pursueTarget" pkg="controls" type="pursueTarget.py" respawn="true" />
-</launch>

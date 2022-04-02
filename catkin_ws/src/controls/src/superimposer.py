@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+import numpy as np
 
 from geometry_msgs.msg import Vector3, Wrench
 from std_msgs.msg import Float64
@@ -13,16 +14,20 @@ class Superimposer:
         self.sway = Superimposer.Degree_Of_Freedom('sway')
 
         # torque
-        self.pitch = Superimposer.Degree_Of_Freedom('pitch')
-        self.roll = Superimposer.Degree_Of_Freedom('roll')
-        self.yaw = Superimposer.Degree_Of_Freedom('yaw')
+        self.axial_effort = Superimposer.Degree_Of_Freedom('axial_effort')
+        self.axis_of_rot = Superimposer.Axis('dtheta_state_axis')  
 
         self.pub = rospy.Publisher('effort', Wrench, queue_size=50)
 
     def update_effort(self, _):
-        # TODO - make better use of second param
-        force = Vector3(self.surge.get(), self.sway.get(), self.heave.get())
-        torque = Vector3(self.roll.get(), self.pitch.get(), self.yaw.get())
+        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
+        
+        if self.axis_of_rot.unit_vector is None:
+            t = np.zeros(3, dtype=np.float64) # no rotational force
+        else:
+            t = self.axial_effort.val * self.axis_of_rot.unit_vector
+
+        torque = Vector3(*t)
         wrench = Wrench(force, torque)
         self.pub.publish(wrench)
 
@@ -31,11 +36,19 @@ class Superimposer:
             self.val = 0.0
             rospy.Subscriber(sub_topic, Float64, self.set_cb)
         
-        def get(self):
-            return self.val
-
         def set_cb(self, new_val):
             self.val = new_val.data
+
+
+    class Axis:
+        def __init__(self, sub_topic):
+            self.unit_vector = None 
+            rospy.Subscriber(sub_topic, Vector3, self.set_cb)
+        
+        def set_cb(self, new_val):
+            # right now being trusting of source that vector is normalized
+            self.unit_vector = np.array([new_val.x, new_val.y, new_val.z], dtype=np.float64)
+
 
 if __name__ == '__main__':
     rospy.init_node('superimposer')

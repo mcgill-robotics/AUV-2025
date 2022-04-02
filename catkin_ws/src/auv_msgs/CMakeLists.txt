@@ -4,7 +4,8 @@ project(auv_msgs)
 # set of packages whose message types are used
 set(MSG_DEP_SET 
 	actionlib_msgs
-	std_msgs 
+	geometry_msgs 
+	std_msgs
 )
 
 
@@ -18,7 +19,7 @@ add_message_files(FILES
 )
 
 add_action_files(FILES
-	PursueTarget.action
+	Waypoint.action
 )
 
 generate_messages(DEPENDENCIES
