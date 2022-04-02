@@ -84,7 +84,7 @@ class Waypoint_Server:
         self.pid_enable_pub.publish(disable)
         self.curr_state.publish()
         if self.target_state is not None:
-            self.target_state.publish_angle_diff(self.curr_state)
+            self.curr_state.publish_axial(self.target_state)
         self.pid_enable_pub.publish(enable)
     
     def feedback_cb(self, _):
@@ -104,7 +104,7 @@ class Waypoint_Server:
         # make sure target update is atomic
         self.pid_enable_pub.publish(disable)
         self.target_state.publish()
-        self.target_state.publish_angle_diff(self.curr_state)
+        self.curr_state.publish_axial(self.target_state)
         self.pid_enable_pub.publish(enable)
         
         # give feedback to action client
