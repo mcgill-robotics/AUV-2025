@@ -9,6 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
 	pid
 	rospy
 	tf
+	tf2
+	tf2_geometry_msgs
+	tf2_ros
 )
 
 catkin_package(	CATKIN_DEPENDS 
@@ -17,5 +20,8 @@ catkin_package(	CATKIN_DEPENDS
 	pid
 	rospy
 	tf
+	tf2
+	tf2_geometry_msgs
+	tf2_ros
 )
 
