@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <robot name="auv">
-    <link name="world"/>
-    <link name="base_link">
+    <link name="auv_base">
         <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <origin xyz="0 0 0" rpy="0 1.571 0"/>
             <geometry>
                 <cylinder length="0.6" radius="0.2"/>
             </geometry>
