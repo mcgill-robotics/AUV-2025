@@ -87,6 +87,21 @@ This starts a demo mission meant to run on a local machine for testing purposes,
 package - you may publish to `/state` using rostopic pub (see controls package for example)
 
     roslaunch bringup stub.launch & 
+    
+You can stub the state of the AUV by publishing a `geometry_msgs/Pose` message onto `/state` topic:
+
+	rostopic pub -r 1 /state geometry_msgs/Pose \
+	"
+	position:
+	  x: 1.0
+	  y: 2.0
+	  z: -1.0
+	orientation:
+	  x: 0.0
+	  y: 1.0
+	  z: 0.0
+	  w: 0.0
+	" 
 
 
 ## Running (on AUV)
