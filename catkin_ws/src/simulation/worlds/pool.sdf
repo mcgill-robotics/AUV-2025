@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <world name="pool">
+
+        <model name="pool">
+            <static>true</static>
+            <link name="link">
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../meshes/pool.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+            </link>
+        </model>
+
+    </world>
+</sdf>
