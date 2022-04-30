@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
-    <world name="quali">
+    <world name="task_gate">
         <light type="directional" name="sun">
             <cast_shadows>true</cast_shadows>
             <pose>0 0 10 0 0 0</pose>
@@ -46,7 +46,7 @@
                         </mesh>
                     </geometry>
                 </visual>
-                <collision name="gate_visual">
+                <collision name="gate_collision">
                     <geometry>
                         <mesh>
                             <uri>../../../assets/robosub2022/meshes/gate.dae</uri>
