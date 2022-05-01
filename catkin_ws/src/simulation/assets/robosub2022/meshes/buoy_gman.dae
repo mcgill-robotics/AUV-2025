@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.82.7</authoring_tool>
     </contributor>
-    <created>2022-04-30T19:14:33</created>
-    <modified>2022-04-30T19:14:33</modified>
+    <created>2022-04-30T23:23:06</created>
+    <modified>2022-04-30T23:23:06</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -93,7 +93,7 @@
         </technique>
       </profile_COMMON>
     </effect>
-    <effect id="__901961_0_901961_0_901961_0_000000_0_003-effect">
+    <effect id="base_white-effect">
       <profile_COMMON>
         <technique sid="common">
           <lambert>
@@ -110,14 +110,48 @@
         </technique>
       </profile_COMMON>
     </effect>
+    <effect id="image-effect">
+      <profile_COMMON>
+        <newparam sid="buoy_gman_png-surface">
+          <surface type="2D">
+            <init_from>buoy_gman_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="buoy_gman_png-sampler">
+          <sampler2D>
+            <source>buoy_gman_png-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <texture texture="buoy_gman_png-sampler" texcoord="UVMap"/>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
   </library_effects>
-  <library_images/>
+  <library_images>
+    <image id="buoy_gman_png" name="buoy_gman_png">
+      <init_from>buoy_gman.png</init_from>
+    </image>
+  </library_images>
   <library_materials>
     <material id="pvc-white-material" name="pvc-white">
       <instance_effect url="#pvc-white-effect"/>
     </material>
-    <material id="__901961_0_901961_0_901961_0_000000_0_003-material" name="0.901961_0.901961_0.901961_0.000000_0.003">
-      <instance_effect url="#__901961_0_901961_0_901961_0_000000_0_003-effect"/>
+    <material id="base_white-material" name="base_white">
+      <instance_effect url="#base_white-effect"/>
+    </material>
+    <material id="image-material" name="image">
+      <instance_effect url="#image-effect"/>
     </material>
   </library_materials>
   <library_geometries>
@@ -399,13 +433,29 @@
             </accessor>
           </technique_common>
         </source>
+        <source id="mesh31_003-mesh-map-0">
+          <float_array id="mesh31_003-mesh-map-0-array" count="72">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.00451833 -0.3590512 0.9998865 1.314957 -0.004518449 1.314957 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.00451833 -0.3590512 0.9998865 -0.3590513 0.9998865 1.314957 0 0 0 0 0 0</float_array>
+          <technique_common>
+            <accessor source="#mesh31_003-mesh-map-0-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
         <vertices id="mesh31_003-mesh-vertices">
           <input semantic="POSITION" source="#mesh31_003-mesh-positions"/>
         </vertices>
-        <triangles material="__901961_0_901961_0_901961_0_000000_0_003-material" count="12">
+        <triangles material="base_white-material" count="10">
           <input semantic="VERTEX" source="#mesh31_003-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#mesh31_003-mesh-normals" offset="1"/>
-          <p>3 0 1 1 0 2 11 3 9 4 10 5 15 6 13 7 14 8 19 9 17 10 18 11 21 12 22 13 20 14 7 15 5 16 6 17 3 0 2 18 1 1 11 3 8 3 9 4 15 6 12 19 13 7 19 9 16 20 17 10 21 12 23 21 22 13 7 15 4 22 5 16</p>
+          <input semantic="TEXCOORD" source="#mesh31_003-mesh-map-0" offset="2" set="0"/>
+          <p>3 0 0 1 1 1 0 2 2 11 3 3 9 4 4 10 5 5 15 6 6 13 7 7 14 8 8 19 9 9 17 10 10 18 11 11 7 15 15 5 16 16 6 17 17 3 0 18 2 18 19 1 1 20 11 3 21 8 3 22 9 4 23 15 6 24 12 19 25 13 7 26 19 9 27 16 20 28 17 10 29 7 15 33 4 22 34 5 16 35</p>
+        </triangles>
+        <triangles material="image-material" count="2">
+          <input semantic="VERTEX" source="#mesh31_003-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#mesh31_003-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#mesh31_003-mesh-map-0" offset="2" set="0"/>
+          <p>21 12 12 22 13 13 20 14 14 21 12 30 23 21 31 22 13 32</p>
         </triangles>
       </mesh>
     </geometry>
@@ -497,7 +547,12 @@
         <instance_geometry url="#mesh31_003-mesh" name="canvas">
           <bind_material>
             <technique_common>
-              <instance_material symbol="__901961_0_901961_0_901961_0_000000_0_003-material" target="#__901961_0_901961_0_901961_0_000000_0_003-material"/>
+              <instance_material symbol="base_white-material" target="#base_white-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="image-material" target="#image-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
             </technique_common>
           </bind_material>
         </instance_geometry>
