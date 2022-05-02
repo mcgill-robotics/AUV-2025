@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.82.7</authoring_tool>
     </contributor>
-    <created>2022-04-30T15:53:06</created>
-    <modified>2022-04-30T15:53:06</modified>
+    <created>2022-05-01T21:54:51</created>
+    <modified>2022-05-01T21:54:51</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -76,6 +76,77 @@
     </light>
   </library_lights>
   <library_effects>
+    <effect id="base_white-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.4720862 0.4720862 0.4720862 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="image_gman-effect">
+      <profile_COMMON>
+        <newparam sid="gate_gman_png-surface">
+          <surface type="2D">
+            <init_from>gate_gman_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="gate_gman_png-sampler">
+          <sampler2D>
+            <source>gate_gman_png-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <texture texture="gate_gman_png-sampler" texcoord="UVMap"/>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="image_bootlegger-effect">
+      <profile_COMMON>
+        <newparam sid="gate_bootlegger_png-surface">
+          <surface type="2D">
+            <init_from>gate_bootlegger_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="gate_bootlegger_png-sampler">
+          <sampler2D>
+            <source>gate_bootlegger_png-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <texture texture="gate_bootlegger_png-sampler" texcoord="UVMap"/>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
     <effect id="pvc_black-effect">
       <profile_COMMON>
         <technique sid="common">
@@ -85,23 +156,6 @@
             </emission>
             <diffuse>
               <color sid="diffuse">0.01054736 0.01054736 0.01054736 1</color>
-            </diffuse>
-            <index_of_refraction>
-              <float sid="ior">1.45</float>
-            </index_of_refraction>
-          </lambert>
-        </technique>
-      </profile_COMMON>
-    </effect>
-    <effect id="pvc_orange_002-effect">
-      <profile_COMMON>
-        <technique sid="common">
-          <lambert>
-            <emission>
-              <color sid="emission">0 0 0 1</color>
-            </emission>
-            <diffuse>
-              <color sid="diffuse">0.9724999 0.2749689 0.01454742 1</color>
             </diffuse>
             <index_of_refraction>
               <float sid="ior">1.45</float>
@@ -145,13 +199,26 @@
       </profile_COMMON>
     </effect>
   </library_effects>
-  <library_images/>
+  <library_images>
+    <image id="gate_bootlegger_png" name="gate_bootlegger_png">
+      <init_from>gate_bootlegger.png</init_from>
+    </image>
+    <image id="gate_gman_png" name="gate_gman_png">
+      <init_from>gate_gman.png</init_from>
+    </image>
+  </library_images>
   <library_materials>
+    <material id="base_white-material" name="base_white">
+      <instance_effect url="#base_white-effect"/>
+    </material>
+    <material id="image_gman-material" name="image_gman">
+      <instance_effect url="#image_gman-effect"/>
+    </material>
+    <material id="image_bootlegger-material" name="image_bootlegger">
+      <instance_effect url="#image_bootlegger-effect"/>
+    </material>
     <material id="pvc_black-material" name="pvc_black">
       <instance_effect url="#pvc_black-effect"/>
-    </material>
-    <material id="pvc_orange_002-material" name="pvc_orange.002">
-      <instance_effect url="#pvc_orange_002-effect"/>
     </material>
     <material id="pvc_orange-material" name="pvc_orange">
       <instance_effect url="#pvc_orange-effect"/>
@@ -161,6 +228,102 @@
     </material>
   </library_materials>
   <library_geometries>
+    <geometry id="Plane_001-mesh" name="Plane.001">
+      <mesh>
+        <source id="Plane_001-mesh-positions">
+          <float_array id="Plane_001-mesh-positions-array" count="24">-0.3048 -0.3048 0 0.3048 -0.3048 0 -0.3048 0.3048 0 0.3048 0.3048 0 -0.3048 -0.3048 -0.00999999 0.3048 -0.3048 -0.00999999 -0.3048 0.3048 -0.00999999 0.3048 0.3048 -0.00999999</float_array>
+          <technique_common>
+            <accessor source="#Plane_001-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane_001-mesh-normals">
+          <float_array id="Plane_001-mesh-normals-array" count="18">0 0 1 0 0 -1 -1 0 0 0 -1 0 1 0 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#Plane_001-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane_001-mesh-map-0">
+          <float_array id="Plane_001-mesh-map-0-array" count="72">0.9971466 -0.3731477 0.001508295 1.375648 0.001508295 -0.3731477 0 1 1 0 0 0 0 1 0 0 0 0 0 0 1 0 1 0 1 0 1 1 1 1 1 1 0 1 0 1 0.9971466 -0.3731477 0.9971466 1.375648 0.001508295 1.375648 0 1 1 1 1 0 0 1 0 1 0 0 0 0 0 0 1 0 1 0 1 0 1 1 1 1 1 1 0 1</float_array>
+          <technique_common>
+            <accessor source="#Plane_001-mesh-map-0-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Plane_001-mesh-vertices">
+          <input semantic="POSITION" source="#Plane_001-mesh-positions"/>
+        </vertices>
+        <triangles material="base_white-material" count="10">
+          <input semantic="VERTEX" source="#Plane_001-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane_001-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane_001-mesh-map-0" offset="2" set="0"/>
+          <p>6 1 3 5 1 4 4 1 5 2 2 6 4 2 7 0 2 8 0 3 9 5 3 10 1 3 11 1 4 12 7 4 13 3 4 14 3 5 15 6 5 16 2 5 17 6 1 21 7 1 22 5 1 23 2 2 24 6 2 25 4 2 26 0 3 27 4 3 28 5 3 29 1 4 30 5 4 31 7 4 32 3 5 33 7 5 34 6 5 35</p>
+        </triangles>
+        <triangles material="image_gman-material" count="2">
+          <input semantic="VERTEX" source="#Plane_001-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane_001-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane_001-mesh-map-0" offset="2" set="0"/>
+          <p>1 0 0 2 0 1 0 0 2 1 0 18 3 0 19 2 0 20</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="Plane-mesh" name="Plane">
+      <mesh>
+        <source id="Plane-mesh-positions">
+          <float_array id="Plane-mesh-positions-array" count="24">-0.3048 -0.3048 0 0.3048 -0.3048 0 -0.3048 0.3048 0 0.3048 0.3048 0 -0.3048 -0.3048 -0.00999999 0.3048 -0.3048 -0.00999999 -0.3048 0.3048 -0.00999999 0.3048 0.3048 -0.00999999</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane-mesh-normals">
+          <float_array id="Plane-mesh-normals-array" count="18">0 0 1 0 0 -1 -1 0 0 0 -1 0 1 0 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane-mesh-map-0">
+          <float_array id="Plane-mesh-map-0-array" count="72">0.9952801 -0.5040064 1.95146e-4 1.486163 1.95146e-4 -0.5040064 0 1 1 0 0 0 0 1 0 0 0 0 0 0 1 0 1 0 1 0 1 1 1 1 1 1 0 1 0 1 0.9952801 -0.5040064 0.9952801 1.486163 1.95146e-4 1.486163 0 1 1 1 1 0 0 1 0 1 0 0 0 0 0 0 1 0 1 0 1 0 1 1 1 1 1 1 0 1</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-map-0-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Plane-mesh-vertices">
+          <input semantic="POSITION" source="#Plane-mesh-positions"/>
+        </vertices>
+        <triangles material="base_white-material" count="10">
+          <input semantic="VERTEX" source="#Plane-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane-mesh-map-0" offset="2" set="0"/>
+          <p>6 1 3 5 1 4 4 1 5 2 2 6 4 2 7 0 2 8 0 3 9 5 3 10 1 3 11 1 4 12 7 4 13 3 4 14 3 5 15 6 5 16 2 5 17 6 1 21 7 1 22 5 1 23 2 2 24 6 2 25 4 2 26 0 3 27 4 3 28 5 3 29 1 4 30 5 4 31 7 4 32 3 5 33 7 5 34 6 5 35</p>
+        </triangles>
+        <triangles material="image_bootlegger-material" count="2">
+          <input semantic="VERTEX" source="#Plane-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane-mesh-map-0" offset="2" set="0"/>
+          <p>1 0 0 2 0 1 0 0 2 1 0 18 3 0 19 2 0 20</p>
+        </triangles>
+      </mesh>
+    </geometry>
     <geometry id="mesh18-mesh" name="mesh18">
       <mesh>
         <source id="mesh18-mesh-positions">
@@ -291,7 +454,7 @@
         <vertices id="Cylinder_001-mesh-vertices">
           <input semantic="POSITION" source="#Cylinder_001-mesh-positions"/>
         </vertices>
-        <triangles material="pvc_orange_002-material" count="364">
+        <triangles material="pvc_orange-material" count="364">
           <input semantic="VERTEX" source="#Cylinder_001-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#Cylinder_001-mesh-normals" offset="1"/>
           <input semantic="TEXCOORD" source="#Cylinder_001-mesh-map-0" offset="2" set="0"/>
@@ -440,6 +603,36 @@
   </library_geometries>
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
+      <node id="image_gman" name="image_gman" type="NODE">
+        <matrix sid="transform">0.25 0 0 -0.762 0 -2.18557e-8 -1 0 0 0.5 -4.37114e-8 -0.19685 0 0 0 1</matrix>
+        <instance_geometry url="#Plane_001-mesh" name="image_gman">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="base_white-material" target="#base_white-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="image_gman-material" target="#image_gman-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="image_bootlegger" name="image_bootlegger" type="NODE">
+        <matrix sid="transform">0.25 0 0 0.762 0 -2.18557e-8 -1 0 0 0.5 -4.37114e-8 -0.19685 0 0 0 1</matrix>
+        <instance_geometry url="#Plane-mesh" name="image_bootlegger">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="base_white-material" target="#base_white-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="image_bootlegger-material" target="#image_bootlegger-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
       <node id="horizontal_pvc" name="horizontal_pvc" type="NODE">
         <matrix sid="transform">0.9583334 0 0 -7.15256e-7 0 1 -6.51683e-7 3.34014e-8 0 6.51683e-7 1 4.17233e-6 0 0 0 1</matrix>
         <instance_geometry url="#mesh18-mesh" name="horizontal_pvc">
@@ -475,7 +668,7 @@
         <instance_geometry url="#Cylinder_001-mesh" name="orange_wrap_right">
           <bind_material>
             <technique_common>
-              <instance_material symbol="pvc_orange_002-material" target="#pvc_orange_002-material">
+              <instance_material symbol="pvc_orange-material" target="#pvc_orange-material">
                 <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
               </instance_material>
             </technique_common>
