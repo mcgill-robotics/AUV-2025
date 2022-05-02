@@ -17,7 +17,7 @@
 
         <model name="simple_pool">
             <static>true</static>
-            <link name="link">
+            <link name="simple_pool">
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
@@ -37,7 +37,7 @@
 
         <model name="octagon">
             <static>true</static>
-            <link name="gate">
+            <link name="octagon">
                 <pose>0 0 0 0 0 0</pose>
                 <visual name="octagon_visual">
                     <geometry>
@@ -50,6 +50,69 @@
                     <geometry>
                         <mesh>
                             <uri>../../../assets/robosub2022/meshes/octagon.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_gman">
+            <static>true</static>
+            <link name="table_gman">
+                <pose>-1.3716 0 -5 0 0 0</pose>
+                <visual name="table_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_bootlegger">
+            <static>true</static>
+            <link name="table_bootlegger">
+                <pose>1.3716 0 -5 0 0 0</pose>
+                <visual name="table_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_bottles">
+            <static>true</static>
+            <link name="table_bottles">
+                <pose>0 0 -5 0 0 0</pose>
+                <visual name="table_bottles_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_bottles.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_bottles_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../../../assets/robosub2022/meshes/table_bottles.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
