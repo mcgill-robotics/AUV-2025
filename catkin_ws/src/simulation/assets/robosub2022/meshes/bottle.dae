@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.82.7</authoring_tool>
     </contributor>
-    <created>2022-04-30T19:07:57</created>
-    <modified>2022-04-30T19:07:57</modified>
+    <created>2022-05-02T20:57:56</created>
+    <modified>2022-05-02T20:57:56</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -137,7 +137,7 @@
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="bottle" name="bottle" type="NODE">
-        <matrix sid="transform">0.4210526 0 0 0 0 0.4210526 -1.04269e-6 0 0 2.74393e-7 1.6 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.4210526 0 0 0 0 0.4210526 -1.04269e-6 0 0 2.74393e-7 1.6 0.3412998 0 0 0 1</matrix>
         <instance_geometry url="#mesh2-mesh" name="bottle">
           <bind_material>
             <technique_common>
