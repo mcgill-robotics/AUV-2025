@@ -1,0 +1,10 @@
+<launch>                                                                        
+
+  <node pkg="image_publisher" type="image_publisher" name="image_publisher" args="/home/ohepler/Downloads/AUV-vision-blue.png" >
+    <param name="publish_rate" value="1" />
+  </node>
+
+  <node pkg="vision" type="detector.py" name="detector" output="screen" >
+  </node>
+
+</launch>

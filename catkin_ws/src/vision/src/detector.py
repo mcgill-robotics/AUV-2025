@@ -29,6 +29,6 @@ def image_cb(image_msg):
 if __name__ == '__main__':
     print("detector")
     rospy.init_node('detector')
-    image_sub = rospy.Subscriber('/image_publisher_1651798201951158778/image_raw', Image, image_cb, queue_size=50)
+    #image_sub = rospy.Subscriber('/image_publisher_1651798201951158778/image_raw', Image, image_cb, queue_size=50)
     #pub = rospy.Publisher('object_detected', Boolean, queue_size=50)
     rospy.spin()
