@@ -1,7 +1,7 @@
 <launch>                                                                        
 
-  <node pkg="image_publisher" type="image_publisher" name="image_publisher" args="/home/ohepler/Downloads/AUV-vision-blue.png" >
-    <param name="publish_rate" value="1" />
+  <node pkg="image_publisher" type="image_publisher" name="image_publisher" args="$(find vision)/poolImages/AUV-vision-blue.png" >
+    <param name="publish_rate" value="0.01" />
   </node>
 
   <node pkg="vision" type="detector.py" name="detector" output="screen" >
