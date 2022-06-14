@@ -1,8 +1,0 @@
-# goal
-geometry_msgs/Pose target_state
----
-# result
-geometry_msgs/Pose result_state
----
-# feedback 
-geometry_msgs/Pose curr_state

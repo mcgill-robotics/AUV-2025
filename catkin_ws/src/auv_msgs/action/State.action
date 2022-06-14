@@ -1,0 +1,8 @@
+# goal
+auv_msgs/StateCommand[] commands
+---
+# result
+std_msgs/Bool status
+---
+# feedback 
+std_msgs/Bool status
