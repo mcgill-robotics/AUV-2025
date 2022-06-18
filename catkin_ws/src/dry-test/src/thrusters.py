@@ -33,7 +33,7 @@ def thruster_test(t):
 rospy.init_node("thrusters_test")
 while True:
     print("========== Thrusters Test ==========")
-    print("refer to images in ___ for labelled diagrams of thrusters on the AUV")
+    print("refer to images in dry-test/images for labelled diagrams of thrusters on the AUV")
     print("1. test all thrusters")
     print("2. select thruster to test")
     print("3. exit")
