@@ -1,77 +1,80 @@
 import rospy
 
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 
 class Controller:
 
-    Controller.si_topic_dict = {'HEAVE':'heave', 'SURGE':'surge'}
+    Controller.si_topic_dict = {'HEAVE':'heave', 'SWAY':'sway', 'SURGE':'surge'}
 
     __init__(self):
+        self.direction  = cmd.direction
+        self.type = cmd.ctl_type
 
-    def controller_cb(self):
-        pass
+        # publishing to superimposer
+        si_topic = Controller.si_topic_dict[self.direction]
+        self.pub_si = rospy.Publisher(si_topic, Float64, queue_size=50)
 
-    
     def publish(self):
         pass
 
-    def release(self):
+    def update_command(self, cmd):
+        pass
+
+    def start(self):
+        pass
+
+    def destroy(self):
+        pass
         
 
 class DirectController(Controller):
 
     __init__(self, cmd):
-        self.var  = cmd.var
-        self.type = 'DIRECT'
+        super().__init__(cmd)
         self.effort = cmd.effort
-
-        self.timer = rospy.Timer(rospy.Duration(cmd.duration), self.reset_effort)
-        
-
-        # publishing to superimposer
-        si_topic = Controller.si_topic_dict[self.var]
-        self.pub_si = rospy.Publisher(si_topic, Float64, queue_size=50)
+        self.duration = cmd.duration
 
 
-    def new_command(self, cmd):
+    def update_command(self, cmd):
         self.effort = cmd.effort
-        self.timer = rospy.Timer(rospy.Duration(cmd.duration), self.reset_effort)
-
+        self.duration = cmd.duration
+        self.start()
 
     def reset_effort(self):
         self.effort = 0.0
-
-    def release(self):
-        # update router allocation table
-        # status depends on timer
-        status = result = True
-        return status, result
-
 
 
     def publish(self):
         self.pub_si.publish(self.effort)
 
 
+    def start(self):
+        self.timer = rospy.Timer(rospy.Duration(self.duration), self.reset_effort)
+
+    def stop(self):
+        # update router allocation table
+        # TODO: status depends on timer
+        status = result = True
+        return status, result
+
 class StateController(Controller):
 
     __init__(self, cmd):
-        self.var  = cmd.var
-        self.type = 'STATE'
+        super().__init__(cmd)
         self.effort = None
         self.setpoint = cmd.setpoint
+        self.threshold = 0.05 # m
+        self.maintain = cmd.maintain
         
-
-        # publishing to superimposer
-        si_topic = Controller.si_topic_dict[self.var]
-        self.pub_si = rospy.Publisher(si_topic, Float64, queue_size=50)
-
         # pid
-        pid_setpoint_topic = self.var + '_setpoint'
-        pid_effort_topic = self.var + '_effort'
-        pid_state_topic = self.var + '_state'
+        # TODO: dynamically create pid nodes 
+        pid_enable_topic = self.direction + '_enable'
+        pid_setpoint_topic = self.direction + '_setpoint'
+        pid_effort_topic = self.direction + '_effort'
+        pid_state_topic = self.direction + '_state'
 
+        self.pub_enable = rospy.Publisher(pid_enable_topic, Bool, queue_size=50)
         self.pub_setpoint = rospy.Publisher(pid_setpoint_topic, Float64, queue_size=50)
         sub_effort = rospy.Subscriber(pid_effort_topic, Float64, self.effort_cb, queue_size=50)
 
@@ -89,6 +92,18 @@ class StateController(Controller):
         self.effort = effort
 
 
+    def state_cb(self, state):
+        if abs(state - self.setpoint) < self.threshold:
+
+
+
     def publish(self):
         self.pub_si.publish(self.effort)
 
+    
+    def start(self):
+        self.pub_enable.publish(True)
+
+
+    def destroy(self):
+        self.pub_enable.publish(False)

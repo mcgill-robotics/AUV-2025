@@ -1,4 +1,5 @@
-std_msgs/String var
+std_msgs/String ctl_type
+std_msgs/String direction
 
 float64 setpoint
 
