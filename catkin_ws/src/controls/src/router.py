@@ -6,65 +6,84 @@ import rospy
 from auv_msgs.msg import DirectAction, StateAction
 from std_msgs.msg import Float64, Bool
 
-from ctls import StateController, DirectController
+from controllers import StateController, DirectController
 
 
 class Router:
 
     def __init__(self):
-        self.direct_server = actionlib.SimpleActionServer('direct_ctl', DirectControllerCommand, self.update_ctls, False)
-        self.state_server = actionlib.SimpleActionServer('state_ctl', StateControllerCommand, self.update_ctls, False)
-
+        self.direct_server = actionlib.SimpleActionServer('direct', DirectAction, self.goal_cb, False)
+        self.state_server = actionlib.SimpleActionServer('state', StateAction, self.goal_cb, False)
         self.alloc_table = {'SURGE':None, 'SWAY':None, 'HEAVE':None}
 
 
-    def update_ctls(self, cmd):
-        ctl_type = cmd.ctl_type
-        curr_ctl = alloc_table[ctl_type]
+    def direct_goal_cb(self, cmd):
+        goal_dof = cmd.dof
+        goal_type = cmd.ctl_type
+        self.update_routes(goal_dof, goal_type)
+        goal_controller = alloc_table[goal_dof]
 
-        # logic to deal with the existing controller for the directioniable
-        if curr_ctl.type == ctl_type:
-            curr_ctl.update_command(cmd)
-
-        else:
-            alloc_table[curr_ctl.direction] = None
-            status, result = curr_ctl.destroy()
-            if status:
-                self.new_ctl.set_succeeded(result)
-            else:
-                self.new_ctl.set_failed(result)
-
-        # set current controller from cmd 
-        if alloc_table[cmd.direction] is None:
-            new_ctl = self.get_ctl(cmd)
-            new_ctl.start()
+        client = actionlib.SimpleActionClient('controller/' + goal_dof, DirectAction)
+        client.send_goal(cmd, done_cb=self.direct_done_cb)
 
 
-    def get_ctl(cmd):
-        ctl_type = cmd.type
+    def direct_done_cb(self, status, result):
+        self.direct_server.set_succeeded()
+        return
+
+
+    def state_goal_cb(self, cmd):
+        goal_dof = cmd.dof
+        goal_type = cmd.ctl_type
+        self.update_routes(goal_dof, goal_type)
+        goal_controller = alloc_table[goal_dof]
+
+        client = actionlib.SimpleActionClient('controller/' + goal_dof, StateAction)
+        client.send_goal(cmd, done_cb=self.state_done_cb)
+
+    
+    def state_done_cb(self, status, result):
+        self.state_server.set_succeeded()
+        return
+
+
+    def update_routes(self, goal_dof, goal_type):
+        existing_controller = self.alloc_table[goal_dof]
+
+        # deg. of freedom not as of yet controlled - create new controller
+        if existing_controller is None:
+            goal_controller = self.create_ctl(cmd.ctl_type)
+            self.alloc_table[goal_dof] = goal_controller
+
+        # existing controller of different type - pre-empt/overwite existing controller
+        elif existing_controller.type != goal_type:
+            existing_controller.finish()
+            goal_controller = self.create_ctl(cmd.ctl_type)
+            alloc_table[existing_controller.dof] = goal_controller
+
+        # no changes necessary
+        return
+
+
+    def create_ctl(ctl_type):
         if ctl_type == 'DIRECT':
-            return DirectController(cmd)
+            ctl = DirectController()
         elif ctl_type == 'STATE':
-            return StateController(cmd)
+            ctl = StateController()
+
+        # start action server on controller
+        ctl.start()
+        return ctl
 
 
-    def up(self):
-        # start each action server
+    def start(self):
         self.direct_server.start()
         self.state_server.start()
-
-        rospy.Timer(rospy.Duration(0.1), self.publish)
-
-
-    def publish(self):
-        unique_ctls = set(self.alloc_table.values())
-        for ctl in unique_ctls:
-            ctl.publish()
 
 
 if __name__ == '__main__':
     rospy.init_node('router')
     router = Router()
-    router.up()
+    router.start()
     rospy.spin()
 

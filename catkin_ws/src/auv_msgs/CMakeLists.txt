@@ -16,10 +16,13 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(FILES
 	ThrusterCommand.msg
+    DirectCommand.msg
+    StateCommand.msg
 )
 
 add_action_files(FILES
-	Waypoint.action
+    Direct.action
+    State.action
 )
 
 generate_messages(DEPENDENCIES

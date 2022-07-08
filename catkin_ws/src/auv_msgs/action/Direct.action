@@ -1,5 +1,5 @@
 # goal
-auv_msgs/DirectCommand[] commands
+auv_msgs/DirectCommand command
 ---
 # result
 std_msgs/Bool status
