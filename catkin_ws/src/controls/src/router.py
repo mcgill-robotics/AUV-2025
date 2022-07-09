@@ -12,8 +12,8 @@ from controllers import StateController, DirectController
 class Router:
 
     def __init__(self):
-        self.direct_server = actionlib.SimpleActionServer('direct', DirectAction, self.goal_cb, False)
-        self.state_server = actionlib.SimpleActionServer('state', StateAction, self.goal_cb, False)
+        self.direct_server = actionlib.SimpleActionServer('direct', DirectAction, self.direct_goal_cb, False)
+        self.state_server = actionlib.SimpleActionServer('state', StateAction, self.state_goal_cb, False)
         self.alloc_table = {'SURGE':None, 'SWAY':None, 'HEAVE':None}
 
 

@@ -1,5 +1,5 @@
 std_msgs/String ctl_type
-std_msgs/String direction
+std_msgs/String dof
 
 float64 setpoint
 
