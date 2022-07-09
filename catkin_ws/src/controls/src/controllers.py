@@ -6,10 +6,10 @@ from geometry_msgs.msg import Pose
 
 class Controller:
 
-    Controller.PUB_PERIOD = 10 # s 
-    Controller.si_topic_for_dof = {'HEAVE':'heave', 'SWAY':'sway', 'SURGE':'surge'}
+    PUB_PERIOD = 10 # s 
+    si_topic_for_dof = {'HEAVE':'heave', 'SWAY':'sway', 'SURGE':'surge'}
 
-    __init__(self, dof):
+    def __init__(self, dof):
         self.dof = dof
 
         # for publishing to superimposer
@@ -32,7 +32,7 @@ class Controller:
 
 class DirectController(Controller):
 
-    __init__(dof):
+    def __init__(dof):
         super().__init__(dof)
         self.type = 'DIRECT'
 
@@ -67,7 +67,7 @@ class StateController(Controller):
     THRESHOLD = 0.05 # m
     REQUIRED_COUNT = 10 #TODO: use timer to avoid coupling to state rate
 
-    __init__(dof):
+    def __init__(dof):
         super().__init__(dof)
         self.type = 'STATE'
         self.threshold_count = 0 
