@@ -16,8 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(FILES
 	ThrusterCommand.msg
-    DirectCommand.msg
-    StateCommand.msg
 )
 
 add_action_files(FILES

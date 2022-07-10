@@ -19,24 +19,30 @@ class Router:
 
     def direct_goal_cb(self, cmd):
         goal_dof = cmd.dof
-        goal_type = cmd.ctl_type
+        goal_type = cmd.type
         self.update_routes(goal_dof, goal_type)
-        goal_controller = alloc_table[goal_dof]
+        goal_controller = self.alloc_table[goal_dof]
 
         client = actionlib.SimpleActionClient('controller/' + goal_dof, DirectAction)
-        client.send_goal(cmd, done_cb=self.direct_done_cb)
+        print("waiting for controller server")
+        client.wait_for_server()
+        print("sending goal")
+        ret_status =  client.send_goal_and_wait(cmd) #TODO - make non-blocking
+        print("returned status: ", ret_status)
+        return ret_status
+
 
 
     def direct_done_cb(self, status, result):
+        print("done callback")
         self.direct_server.set_succeeded()
-        return
 
 
     def state_goal_cb(self, cmd):
         goal_dof = cmd.dof
-        goal_type = cmd.ctl_type
+        goal_type = cmd.type
         self.update_routes(goal_dof, goal_type)
-        goal_controller = alloc_table[goal_dof]
+        goal_controller = self.alloc_table[goal_dof]
 
         client = actionlib.SimpleActionClient('controller/' + goal_dof, StateAction)
         client.send_goal(cmd, done_cb=self.state_done_cb)
@@ -44,7 +50,6 @@ class Router:
     
     def state_done_cb(self, status, result):
         self.state_server.set_succeeded()
-        return
 
 
     def update_routes(self, goal_dof, goal_type):
@@ -52,24 +57,24 @@ class Router:
 
         # deg. of freedom not as of yet controlled - create new controller
         if existing_controller is None:
-            goal_controller = self.create_ctl(cmd.ctl_type)
+            goal_controller = self.create_ctl(goal_type, goal_dof)
             self.alloc_table[goal_dof] = goal_controller
 
         # existing controller of different type - pre-empt/overwite existing controller
         elif existing_controller.type != goal_type:
             existing_controller.finish()
-            goal_controller = self.create_ctl(cmd.ctl_type)
-            alloc_table[existing_controller.dof] = goal_controller
+            goal_controller = self.create_ctl(goal_type, goal_dof)
+            self.alloc_table[existing_controller.dof] = goal_controller
 
         # no changes necessary
         return
 
 
-    def create_ctl(ctl_type):
-        if ctl_type == 'DIRECT':
-            ctl = DirectController()
-        elif ctl_type == 'STATE':
-            ctl = StateController()
+    def create_ctl(self, goal_type, goal_dof):
+        if goal_type == 'DIRECT':
+            ctl = DirectController(goal_dof)
+        elif goal_type == 'STATE':
+            ctl = StateController(goal_dof)
 
         # start action server on controller
         ctl.start()

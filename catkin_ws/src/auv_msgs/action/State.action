@@ -1,5 +1,8 @@
 # goal
-auv_msgs/StateCommand command
+std_msgs/String type
+std_msgs/String dof
+float64 setpoint
+std_msgs/Bool maintain #false - reach the state and return , true - maintain state
 ---
 # result
 std_msgs/Bool status
