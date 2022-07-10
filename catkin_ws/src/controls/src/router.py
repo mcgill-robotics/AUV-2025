@@ -29,6 +29,7 @@ class Router:
         print("sending goal")
         ret_status =  client.send_goal_and_wait(cmd) #TODO - make non-blocking
         print("returned status: ", ret_status)
+        self.direct_server.set_succeeded()
         return ret_status
 
 

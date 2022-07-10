@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose
 
 class Controller:
 
-    PUB_PERIOD = 10 # s 
+    PUB_PERIOD = 1 # s 
     si_topic_for_dof = {'HEAVE':'heave', 'SWAY':'sway', 'SURGE':'surge'}
 
     def __init__(self, dof):
@@ -19,12 +19,18 @@ class Controller:
         si_topic = Controller.si_topic_for_dof[dof]
         self.pub_si = rospy.Publisher(si_topic, Float64, queue_size=50)
 
-    def publish(self):
+
+    # this is a hack to use as callback to timer
+    def publish_cb(self, timer):
+        self.publish_to_si()
+
+    def publish_to_si(self):
+        print("publishing to si")
         self.pub_si.publish(self.effort)
 
     def reset_effort(self):
         self.effort = 0.0
-        self.publish()
+        self.publish_to_si()
 
     def start(self):
         self.action_server.start()
@@ -43,15 +49,16 @@ class DirectController(Controller):
         self.action_server = actionlib.SimpleActionServer('controller/' + dof, DirectAction, self.goal_cb, False)
 
     def goal_cb(self, cmd):
-        print("controller goal cb")
+        print("controller goal cb - effort", cmd.effort)
         self.effort = cmd.effort
         self.duration = cmd.duration
 
         # controller execution/publishing to superimposer
-        self.pub_timer = rospy.Timer(rospy.Duration(Controller.PUB_PERIOD, self.publish))
+        self.pub_timer = rospy.Timer(rospy.Duration(Controller.PUB_PERIOD), self.publish_cb)
 
         # after <duration> has elapsed, publish reset and return action result
         rospy.sleep(self.duration) #TODO - check whether this is blocking
+        self.pub_timer.shutdown() # stop publishing periodically
         self.reset_effort()
 
         self.action_server.set_succeeded() #TODO - what to return to client?
@@ -103,7 +110,7 @@ class StateController(Controller):
 
         # TODO - wait until effort is published - just set init. effort to 0.0?
         # controller execution/publishing to superimposer
-        self.pub_timer = rospy.Timer(rospy.Duration(Controller.PUB_PERIOD, self.publish))
+        self.pub_timer = rospy.Timer(rospy.Duration(Controller.PUB_PERIOD), self.publish_cb)
         return
 
 
