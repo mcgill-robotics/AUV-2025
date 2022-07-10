@@ -1,5 +1,8 @@
 import rospy
 
+import actionlib
+
+from auv_msgs.msg import DirectAction, StateAction
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose
 
@@ -32,14 +35,15 @@ class Controller:
 
 class DirectController(Controller):
 
-    def __init__(dof):
+    def __init__(self, dof):
         super().__init__(dof)
         self.type = 'DIRECT'
 
         # set up action server
-        self.action_server = actionlib.SimpleActionServer('controllers/direct', DirectAction, self.goal_cb, False)
+        self.action_server = actionlib.SimpleActionServer('controller/' + dof, DirectAction, self.goal_cb, False)
 
     def goal_cb(self, cmd):
+        print("controller goal cb")
         self.effort = cmd.effort
         self.duration = cmd.duration
 
@@ -67,13 +71,13 @@ class StateController(Controller):
     THRESHOLD = 0.05 # m
     REQUIRED_COUNT = 10 #TODO: use timer to avoid coupling to state rate
 
-    def __init__(dof):
+    def __init__(self, dof):
         super().__init__(dof)
         self.type = 'STATE'
         self.threshold_count = 0 
 
         # set up action server
-        self.action_server = actionlib.SimpleActionServer('controllers/state', StateAction, self.goal_cb, False)
+        self.action_server = actionlib.SimpleActionServer('controller/' + dof, StateAction, self.goal_cb, False)
         
         # pid
         # TODO: dynamically create pid nodes 
