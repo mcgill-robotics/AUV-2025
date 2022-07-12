@@ -6,9 +6,9 @@ import smach
 from pooltest import DeadReckonMotion, Pause
 from std_msgs.msg import Float64
 
-class Surge(DeadReckonMotion):
+class Pitch(DeadReckonMotion):
     def __init__(self, effort, duration=2.0):
-        super().__init__('surge', effort, duration)
+        super().__init__('pitch', effort, duration)
 
 class Heave(DeadReckonMotion):
     def __init__(self, effort, duration=2.0):
@@ -16,7 +16,7 @@ class Heave(DeadReckonMotion):
 
 
 if __name__ == '__main__':
-    rospy.init_node('pool_testing_surge')
+    rospy.init_node('pool_testing_pitch')
     sm =smach.StateMachine(outcomes=['finished'])
 
     with sm:
@@ -24,9 +24,9 @@ if __name__ == '__main__':
             transitions={'done':'pause'})
         smach.StateMachine.add('pause', Pause(duration=2.0), 
             transitions={'done':'positive'})
-        smach.StateMachine.add('positive', Surge(effort=0.20), 
+        smach.StateMachine.add('positive', Pitch(effort=0.20), 
             transitions={'done':'negative'})
-        smach.StateMachine.add('negative', Surge(effort=-0.20), 
+        smach.StateMachine.add('negative', Pitch(effort=-0.20), 
             transitions={'done':'off'})
         smach.StateMachine.add('off', Pause(), 
             transitions={'done':'finished'})
