@@ -7,11 +7,11 @@ from pooltest import DeadReckonMotion, Pause
 from std_msgs.msg import Float64
 
 class Pitch(DeadReckonMotion):
-    def __init__(self, effort, duration=2.0):
+    def __init__(self, effort, duration=10.0):
         super().__init__('pitch', effort, duration)
 
 class Heave(DeadReckonMotion):
-    def __init__(self, effort, duration=2.0):
+    def __init__(self, effort, duration=10.0):
         super().__init__('heave', effort, duration)
 
 
