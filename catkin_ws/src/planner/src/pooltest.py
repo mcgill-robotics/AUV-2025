@@ -10,14 +10,19 @@ class DeadReckonMotion(smach.State):
         super().__init__(outcomes=['done'])
         self.effort = Float64(effort)
         self.duration = duration
+        self.topic = topic
         self.pub = rospy.Publisher(topic, Float64, queue_size=50)
     
     def execute(self, ud):
-        rospy.Timer(rospy.Duration(0.1), self.update)
+        timer = rospy.Timer(rospy.Duration(0.1), self.update)
         rospy.sleep(self.duration)
+
+        # this is a hack to stop publishing
+        timer.shutdown()
         return 'done'
 
     def update(self, _):
+        print("publishing to ", self.topic)
         self.pub.publish(self.effort) 
 
 class Pause(smach.State):
