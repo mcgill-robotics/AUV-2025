@@ -14,7 +14,7 @@ class Router:
     def __init__(self):
         self.direct_server = actionlib.SimpleActionServer('direct', DirectAction, self.direct_goal_cb, False)
         self.state_server = actionlib.SimpleActionServer('state', StateAction, self.state_goal_cb, False)
-        self.alloc_table = {'SURGE':None, 'SWAY':None, 'HEAVE':None}
+        self.alloc_table = {'X':None, 'Y':None, 'Z':None, 'ROT':None}
 
 
     def direct_goal_cb(self, cmd):
@@ -30,13 +30,6 @@ class Router:
         ret_status =  client.send_goal_and_wait(cmd) #TODO - make non-blocking
         print("returned status: ", ret_status)
         self.direct_server.set_succeeded()
-        return ret_status
-
-
-
-    def direct_done_cb(self, status, result):
-        print("done callback")
-        self.direct_server.set_succeeded()
 
 
     def state_goal_cb(self, cmd):
@@ -46,10 +39,10 @@ class Router:
         goal_controller = self.alloc_table[goal_dof]
 
         client = actionlib.SimpleActionClient('controller/' + goal_dof, StateAction)
-        client.send_goal(cmd, done_cb=self.state_done_cb)
-
-    
-    def state_done_cb(self, status, result):
+        client.wait_for_server()
+        print("sending goal")
+        ret_status =  client.send_goal_and_wait(cmd) #TODO - make non-blocking
+        print("returned status: ", ret_status)
         self.state_server.set_succeeded()
 
 
