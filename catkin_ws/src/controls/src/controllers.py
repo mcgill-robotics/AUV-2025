@@ -48,6 +48,9 @@ class DirectController(Controller):
         # set up action server
         self.action_server = actionlib.SimpleActionServer('controller/' + dof, DirectAction, self.goal_cb, False)
 
+        # TODO - self.status to check whether to reset
+
+
     def goal_cb(self, cmd):
         print("controller goal cb - effort", cmd.effort)
         self.effort = cmd.effort
