@@ -1,0 +1,3 @@
+<launch>
+	<node name="test_pitch" pkg="planner" type="test_pitch.py" respawn="false" output="screen"/>
+</launch>
