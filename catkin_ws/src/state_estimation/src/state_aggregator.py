@@ -2,7 +2,7 @@
 
 import rospy
 import tf
-from std_msgs.msg import Float64
+from geometry_msgs.msg import Point, Pose, Quaternion
 from state_variables import *
 
 
@@ -28,12 +28,22 @@ class State_Aggregator:
 
 
     def update_state(self, _):
-        State_Aggregator.pub_x.publish(Float64(self.x.get())) 
-        State_Aggregator.pub_y.publish(Float64(self.y.get())) 
-        State_Aggregator.pub_z.publish(Float64(self.z.get())) 
-        State_Aggregator.pub_theta_x.publish(Float64(self.theta_x.get())) 
-        State_Aggregator.pub_theta_y.publish(Float64(self.theta_y.get())) 
-        State_Aggregator.pub_theta_z.publish(Float64(self.theta_z.get())) 
+        position = Point(
+                self.x.get(), 
+                self.y.get(), 
+                self.z.get())
+        quaternion = tf.transformations.quaternion_from_euler(
+                self.theta_x.get(), 
+                self.theta_y.get(), 
+                self.theta_z.get())
+        orientation = Quaternion(
+                quaternion[0], 
+                quaternion[1],
+                quaternion[2],
+                quaternion[3])
+        pose  = Pose(position, orientation)
+        self.pub.publish(pose)
+
 
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')
