@@ -1,8 +1,0 @@
-# Define the goal
-std_msgs/Float64 target_depth
----
-# Define the result
-std_msgs/Float64 final_depth
----
-# Define a feedback message
-std_msgs/Float64 curr_depth
