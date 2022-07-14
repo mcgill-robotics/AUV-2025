@@ -3,7 +3,7 @@
 import rospy
 import smach
 
-from dof import Pitch, Pause
+from dof_states import Pitch, Pause
 
 
 if __name__ == '__main__':
@@ -11,11 +11,11 @@ if __name__ == '__main__':
     sm =smach.StateMachine(outcomes=['finished'])
 
     with sm:
-        smach.StateMachine.add('positive', Pitch(effort=0.20), 
+        smach.StateMachine.add('positive', Pitch(effort=0.2), 
             transitions={'done':'pause'})
         smach.StateMachine.add('pause', Pause(duration=2.0), 
             transitions={'done':'negative'})
-        smach.StateMachine.add('negative', Pitch(effort=-0.20), 
+        smach.StateMachine.add('negative', Pitch(effort=-0.2), 
             transitions={'done':'off'})
         smach.StateMachine.add('off', Pause(), 
             transitions={'done':'finished'})
