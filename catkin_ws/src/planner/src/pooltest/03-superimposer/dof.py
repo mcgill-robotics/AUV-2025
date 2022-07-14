@@ -5,7 +5,7 @@ import smach
 
 from std_msgs.msg import Float64
 
-class DeadReckonMotion(smach.State):
+class DOFMotion(smach.State):
     def __init__(self, topic, effort, duration=2.0):
         super().__init__(outcomes=['done'])
         self.effort = Float64(effort)
@@ -22,8 +22,38 @@ class DeadReckonMotion(smach.State):
         return 'done'
 
     def update(self, _):
-        print("publishing to ", self.topic)
         self.pub.publish(self.effort) 
+
+
+class Surge(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('surge', effort, duration)
+
+
+class Sway(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('sway', effort, duration)
+
+
+class Heave(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('heave', effort, duration)
+
+
+class Roll(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('roll', effort, duration)
+
+
+class Pitch(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('pitch', effort, duration)
+
+
+class Yaw(DOFMotion):
+    def __init__(self, effort, duration=10.0):
+        super().__init__('yaw', effort, duration)
+
 
 class Pause(smach.State):
     off = Float64(0.0)
