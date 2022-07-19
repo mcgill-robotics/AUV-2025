@@ -1,3 +1,0 @@
-<launch>
-	<node name="test_yaw" pkg="planner" type="test_yaw.py" respawn="false" output="screen"/>
-</launch>
