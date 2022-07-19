@@ -24,43 +24,43 @@ class ThrusterMotion(smach.State):
         self.pub.publish(self.effort) 
 
 
-class Surge(EffortMotion):
+class Surge(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([effort, effort, 0, 0, 0, 0, 0, 0])
         super().__init__(cmd, duration)
 
 
-class Sway(EffortMotion):
+class Sway(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([0, 0, effort, effort, 0, 0, 0, 0])
         super().__init__(cmd, duration)
 
 
-class Heave(EffortMotion):
+class Heave(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([0, 0, 0, 0, effort, effort, effort, effort])
         super().__init__(cmd, duration)
 
 
-class Roll(EffortMotion):
+class Roll(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([0, 0, 0, 0, -effort, effort, effort, -effort])
         super().__init__(cmd, duration)
 
 
-class Pitch(EffortMotion):
+class Pitch(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([0, 0, 0, 0, effort, effort, -effort, -effort])
         super().__init__(cmd, duration)
 
 
-class Yaw(EffortMotion):
+class Yaw(ThrusterMotion):
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([-effort, effort, effort, -effort, 0, 0, 0, 0])
         super().__init__(cmd, duration)
 
 
-class Pause(EffortMotion):
+class Pause(ThrusterMotion):
 
     def __init__(self, effort=0.2, duration=10.0):
         cmd = ThrusterCommand([0, 0, 0, 0, 0, 0, 0, 0])
