@@ -1,5 +1,7 @@
-from cv2 import line
+import rospy
 import numpy as np 
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import math
 
@@ -14,6 +16,7 @@ CANNY_THRESHOLD_2 = 255 # Used to find initial segments of strong edges
 HOUGH_RHO = 6 # Distance resolution of accumulator in pixels
 HOUGH_THETA = np.pi/180 # Angle resolution of accumulator in rad
 HOUGH_THRESHOLD = 100 # Accumulator threshold (ie- mumber of votes) - DECREASE FOR MORE LINES
+ANGLE_TOLERANCE = 0.4 # Tolerance for angles of considered to belong to the same line 
 
 original = cv2.imread('source.png') # Initially using static image
 masked = original.copy() # Create copy of original
@@ -40,37 +43,42 @@ if houghLines is not None:
     thetaFromVertical[rhos<0] = np.pi-thetaFromVertical[rhos<0] # Deal with lines which have negative slope
     fromRef = np.min(thetaFromVertical) # Find point closest to vertical, assuming that we will be nearly aligned with this line
     toRef = np.max(thetaFromVertical) # Find point farthest from the vertical
-    linesFrom = houghLines[thetaFromVertical<fromRef+0.4] # All lines close to vertical
-    linesTo = houghLines[thetaFromVertical>toRef-0.4] # All lines far from vertical
+    linesFrom = houghLines[thetaFromVertical<fromRef+ANGLE_TOLERANCE] # All lines close to vertical
+    linesTo = houghLines[thetaFromVertical>toRef-ANGLE_TOLERANCE] # All lines far from vertical
     lineFromAvg = np.average(linesFrom,axis=0) # Take average for both lines
     lineToAvg = np.average(linesTo,axis=0)
     linesAvg = np.array([lineFromAvg,lineToAvg]) # Create array with the average rho and theta values
-    lines = linesAvg.tolist() # Convert to list for plotting
 
-grads = [] # List of gradients
-yints = [] # List of y-intercepts
 color = (0,0,255)  # Set color to red initially, to represent 'from' lane
+rho = linesAvg[:,0,0]
+theta = linesAvg[:,0,1]
+print(theta)
+a = np.cos(theta)
+b = np.sin(theta)
+x0 = a * rho # rho = x.cos(theta) + y.sin(theta)
+y0 = b * rho
+grad = -a/b # convert to y = mx+c OR y = [rho-x.cos(theta)]/sin(theta). Gradient is -cos/sin = -cot(theta)
+yint = rho / b # y = [rho-x.cos(theta)]/sin(theta), so the y-intercept or c is rho/sin(theta)
+#Lines for plotting taken from Opencv houghlines docs
+pt1 = (int(x0[0] + 1000*(-b[0])), int(y0[0] + 1000*(a[0])))
+pt2 = (int(x0[0] - 1000*(-b[0])), int(y0[0] - 1000*(a[0])))
+cv2.line(hough, pt1, pt2, color, 2, cv2.LINE_AA) # Plot line
 
-for i in range(len(lines)):
-    rho = lines[i][0][0]
-    theta = lines[i][0][1]
-    a = math.cos(theta)
-    b = math.sin(theta)
-    x0 = a * rho # rho = x.cos(theta) + y.sin(theta)
-    y0 = b * rho
-    grad = -a/b # convert to y = mx+c OR y = [rho-x.cos(theta)]/sin(theta). Gradient is -cos/sin = -cot(theta)
-    grads.append(grad) # Append current gradient to list
-    #Lines for plotting taken from Opencv houghlines docs
-    pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-    pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
-    yint = rho / b # y = [rho-x.cos(theta)]/sin(theta), so the y-intercept or c is rho/sin(theta)
-    yints.append(yint) # Append to list of y-intercepts
-    cv2.line(hough, pt1, pt2, color, 2, cv2.LINE_AA) # Plot line
-    color = (0,255,0) # Change color to  green for 'to' line
+color = (0,255,0) # Change color to  green for 'to' line
+pt3 = (int(x0[1] + 1000*(-b[1])), int(y0[1] + 1000*(a[1])))
+pt4 = (int(x0[1] - 1000*(-b[1])), int(y0[1] - 1000*(a[1])))
+cv2.line(hough, pt3, pt4, color, 2, cv2.LINE_AA) # Plot line
 
-centerX = (yints[1]-yints[0])/(grads[0]-grads[1]) # Caculate the intersection of the lines, where m1x + c1 = m2X + c2
-centerY = centerX * grads[0] + yints[0] # y = mx + c
+centerX = (yint[1]-yint[0])/(grad[0]-grad[1]) # Caculate the intersection of the lines, where m1x + c1 = m2X + c2
+centerY = centerX * grad[0] + yint[0] # y = mx + c
 cv2.circle(hough,(int(centerX),int(centerY)),10,color=(255,0,150),thickness=3) # Draw a circle at the center
+
+headings = theta
+headings[rho<0] = headings[rho<0]-np.pi
+headings = headings * 180 /np.pi
+print('Heading from: ',headings[0])
+print('Heading to: ',headings[1])
+print('Center at: ',centerX,', ',centerY)
 
 
 # Only display
