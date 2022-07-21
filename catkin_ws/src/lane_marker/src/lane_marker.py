@@ -5,10 +5,9 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import math
 
-#TODO #1: Calculate angles to be published
-#TODO #2: Incorporate into ros
-#TODO #3: Deal with noise or foreign objects
-#TODO #4: Deal with case where we don't find lines
+#TODO #1: Incorporate into ros
+#TODO #2: Deal with noise or foreign objects
+#TODO #3: Deal with case where we don't find lines
 
 BRIGHTNESS_THRESOLD = 50 # Threshold used to compare grayscale image
 CANNY_THRESHOLD_1 = 50 # Value for canny edge detection - used for edge linking
