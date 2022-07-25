@@ -28,13 +28,17 @@ class Lane_Marker:
             original = self.bridge.imgmsg_to_cv2(ros_img, 'bgr8') # Convert to opencv form
         except CvBridgeError as e:
             rospy.loginfo('Topic does not exist')
-        #original = cv2.imread('source.png') # Initially using static image
+        linesFound = self.findLines(original)
+        resultImg, headings, centerX, centerY = self.processLines(linesFound, original.copy())
+        return self.sendResponse(headings, centerX, centerY, resultImg)
+
+
+    def findLines(self,original):
         masked = original.copy() # Create copy of original
         masked[:,:,0:2] = 0 # Keep only red in the image
         gray = cv2.cvtColor(masked,cv2.COLOR_BGR2GRAY) # Convert to gray(red points will be brighter)
         gray = (gray > BRIGHTNESS_THRESOLD) * gray # Zero out parts  of image that are below thresold
         canny = cv2.Canny(gray, CANNY_THRESHOLD_1, CANNY_THRESHOLD_2) # Perform Canny edge detection on grayscale image to find outlines
-        hough = original.copy() # Create copy of original for final display of lines
         houghLines = cv2.HoughLines(canny,HOUGH_RHO,HOUGH_THETA,HOUGH_THRESHOLD) # Run Hough lines to detect straight lines
 
         '''
@@ -58,7 +62,9 @@ class Lane_Marker:
             lineFromAvg = np.average(linesFrom,axis=0) # Take average for both lines
             lineToAvg = np.average(linesTo,axis=0)
             linesAvg = np.array([lineFromAvg,lineToAvg]) # Create array with the average rho and theta values
-
+            return linesAvg
+    
+    def processLines(self,linesAvg, resultImg):
         color = (0,0,255)  # Set color to red initially, to represent 'from' lane
         rho = linesAvg[:,0,0]
         theta = linesAvg[:,0,1]
@@ -66,21 +72,21 @@ class Lane_Marker:
         b = np.sin(theta)
         x0 = a * rho # rho = x.cos(theta) + y.sin(theta)
         y0 = b * rho
-        grad = -a/b # convert to y = mx+c OR y = [rho-x.cos(theta)]/sin(theta). Gradient is -cos/sin = -cot(theta)
+        grad = -a / b # convert to y = mx+c OR y = [rho-x.cos(theta)]/sin(theta). Gradient is -cos/sin = -cot(theta)
         yint = rho / b # y = [rho-x.cos(theta)]/sin(theta), so the y-intercept or c is rho/sin(theta)
         #Lines for plotting taken from Opencv houghlines docs
         pt1 = (int(x0[0] + 1000*(-b[0])), int(y0[0] + 1000*(a[0])))
         pt2 = (int(x0[0] - 1000*(-b[0])), int(y0[0] - 1000*(a[0])))
-        cv2.line(hough, pt1, pt2, color, 2, cv2.LINE_AA) # Plot line
+        cv2.line(resultImg, pt1, pt2, color, 2, cv2.LINE_AA) # Plot line
 
         color = (0,255,0) # Change color to  green for 'to' line
         pt3 = (int(x0[1] + 1000*(-b[1])), int(y0[1] + 1000*(a[1])))
         pt4 = (int(x0[1] - 1000*(-b[1])), int(y0[1] - 1000*(a[1])))
-        cv2.line(hough, pt3, pt4, color, 2, cv2.LINE_AA) # Plot line
+        cv2.line(resultImg, pt3, pt4, color, 2, cv2.LINE_AA) # Plot line
 
         centerX = (yint[1]-yint[0])/(grad[0]-grad[1]) # Caculate the intersection of the lines, where m1x + c1 = m2X + c2
         centerY = centerX * grad[0] + yint[0] # y = mx + c
-        cv2.circle(hough,(int(centerX),int(centerY)),10,color=(255,0,150),thickness=3) # Draw a circle at the center
+        cv2.circle(resultImg,(int(centerX),int(centerY)),10,color=(255,0,150),thickness=3) # Draw a circle at the center
 
         headings = theta # Initial headings
         headings[rho>0] = -headings[rho>0] # Clockwise headings are negative
@@ -89,16 +95,18 @@ class Lane_Marker:
         print('Heading from: ', headingsInDegrees[0])
         print('Heading to: ', headingsInDegrees[1])
         print('Center at: ', centerX, ', ', centerY)
-
-        ros_resp_img = self.bridge.cv2_to_imgmsg(hough,'bgr8')
+        return resultImg, headings, centerX, centerY
+    
+    def sendResponse(self, headings, centerX, centerY, resultImg):
+        rosResponseImg = self.bridge.cv2_to_imgmsg(resultImg,'bgr8')
         vectorFrom = Vector3()
         vectorTo = Vector3()
+        center = Point()
         vectorFrom.z = headings[0]
         vectorTo.z = headings[1]
-        center = Point()
         center.x = centerX
         center.y = centerY
-        server_response = LanesInfoResponse(ros_resp_img, vectorTo, vectorFrom, center)
+        server_response = LanesInfoResponse(rosResponseImg, vectorTo, vectorFrom, center)
         return server_response
 
 
@@ -107,4 +115,3 @@ if __name__=='__main__':
     lane_marker = Lane_Marker()
     serv = rospy.Service('lanes_info',LanesInfo,lane_marker.image_callback)
     rospy.spin()
-    #cv2.destroyAllWindows()
