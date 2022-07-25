@@ -2,10 +2,11 @@
 import rospy
 from cv_bridge import CvBridge
 from lane_marker.srv import LanesInfo, LanesInfoRequest
-from sensor_msgs.msg import Image
+import rospkg
 import cv2
 
-image = cv2.imread('source.png')
+path = rospkg.RosPack().get_path('lane_marker')
+image = cv2.imread(path + '/images/source.png')
 rospy.init_node('image_service_client',anonymous=True)
 bridge = CvBridge()
 ros_img = bridge.cv2_to_imgmsg(image,'bgr8')
