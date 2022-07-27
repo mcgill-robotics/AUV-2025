@@ -1,0 +1,4 @@
+sensor_msgs/Image gate_image
+---
+geometry_msgs/Point frame_center
+geometry_msgs/Point gate_center
