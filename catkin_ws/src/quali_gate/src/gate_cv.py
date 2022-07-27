@@ -2,14 +2,20 @@ import cv2
 import numpy as np
 import math
 from cv_bridge import CvBridge
+import rospy
+from sensor_msgs.msg import Image
 
-image = cv2.imread('gate.png')
+#image = cv2.imread('gate.png')
 bridge = CvBridge()
 
 def imageCallback(ros_image):
     image = bridge.imgmsg_to_cv2(ros_image, 'bgr8')
-    resImg, frameCenX, frameCenY, lines = getLines(image)
-    gateCenterX, gateCenterY = processLines(image, lines)
+    resImg = image.copy()
+    frameCenX, frameCenY, lines = getLines(image)
+    gateCenX, gateCenY = processLines(resImg, lines)
+    print('Center of gate is at: ', gateCenX, ',', gateCenY)
+    print('Center of frame is at ', frameCenX, ',', frameCenY)
+    plotResult(image, resImg, gateCenX, gateCenY, frameCenX, frameCenY)
 
 
 def getLines(image):
@@ -20,11 +26,10 @@ def getLines(image):
     canny = cv2.Canny(gray, 50, 150)
 
     lines = cv2.HoughLinesP(canny, rho=6, theta=np.pi/180, threshold=60, minLineLength=200, maxLineGap=70)
-    resultImg = image.copy()
     frameCenterX = np.size(canny, 1) / 2
     frameCenterY = np.size(canny, 0) / 2
     
-    return resultImg, frameCenterX, frameCenterY, lines
+    return frameCenterX, frameCenterY, lines
 
 def processLines(resultImg, lines):
     if lines is not None:
@@ -47,17 +52,21 @@ def processLines(resultImg, lines):
         print(leftAvg[2])
         avgX = (leftAvg[0]+leftAvg[2]+rightAvg[0]+rightAvg[2]) / 4
          
-        print('Center of gate is at: ', avgX, ',', avgY)
-        print('Center of frame is at ', frameCenterX, ',', frameCenterY)
+        
         for i in range(0, len(lines)):
             l = lines[i]
             cv2.line(resultImg, (int(l[0]), int(l[1])), (int(l[2]), int(l[3])), (0,150,0), 3, cv2.LINE_AA)
         return avgX, avgY
 
-def plotResult(resultImg, centerX, centerY, frameCenterX, frameCenterY):
-    cv2.circle(resultImg, (int(avgX), int(avgY)), 5,( 0,255,0), -1)
+def plotResult(img, resultImg, centerX, centerY, frameCenterX, frameCenterY):
+    cv2.circle(resultImg, (int(centerX), int(centerY)), 5,( 0,255,0), -1)
     cv2.circle(resultImg, (int(frameCenterX), int(frameCenterY)), 5, (0,0,255), -1) # Draw circle at frame center
-cv2.imshow('Main',image)
-cv2.imshow('Hough',hough)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    cv2.imshow('Main',img)
+    cv2.imshow('Hough',resultImg)
+    cv2.waitKey(3000)
+    cv2.destroyAllWindows()
+
+if __name__=='__main__':
+    rospy.init_node('listener_node',anonymous=True)
+    imsub = rospy.Subscriber('/image_publisher_1658951535633707299/image_raw', Image, imageCallback)
+    rospy.spin()
