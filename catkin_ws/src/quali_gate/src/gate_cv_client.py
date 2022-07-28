@@ -3,8 +3,10 @@ import rospy
 import cv2
 from cv_bridge import CvBridge
 from quali_gate.srv import GateInfo, GateInfoRequest
+import rospkg
 
-original = cv2.imread('gate.png')
+path = rospkg.RosPack().get_path('quali_gate')
+original = cv2.imread(path + '/images/gate.png')
 bridge = CvBridge()
 rosImg = bridge.cv2_to_imgmsg(original)
 rospy.init_node('gate_client', anonymous=True)
