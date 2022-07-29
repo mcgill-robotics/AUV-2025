@@ -71,24 +71,20 @@ class Lane_Marker:
         theta = linesAvg[:,0,1]
         a = np.cos(theta)
         b = np.sin(theta)
+        # Taking x and y components of ax + by = c, where c=rho
+        eqns = np.column_stack((a,b))
+        centerX, centerY = np.linalg.solve(eqns,rho)
         x0 = a * rho # rho = x.cos(theta) + y.sin(theta)
         y0 = b * rho
-        grad = -a / b # convert to y = mx+c OR y = [rho-x.cos(theta)]/sin(theta). Gradient is -cos/sin = -cot(theta)
-        yint = rho / b # y = [rho-x.cos(theta)]/sin(theta), so the y-intercept or c is rho/sin(theta)
         #Lines for plotting taken from Opencv houghlines docs
         pt1 = (int(x0[0] + 1000*(-b[0])), int(y0[0] + 1000*(a[0])))
         pt2 = (int(x0[0] - 1000*(-b[0])), int(y0[0] - 1000*(a[0])))
         cv2.line(resultImg, pt1, pt2, color, 2, cv2.LINE_AA) # Plot line
-
         color = (0,255,0) # Change color to  green for 'to' line
         pt3 = (int(x0[1] + 1000*(-b[1])), int(y0[1] + 1000*(a[1])))
         pt4 = (int(x0[1] - 1000*(-b[1])), int(y0[1] - 1000*(a[1])))
-        cv2.line(resultImg, pt3, pt4, color, 2, cv2.LINE_AA) # Plot line
-
-        centerX = (yint[1]-yint[0]) / (grad[0]-grad[1]) # Caculate the intersection of the lines, where m1x + c1 = m2X + c2
-        centerY = centerX * grad[0] + yint[0] # y = mx + c
+        cv2.line(resultImg, pt3, pt4, color, 2, cv2.LINE_AA) # Plot line 
         cv2.circle(resultImg,(int(centerX),int(centerY)),10,color=(255,0,150),thickness=3) # Draw a circle at the center
-
         headings = theta # Initial headings
         headings[rho>0] = -headings[rho>0] # Clockwise headings are negative
         headings[rho<0] = np.pi - headings[rho<0] # Conversion for certain slopes
@@ -100,11 +96,9 @@ class Lane_Marker:
     
     def sendResponse(self, headings, centerX, centerY, resultImg):
         rosResponseImg = self.bridge.cv2_to_imgmsg(resultImg,'bgr8')
-        headingFrom = Float32()
-        headingTo = Float32()
         center = Point()
-        headingFrom.data = headings[0]
-        headingTo.data = headings[1]
+        headingFrom = headings[0]
+        headingTo = headings[1]
         center.x = centerX
         center.y = centerY
         server_response = LanesInfoResponse(rosResponseImg, headingTo, headingFrom, center)
