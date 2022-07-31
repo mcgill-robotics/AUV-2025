@@ -75,7 +75,7 @@ To build the currently functional packages:
 
 After build is complete, update ROS environment so that packages are 'visible':
 
-	source ../devel/setup.bash
+	source ./devel/setup.bash
   
 ### Flashing Firmware
 
