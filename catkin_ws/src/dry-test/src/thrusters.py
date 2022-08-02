@@ -4,16 +4,16 @@ import rospy
 from auv_msgs.msg import ThrusterCommand
 
 pins = {1:4, 2:5, 3:6, 4:7, 5:8, 6:9, 7:10, 8:11}
-reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
+reset = [0, 0, 0, 0, 0, 0, 0, 0]
 reset_cmd = ThrusterCommand(reset)
 pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=50)
 
 def forwards_test(t):
     while True:
-        print("- spinning at 5% power forwards for 5s")
+        print("- spinning at 25% power forwards for 5s")
 
         cmd = reset.copy()
-        cmd[t-1] = 1525
+        cmd[t-1] = 0.25
         pub.publish(cmd)
         rospy.sleep(5.0)
         pub.publish(reset_cmd)
