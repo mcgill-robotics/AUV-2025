@@ -86,6 +86,7 @@ ros::Subscriber<auv_msgs::ThrusterCommand> sub("propulsion/thruster_cmd", &comma
 
 void setup() {
 	initThrusters();
+	nh.subscribe(sub);
 	nh.initNode();
 }
 
