@@ -3,10 +3,11 @@
 import rospy
 from auv_msgs.msg import ThrusterCommand
 
-pins = {1:4, 2:5, 3:6, 4:7, 5:8, 6:9, 7:10, 8:11}
-reset = [0, 0, 0, 0, 0, 0, 0, 0]
+pins = {1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9}
+reset = [0,0,0,0,0,0,0,0]
 reset_cmd = ThrusterCommand(reset)
-pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=50)
+pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=10)
+rospy.sleep(7)
 
 def forwards_test(t):
     while True:
@@ -31,6 +32,8 @@ def thruster_test(t):
 
 
 rospy.init_node("thrusters_test")
+#pub.publish(reset_cmd)
+#rospy.sleep(7)
 while True:
     print("========== Thrusters Test ==========")
     print("refer to images in dry-test/images for labelled diagrams of thrusters on the AUV")
