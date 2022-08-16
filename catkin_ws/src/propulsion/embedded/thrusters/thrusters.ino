@@ -53,14 +53,14 @@ uint16_t* convertToMicroseconds(const float intensities[8]){
 void updateThrusters(const float intensities[8]){
 	uint16_t* command = convertToMicroseconds(intensities);
 
-	thrusters[SRG_P].writeMicroseconds(command[SRG_P_PIN-2]);
-	thrusters[SRG_S].writeMicroseconds(command[SRG_S_PIN-2]);
-	thrusters[SWY_BW].writeMicroseconds(command[SWY_BW_PIN-2]);
-	thrusters[SWY_ST].writeMicroseconds(command[SWY_ST_PIN-2]);
-	thrusters[HVE_BW_P].writeMicroseconds(command[HVE_BW_P_PIN-2]);
-	thrusters[HVE_BW_S].writeMicroseconds(command[HVE_BW_S_PIN-2]);
-	thrusters[HVE_ST_P].writeMicroseconds(command[HVE_ST_P_PIN-2]);
-	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S_PIN-2]);
+	thrusters[SRG_P].writeMicroseconds(command[SRG_P]);
+	thrusters[SRG_S].writeMicroseconds(command[SRG_S]);
+	thrusters[SWY_BW].writeMicroseconds(command[SWY_BW]);
+	thrusters[SWY_ST].writeMicroseconds(command[SWY_ST]);
+	thrusters[HVE_BW_P].writeMicroseconds(command[HVE_BW_P]);
+	thrusters[HVE_BW_S].writeMicroseconds(command[HVE_BW_S]);
+	thrusters[HVE_ST_P].writeMicroseconds(command[HVE_ST_P]);
+	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S]);
 }
 
 void thrustersOff(){
