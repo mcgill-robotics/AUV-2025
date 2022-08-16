@@ -60,6 +60,11 @@ time (**recommended**):
 
 ## Building ROS Packages
 
+Before building packages, make sure that the following additional ROS packages are installed:
+
+	sudo apt-get install ros-noetic-rosserial-arduino
+	sudo apt-get install ros-noetic-pid
+
 *To build/launch/test an individual package, see the README.md in the respective package.*
 
 To build the currently functional packages:
@@ -70,7 +75,7 @@ To build the currently functional packages:
 
 After build is complete, update ROS environment so that packages are 'visible':
 
-	source ../devel/setup.bash
+	source ./devel/setup.bash
   
 ### Flashing Firmware
 

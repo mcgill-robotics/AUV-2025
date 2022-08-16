@@ -1,21 +1,27 @@
 #include <ros.h>
 #include <Servo.h>
 #include <auv_msgs/ThrusterCommand.h>
+/* 
+NOTE: pins 2-9 were chosen instead of 0-7, since 
+pins 0 and 1 function differently.
 
-#define SRG_P_PIN 	4
-#define SRG_S_PIN	5
-#define SWY_BW_PIN 	6
-#define SWY_ST_PIN 	7
-#define HVE_BW_P_PIN 	8
-#define HVE_BW_S_PIN 	9
-#define HVE_ST_S_PIN 	10
-#define HVE_ST_P_PIN 	11
+*/
+#define SRG_P_PIN 	2
+#define SRG_S_PIN	3
+#define SWY_BW_PIN 	4
+#define SWY_ST_PIN 	5
+#define HVE_BW_P_PIN 	6
+#define HVE_BW_S_PIN 	7
+#define HVE_ST_S_PIN 	8
+#define HVE_ST_P_PIN 	9
 
 /* thrusters operate in range 1500 +/- 500 */
 #define STOP 1500
 #define MAX_DELTA 500
 
-/* less verbose identifiers */
+/* less verbose identifiers
+	Pin numbers [0-7] from ThusterCommand.msg
+ */
 const uint8_t SRG_P 	= auv_msgs::ThrusterCommand::SURGE_PORT;
 const uint8_t SRG_S 	= auv_msgs::ThrusterCommand::SURGE_STAR;
 const uint8_t SWY_BW 	= auv_msgs::ThrusterCommand::SWAY_BOW;
@@ -47,14 +53,14 @@ uint16_t* convertToMicroseconds(const float intensities[8]){
 void updateThrusters(const float intensities[8]){
 	uint16_t* command = convertToMicroseconds(intensities);
 
-	thrusters[SRG_P].writeMicroseconds(command[SRG_P_PIN]);
-	thrusters[SRG_S].writeMicroseconds(command[SRG_S_PIN]);
-	thrusters[SWY_BW].writeMicroseconds(command[SWY_BW_PIN]);
-	thrusters[SWY_ST].writeMicroseconds(command[SWY_ST_PIN]);
-	thrusters[HVE_BW_P].writeMicroseconds(command[HVE_BW_P_PIN]);
-	thrusters[HVE_BW_S].writeMicroseconds(command[HVE_BW_S_PIN]);
-	thrusters[HVE_ST_P].writeMicroseconds(command[HVE_ST_P_PIN]);
-	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S_PIN]);
+	thrusters[SRG_P].writeMicroseconds(command[SRG_P_PIN-2]);
+	thrusters[SRG_S].writeMicroseconds(command[SRG_S_PIN-2]);
+	thrusters[SWY_BW].writeMicroseconds(command[SWY_BW_PIN-2]);
+	thrusters[SWY_ST].writeMicroseconds(command[SWY_ST_PIN-2]);
+	thrusters[HVE_BW_P].writeMicroseconds(command[HVE_BW_P_PIN-2]);
+	thrusters[HVE_BW_S].writeMicroseconds(command[HVE_BW_S_PIN-2]);
+	thrusters[HVE_ST_P].writeMicroseconds(command[HVE_ST_P_PIN-2]);
+	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S_PIN-2]);
 }
 
 void thrustersOff(){
@@ -77,7 +83,7 @@ void initThrusters(){
 	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
 
 	//set initial thruster effort (OFF)
-	thrustersOff();
+	//thrustersOff();
 }
 
 
@@ -86,7 +92,9 @@ ros::Subscriber<auv_msgs::ThrusterCommand> sub("propulsion/thruster_cmd", &comma
 
 void setup() {
 	initThrusters();
+	nh.subscribe(sub);
 	nh.initNode();
+	
 }
 
 void loop() {
