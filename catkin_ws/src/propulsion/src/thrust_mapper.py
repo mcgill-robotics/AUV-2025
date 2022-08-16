@@ -11,7 +11,7 @@ D_1 = 0.895 # m
 D_2 = 0.778 # m
 
 thrust_pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=5)
-rospy.wait(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
+rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
 
 T = np.matrix(
         [[1., 1., 0., 0., 0., 0., 0., 0.],
