@@ -31,10 +31,13 @@ def thruster_test(t):
     print("expected output is on pin {}".format(pins[t]))
     forwards_test(t)
 
+def reset_thrusters():
+    pub.publish(reset_cmd)
+    print('Safely shutting down thrusters')
 
 rospy.init_node("thrusters_test")
-#pub.publish(reset_cmd)
-#rospy.sleep(7)
+rospy.on_shutdown(reset_thrusters)
+
 while True:
     print("========== Thrusters Test ==========")
     print("refer to images in dry-test/images for labelled diagrams of thrusters on the AUV")
