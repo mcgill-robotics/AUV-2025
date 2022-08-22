@@ -1,7 +1,8 @@
 #include <Wire.h>
 #include "MS5803.h"
+#include <Arduino.h>
 
-#define sensor_address 0x77
+
 #define secondOrder false
 #define resetCommand  0x1E
 #define pressureADCCommand 0x48
@@ -11,9 +12,12 @@
 int64_t coefficients[6];
 int32_t temperature, pressure;
 int64_t dT;
+byte sensor_address;
 
-MS5803::MS5803() {
-  sensorInit();
+MS5803::MS5803(byte address) {
+  Wire.begin();
+  sensor_address = address;
+  //sensorInit();
 }
 //Send i2c command
 void MS5803::sendCommand(byte command) {
@@ -100,4 +104,3 @@ int32_t MS5803::getPressure() {
   calculatePressure();
   return (pressure);
 }
-
