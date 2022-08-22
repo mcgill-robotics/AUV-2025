@@ -1,20 +1,29 @@
 #include <Wire.h>
+#include "MS5803.h"
+
 #define sensor_address 0x77
+#define secondOrder false
+#define resetCommand  0x1E
+#define pressureADCCommand 0x48
+#define tempADCCommand 0x58
+#define readADCCommand 0x00
 
 int64_t coefficients[6];
 int32_t temperature, pressure;
 int64_t dT;
-bool secondOrder = true;
 
+MS5803::MS5803() {
+  sensorInit();
+}
 //Send i2c command
-void sendCommand(byte command) {
+void MS5803::sendCommand(byte command) {
   Wire.beginTransmission(sensor_address);
   Wire.write(command);
   Wire.endTransmission();
 }
 
 //Read compensation coefficients from PROM
-void readCoefficients() {
+void MS5803::readCoefficients() {
   for (int i=0; i<6; i++) {
     sendCommand(0xA2 + i*2); //Address of each coefficient
     Wire.requestFrom(sensor_address, 2); 
@@ -30,17 +39,17 @@ void readCoefficients() {
 }
 
 //Initialization steps for sensor
-void sensorInit() {
-  sendCommand(0x1E);
+void MS5803::sensorInit() {
+  sendCommand(resetCommand);
   delay(50);
   readCoefficients();
 }
 
 //Read raw temperature or pressure
-uint32_t adcRead(byte adcCommand) {
+uint32_t MS5803::adcRead(byte adcCommand) {
     sendCommand(adcCommand);
     delay(10);
-    sendCommand(0x00);
+    sendCommand(readADCCommand);
     Wire.requestFrom(sensor_address, 3);
     byte byte1 = Wire.read();
     byte byte2 = Wire.read();
@@ -51,16 +60,16 @@ uint32_t adcRead(byte adcCommand) {
 
 
 //Calculate actual temperature without second order compensation
-void calculateTemperature() {
-  uint32_t rawTemp = adcRead(0x58);
+void MS5803::calculateTemperature() {
+  uint32_t rawTemp = adcRead(tempADCCommand);
   dT = (int64_t)rawTemp - (coefficients[4]<<8);
   temperature = 2000 + ((dT*coefficients[5])>>23);  
 }
 
 //Calculate pressure and temperature with second order compensation
-int32_t calculatePressure() {
+void MS5803::calculatePressure() {
   calculateTemperature();
-  uint32_t rawPressure = adcRead(0x48);
+  uint32_t rawPressure = adcRead(pressureADCCommand);
   int64_t offset = (coefficients[1]<<18) + (coefficients[3]*dT>>5);
   int64_t sensitivity = (coefficients[0]<<17) + (coefficients[2]*dT>>7);
   //Second order compensation
@@ -87,22 +96,8 @@ int32_t calculatePressure() {
 }
 
 //Public method to get pressure
-int32_t getPressure() {
+int32_t MS5803::getPressure() {
   calculatePressure();
   return (pressure);
 }
 
-void setup() {
-  delay(5000);
-  Serial.begin(9600);
-  sensorInit();
-}
-
-void loop() {
-  calculatePressure();
-  Serial.print("Temperature is ");
-  Serial.println(temperature/100.0);
-  Serial.print("Pressure is ");
-  Serial.println(pressure);
-  delay(100);
-}
