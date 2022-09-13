@@ -112,13 +112,3 @@ You can stub the state of the AUV by publishing a `geometry_msgs/Pose` message o
 ## Running (on AUV)
  
     roslaunch bringup bringup.launch & 
-
-
-## Contributing
-
-To learn how to contribute to the project and how to get started see CONTRIBUTING.md (**TODO**)
-
-
-## Known Issues
-
-If you find something not-quite-right please create a new Github Issue outlining the problem and make a pull request to `noetic` branch.
