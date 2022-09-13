@@ -2,7 +2,7 @@
 
 *This project is currently under development*
 
-Ahoy! This project contains software intended to run on a custom built AUV (model: Bradbury) to compete at RoboSub2022 on behalf of McGill Robotics. It runs using ROS and Arduino.
+Ahoy! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics. It runs using ROS and Arduino.
 
 This project is maintained by the McGill Robotics Club and was developed by its members - students of McGill University. 
 A number of ROS packages were included as git submodules (and thus fall under their respective licenses): 
