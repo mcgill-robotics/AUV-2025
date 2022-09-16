@@ -51,6 +51,13 @@
           </script>
         </material>
       </visual>
+
+      <sensor name="imu_sensor" type="imu">
+	<always_on>1</always_on>
+	<update_rate>1</update_rate>
+	<visualize>true</visualize>
+	<topic>imu</topic>
+      </sensor>
     </link>
 
     <!-- Horizontal fins -->
@@ -346,5 +353,10 @@
         <joint_name>vertical_fins_joint</joint_name>
         <p_gain>0.1</p_gain>
     </plugin>
+
+    <plugin filename="libignition-gazebo-imu-system.so"
+        name="ignition::gazebo::systems::Imu">
+    </plugin>
+
   </model>
 </sdf>
