@@ -59,42 +59,36 @@ see [forum post](https://answers.gazebosim.org/question/27597/ignition-crashes-d
 
 ##### Sol. 1 - Use Ogre1 as render engine
 
-Run the simulation using an older version of the rendering engine (Ogre1), this can
-be forced at the command line, though some assets may not be rendered correctly:
+Run the simulation using an older version of the rendering engine (Ogre1) that uses an older version of 
+the OpenGL standard, this can be forced at the command line, though some assets may not be rendered correctly:
 
 	ign gazebo quali.sdf --render-engine ogre
 
-##### Sol. 2 - upgrade OpenGL via PPA
 
-Alternatively, the version of OpenGL could be upgraded to be 3.3 or later. To see the current OpenGL 
-version do (may need to install mesa-utils first):
+##### Sol. 2 - install the up-to-date drivers for your graphics card via PPA
+
+OpenGL is not a program, it is a standard that the CPU uses to give graphics-related commands to the GPU. 
+We require the implementation of the OpenGL 3.3 standard - the actual implementation of this standard is 
+likely done by the manufacturers of our GPU card as part of their operating-system compatible GPU drivers. 
+To see the current OpenGL version supported by your GPU drivers (may need to install mesa-utils first):
 
 	glxinfo | grep "OpenGL version"
 
-The required OpenGL version is provided in a separate repository for stable upstream releases of X.org components, 
-see [reddit post](https://www.reddit.com/r/Ubuntu/comments/8tpq05/how_can_update_my_display_driver_to_opengl_33/).
-You can add this repository and upgrade:
+To find out your GPU card model:
+
+	sudo lshw -c video
+
+Do some research to try and find drivers for your graphics card, often the latest drivers using OpenGL > 3.3 are 
+provided via PPA - to fix this issue on the MEDN-WS1 desktop, the following was done:
 
 ```
-sudo add-apt-repository ppa:ubuntu-x-swat/x-updates 
-sudo apt-get update
+sudo add-apt-repository ppa:kisak/kisak-mesa
 sudo apt-get dist-upgrade	
 ```
 
-**Note:** as stated in the message when adding the PPA, you should purge all the PPA packages prior to 
-upgrading to a new release (ie. Ubuntu 20.04 -> Ubuntu 22.04).
+**Note:** as stated in the message when adding the PPA, you should install ppa-purge and downgrade all PPA packages 
+prior to upgrading to a new release (ie. Ubuntu 20.04 -> Ubuntu 22.04). Example for the PPA used on MEDN-WS1:
 
 ```
-If you are upgrading from one release to another with this PPA activated, please install the ppa-purge package 
-and use it to downgrade everything in here beforehand. sudo ppa-purge ppa:ubuntu-x-swat/updates will do it.
-
+sudo ppa-purge -d focal ppa:kisak/kisak-mesa
 ```
- 
-##### Sol. 3 - install the up-to-date drivers for your graphics card
-
-You can find out your GPU card model:
-
-	lspci | grep VGA
-
-Look up if there are any (proprietary) drivers available and instructions to install them. Often the more recent
-version of these drivers will bring in a more recent version of OpenGL.
