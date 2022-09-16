@@ -64,7 +64,7 @@
         </include>
 
         <include>
-            <uri>../assets/robots/mbari_tethys/model.sdf</uri>
+            <uri>../assets/robots/mbari_tethys/mbari_tethys.sdf</uri>
             <pose>0 -4 -2 0 0 -1.57</pose>
         </include>
 
