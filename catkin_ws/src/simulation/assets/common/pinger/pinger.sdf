@@ -1,19 +1,19 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
-    <model name="simple_pool">
+    <model name="pinger">
         <static>true</static>
-        <link name="link">
-            <visual name="pool_visual">
+        <link name="pinger">
+            <visual name="pinger_visual">
                 <geometry>
                     <mesh>
-                        <uri>simple_pool.dae</uri>
+                        <uri>pinger.dae</uri>
                     </mesh>
                 </geometry>
             </visual>
-            <collision name="pool_collision">
+            <collision name="pinger_collision">
                 <geometry>
                     <mesh>
-                        <uri>simple_pool.dae</uri>
+                        <uri>pinger.dae</uri>
                     </mesh>
                 </geometry>
             </collision>

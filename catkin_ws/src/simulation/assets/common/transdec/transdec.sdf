@@ -1,19 +1,19 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
-    <model name="simple_pool">
+    <model name="transdec">
         <static>true</static>
         <link name="link">
-            <visual name="pool_visual">
+            <visual name="transdec_visual">
                 <geometry>
                     <mesh>
-                        <uri>simple_pool.dae</uri>
+                        <uri>transdec.dae</uri>
                     </mesh>
                 </geometry>
             </visual>
-            <collision name="pool_collision">
+            <collision name="transdec_collision">
                 <geometry>
                     <mesh>
-                        <uri>simple_pool.dae</uri>
+                        <uri>transdec.dae</uri>
                     </mesh>
                 </geometry>
             </collision>
