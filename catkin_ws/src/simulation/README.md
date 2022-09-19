@@ -25,6 +25,13 @@ Run gazebo simulation of quali task with Tethys AUV
 	cd <AUV-2020>/catkin_ws/src/simulation/worlds/
 	ign gazebo quali.sdf
 	
+To hook up with ROS:
+
+	roscore &
+	rosrun simulation test_tethys.py &
+	rosrun ros_ign_bridge parameter_bridge \ 
+	/model/tethys/joint/propeller_joint/cmd_pos@std_msgs/Float64@ignition.msgs.Double &
+
 
 ### Usage
 
