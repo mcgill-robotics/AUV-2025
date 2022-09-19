@@ -17,6 +17,14 @@ This package has been tested under [ROS] Noetic on Ubuntu 20.04, using Ignition 
 
 Follow Ignition Gazebo Fortress [installation instructions](https://gazebosim.org/docs/fortress/install_ubuntu). 
 
+Install the `ros_ign_bridge` package from source
+
+	cd <AUV-2020>/catkin_ws
+	export IGNITION_VERSION=fortress
+	rosdep install -r --from-paths src -i -y --rosdistro noetic
+	source /opt/ros/noetic/setup.bash
+	catkin build ros_ign_bridge
+
 
 ### Running
 
@@ -25,7 +33,7 @@ Run gazebo simulation of quali task with Tethys AUV
 	cd <AUV-2020>/catkin_ws/src/simulation/worlds/
 	ign gazebo quali.sdf
 	
-To hook up with ROS:
+To interface with gazebo using ROS:
 
 	roscore &
 	rosrun simulation test_tethys.py &
