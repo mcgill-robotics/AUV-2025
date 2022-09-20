@@ -5,18 +5,11 @@
 Ahoy! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics. It runs using ROS and Arduino.
 
 This project is maintained by the McGill Robotics Club and was developed by its members - students of McGill University. 
-A number of ROS packages were included as git submodules (and thus fall under their respective licenses): 
-- The `hydrophones`, `dvl`, and `teledyne_navigator` packages were built by former McGill Robotics Members (largely GPLv2)
-- The `pointgrey_camera_driver` package is maintained by Mike Purvis, original repo [here](https://github.com/ros-drivers/pointgrey_camera_driver) (BSD)
 
 
 ## License
 
-Since we are using GPLv2 dependancies, the project as a whole falls 
-under GPLv2. The full license is provided inside [LICENSE](LICENSE).
-
-Individual ROS packages (not submodules mentioned above) are under the MIT license. Other packages are subject to licenses set 
-out by their respective maintainers (including GPLv2, BSD). 
+This software is licensed under [GPLv3](LICENSE).
 
 
 ## Getting Started
