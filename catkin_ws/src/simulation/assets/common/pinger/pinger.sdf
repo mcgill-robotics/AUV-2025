@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <model name="pinger">
+        <static>true</static>
+        <link name="pinger">
+            <visual name="pinger_visual">
+                <geometry>
+                    <mesh>
+                        <uri>pinger.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name="pinger_collision">
+                <geometry>
+                    <mesh>
+                        <uri>pinger.dae</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+</sdf>

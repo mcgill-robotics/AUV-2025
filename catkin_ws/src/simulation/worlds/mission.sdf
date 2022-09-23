@@ -1,0 +1,476 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <world name="mission">
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <model name="transdec">
+            <uri>../assets/common/transdec/transdec.dae</uri>
+        </model>
+
+        <model name="gate">
+            <static>true</static>
+            <link name="gate">
+                <pose>8.75 -25.5 4 0 0 -0.5</pose>
+                <visual name="gate_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/gate.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="gate_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/gate.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="path_marker_to_buoys">
+            <static>true</static>
+            <link name="path_marker_to_buoys">
+                <pose>9.55 -23.85 0 0 0 -2.15</pose>
+                <visual name="path_marker_to_buoys_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/common/meshes/path_marker_45ccw.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="path_marker_to_buoys_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/common/meshes/path_marker_45ccw.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="ballast_gman">
+            <static>true</static>
+            <link name="ballast_gman">
+                <pose>15.45 -22.75 0 0 0 -2.65</pose>
+                <visual name="ballast_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="ballast_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="buoy_gman">
+            <static>false</static>
+            <link name="buoy_gman">
+                <pose>15.45 -22.75 0 0 0 -2.65</pose>
+                <visual name="buoy_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/buoy_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="buoy_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/buoy_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="ballast_bootlegger">
+            <static>true</static>
+            <link name="octagon">
+                <pose>15.9 -23.55 0 0 0 -2.65</pose>
+                <visual name="ballast_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="ballast_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="buoy_bootlegger">
+            <static>false</static>
+            <link name="buoy_bootlegger">
+                <pose>15.9 -23.55 0 0 0 -2.65</pose>
+                <visual name="buoy_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/buoy_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="buoy_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/buoy_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="path_marker_to_bins">
+            <static>true</static>
+            <link name="path_marker_to_bins">
+                <pose>17.75 -22.1 0 0 0 -2.65</pose>
+                <visual name="path_marker_to_bins_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/common/meshes/path_marker_45cw.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="path_marker_to_bins_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/common/meshes/path_marker_45cw.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bin_gman">
+            <static>true</static>
+            <link name="bin_gman">
+                <pose>19.82 -15.84 0 0 0 0</pose>
+                <visual name="bin_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bin_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bin_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bin_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="cover_gman">
+            <static>true</static>
+            <link name="cover_gman">
+                <pose>19.62 -16.5 0 0 0 0</pose>
+                <visual name="cover_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="cover_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bin_bootlegger">
+            <static>true</static>
+            <link name="bin_bootlegger">
+                <pose>19.83 -16.5 0 0 0 0</pose>
+                <visual name="bin_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bin_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="cover_bootlegger">
+            <static>true</static>
+            <link name="cover_bootlegger">
+                <pose>20.03 -15.84 0 0 0 0</pose>
+                <visual name="cover_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="cover_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="pinger_torpedo">
+            <uri>../assets/common/pinger/pinger.sdf</uri>
+            <pose>27.75 -6.35 0 0 0 0</pose>
+        </model>
+
+        <model name="torpedo_gman">
+            <static>true</static>
+            <link name="torpedo_gman">
+                <pose>27.3 -5.85 0 0 0 -2.4</pose>
+                <visual name="torpedo_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="torpedo_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="torpedo_bootlegger">
+            <static>true</static>
+            <link name="torpedo_bootlegger">
+                <pose>28.2 -6.8 0 0 0 -2.4</pose>
+                <visual name="torpedo_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="torpedo_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="pinger_octagon">
+            <uri>../assets/common/pinger/pinger.sdf</uri>
+            <pose>36 -7 0 0 0 0</pose>
+        </model>
+
+        <model name="octagon">
+            <static>true</static>
+            <link name="octagon">
+                <pose>36 -7 4.88 0 0 0</pose>
+                <visual name="octagon_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/octagon.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="octagon_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/octagon.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_gman">
+            <static>true</static>
+            <link name="table_gman">
+                <pose>36 -5.63 0 0 0 -1.57</pose>
+                <visual name="table_gman_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_gman_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_gman.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_bootlegger">
+            <static>true</static>
+            <link name="table_bootlegger">
+                <pose>36 -8.37 0 0 0 -1.57</pose>
+                <visual name="table_bootlegger_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_bootlegger_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="table_bottles">
+            <static>true</static>
+            <link name="table_bottles">
+                <pose>36 -7 0 0 0 -1.57</pose>
+                <visual name="table_bottles_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_bottles.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="table_bottles_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/table_bottles.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bottle_1">
+            <static>false</static>
+            <link name="bottle_1">
+                <pose>35.85 -6.85 0 0 0 -1.57</pose>
+                <visual name="bottle_1_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bottle_1_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bottle_2">
+            <static>false</static>
+            <link name="bottle_2">
+                <pose>35.85 -7.15 0 0 0 -1.57</pose>
+                <visual name="bottle_2_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bottle_2_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bottle_3">
+            <static>false</static>
+            <link name="bottle_2">
+                <pose>36.15 -7.15 0 0 0 -1.57</pose>
+                <visual name="bottle_3_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bottle_3_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+
+        <model name="bottle_4">
+            <static>false</static>
+            <link name="bottle_4">
+                <pose>36.15 -6.85 0 0 0 -1.57</pose>
+                <visual name="bottle_4_visual">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <collision name="bottle_4_collision">
+                    <geometry>
+                        <mesh>
+                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                        </mesh>
+                    </geometry>
+                </collision>
+            </link>
+        </model>
+    </world>
+</sdf>
+
+    </world>
+</sdf>

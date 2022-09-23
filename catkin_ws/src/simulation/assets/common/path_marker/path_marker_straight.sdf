@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <model name="path_marker_straight">
+        <static>true</static>
+        <link name="path_marker_straight">
+            <visual name="path_marker_straight_visual">
+                <geometry>
+                    <mesh>
+                        <uri>path_marker_straight.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name="path_marker_straight_collision">
+                <geometry>
+                    <mesh>
+                        <uri>path_marker_straight.dae</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+</sdf>

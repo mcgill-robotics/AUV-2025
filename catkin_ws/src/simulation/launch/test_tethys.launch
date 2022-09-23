@@ -1,0 +1,14 @@
+<launch>
+	<node
+	    name="ign_gazebo" pkg="ros_ign_gazebo" type="ign_gazebo" output="screen" required="true"
+	    args="$(find simulation)/worlds/quali.sdf">
+	  </node>
+
+	<node 
+	    name="test_tethys" pkg="simulation" type="test_tethys.py" respawn="false" output="screen" />
+
+	<node
+	    name="$(anon ros_ign_bridge)" pkg="ros_ign_bridge" type="parameter_bridge" output="screen"
+	    args="/model/tethys/joint/propeller_joint/cmd_pos@std_msgs/Float64@ignition.msgs.Double">
+	</node>
+</launch>

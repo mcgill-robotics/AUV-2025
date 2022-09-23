@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <world name="quali">
+
+        <physics name="1ms" type="ode">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <plugin
+            filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact">
+        </plugin>
+
+        <plugin
+            filename="ignition-gazebo-buoyancy-system"
+        name="ignition::gazebo::systems::Buoyancy">
+            <uniform_fluid_density>997</uniform_fluid_density>
+        </plugin>
+
+        <plugin
+        filename="ignition-gazebo-particle-emitter2-system"
+        name="ignition::gazebo::systems::ParticleEmitter2">
+        </plugin>
+
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <include>
+            <uri>../assets/common/simple_pool/simple_pool.sdf</uri>
+            <pose>0 0 0 0 0 0</pose>
+        </include>
+
+        <include>
+            <uri>../assets/quali/gate/gate.sdf</uri>
+            <pose>-1 0 -1 0 0 0</pose>
+        </include>
+
+        <include>
+            <uri>../assets/quali/pole/pole.sdf</uri>
+            <pose>0 10 -5 0 0 0</pose>
+        </include>
+
+        <include>
+            <uri>../assets/robots/mbari_tethys/mbari_tethys.sdf</uri>
+            <pose>0 -4 -2 0 0 -1.57</pose>
+        </include>
+
+    </world>
+</sdf>

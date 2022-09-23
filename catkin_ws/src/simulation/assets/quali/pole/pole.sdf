@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <model name="pole">
+        <static>true</static>
+        <link name="pole">
+            <visual name="pole_visual">
+                <geometry>
+                    <mesh>
+                        <uri>pole.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name="pole_visual">
+                <geometry>
+                    <mesh>
+                        <uri>pole.dae</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+</sdf>
