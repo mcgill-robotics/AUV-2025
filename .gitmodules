@@ -1,3 +1,6 @@
 [submodule "catkin_ws/src/teledyne_navigator"]
 	path = catkin_ws/src/teledyne_navigator
 	url = git@github.com:VasilyF/ros-teledyne-navigator.git
+[submodule "catkin_ws/src/ros_gz"]
+	path = catkin_ws/src/ros_gz
+	url = git@github.com:gazebosim/ros_gz.git
