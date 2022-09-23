@@ -6,23 +6,26 @@ import rospy
 from auv_msgs.msg import ThrusterCommand
 from geometry_msgs.msg import Wrench
 
-Dx = 3.0
-Dy = 1.0
-Dz = 2.0
+d = 0.224 # m
+D_1 = 0.895 # m
+D_2 = 0.778 # m
+
+thrust_pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=5)
+rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
 
 T = np.matrix(
         [[1., 1., 0., 0., 0., 0., 0., 0.],
-        [0., 0., 1., 1., 0., 0., 0., 0.],
-        [1., 1., 0., 0., 1., 1., 1., 1.],
-        [0., 0., 0., 0., -Dy/2, Dy/2, Dy/2, -Dy/2],
-        [1., 1., 0., 0., -Dx/2, -Dx/2, Dx/2, Dx/2],
-        [Dy/2, -Dy/2, -Dx/2, Dx/2, 0., 0., 0., 0.]]
+        [0., 0., 1., -1., 0., 0., 0., 0.],
+        [0., 0., 0., 0., -1., -1., -1., -1.],
+        [0., 0., 0., 0., -d/2, d/2, d/2, -d/2],
+        [0., 0., 0., 0., -D_2/2, -D_2/2, D_2/2, D_2/2],
+        [-d/2, d/2, D_1/2, D_1/2, 0., 0., 0., 0.]]
         )
 
 T_inv = np.linalg.pinv(T) # matrix transformation wrench -> thrust  
 
+
 def effort_cb():
-    thrust_pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=5)
     
     def wrench_to_thrust(w):
         '''
