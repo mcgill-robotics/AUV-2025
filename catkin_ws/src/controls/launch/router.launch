@@ -1,0 +1,3 @@
+<launch>
+	<node name="router" pkg="controls" type="router.py" respawn="false" output="screen" />
+</launch>

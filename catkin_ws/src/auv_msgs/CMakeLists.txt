@@ -19,7 +19,8 @@ add_message_files(FILES
 )
 
 add_action_files(FILES
-	Waypoint.action
+    Direct.action
+    State.action
 )
 
 generate_messages(DEPENDENCIES

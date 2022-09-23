@@ -1,0 +1,11 @@
+# goal
+string type # DIRECT
+string dof  # SURGE
+float64 effort
+float64 duration
+---
+# result
+std_msgs/Bool status
+---
+# feedback 
+std_msgs/Bool status
