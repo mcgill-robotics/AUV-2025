@@ -1,3 +1,0 @@
-<launch>
-	<node name="waypoint" pkg="controls" type="waypoint.py" respawn="false" output="screen" />
-</launch>
