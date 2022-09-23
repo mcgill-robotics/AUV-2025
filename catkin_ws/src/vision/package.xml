@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>vision</name>
+  <version>0.1.0</version>
+  <description>Package for understanding visual data</description>
+
+  <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/mcgill-robotics/AUV-2020</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>rospy</build_depend>
+
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
+
+</package>
