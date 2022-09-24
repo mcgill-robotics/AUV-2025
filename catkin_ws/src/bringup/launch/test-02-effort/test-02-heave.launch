@@ -1,0 +1,6 @@
+<launch>
+	<include file="$(find planner)/launch/test-02-effort/test-02-heave.launch" />
+	<include file="$(find controls)/launch/controls.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch" />
+	<include file="$(find state_estimation)/launch/state_estimation.launch" />
+</launch>
