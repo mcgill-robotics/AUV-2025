@@ -26,6 +26,8 @@ class State_Aggregator:
         self.theta_y = Theta_Y()
         self.theta_z = Theta_Z()
 
+        self.pub = rospy.Publisher('pose', Pose, queue_size=50)
+
 
     def update_state(self, _):
         position = Point(
