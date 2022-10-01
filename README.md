@@ -1,4 +1,4 @@
-# AUV-2020
+# AUV
 
 *This project is currently under development*
 
