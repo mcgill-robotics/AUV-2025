@@ -2,7 +2,7 @@
 
 *This project is currently under development*
 
-Ahoy! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics. It runs using ROS and Arduino.
+Ahoy! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics.
 
 This project is maintained by the McGill Robotics Club and was developed by its members - students of McGill University. 
 
@@ -43,12 +43,12 @@ We recommend using the catkin command line tools as opposed to whatever is bundl
 
 To get these project files onto your computer using git navigate to a desired folder and do:
 
-    git clone https://github.com/mcgill-robotics/AUV-2020.git
+    git clone https://github.com/mcgill-robotics/AUV-2023.git
   
 Alternatively, if you set up your SSH keys with your Github account you can save yourself having to type your user/pass every 
 time (**recommended**):
 
-    git clone git@github.com:mcgill-robotics/AUV-2020.git
+    git clone git@github.com:mcgill-robotics/AUV-2023.git
 
 
 ## Building ROS Packages
@@ -70,36 +70,32 @@ After build is complete, update ROS environment so that packages are 'visible':
 
 	source ./devel/setup.bash
   
+  
 ### Flashing Firmware
 
-If you have an Arduino you can wire it up to emmulate the thrusters on the AUV (see schematic - **TODO**). Upload the 
+If you have an Arduino you can wire it up to emmulate the thrusters on the AUV. Upload the 
 binary file by connecting the Arduino via USB (currently hardcoded assumption USB shows up as /dev/ttyACM0) and running 
 the generated make target:
 
     catkin build --no-deps  propulsion --make-args propulsion_embedded_thrusters-upload
+    
+_Note: This will eventually be phased out and embedded software will be located in the AUV-embedded-2023 repository_
 
 
 ## Running (on local machine)
 
-This starts a demo mission meant to run on a local machine for testing purposes, it does not launch the state_estimation
-package - you may publish to `/state` using rostopic pub (see controls package for example)
+This starts a demo mission that would make the AUV go forwards then backwards by publishing a `goemoetry_msgs/Wrench` message directly onto the propulsion package
 
-    roslaunch bringup stub.launch & 
+    roslaunch bringup test-02-surge.launch &
     
-You can stub the state of the AUV by publishing a `geometry_msgs/Pose` message onto `/state` topic:
+You can see what messages are being published by running in a new terminal tab (make sure you source devel/setup.bash as environment variables will not carry over).
+To see the effort:
 
-	rostopic pub -r 1 /state geometry_msgs/Pose \
-	"
-	position:
-	  x: 1.0
-	  y: 2.0
-	  z: -1.0
-	orientation:
-	  x: 0.0
-	  y: 1.0
-	  z: 0.0
-	  w: 0.0
-	" 
+    rostopic echo /effort
+    
+To see the thruster intensities:
+
+    rostopic echo /propulsion/thruster_cmd
 
 
 ## Running (on AUV)
