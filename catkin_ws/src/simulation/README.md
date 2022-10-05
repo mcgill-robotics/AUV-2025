@@ -20,6 +20,7 @@ Follow Ignition Gazebo Fortress [installation instructions](https://gazebosim.or
 Install the `ros_ign_bridge` package from source
 
 	cd <AUV-2020>/catkin_ws
+	git submodule update
 	export IGNITION_VERSION=fortress
 	rosdep install -r --from-paths src -i -y --rosdistro noetic
 	source /opt/ros/noetic/setup.bash
