@@ -6,12 +6,11 @@
 
 The propulsion package is responsible for moving the AUV and provides a hardware-agnostic interface.
 
+The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
+
 ### License
 
-The source code is released under a [MIT license](../../../LICENSE).
-
-The propulsion package has been tested under [ROS] Noetic opropulsionn Ubuntu 20.04.
-
+The source code is released under a GPLv3 license.
 
 ## Package Interface
 

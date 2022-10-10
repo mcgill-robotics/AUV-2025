@@ -6,12 +6,11 @@
 This package contains sdf files used for (graphical) simulation of the AUV using the ignition gazebo simulator.
 It also contains the models/environments that are used in the simulation.  
 
+The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
+
 ### License
 
-The source code is under the [GPLv3 license](../../../LICENSE).
-
-This package has been tested under [ROS] Noetic on Ubuntu 20.04, using Ignition Fortress.
-
+The source code is released under a GPLv3 license.
 
 ## Installation
 
