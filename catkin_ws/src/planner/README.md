@@ -5,12 +5,11 @@
 The planner package is responsible for making the high-level decision regarding what the AUV 
 will do depending on its current 'operational state'
 
+The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
+
 ### License
 
-The source code is released under a [MIT license](LICENSE.md).
-
-The planner package has been tested under [ROS] Noetic on Ubuntu 20.04.
-
+The source code is released under a GPLv3 license.
 
 ## Package Interface
 
