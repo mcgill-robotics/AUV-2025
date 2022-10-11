@@ -4,9 +4,8 @@ import rospy
 import numpy as np
 import tf2_geometry_msgs # needed for do_transform_wrench
 
-from geometry_msgs.msg import Vector3, Wrench, WrenchStamped 
-from std_msgs.msg import Float64, Header
-from tf2_ros import Buffer, TransformListener 
+from geometry_msgs.msg import Vector3, Wrench 
+from std_msgs.msg import Float64 
 
 class Superimposer:
     def __init__(self):
@@ -19,21 +18,25 @@ class Superimposer:
         self.axial_effort = Superimposer.Degree_Of_Freedom('axial_effort')
         self.axis_of_rot = Superimposer.Axis('dtheta_state_axis')  
 
-        # tf2 buffer
-        self.tf_buffer = Buffer()
-        TransformListener(self.tf_buffer) 
         self.pub = rospy.Publisher('effort', Wrench, queue_size=50)
 
+<<<<<<< Updated upstream
         # avoid creating a new Header object for every update
         # just update the time
         self.header = Header(frame_id="world")
 
         # give time for listener to gather transform data
         # rospy.sleep(15.0)
+=======
+>>>>>>> Stashed changes
 
     def update_effort(self, _):
-        self.header.stamp = rospy.Time(0)
+        # force and torque are vectors in the robot ref. frame
+        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
+        torque = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
+        wrench = Wrench(force=force, torque=torque) 
 
+<<<<<<< Updated upstream
         # force and torque are vectors in the world ref. frame
         # they need to be converted into the ref. frame of the robot
         # before being published as wrench
@@ -54,6 +57,9 @@ class Superimposer:
             self.pub.publish(wrench_auv.wrench)
         except Exception as e:
             print(type(e), e)
+=======
+        self.pub.publish(wrench)
+>>>>>>> Stashed changes
 
 
     class Degree_Of_Freedom:
