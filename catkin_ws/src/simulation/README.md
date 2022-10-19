@@ -23,7 +23,7 @@ Install the `ros_ign_bridge` package from source
 	export IGNITION_VERSION=fortress
 	rosdep install -r --from-paths src -i -y --rosdistro noetic
 	source /opt/ros/noetic/setup.bash
-	catkin build ros_ign_bridge
+	catkin build simulation
 
 
 ### Running
