@@ -46,9 +46,9 @@ def effort_cb():
         tc = ThrusterCommand([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]) 
         thrust_pub.publish(tc)
 
-    return wrench_to_thrust
-
+    return 
+    
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
-    sub = rospy.Subscriber('/effort', Wrench, effort_cb())
+    sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
     rospy.spin()
