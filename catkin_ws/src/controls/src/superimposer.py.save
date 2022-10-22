@@ -19,17 +19,18 @@ class Superimposer:
         self.pitch = Superimposer.Degree_Of_Freedom('pitch')
         self.yaw = Superimposer.Degree_Of_Freedom('yaw')
 
-        # tf2 buffer 
+        # tf2 buffer
+        self.tf_buffer = Buffer()
+        TransformListener(self.tf_buffer) 
         self.pub = rospy.Publisher('effort', Wrench, queue_size=50)
 
-        
+        # avoid creating a new Header object for every update
+        # just update the time
+        self.header = Header(frame_id="world")
 
 
     def update_effort(self, _):
-        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
-        torque = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
-        wrench = Wrench(force=force, torque=torque)
-        self.pub.publish(wrench)
+        
 
 
     class Degree_Of_Freedom:
