@@ -26,10 +26,10 @@ T_inv = np.linalg.pinv(T) # matrix transformation wrench -> thrust
 
 
 def wrench_to_thrust(w):
-	'''
-        wrench_to_thrust maps a Wrench into an intensity [-1.0, 1.0]
-        for each thruster
-        '''
+    '''
+    wrench_to_thrust maps a Wrench into an intensity [-1.0, 1.0]
+    for each thruster
+    '''
     a = np.array(
     		[[w.force.x],
 		[w.force.y],
