@@ -30,24 +30,12 @@ class Superimposer:
 
 
     def update_effort(self, _):
-        self.header.stamp = rospy.Time(0)
-
         # force and torque are vectors in the world ref. frame
-        # they need to be converted into the ref. frame of the robot
-        # before being published as wrench
-        force_world = Vector3(self.surge.val, self.sway.val, self.heave.val)
-        torque_world = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
-        wrench_world = Wrench(force=force_world, torque=torque_world) 
+        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
+        torque = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
+        wrench = Wrench(force=force, torque=torque) 
   
-        # transform is computed on stamped message
-        wrench_world_stmp = WrenchStamped(header=self.header, wrench=wrench_world)
-
-        try:
-            # force/torque vectors in robot's ref. frame
-            wrench_auv = self.tf_buffer.transform(wrench_world_stmp, "auv_base")
-            self.pub.publish(wrench_auv.wrench)
-        except Exception as e:
-            print(type(e), e)
+        self.pub.publish(wrench)
 
 
     class Degree_Of_Freedom:
