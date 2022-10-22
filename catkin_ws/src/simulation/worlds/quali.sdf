@@ -1,6 +1,39 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
     <world name="quali">
+
+        <physics name="1ms" type="ode">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <plugin
+            filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster">
+        </plugin>
+        <plugin
+            filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact">
+        </plugin>
+
+        <plugin
+            filename="ignition-gazebo-buoyancy-system"
+        name="ignition::gazebo::systems::Buoyancy">
+            <uniform_fluid_density>997</uniform_fluid_density>
+        </plugin>
+
+        <plugin
+        filename="ignition-gazebo-particle-emitter2-system"
+        name="ignition::gazebo::systems::ParticleEmitter2">
+        </plugin>
+
         <light type="directional" name="sun">
             <cast_shadows>true</cast_shadows>
             <pose>0 0 10 0 0 0</pose>
@@ -15,104 +48,25 @@
             <direction>-0.5 0.1 -0.9</direction>
         </light>
 
-        <model name="simple_pool">
-            <static>true</static>
-            <link name="link">
-                <visual name="pool_visual">
-                    <geometry>
-                        <mesh>
-                            <uri>../assets/common/meshes/simple_pool.dae</uri>
-                        </mesh>
-                    </geometry>
-                </visual>
-                <collision name="pool_collision">
-                    <geometry>
-                        <mesh>
-                            <uri>../assets/common/meshes/simple_pool.dae</uri>
-                        </mesh>
-                    </geometry>
-                </collision>
-            </link>
-        </model>
+        <include>
+            <uri>../assets/common/simple_pool/simple_pool.sdf</uri>
+            <pose>0 0 0 0 0 0</pose>
+        </include>
 
-        <model name="gate">
-            <static>true</static>
-            <link name="gate">
-                <pose>-1 0 -1 0 0 0</pose>
-                <visual name="gate_visual">
-                    <geometry>
-                        <mesh>
-                            <uri>../assets/quali/meshes/gate.dae</uri>
-                        </mesh>
-                    </geometry>
-                </visual>
-                <collision name="gate_visual">
-                    <geometry>
-                        <mesh>
-                            <uri>../assets/quali/meshes/gate.dae</uri>
-                        </mesh>
-                    </geometry>
-                </collision>
-            </link>
-        </model>
+        <include>
+            <uri>../assets/quali/gate/gate.sdf</uri>
+            <pose>-1 0 -1 0 0 0</pose>
+        </include>
 
-          <model name="auv">
-            <static>false</static>
-            <link name="auv_link">
-        
-                <collision name="auv_box_collision">
-                    <pose> 0 0 0 0 0 0 </pose>
-                   <geometry>
-                        <box>
-                            <size>.88 .22 .14</size>
-                        </box>>
-                    </geometry>
-                </collision>
+        <include>
+            <uri>../assets/quali/pole/pole.sdf</uri>
+            <pose>0 10 -5 0 0 0</pose>
+        </include>
 
-                <collision name="auv_cylinder_collsion">
-                    <pose> 0 0 0.2 0 1.57 0</pose>
-                    <geometry>
-                         <cylinder>
-                             <radius>.19</radius>
-                             <length>.86</length>
-                         </cylinder>>
-                     </geometry>
-                 </collision>  
-    
-                <visual name="auv_box_visual">
-                    <pose> 0 0 0 0 0 0 </pose>
-                    <geometry>
-                        <box>
-                            <size>.88 .22 .14</size>
-                        </box>>
-                    </geometry>
-                </visual>
-
-                <visual name="auv_cylinder_visual">
-                    <pose> 0 0 0.2 0 1.57 0</pose>
-                    <geometry>
-                        <cylinder>
-                            <radius>.19</radius>
-                            <length>.86</length>
-                        </cylinder>>
-                    </geometry>
-                </visual>
-                
-                <inertial>
-                    <mass>12.0</mass>
-                        <inertia> 
-                        <ixx>.9839</ixx>       
-                        <ixy>0.0</ixy>         
-                        <ixz>0.0</ixz>         
-                        <iyy>1.81</iyy>      
-                        <iyz>0.0</iyz>         
-                        <izz>2.4934</izz>       
-                        </inertia>
-                </inertial> 
-    
-            </link>
-        </model>
-
+        <include>
+            <uri>../assets/robots/auv.sdf</uri>
+            <pose>0 0 0 0 0 0</pose>
+        </include>
 
         <model name="pole">
             <static>true</static>
@@ -134,6 +88,10 @@
                 </collision>
             </link>
         </model>
+        <include>
+            <uri>../assets/robots/mbari_tethys/mbari_tethys.sdf</uri>
+            <pose>0 -4 -2 0 0 -1.57</pose>
+        </include>
 
     </world>
 </sdf>
