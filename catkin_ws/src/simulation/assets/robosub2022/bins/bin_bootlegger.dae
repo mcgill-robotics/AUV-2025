@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 2.82.7</authoring_tool>
+    </contributor>
+    <created>2022-04-30T23:09:22</created>
+    <modified>2022-04-30T23:09:22</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="steel-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.2810134 0.2810134 0.2810134 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="bottom_image-effect">
+      <profile_COMMON>
+        <newparam sid="bins_bootlegger_png-surface">
+          <surface type="2D">
+            <init_from>bins_bootlegger_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="bins_bootlegger_png-sampler">
+          <sampler2D>
+            <source>bins_bootlegger_png-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <texture texture="bins_bootlegger_png-sampler" texcoord="UVMap"/>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="bins_bootlegger_png" name="bins_bootlegger_png">
+      <init_from>bins_bootlegger.png</init_from>
+    </image>
+  </library_images>
+  <library_materials>
+    <material id="steel-material" name="steel">
+      <instance_effect url="#steel-effect"/>
+    </material>
+    <material id="bottom_image-material" name="bottom_image">
+      <instance_effect url="#bottom_image-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="bottom_v2-mesh" name="bottom v2">
+      <mesh>
+        <source id="bottom_v2-mesh-positions">
+          <float_array id="bottom_v2-mesh-positions-array" count="96">-224.8517 -345.926 -78.69812 -224.8517 345.9254 -78.69812 224.8517 345.9254 -78.69812 224.8517 -345.926 -78.69812 224.8517 -345.926 -75.67122 224.8517 345.9255 -75.67127 -224.8517 -345.926 -75.67122 281.0646 -518.8889 -78.69812 281.0646 518.8883 -78.69812 281.0646 -518.8889 -73.69812 281.0646 518.8883 -73.69813 -281.0647 -518.8889 -78.69812 -281.0647 -518.8889 -73.69812 -281.0647 518.8883 -78.69812 -281.0647 518.8883 -73.69813 -224.8517 345.9255 -75.67127 224.8516 -345.9257 -3.039616 -224.8518 -345.9259 -75.67114 -224.8518 -345.9255 -3.039616 -229.5361 360.3395 -6.48498e-5 -229.5362 -360.3392 6.48499e-5 229.5362 360.3387 -75.69713 229.5361 -360.3399 -75.69698 224.8517 -345.9262 -75.67114 -224.8517 345.9259 -3.039745 229.5362 360.3391 -6.48498e-5 229.5361 -360.3395 6.48499e-5 -229.5361 360.3391 -75.69713 -229.5362 -360.3395 -75.69698 224.8518 345.9251 -75.67127 224.8518 345.9255 -3.039745 -224.8517 345.9254 -75.67127</float_array>
+          <technique_common>
+            <accessor source="#bottom_v2-mesh-positions-array" count="32" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="bottom_v2-mesh-normals">
+          <float_array id="bottom_v2-mesh-normals-array" count="201">0 -1 0 -1 0 0 0 1 0 1 0 0 0.02105033 -0.004563868 0.999768 0 -0.01140707 0.999935 0.007021486 -0.009125113 0.9999337 0 0 -1 -0.03507936 0 0.9993847 0 0.01140689 0.999935 0 -1 2.29579e-5 3.01323e-7 0 -1 0.03507876 0 0.9993847 -1 0 0 -1 1.52529e-7 -7.84383e-7 -1 0 0 -1 1.38698e-7 2.01577e-7 -1 1.42887e-7 2.01576e-7 -1 1.38376e-7 2.01577e-7 1 0 -4.03154e-7 1 0 -4.03154e-7 1 0 -4.03154e-7 -7.39559e-7 -1 5.7405e-6 -6.85533e-7 -1 5.7405e-6 -6.78616e-7 -1 5.7405e-6 8.64196e-7 1 -5.42333e-6 8.64196e-7 1 -5.63428e-6 8.64196e-7 1 -5.39562e-6 -6.78598e-7 -1 4.46343e-6 -7.83888e-7 -1 4.21282e-6 -7.9772e-7 -1 4.1799e-6 0 -1.87468e-7 -1 0 -1.87468e-7 -1 0 -1.87468e-7 -1 0 1.79969e-7 1 0 1.79969e-7 1 0 1.79969e-7 1 5.56728e-7 1 -5.90131e-6 6.6478e-7 1 -7.15712e-6 6.78616e-7 1 -7.31792e-6 1 -1.86365e-7 0 1 0 0 1 0 0 -0.003308653 7.17027e-4 -0.9999943 -0.001103937 -0.001435458 -0.9999984 -0.001103162 0.001434087 -0.9999984 0.001102805 0.001434087 -0.9999985 0.0033077 7.1704e-4 -0.9999943 0.00331223 -7.17908e-4 -0.9999943 -0.003311097 -7.17903e-4 -0.9999943 -1 0 0 -3.01323e-7 0 -1 -0.03507918 0 0.9993847 0 0.01140689 0.999935 0 -1 2.29579e-5 0.03507846 0 0.9993846 -1 1.55472e-7 -8.4034e-7 -1 1.43209e-7 2.01576e-7 1 0 -4.03154e-7 -7.46477e-7 -1 5.7405e-6 8.64196e-7 1 -5.66199e-6 -6.64766e-7 -1 4.49635e-6 0 -1.87468e-7 -1 0 1.79969e-7 1 5.42893e-7 1 -5.7405e-6 1 -1.9966e-7 0 0.001104354 -0.001435458 -0.9999985</float_array>
+          <technique_common>
+            <accessor source="#bottom_v2-mesh-normals-array" count="67" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="bottom_v2-mesh-map-0">
+          <float_array id="bottom_v2-mesh-map-0-array" count="360">65 0.5 0 0 65 0 100 0.5 0 0 100 0 65 0.5 0 0 65 0 0 0 0 0 0 0 0 0 0 0.5 0 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 65 0 0 0 0 0 100 0 0 0 0 0 0 0.5 0 0 0 0 65 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 100 0.5 0 0 0 0.5 100 0.5 0 0 100 0 -65 0 0 10 -65 10 70 10.5 0 0.5 70 0.5 70 0.5 0 10.5 0 0.5 0 0 -30 10 -30 0 35 10.5 0 0.5 35 0.5 35 0.5 0 10.5 0 0.5 -5.21839e-4 0.001320958 1.000522 0.9992461 -5.22077e-4 0.9992461 17.5 35 -17.5 -35 17.5 -35 0 0 -30 10 -30 0 0 0 -65 10 -65 0 0 0 70 0.5 0 0.5 0 0 0 0.5 0 0 0 0.5 0 0 0 0 0 0 70 0.5 -65 0 65 0.5 0 0.5 0 0 100 0.5 0 0.5 0 0 65 0.5 0 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 65 0 0 0 0 0 100 0 0 0 0 0.5 0 0.5 0 0 100 0.5 65 0.5 0 0 0 0 0 0 0 0 100 0 0 0 0 0 0 0 0 0 100 0.5 0 0 0 0 100 0.5 0 0.5 0 0 -65 0 0 0 0 10 70 10.5 0 10.5 0 0.5 70 0.5 70 10.5 0 10.5 0 0 0 10 -30 10 35 10.5 0 10.5 0 0.5 35 0.5 35 10.5 0 10.5 -5.21839e-4 0.001320958 1.000522 0.001320898 1.000522 0.9992461 17.5 35 -17.5 35 -17.5 -35 0 0 0 10 -30 10 0 0 0 10 -65 10 0 0 -65 0 70 0.5 0 0 0 0.5 0 0.5 0 0.5 0 0.5 0 0 0 0 35 0.5 70 0.5</float_array>
+          <technique_common>
+            <accessor source="#bottom_v2-mesh-map-0-array" count="180" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="bottom_v2-mesh-vertices">
+          <input semantic="POSITION" source="#bottom_v2-mesh-positions"/>
+        </vertices>
+        <triangles material="steel-material" count="58">
+          <input semantic="VERTEX" source="#bottom_v2-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#bottom_v2-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#bottom_v2-mesh-map-0" offset="2" set="0"/>
+          <p>9 0 0 11 0 1 7 0 2 12 1 3 13 1 4 11 1 5 14 2 6 8 2 7 13 2 8 15 3 9 0 3 10 1 3 11 15 4 12 10 5 13 14 6 14 6 2 15 3 2 16 0 2 17 3 1 18 5 1 19 2 1 20 0 7 21 7 7 22 11 7 23 1 7 24 11 7 25 13 7 26 4 8 27 10 8 28 5 8 29 6 9 30 9 9 31 4 9 32 2 10 33 15 10 34 1 10 35 2 11 36 7 11 37 3 11 38 1 7 39 8 7 40 2 7 41 12 12 42 15 4 43 14 6 44 10 3 45 7 3 46 8 3 47 29 13 48 16 14 49 30 15 50 20 16 51 27 17 52 28 18 53 21 19 54 26 20 55 22 21 56 29 22 57 24 23 58 31 24 59 19 25 60 21 26 61 27 27 62 22 28 63 20 29 64 28 30 65 20 34 69 25 35 70 19 36 71 17 37 72 16 38 73 23 39 74 31 40 75 18 41 76 17 42 77 23 43 78 21 44 79 22 45 80 23 43 81 28 46 82 17 47 83 28 46 84 31 48 85 17 47 86 31 48 87 21 44 88 29 49 89 9 0 90 12 0 91 11 0 92 12 1 93 14 1 94 13 1 95 14 2 96 10 2 97 8 2 98 15 3 99 6 3 100 0 3 101 15 4 102 5 5 103 10 5 104 6 2 105 4 2 106 3 2 107 3 50 108 4 50 109 5 50 110 0 7 111 3 7 112 7 7 113 1 51 114 0 51 115 11 51 116 4 52 117 9 52 118 10 52 119 6 53 120 12 53 121 9 53 122 2 54 123 5 54 124 15 54 125 2 7 126 8 7 127 7 7 128 1 7 129 13 7 130 8 7 131 12 12 132 6 55 133 15 4 134 10 3 135 9 3 136 7 3 137 29 13 138 23 56 139 16 14 140 20 16 141 19 57 142 27 17 143 21 19 144 25 58 145 26 20 146 29 22 147 30 59 148 24 23 149 19 25 150 25 60 151 21 26 152 22 28 153 26 61 154 20 29 155 20 34 159 26 63 160 25 35 161 17 37 162 18 64 163 16 38 164 31 40 165 24 65 166 18 41 167 23 43 168 29 49 169 21 44 170 23 43 171 22 45 172 28 46 173 28 46 174 27 66 175 31 48 176 31 48 177 27 66 178 21 44 179</p>
+        </triangles>
+        <triangles material="bottom_image-material" count="2">
+          <input semantic="VERTEX" source="#bottom_v2-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#bottom_v2-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#bottom_v2-mesh-map-0" offset="2" set="0"/>
+          <p>30 31 66 18 32 67 24 33 68 30 31 156 16 62 157 18 32 158</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="bin" name="bin" type="NODE">
+        <matrix sid="transform">0.00135556 0 0 0 0 -4.40557e-4 6.8358e-10 0 0 -1.43552e-10 -0.002097891 0 0 0 0 1</matrix>
+        <instance_geometry url="#bottom_v2-mesh" name="bin">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="steel-material" target="#steel-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="bottom_image-material" target="#bottom_image-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
