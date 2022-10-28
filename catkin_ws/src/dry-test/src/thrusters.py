@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import rospy
-from auv_msgs.msg import ThrusterCommand
+from auv_msgs.msg import ThrusterIntensities
 
 pins = {1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9}
 reset = [0,0,0,0,0,0,0,0]
 
-reset_cmd = ThrusterCommand(reset)
-pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=10)
+reset_cmd = ThrusterIntensities(reset)
+pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterIntensities, queue_size=10)
 rospy.sleep(7)
 
 def forwards_test(t):
