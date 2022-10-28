@@ -8,6 +8,5 @@ uint8 HEAVE_BOW_STAR=5
 uint8 HEAVE_STERN_STAR=6
 uint8 HEAVE_STERN_PORT=7
 
-# Thruster command array [-1, 1]
 # -1 full backwards, 1 full forwards, 0 stop
 float64[8] intensities
