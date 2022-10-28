@@ -7,7 +7,7 @@ pins = {1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9}
 reset = [0,0,0,0,0,0,0,0]
 
 reset_cmd = ThrusterIntensities(reset)
-pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterIntensities, queue_size=10)
+pub = rospy.Publisher('propulsion/thruster_intensities', ThrusterIntensities, queue_size=10)
 rospy.sleep(7)
 
 def forwards_test(t):
