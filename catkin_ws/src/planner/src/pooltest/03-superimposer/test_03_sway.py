@@ -10,11 +10,11 @@ if __name__ == '__main__':
     sm =smach.StateMachine(outcomes=['finished'])
 
     with sm:
-        smach.StateMachine.add('positive', Sway(effort=0.2), 
+        smach.StateMachine.add('positive', Sway(effort=20.0), 
             transitions={'done':'pause'})
         smach.StateMachine.add('pause', Pause(duration=2.0), 
             transitions={'done':'negative'})
-        smach.StateMachine.add('negative', Sway(effort=-0.2), 
+        smach.StateMachine.add('negative', Sway(effort=-20.0), 
             transitions={'done':'off'})
         smach.StateMachine.add('off', Pause(), 
             transitions={'done':'finished'})
