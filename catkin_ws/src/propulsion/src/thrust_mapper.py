@@ -50,7 +50,7 @@ def wrench_to_thrust(w):
     tf.HEAVE_STERN_STAR = b[6]
     tf.HEAVE_STERN_PORT = b[7]
 
-    pub.publish(tc)
+    pub.publish(tf)
 
 
 if __name__ == '__main__':
