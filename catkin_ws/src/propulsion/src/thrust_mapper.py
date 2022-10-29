@@ -29,9 +29,8 @@ def effort_cb():
     
     def wrench_to_thrust(w):
         '''
-        wrench_to_thrust returns a function, configured with thrust
-        characterisations, that maps a Wrench into thrust intensity (TODO)
-        [-1.0, 1.0]
+        wrench_to_thrust  maps a Wrench into thrust intensity [-1.0, 1.0]
+        for each thruster
         '''
         a = np.array(
                 [[w.force.x],
@@ -45,8 +44,8 @@ def effort_cb():
         b = np.matmul(T_inv, a) 
         tc = ThrusterCommand([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]) 
         thrust_pub.publish(tc)
+        return
 
-    return wrench_to_thrust
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
