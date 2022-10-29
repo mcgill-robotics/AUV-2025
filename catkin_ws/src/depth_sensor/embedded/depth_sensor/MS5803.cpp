@@ -30,15 +30,15 @@ void MS5803::sendCommand(byte command) {
 void MS5803::readCoefficients() {
   for (int i=0; i<6; i++) {
     sendCommand(0xA2 + i*2); //Address of each coefficient
-    Wire.requestFrom(sensor_address, 2); 
+    Wire.requestFrom((uint8_t)sensor_address, (uint8_t)2); 
     byte byte1 = Wire.read();
     byte byte2 = Wire.read();
     uint16_t coeff = ((uint16_t)byte1<<8) + byte2;
     coefficients[i] = (int64_t)coeff;
-    //Serial.print("C");
-    //Serial.print(i+1);
-    //Serial.print(" = ");
-    //Serial.println(coeff);
+    Serial.print("C");
+    Serial.print(i+1);
+    Serial.print(" = ");
+    Serial.println(coeff);
   }
 }
 
@@ -54,7 +54,7 @@ uint32_t MS5803::adcRead(byte adcCommand) {
     sendCommand(adcCommand);
     delay(10);
     sendCommand(readADCCommand);
-    Wire.requestFrom(sensor_address, 3);
+    Wire.requestFrom((uint8_t)sensor_address, (uint8_t)3);
     byte byte1 = Wire.read();
     byte byte2 = Wire.read();
     byte byte3 = Wire.read();
