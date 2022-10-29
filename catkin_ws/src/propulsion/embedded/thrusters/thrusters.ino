@@ -1,6 +1,6 @@
 #include <ros.h>
 #include <Servo.h>
-#include <auv_msgs/ThrusterCommand.h>
+#include <auv_msgs/ThrusterIntensities.h>
 /* 
 NOTE: pins 2-9 were chosen instead of 0-7, since 
 pins 0 and 1 function differently.
@@ -22,14 +22,14 @@ pins 0 and 1 function differently.
 /* less verbose identifiers
 	Pin numbers [0-7] from ThusterCommand.msg
  */
-const uint8_t SRG_P 	= auv_msgs::ThrusterCommand::SURGE_PORT;
-const uint8_t SRG_S 	= auv_msgs::ThrusterCommand::SURGE_STAR;
-const uint8_t SWY_BW 	= auv_msgs::ThrusterCommand::SWAY_BOW;
-const uint8_t SWY_ST 	= auv_msgs::ThrusterCommand::SWAY_STERN;
-const uint8_t HVE_BW_P 	= auv_msgs::ThrusterCommand::HEAVE_BOW_PORT;
-const uint8_t HVE_BW_S 	= auv_msgs::ThrusterCommand::HEAVE_BOW_STAR;
-const uint8_t HVE_ST_S 	= auv_msgs::ThrusterCommand::HEAVE_STERN_STAR;
-const uint8_t HVE_ST_P 	= auv_msgs::ThrusterCommand::HEAVE_STERN_PORT;
+const uint8_t SRG_P 	= auv_msgs::ThrusterIntensities::SURGE_PORT;
+const uint8_t SRG_S 	= auv_msgs::ThrusterIntensities::SURGE_STAR;
+const uint8_t SWY_BW 	= auv_msgs::ThrusterIntensities::SWAY_BOW;
+const uint8_t SWY_ST 	= auv_msgs::ThrusterIntensities::SWAY_STERN;
+const uint8_t HVE_BW_P 	= auv_msgs::ThrusterIntensities::HEAVE_BOW_PORT;
+const uint8_t HVE_BW_S 	= auv_msgs::ThrusterIntensities::HEAVE_BOW_STAR;
+const uint8_t HVE_ST_S 	= auv_msgs::ThrusterIntensities::HEAVE_STERN_STAR;
+const uint8_t HVE_ST_P 	= auv_msgs::ThrusterIntensities::HEAVE_STERN_PORT;
 
 Servo thrusters[8];
 const float offCommand[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
@@ -67,7 +67,7 @@ void thrustersOff(){
 	updateThrusters(offCommand);
 }
 
-void commandCb(const auv_msgs::ThrusterCommand& tc){
+void commandCb(const auv_msgs::ThrusterIntensities& tc){
 	const float* intensities = tc.intensities;
 	updateThrusters(intensities);
 }
@@ -88,7 +88,7 @@ void initThrusters(){
 
 
 ros::NodeHandle nh;
-ros::Subscriber<auv_msgs::ThrusterCommand> sub("propulsion/thruster_cmd", &commandCb);
+ros::Subscriber<auv_msgs::ThrusterIntensities> sub("propulsion/thruster_cmd", &commandCb);
 
 void setup() {
 	initThrusters();

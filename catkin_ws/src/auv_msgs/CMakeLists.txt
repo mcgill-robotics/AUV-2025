@@ -15,7 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
 ) 
 
 add_message_files(FILES
-	ThrusterCommand.msg
+	ThrusterIntensities.msg
+	ThrusterForces.msg
 )
 
 add_action_files(FILES
