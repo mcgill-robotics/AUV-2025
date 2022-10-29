@@ -3,9 +3,9 @@
 import rospy
 import numpy as np
 
-from geometry_msgs.msg import Vector3, Wrench, WrenchStamped 
+from geometry_msgs.msg import Vector3, Wrench, WrenchStamped
 from std_msgs.msg import Float64, Header
-from tf2_ros import Buffer, TransformListener 
+from tf2_ros import Buffer, TransformListener
 
 class Superimposer:
     def __init__(self):
@@ -20,25 +20,19 @@ class Superimposer:
         self.yaw = Superimposer.Degree_Of_Freedom('yaw')
 
         # tf2 buffer
-        self.tf_buffer = Buffer()
-        TransformListener(self.tf_buffer) 
+
         self.pub = rospy.Publisher('effort', Wrench, queue_size=50)
-
-        # avoid creating a new Header object for every update
-        # just update the time
-        self.header = Header(frame_id="world")
-
 
     def update_effort(self, _):
         self.header.stamp = rospy.Time(0)
 
         # force and torque are vectors in the world ref. frame
-        # they need to be converted into the ref. frame of the robot
-        # before being published as wrench
         force_world = Vector3(self.surge.val, self.sway.val, self.heave.val)
         torque_world = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
-        wrench_world = Wrench(force=force_world, torque=torque_world) 
-  
+        wrench_world = Wrench(force=force, torque=torque)
+
+	self.pub.publish(wrench)
+
         # transform is computed on stamped message
         wrench_world_stmp = WrenchStamped(header=self.header, wrench=wrench_world)
 
@@ -54,7 +48,7 @@ class Superimposer:
         def __init__(self, sub_topic):
             self.val = 0.0
             rospy.Subscriber(sub_topic, Float64, self.set_cb)
-        
+
         def set_cb(self, new_val):
             self.val = new_val.data
 
