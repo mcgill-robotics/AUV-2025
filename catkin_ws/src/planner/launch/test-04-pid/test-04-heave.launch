@@ -1,0 +1,3 @@
+<launch>
+	<node name="test_04_heave" pkg="planner" type="test_04_heave.py" respawn="false" output="screen"/>
+</launch>
