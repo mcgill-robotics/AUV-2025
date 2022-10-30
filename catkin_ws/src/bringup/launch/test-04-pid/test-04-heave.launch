@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find planner)/launch/test-04-pid/test-04-heave.launch" />
+	<include file="$(find controls)/launch/controls.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch" />
+</launch>
