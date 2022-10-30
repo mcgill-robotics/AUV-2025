@@ -5,12 +5,12 @@ set(MSG_DEP_SET geometry_msgs std_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
-	# depth_sensor - disclude due to compilation errors
+	depth_sensor
 	rospy
 )
 
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
-	# depth_sensor - disclude due to compilation errors
+	depth_sensor
 	rospy
 )
