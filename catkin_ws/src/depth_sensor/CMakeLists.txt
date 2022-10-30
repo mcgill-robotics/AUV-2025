@@ -15,6 +15,7 @@ catkin_package( CATKIN_DEPENDS
 	std_msgs
 )
 
+#[[for the pool test, the firmware is already uploaded
 rosserial_generate_ros_lib(
 	PACKAGE rosserial_arduino
 	SCRIPT make_libraries.py
@@ -34,3 +35,4 @@ rosserial_add_client_target(
 	embedded
 	depth_sensor-upload
 )
+]]

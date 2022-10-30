@@ -1,7 +1,7 @@
 <launch>
-	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
-	<!-- 
-	depth_sensor is currently having errors buiding
 	<include file="$(find depth_sensor)/launch/depth_sensor.launch"/>
+	<!-- 
+    for the current pool tests we are publishing just /depth directly from the sensor/rosserial node
+	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
 	-->
 </launch>
