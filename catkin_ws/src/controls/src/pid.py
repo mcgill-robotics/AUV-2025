@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 
 import rospy
+from std_msgs.msg import Float64
 
-from std_msgs.msg import Float64 
-
-'''
-This node implements a PID controller (only proportional term)
-for the forward (x) direction of the robot
-
-Assume that the robot is able to move along the x axis, 
-and that it is always oriented forwards towards positive x 
-(so you don't need to bother with coordinate transformations)
-
-TO IMPLEMENT
----------------
-
-Subscribers:
-    1. to get setpoint from /setpoint_x topic (Float64)
-    2. to get current state from /state_x topic (float64)
-
-Publishers:
-    1. output the force (effort) with which the robot should 
-    move in the positive x direction on /surge topic
-'''
-
+P = 0.1 #proportional factor for determining required surge
 
 if __name__ == '__main__':
+    current_x = None
     rospy.init_node('pid')
+    publisher = rospy.Publisher('/surge', Float64, queue_size=5)
+
+    def update_state(x):
+        global current_x
+        current_x = x
+
+    def update_setpoint(target_x):
+        global current_x
+        if current_x == None: return
+        out = Float64(P*(target_x-current_x))
+        publisher.publish(out)
+
+    state_subscriber = rospy.Subscriber('/state_x', Float64, update_state)
+    setpoint_subscriber = rospy.Subscriber('/setpoint_x', Float64, update_setpoint)
     rospy.spin()

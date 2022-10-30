@@ -3,14 +3,14 @@
 import numpy as np
 import rospy
 
-from auv_msgs.msg import ThrusterCommand
+from auv_msgs.msg import ThrusterForces
 from geometry_msgs.msg import Wrench
 
 d = 0.224 # m
 D_1 = 0.895 # m
 D_2 = 0.778 # m
 
-thrust_pub = rospy.Publisher('propulsion/thruster_cmd', ThrusterCommand, queue_size=5)
+thrust_pub = rospy.Publisher('propulsion/thruster_forces', ThrusterForces, queue_size=5)
 rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
 
 T = np.matrix(
@@ -39,7 +39,7 @@ def wrench_to_thrust(w):
             )
 
     b = np.matmul(T_inv, a) 
-    tc = ThrusterCommand([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]) 
+    tc = ThrusterForces([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]) 
     thrust_pub.publish(tc)
     return
 

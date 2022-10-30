@@ -1,4 +1,5 @@
 <launch>
     <include file="$(find propulsion)/launch/thrust_mapper.launch" />
     <include file="$(find propulsion)/launch/thrusters.launch" />
+    <include file="$(find propulsion)/launch/force_to_intensities.launch" />
 </launch>
