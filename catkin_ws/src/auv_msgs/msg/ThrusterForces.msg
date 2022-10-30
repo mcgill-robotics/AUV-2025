@@ -1,0 +1,10 @@
+#Thruster definitions
+float64 SURGE_PORT=0
+float64 SURGE_STAR=1
+float64 SWAY_BOW=2
+float64 SWAY_STERN=3
+float64 HEAVE_BOW_PORT=4
+float64 HEAVE_BOW_STAR=5
+float64 HEAVE_STERN_STAR=6
+float64 HEAVE_STERN_PORT=7
+
