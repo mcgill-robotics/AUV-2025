@@ -1,18 +1,3 @@
 <launch>
-	<node name="z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="1.0" />
-		<param name="Ki" value="0.0" />
-		<param name="Kd" value="0.0" />
-		<param name="upper_limit" value="10" />
-		<param name="lower_limit" value="-10" />
-		<param name="windup_limit" value="10" />
-		<param name="max_loop_frequency" value="100.0" />
-		<param name="min_loop_frequency" value="100.0" />
-
-		<param name="topic_from_controller" value="z_effort" />
-		<param name="topic_from_plant" value="z_state" />
-		<param name="setpoint_topic" value="z_setpoint" />
-	</node>
-
-    <node name="pid" pkg="controls" type="pid.py" respawn="true" />
+    <node name="pid" pkg="controls" type="pid.py" respawn="true" output="screen" />
 </launch>
