@@ -25,6 +25,23 @@ Publishers:
 '''
 
 
+ 
+pub = rospy.Publisher('/surge', Float64,queue_size=5)
+
+set = Float64(0.0)
+state = Float64(0.0)
+
+def set_set(s):
+        set = s
+        pub.publish(Float64(set.data - state.data))
+
+def set_state(s):
+        state = s
+        pub.publish(Float64(set.data - state.data))
+
+
 if __name__ == '__main__':
-    rospy.init_node('pid')
-    rospy.spin()
+        rospy.init_node('pid')
+        rospy.Subscriber('/setpoint_x',Float64, set_set)
+        rospy.Subscriber('/state_x',Float64, set_state)
+        rospy.spin()
