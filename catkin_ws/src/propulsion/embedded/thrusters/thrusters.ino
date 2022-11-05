@@ -17,7 +17,7 @@ pins 0 and 1 function differently.
 
 /* thrusters operate in range 1500 +/- 500 */
 #define STOP 1500
-#define MAX_DELTA 500
+#define MAX_DELTA 400
 
 /* less verbose identifiers
 	Pin numbers [0-7] from ThusterCommand.msg
@@ -83,7 +83,7 @@ void initThrusters(){
 	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
 
 	//set initial thruster effort (OFF)
-	//thrustersOff();
+	thrustersOff();
 }
 
 
