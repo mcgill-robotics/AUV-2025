@@ -30,21 +30,29 @@ class State_Aggregator:
 
 
     def update_state(self, _):
+        '''
         position = Point(
-                self.x.get(), 
-                self.y.get(), 
+                self.x.get(),
+                self.y.get(),
                 self.z.get())
         quaternion = tf.transformations.quaternion_from_euler(
-                self.theta_x.get(), 
-                self.theta_y.get(), 
+                self.theta_x.get(),
+                self.theta_y.get(),
                 self.theta_z.get())
         orientation = Quaternion(
-                quaternion[0], 
+                quaternion[0],
                 quaternion[1],
                 quaternion[2],
                 quaternion[3])
-        pose  = Pose(position, orientation)
-        self.pub.publish(pose)
+       	pose  = Pose(position, orientation)'''
+        #self.pub.publish(pose)
+        self.pub_x.publish(self.x.get())
+        self.pub_y.publish(self.y.get())
+        self.pub_z.publish(self.z.get())
+        self.pub_theta_x.publish(self.theta_x.get())
+        self.pub_theta_y.publish(self.theta_y.get())
+        self.pub_theta_z.publish(self.theta_z.get())
+
 
 
 if __name__ == '__main__':
