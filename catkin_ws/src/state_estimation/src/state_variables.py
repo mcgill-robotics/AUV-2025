@@ -24,7 +24,10 @@ class Z(_State_Var):
         rospy.Subscriber('depth', Float64, self.depth_sensor_cb)
 
     def depth_sensor_cb(self, depth):
-        self.val = depth.data 
+        self.val = self.convert(depth.data)
+
+    def convert(self, depth):
+        return depth * -1
 
 class Theta_X(_State_Var):
     def __init__(self):
@@ -33,6 +36,7 @@ class Theta_X(_State_Var):
 class Theta_Y(_State_Var):
     def __init__(self):
         super().__init__()
+
 
 class Theta_Z(_State_Var):
     def __init__(self):
