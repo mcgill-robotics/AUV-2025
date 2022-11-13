@@ -15,12 +15,12 @@ if __name__ == '__main__':
         motor_thrust = 0
         # cap our input force at maximum fwd/bkwd speeds
         force = min(max(force, MAX_FORCE_BKWD), MAX_FORCE_FWD)
-
+        #get correct max force
         if force >= 0:
-            motor_thrust = math.log2((force/MAX_FORCE_FWD)+1)
+            MAX_FORCE = MAX_FORCE_FWD
         else:
-            motor_thrust = -1.0 * math.log2((math.abs(force)/MAX_FORCE_BKWD)+1)
-        return motor_thrust
+            MAX_FORCE = MAX_FORCE_BKWD
+        return math.log2((force/MAX_FORCE)+1)
 
     def forces_to_intensities(f):
         # After a quick google search i found that approximately thrust = rpm^2, so i wanted to test scaling

@@ -13,6 +13,4 @@
 		<param name="topic_from_plant" value="z_state" />
 		<param name="setpoint_topic" value="z_setpoint" />
 	</node>
-
-    <node name="pid" pkg="controls" type="pid.py" respawn="true" />
 </launch>
