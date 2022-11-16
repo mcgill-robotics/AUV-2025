@@ -6,6 +6,7 @@ from auv_msgs.msg import ThrusterForces, ThrusterIntensities
 
 MAX_FORCE_FWD = 5.25*9.81 #max theoretical force to expect (in newtons) for going forward
 MAX_FORCE_BKWD = -4.1*9.81 #max theoretical force to expect (in newtons) for spinning backward
+stiffness = 0.0 #optional parameter, must be >= 0, increase to make motor movement stiffer/more reactive at low speeds
 
 if __name__ == '__main__':
     rospy.init_node('force_to_intensity')
@@ -15,12 +16,13 @@ if __name__ == '__main__':
         motor_thrust = 0
         # cap our input force at maximum fwd/bkwd speeds
         force = min(max(force, MAX_FORCE_BKWD), MAX_FORCE_FWD)
-        #get correct max force
-        if force >= 0:
-            MAX_FORCE = MAX_FORCE_FWD
-        else:
-            MAX_FORCE = MAX_FORCE_BKWD
-        return math.log2((force/MAX_FORCE)+1)
+        if force > 0:
+            max_log = math.log2(MAX_FORCE_FWD) #get log value of maximum fwd force
+            return (math.log2(force)+2+stiffness)/(max_log+2+stiffness) #+2 to make the logs start at 0
+        elif force < 0:
+            max_log = math.log2(-MAX_FORCE_BKWD) #get log value of maximum bkwd force
+            return -(math.log2(-force)+2+stiffness)/(max_log+2+stiffness) #we negate the force to find the log value, and negate the final return value
+        else: return 0
 
     def forces_to_intensities(f):
         # After a quick google search i found that approximately thrust = rpm^2, so i wanted to test scaling
