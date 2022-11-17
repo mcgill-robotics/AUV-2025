@@ -48,9 +48,9 @@ std_msgs::Float64 theta_z_msg;
 ros::Publisher x_pub("state_x", &x_msg);
 ros::Publisher y_pub("state_y", &y_msg);
 ros::Publisher z_pub("state_z", &z_msg);*/
-ros::Publisher theta_x_pub("imu_theta_x", &x_theta_msg);
-ros::Publisher theta_y_pub("imu_theta_y", &y_theta_msg);
-ros::Publisher theta_z_pub("imu_theta_z", &z_theta_msg);
+ros::Publisher theta_x_pub("imu_theta_x", &theta_x_msg);
+ros::Publisher theta_y_pub("imu_theta_y", &theta_y_msg);
+ros::Publisher theta_z_pub("imu_theta_z", &theta_z_msg);
 
 
 //------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ void setup() {
 
     theta_x_nh.advertise(theta_x_pub);
     theta_y_nh.advertise(theta_y_pub);
-    theta_z_nh.advertise)theta_z_pub);
+    theta_z_nh.advertise(theta_z_pub);
 
     Serial.begin(115200);   // for sending data to computer
     Serial1.begin(115200);  // for receiving data from x-IMU
@@ -130,9 +130,9 @@ void loop() {
     theta_y_msg.data = inertialAndMagStruct.gyrY;
     theta_z_msg.data = inertialAndMagStruct.gyrZ;
 
-    theta_x_nh.publish(&theta_x_msg);
-    theta_y_nh.publish(&theta_y_msg);
-    theta_z_nh.publish(&theta_z_msg);
+    theta_x_pub.publish(&theta_x_msg);
+    theta_y_pub.publish(&theta_y_msg);
+    theta_z_pub.publish(&theta_z_msg);
 
 
     // Print quaternion data as Euler angles
