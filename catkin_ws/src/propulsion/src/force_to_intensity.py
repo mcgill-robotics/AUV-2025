@@ -9,10 +9,16 @@ MAX_FWD_FORCE = 5.25*9.81
 MAX_BKWD_FORCE = 4.1*9.81
 
 def force_to_intensity(force):
-    if force >= 0:
-        return force/MAX_FWD_FORCE
-    else:
-        return force/MAX_BKWD_FORCE
+        motor_thrust = 0
+        # cap our input force at maximum fwd/bkwd speeds
+        force = min(max(force, -MAX_FORCE_BKWD), MAX_FORCE_FWD)
+        if force > 0:
+            max_log = math.log2(MAX_FORCE_FWD) #get log value of maximum fwd force
+            return (math.log2(force)+2+stiffness)/(max_log+2+stiffness) #+2 to make the logs start at 0
+        elif force < 0:
+            max_log = math.log2(MAX_FORCE_BKWD) #get log value of maximum bkwd force
+            return -(math.log2(-force)+2+stiffness)/(max_log+2+stiffness) #we negate the final return value since we want a negative intensity backwards
+        else: return 0
 
 
 pub = rospy.Publisher('/propulsion/thruster_intensities', ThrusterIntensities, queue_size=5)
