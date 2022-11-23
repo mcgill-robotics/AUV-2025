@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 
 import rospy
+import math
 from auv_msgs.msg import ThrusterForces, ThrusterIntensities
 
 
 # forces produced by T200 thruster at 16V (N)
-MAX_FWD_FORCE = 5.25*9.81 
-MAX_BKWD_FORCE = 4.1*9.81
+MAX_FWD_FORCE = 4.52*9.81 
+MAX_BKWD_FORCE = 3.52*9.81
 
 def force_to_intensity(force):
-    if force >= 0:
-        return force/MAX_FWD_FORCE
-    else:
-        return force/MAX_BKWD_FORCE
+        # cap our input force at maximum fwd/bkwd speeds
+        force = min(max(force, -MAX_BKWD_FORCE), MAX_FWD_FORCE)
+        if force > 0.0:
+            return math.sqrt(force/MAX_FWD_FORCE)
+        elif force < 0.0:
+            return -1.0*math.sqrt(-force/MAX_BKWD_FORCE)
+        else: return 0.0
 
 
 pub = rospy.Publisher('/propulsion/thruster_intensities', ThrusterIntensities, queue_size=5)
