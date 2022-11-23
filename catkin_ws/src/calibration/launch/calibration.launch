@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find controls)/launch/controls.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch"/>
+	<include file="$(find calibration)/launch/heave_calibration.launch" />
+</launch>
