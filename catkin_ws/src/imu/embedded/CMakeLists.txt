@@ -10,7 +10,6 @@ generate_arduino_firmware(${PROJECT_NAME}
 	SKETCH imu
 	BOARD uno
 
-
 	#BOTH LINES COPIED FROM DEPTH SENSOR NEEDS TO BE LOOKED INTO
 	SRCS ${ROS_LIB_DIR}/time.cpp
 	PORT dev/ttyACM0

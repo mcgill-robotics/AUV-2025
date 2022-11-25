@@ -124,16 +124,17 @@ void loop() {
         Serial.print(", magZ = ");
         Serial.print(inertialAndMagStruct.magZ);
         Serial.print("\r");
+
+
+	theta_x_msg.data = inertialAndMagStruct.gyrX;
+	theta_y_msg.data = inertialAndMagStruct.gyrY;
+	theta_z_msg.data = inertialAndMagStruct.gyrZ;
+	theta_x_pub.publish(&theta_x_msg);
+	theta_y_pub.publish(&theta_y_msg);
+	theta_z_pub.publish(&theta_z_msg);
+
+	
     }
-
-    theta_x_msg.data = inertialAndMagStruct.gyrX;
-    theta_y_msg.data = inertialAndMagStruct.gyrY;
-    theta_z_msg.data = inertialAndMagStruct.gyrZ;
-
-    theta_x_pub.publish(&theta_x_msg);
-    theta_y_pub.publish(&theta_y_msg);
-    theta_z_pub.publish(&theta_z_msg);
-
 
     // Print quaternion data as Euler angles
     if(ximuReceiver.isQuaternionGetReady()) {
