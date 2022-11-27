@@ -14,9 +14,24 @@
 		<param name="setpoint_topic" value="z_setpoint" />
 	</node>
 	
+	<node name="theta_x_pid" pkg="pid" type="controller" >
+		<param name="Kp" value="1.0" />
+		<param name="Ki" value="1.0" />
+		<param name="Kd" value="0.0" />
+		<param name="upper_limit" value="10" />
+		<param name="lower_limit" value="-10" />
+		<param name="windup_limit" value="10" />
+		<param name="max_loop_frequency" value="100.0" />
+		<param name="min_loop_frequency" value="100.0" />
+
+		<param name="topic_from_controller" value="/roll" />
+		<param name="topic_from_plant" value="/state_theta_x" />
+		<param name="setpoint_topic" value="theta_x_setpoint" />
+	</node>
+	
 	<node name="theta_y_pid" pkg="pid" type="controller" >
 		<param name="Kp" value="1.0" />
-		<param name="Ki" value="0.0" />
+		<param name="Ki" value="1.0" />
 		<param name="Kd" value="0.0" />
 		<param name="upper_limit" value="10" />
 		<param name="lower_limit" value="-10" />
@@ -27,5 +42,20 @@
 		<param name="topic_from_controller" value="/pitch" />
 		<param name="topic_from_plant" value="/state_theta_y" />
 		<param name="setpoint_topic" value="theta_y_setpoint" />
+	</node>
+	
+	<node name="theta_z_pid" pkg="pid" type="controller" >
+		<param name="Kp" value="1.0" />
+		<param name="Ki" value="1.0" />
+		<param name="Kd" value="0.0" />
+		<param name="upper_limit" value="10" />
+		<param name="lower_limit" value="-10" />
+		<param name="windup_limit" value="10" />
+		<param name="max_loop_frequency" value="100.0" />
+		<param name="min_loop_frequency" value="100.0" />
+
+		<param name="topic_from_controller" value="/yaw" />
+		<param name="topic_from_plant" value="/state_theta_z" />
+		<param name="setpoint_topic" value="theta_z_setpoint" />
 	</node>
 </launch>
