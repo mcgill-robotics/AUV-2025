@@ -23,8 +23,15 @@ class Superimposer:
 
     def update_effort(self, _):
         # force and torque are vectors in the robot ref. frame
-        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
-        torque = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
+        surge = self.surge.val + rospy.get_param("~surge_offset", 0)
+        sway = self.sway.val + rospy.get_param("~sway_offset", 0)
+        heave = self.heave.val + rospy.get_param("~heave_offset", 0)
+        roll = self.roll.val + rospy.get_param("~roll_offset", 0)
+        pitch = self.pitch.val + rospy.get_param("~pitch_offset", 0)
+        yaw = self.yaw.val + rospy.get_param("~yaw_offset", 0)
+
+        force = Vector3(surge, sway, heave)
+        torque = Vector3(roll, pitch, yaw)
         wrench = Wrench(force=force, torque=torque) 
 
         self.pub.publish(wrench)
