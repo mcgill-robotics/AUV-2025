@@ -33,24 +33,22 @@
 /*ros::NodeHandle x_nh;
 ros::NodeHandle y_nh;
 ros::NodeHandle z_nh;*/
-ros::NodeHandle theta_x_nh;
-ros::NodeHandle theta_y_nh;
-ros::NodeHandle theta_z_nh;
+ros::NodeHandle nh;
 
 /*std_msgs::Float64 x_msg;
 std_msgs::Float64 y_msg;
 std_msgs::Float64 z_msg;*/
-std_msgs::Float64 theta_x_msg;
-std_msgs::Float64 theta_y_msg;
-std_msgs::Float64 theta_z_msg;
+std_msgs::Float64 roll_msg;
+std_msgs::Float64 pitch_msg;
+std_msgs::Float64 yaw_msg;
 
 /*
 ros::Publisher x_pub("state_x", &x_msg);
 ros::Publisher y_pub("state_y", &y_msg);
 ros::Publisher z_pub("state_z", &z_msg);*/
-ros::Publisher theta_x_pub("imu_theta_x", &theta_x_msg);
-ros::Publisher theta_y_pub("imu_theta_y", &theta_y_msg);
-ros::Publisher theta_z_pub("imu_theta_z", &theta_z_msg);
+ros::Publisher roll_pub("imu_roll", &roll_msg);
+ros::Publisher pitch_pub("imu_pitch", &pitch_msg);
+ros::Publisher yaw_pub("imu_yaw", &yaw_msg);
 
 
 //------------------------------------------------------------------------------
@@ -65,13 +63,11 @@ XimuReceiver ximuReceiver;
 
 void setup() {
 
-    theta_x_nh.initNode();
-    theta_y_nh.initNode();
-    theta_z_nh.initNode();
+    nh.initNode();
 
-    theta_x_nh.advertise(theta_x_pub);
-    theta_y_nh.advertise(theta_y_pub);
-    theta_z_nh.advertise(theta_z_pub);
+    nh.advertise(roll_pub);
+    nh.advertise(pitch_pub);
+    nh.advertise(yaw_pub);
 
     Serial.begin(115200);   // for sending data to computer
     Serial1.begin(115200);  // for receiving data from x-IMU
@@ -124,15 +120,6 @@ void loop() {
         Serial.print(", magZ = ");
         Serial.print(inertialAndMagStruct.magZ);
         Serial.print("\r");
-
-
-	theta_x_msg.data = inertialAndMagStruct.gyrX;
-	theta_y_msg.data = inertialAndMagStruct.gyrY;
-	theta_z_msg.data = inertialAndMagStruct.gyrZ;
-	theta_x_pub.publish(&theta_x_msg);
-	theta_y_pub.publish(&theta_y_msg);
-	theta_z_pub.publish(&theta_z_msg);
-
 	
     }
 
@@ -148,6 +135,14 @@ void loop() {
         Serial.print(", yaw = ");
         Serial.print(eulerAnglesStruct.yaw);
         Serial.print("\r");
+
+
+        roll_msg.data = eulerAnglesStruct.roll;
+        pitch_msg.data = eulerAnglesStruct.pitch;
+        yaw_msg.data = eulerAnglesStruct.yaw;
+        roll_pub.publish(&roll_msg);
+        pitch_pub.publish(&pitch_msg);
+        yaw_pub.publish(&yaw_msg);
     }
 }
 
