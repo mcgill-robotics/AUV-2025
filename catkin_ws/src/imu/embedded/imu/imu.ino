@@ -66,17 +66,21 @@ void setup() {
     nh.initNode();
 
     nh.advertise(roll_pub);
-    nh.advertise(pitch_pub);
-    nh.advertise(yaw_pub);
+    //nh.advertise(pitch_pub);
+    //nh.advertise(yaw_pub);
 
-    Serial.begin(115200);   // for sending data to computer
+    //Serial.begin(57600);   // for sending data to computer
     Serial1.begin(115200);  // for receiving data from x-IMU
 }
 
 void loop() {
+    delay(5000);
     ErrorCode e = ERR_NO_ERROR;
-
+    roll_msg.data = 5;
+    roll_pub.publish(&roll_msg);
+    nh.spinOnce();
     // Process recieved data
+/*    
     while(Serial1.available() > 0) {
         e = ximuReceiver.processNewChar(Serial1.read());
     }
@@ -138,12 +142,13 @@ void loop() {
 
 
         roll_msg.data = eulerAnglesStruct.roll;
-        pitch_msg.data = eulerAnglesStruct.pitch;
-        yaw_msg.data = eulerAnglesStruct.yaw;
+        //pitch_msg.data = eulerAnglesStruct.pitch;
+        //yaw_msg.data = eulerAnglesStruct.yaw;
         roll_pub.publish(&roll_msg);
-        pitch_pub.publish(&pitch_msg);
-        yaw_pub.publish(&yaw_msg);
+        //pitch_pub.publish(&pitch_msg);
+        //yaw_pub.publish(&yaw_msg);
     }
+*/
 }
 
 //------------------------------------------------------------------------------
