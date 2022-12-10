@@ -24,10 +24,10 @@
 //------------------------------------------------------------------------------
 // Includes
 
-#include "Quaternion.h"
-#include "XimuReceiver.h"
+//#include "Quaternion.h"
+//#include "XimuReceiver.h"
 #include <ros.h>
-#include "std_msgs/Float64.h"
+#include <auv_msgs/ImuData.h>
 
 
 /*ros::NodeHandle x_nh;
@@ -38,17 +38,13 @@ ros::NodeHandle nh;
 /*std_msgs::Float64 x_msg;
 std_msgs::Float64 y_msg;
 std_msgs::Float64 z_msg;*/
-std_msgs::Float64 roll_msg;
-std_msgs::Float64 pitch_msg;
-std_msgs::Float64 yaw_msg;
+auv_msgs::ImuData data_msg;
 
 /*
 ros::Publisher x_pub("state_x", &x_msg);
 ros::Publisher y_pub("state_y", &y_msg);
 ros::Publisher z_pub("state_z", &z_msg);*/
-ros::Publisher roll_pub("imu_roll", &roll_msg);
-ros::Publisher pitch_pub("imu_pitch", &pitch_msg);
-ros::Publisher yaw_pub("imu_yaw", &yaw_msg);
+ros::Publisher pub("imu_data", &data_msg);
 
 
 //------------------------------------------------------------------------------
@@ -65,9 +61,7 @@ void setup() {
 
     nh.initNode();
 
-    nh.advertise(roll_pub);
-    //nh.advertise(pitch_pub);
-    //nh.advertise(yaw_pub);
+    nh.advertise(pub);
 
     //Serial.begin(57600);   // for sending data to computer
     Serial1.begin(115200);  // for receiving data from x-IMU
@@ -76,14 +70,16 @@ void setup() {
 void loop() {
     delay(5000);
     ErrorCode e = ERR_NO_ERROR;
-    roll_msg.data = 5;
-    roll_pub.publish(&roll_msg);
+    data_msg.ROLL = 5;
+    data_msg.PITCH = 10;
+    data_msg.YAW = 15;
+    pub.publish(&data_msg);
     nh.spinOnce();
     // Process recieved data
-/*    
+    
     while(Serial1.available() > 0) {
         e = ximuReceiver.processNewChar(Serial1.read());
-    }
+    }/*
 
     // Print error code (receive error)
     if(e != ERR_NO_ERROR) {
