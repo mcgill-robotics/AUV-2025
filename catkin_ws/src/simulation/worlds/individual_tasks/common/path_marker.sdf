@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="path_marker_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/path_marker_45cw.dae</uri>
+                            <uri>../../../assets/common/path_marker/path_marker_45cw.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="path_marker_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/path_marker_45cw.dae</uri>
+                            <uri>../../../assets/common/path_marker/path_marker_45cw.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
