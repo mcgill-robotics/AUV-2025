@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="octagon_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/octagon.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/octagon.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="octagon_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/octagon.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/octagon.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -63,14 +63,14 @@
                 <visual name="table_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -84,14 +84,14 @@
                 <visual name="table_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -105,14 +105,14 @@
                 <visual name="table_bottles_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_bottles.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_bottles.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_bottles_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/table_bottles.dae</uri>
+                            <uri>../../../assets/robosub2022/octagon/table_bottles.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
