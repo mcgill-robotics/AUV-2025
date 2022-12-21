@@ -26,14 +26,14 @@
                 <visual name="gate_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/gate.dae</uri>
+                            <uri>../assets/robosub2022/gate/gate.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="gate_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/gate.dae</uri>
+                            <uri>../assets/robosub2022/gate/gate.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -47,14 +47,14 @@
                 <visual name="path_marker_to_buoys_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/common/meshes/path_marker_45ccw.dae</uri>
+                            <uri>../assets/common/path_marker/path_marker_45ccw.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="path_marker_to_buoys_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/common/meshes/path_marker_45ccw.dae</uri>
+                            <uri>../assets/common/path_marker/path_marker_45ccw.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -68,14 +68,14 @@
                 <visual name="ballast_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                            <uri>../assets/robosub2022/buoys/ballast.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="ballast_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                            <uri>../assets/robosub2022/buoys/ballast.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -89,14 +89,14 @@
                 <visual name="buoy_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/buoy_gman.dae</uri>
+                            <uri>../assets/robosub2022/buoys/buoy_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="buoy_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/buoy_gman.dae</uri>
+                            <uri>../assets/robosub2022/buoys/buoy_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -112,14 +112,14 @@
                 <visual name="ballast_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                            <uri>../assets/robosub2022/buoys/ballast.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="ballast_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/ballast.dae</uri>
+                            <uri>../assets/robosub2022/buoys/ballast.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -133,14 +133,14 @@
                 <visual name="buoy_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/buoy_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/buoys/buoy_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="buoy_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/buoy_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/buoys/buoy_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -154,14 +154,14 @@
                 <visual name="path_marker_to_bins_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/common/meshes/path_marker_45cw.dae</uri>
+                            <uri>../assets/common/path_marker/path_marker_45cw.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="path_marker_to_bins_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/common/meshes/path_marker_45cw.dae</uri>
+                            <uri>../assets/common/path_marker/path_marker_45cw.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -175,14 +175,14 @@
                 <visual name="bin_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bin_gman.dae</uri>
+                            <uri>../assets/robosub2022/bins/bin_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bin_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bin_gman.dae</uri>
+                            <uri>../assets/robosub2022/bins/bin_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -196,14 +196,14 @@
                 <visual name="cover_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="cover_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -217,14 +217,14 @@
                 <visual name="bin_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/bins/bin_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bin_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/bins/bin_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -238,14 +238,14 @@
                 <visual name="cover_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="cover_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -264,14 +264,14 @@
                 <visual name="torpedo_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                            <uri>../assets/robosub2022/torpedo/torpedo_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="torpedo_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                            <uri>../assets/robosub2022/torpedo/torpedo_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -285,14 +285,14 @@
                 <visual name="torpedo_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/torpedo/torpedo_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="torpedo_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/torpedo/torpedo_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -311,14 +311,14 @@
                 <visual name="octagon_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/octagon.dae</uri>
+                            <uri>../assets/robosub2022/octagon/octagon.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="octagon_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/octagon.dae</uri>
+                            <uri>../assets/robosub2022/octagon/octagon.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -332,14 +332,14 @@
                 <visual name="table_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_gman.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_gman.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -353,14 +353,14 @@
                 <visual name="table_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_bootlegger.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -374,14 +374,14 @@
                 <visual name="table_bottles_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_bottles.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_bottles.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="table_bottles_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/table_bottles.dae</uri>
+                            <uri>../assets/robosub2022/octagon/table_bottles.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -395,14 +395,14 @@
                 <visual name="bottle_1_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bottle_1_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -416,14 +416,14 @@
                 <visual name="bottle_2_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bottle_2_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -437,14 +437,14 @@
                 <visual name="bottle_3_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bottle_3_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -458,21 +458,18 @@
                 <visual name="bottle_4_visual">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bottle_4_collision">
                     <geometry>
                         <mesh>
-                            <uri>../assets/robosub2022/meshes/bottle.dae</uri>
+                            <uri>../assets/robosub2022/octagon/bottle.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
             </link>
         </model>
-    </world>
-</sdf>
-
     </world>
 </sdf>
