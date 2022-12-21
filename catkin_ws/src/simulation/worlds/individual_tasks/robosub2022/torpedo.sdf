@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="torpedo_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/torpedo/torpedo_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="torpedo_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/torpedo_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/torpedo/torpedo_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -64,14 +64,14 @@
                 <visual name="torpedo_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/torpedo/torpedo_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="torpedo_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/torpedo_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/torpedo/torpedo_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
