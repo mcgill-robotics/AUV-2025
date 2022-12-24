@@ -7,13 +7,6 @@ from state_variables import *
 
 
 class State_Aggregator:
-    pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
-    pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
-    pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
-    pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
-    pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
-    pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
-
 
     def __init__(self):
         # position
@@ -28,9 +21,17 @@ class State_Aggregator:
 
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
 
+        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
+        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
+        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+
+
 
     def update_state(self, _):
-        '''
+        # publish pose
         position = Point(
                 self.x.get(),
                 self.y.get(),
@@ -44,8 +45,10 @@ class State_Aggregator:
                 quaternion[1],
                 quaternion[2],
                 quaternion[3])
-       	pose  = Pose(position, orientation)'''
-        #self.pub.publish(pose)
+       	pose  = Pose(position, orientation)
+        self.pub.publish(pose)
+
+        # publish individual degrees of freedom
         self.pub_x.publish(self.x.get())
         self.pub_y.publish(self.y.get())
         self.pub_z.publish(self.z.get())
