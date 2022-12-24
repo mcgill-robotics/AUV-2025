@@ -9,7 +9,7 @@
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
-		<param name="topic_from_controller" value="/heave" />
+		<param name="topic_from_controller" value="/global_z" />
 		<param name="topic_from_plant" value="/state_z" />
 		<param name="setpoint_topic" value="z_setpoint" />
 	</node>
