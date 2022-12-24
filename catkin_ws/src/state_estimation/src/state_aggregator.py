@@ -7,13 +7,6 @@ from state_variables import *
 
 
 class State_Aggregator:
-    pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
-    pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
-    pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
-    pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
-    pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
-    pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
-
 
     def __init__(self):
         # position
@@ -28,23 +21,41 @@ class State_Aggregator:
 
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
 
+        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
+        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
+        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+
+
 
     def update_state(self, _):
+        # publish pose
         position = Point(
-                self.x.get(), 
-                self.y.get(), 
+                self.x.get(),
+                self.y.get(),
                 self.z.get())
         quaternion = tf.transformations.quaternion_from_euler(
-                self.theta_x.get(), 
-                self.theta_y.get(), 
+                self.theta_x.get(),
+                self.theta_y.get(),
                 self.theta_z.get())
         orientation = Quaternion(
-                quaternion[0], 
+                quaternion[0],
                 quaternion[1],
                 quaternion[2],
                 quaternion[3])
-        pose  = Pose(position, orientation)
+       	pose  = Pose(position, orientation)
         self.pub.publish(pose)
+
+        # publish individual degrees of freedom
+        self.pub_x.publish(self.x.get())
+        self.pub_y.publish(self.y.get())
+        self.pub_z.publish(self.z.get())
+        self.pub_theta_x.publish(self.theta_x.get())
+        self.pub_theta_y.publish(self.theta_y.get())
+        self.pub_theta_z.publish(self.theta_z.get())
+
 
 
 if __name__ == '__main__':
