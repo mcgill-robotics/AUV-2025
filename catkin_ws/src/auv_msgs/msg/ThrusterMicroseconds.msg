@@ -8,5 +8,4 @@ uint8 HEAVE_BOW_STAR=5
 uint8 HEAVE_STERN_STAR=6
 uint8 HEAVE_STERN_PORT=7
 
-# -1 full backwards, 1 full forwards, 0 stop
-float64[8] intensities
+uint16[8] microseconds
