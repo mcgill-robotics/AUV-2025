@@ -29,7 +29,7 @@ T_inv = np.linalg.pinv(T) # matrix transformation wrench -> thrust
 
 def wrench_to_thrust(w):
     '''
-    wrench_to_thrust maps a Wrench into an intensity [-1.0, 1.0]
+    wrench_to_thrust maps a Wrench into a force in kg f
     for each thruster
     '''
     a = np.array(
@@ -40,6 +40,10 @@ def wrench_to_thrust(w):
             [w.torque.y],
             [w.torque.z]]
             )
+
+    #sample wrenches
+    #   rostopic pub -1 /effort geometry_msgs/Wrench
+    #   "{ force: {x: 20.0, y: 0.0, z: 0.0}, torque:{x: 0.0, y: 0.0, z: 0.0} }"
 
     b = np.matmul(T_inv, a) 
     tf = ThrusterForces() 
