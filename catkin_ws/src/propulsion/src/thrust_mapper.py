@@ -3,14 +3,17 @@
 import numpy as np
 import rospy
 
-from auv_msgs.msg import ThrusterForces
+from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
 d = 0.224 # m
 D_1 = 0.895 # m
 D_2 = 0.778 # m
 
-pub = rospy.Publisher('propulsion/thruster_forces', ThrusterForces, queue_size=5)
+# forces produced by T200 thruster at 16V (N)
+MAX_FWD_FORCE = 4.52*9.81 
+MAX_BKWD_FORCE = -3.52*9.81
+
 rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
 
 T = np.matrix(
@@ -50,10 +53,44 @@ def wrench_to_thrust(w):
     tf.HEAVE_STERN_STAR = b[6]
     tf.HEAVE_STERN_PORT = b[7]
 
-    pub.publish(tf)
+    forces_to_microseconds_cb(tf)
+
+def negativeForceCurve(force):
+    return 1.4701043632380542*(10**3) + force*2.3999978362959104*(10**2) + (force**2)*2.5705773429064880*(10**2) + (force**3)*3.1133962497995367*(10**2) + (force**4)*2.1943237103469241*(10**2) + (force**5)*8.4596303821198617*(10**1) + (force**6)*1.6655229499580056*(10**1) + (force**7)*1.3116834437073399
+
+def positiveForceCurve(force):
+    return 1.5299083405100268*(10**3) + force*1.9317247519327023*(10**2) + (force**2)*-1.6227874418158476*(10**2) + (force**3)*1.4980771349508325*(10**2) + (force**4)*-8.0478019175136623*(10**1) + (force**5)*2.3661746039755371*(10**1) + (force**6)*-3.5559291204780612 + (force**7)*2.1398707591286295*(10**-1)
+
+def force_to_microseconds(force):
+        # cap our input force at maximum fwd/bkwd speeds
+        force = min(max(force, MAX_BKWD_FORCE), MAX_FWD_FORCE)
+        #two different curves (negative and positive forces)
+        if force > 0.0:
+            return int(positiveForceCurve(force/9.81))
+        elif force < 0.0:
+            return int(negativeForceCurve(force/9.81))
+        else: return 1500 #middle value is 1500
+
+# functions or relevant code
+def forces_to_microseconds_cb(forces_msg):
+    # array message to publish
+    micro_arr = [None]*8
+    micro_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_microseconds(forces_msg.SURGE_PORT)
+    micro_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_microseconds(forces_msg.SURGE_STAR) 
+    micro_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_microseconds(forces_msg.SWAY_BOW)
+    micro_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_microseconds(forces_msg.SWAY_STERN) 
+    micro_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_microseconds(forces_msg.HEAVE_BOW_PORT) 
+    micro_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_microseconds(forces_msg.HEAVE_BOW_STAR) 
+    micro_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_microseconds(forces_msg.HEAVE_STERN_STAR) 
+    micro_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_microseconds(forces_msg.HEAVE_STERN_PORT)
+
+    micro_msg = ThrusterMicroseconds(micro_arr)
+    pub.publish(micro_msg)
 
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
+    pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=5)
     sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
+
     rospy.spin()
