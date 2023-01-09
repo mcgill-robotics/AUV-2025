@@ -1,6 +1,6 @@
 #include <ros.h>
 #include <Servo.h>
-#include <auv_msgs/ThrusterIntensities.h>
+#include <auv_msgs/ThrusterMicroseconds.h>
 /* 
 NOTE: pins 2-9 were chosen instead of 0-7, since 
 pins 0 and 1 function differently.
@@ -15,61 +15,39 @@ pins 0 and 1 function differently.
 #define HVE_ST_S_PIN 	8
 #define HVE_ST_P_PIN 	9
 
-/* thrusters operate in range 1500 +/- 500 */
-#define STOP 1500
-#define MAX_DELTA 400
-
 /* less verbose identifiers
 	Pin numbers [0-7] from ThusterCommand.msg
  */
-const uint8_t SRG_P 	= auv_msgs::ThrusterIntensities::SURGE_PORT;
-const uint8_t SRG_S 	= auv_msgs::ThrusterIntensities::SURGE_STAR;
-const uint8_t SWY_BW 	= auv_msgs::ThrusterIntensities::SWAY_BOW;
-const uint8_t SWY_ST 	= auv_msgs::ThrusterIntensities::SWAY_STERN;
-const uint8_t HVE_BW_P 	= auv_msgs::ThrusterIntensities::HEAVE_BOW_PORT;
-const uint8_t HVE_BW_S 	= auv_msgs::ThrusterIntensities::HEAVE_BOW_STAR;
-const uint8_t HVE_ST_S 	= auv_msgs::ThrusterIntensities::HEAVE_STERN_STAR;
-const uint8_t HVE_ST_P 	= auv_msgs::ThrusterIntensities::HEAVE_STERN_PORT;
+const uint8_t SRG_P 	= auv_msgs::ThrusterMicroseconds::SURGE_PORT;
+const uint8_t SRG_S 	= auv_msgs::ThrusterMicroseconds::SURGE_STAR;
+const uint8_t SWY_BW 	= auv_msgs::ThrusterMicroseconds::SWAY_BOW;
+const uint8_t SWY_ST 	= auv_msgs::ThrusterMicroseconds::SWAY_STERN;
+const uint8_t HVE_BW_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_PORT;
+const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
+const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
+const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
 
 Servo thrusters[8];
-const float offCommand[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
 
-uint16_t* convertToMicroseconds(const float intensities[8]){
-	double intensity; 
-	static uint16_t res[8];
-
-	for(uint8_t i = 0; i < 8; i++){
-		intensity = intensities[i];
-		if(intensity < -1){
-			intensity = -1;
-		} else if(intensity > 1){
-			intensity = 1;	
-		}
-		res[i] = static_cast<int>(STOP + intensity*MAX_DELTA);
-	}
-	return res;
-}
-
-void updateThrusters(const float intensities[8]){
-	uint16_t* command = convertToMicroseconds(intensities);
-
-	thrusters[SRG_P].writeMicroseconds(command[SRG_P]);
-	thrusters[SRG_S].writeMicroseconds(command[SRG_S]);
-	thrusters[SWY_BW].writeMicroseconds(command[SWY_BW]);
-	thrusters[SWY_ST].writeMicroseconds(command[SWY_ST]);
-	thrusters[HVE_BW_P].writeMicroseconds(command[HVE_BW_P]);
-	thrusters[HVE_BW_S].writeMicroseconds(command[HVE_BW_S]);
-	thrusters[HVE_ST_P].writeMicroseconds(command[HVE_ST_P]);
-	thrusters[HVE_ST_S].writeMicroseconds(command[HVE_ST_S]);
+void updateThrusters(const uint16_t microseconds[8]){
+	thrusters[SRG_P].writeMicroseconds(microseconds[SRG_P]);
+	thrusters[SRG_S].writeMicroseconds(microseconds[SRG_S]);
+	thrusters[SWY_BW].writeMicroseconds(microseconds[SWY_BW]);
+	thrusters[SWY_ST].writeMicroseconds(microseconds[SWY_ST]);
+	thrusters[HVE_BW_P].writeMicroseconds(microseconds[HVE_BW_P]);
+	thrusters[HVE_BW_S].writeMicroseconds(microseconds[HVE_BW_S]);
+	thrusters[HVE_ST_P].writeMicroseconds(microseconds[HVE_ST_P]);
+	thrusters[HVE_ST_S].writeMicroseconds(microseconds[HVE_ST_S]);
 }
 
 void thrustersOff(){
 	updateThrusters(offCommand);
 }
 
-void commandCb(const auv_msgs::ThrusterIntensities& tc){
-	const float* intensities = tc.intensities;
-	updateThrusters(intensities);
+void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+	const uint16_t* microseconds = tc.microseconds;
+	updateThrusters(microseconds);
 }
 
 void initThrusters(){
@@ -88,7 +66,7 @@ void initThrusters(){
 
 
 ros::NodeHandle nh;
-ros::Subscriber<auv_msgs::ThrusterIntensities> sub("propulsion/thruster_intensities", &commandCb);
+ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("propulsion/thruster_microseconds", &commandCb);
 
 void setup() {
 	initThrusters();
