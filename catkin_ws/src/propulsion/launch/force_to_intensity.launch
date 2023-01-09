@@ -1,3 +1,0 @@
-<launch>
-	<node name="force_to_intensity" pkg="propulsion" type="force_to_intensity.py" respawn="true" />
-</launch>
