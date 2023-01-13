@@ -4,30 +4,29 @@
 #include <auv_msgs/ImuData.h>
 
 
-//ros::NodeHandle nh;
+ros::NodeHandle nh;
 
-//auv_msgs::ImuData data_msg;
+auv_msgs::ImuData data_msg;
 
 
-//XimuReceiver ximuReceiver;
+XimuReceiver ximuReceiver;
 
-//ros::Publisher pub("imu_data", &data_msg);
+ros::Publisher pub("imu_data", &data_msg);
 
 void setup() {
-	//nh.initNode();
-	//nh.advertise(pub);
-
-	//Serial1.begin(115200);
+	nh.initNode();
+	nh.advertise(pub);
+	nh.spinOnce();
+	Serial1.begin(115200);
 }
 
 void loop() {
-/*	delay(5000);/*
+	delay(1000);
 	ErrorCode e = ERR_NO_ERROR;
-	data_msg.ROLL = 5;
-	data_msg.pitch = 10;
-	data_msg.yaw = 15;
-	pub.publish(&data_msg);
-	nh.spinOnce();/*
+	/*data_msg.ROLL = 5;
+	data_msg.PITCH = 10;
+	data_msg.YAW = 15;
+	pub.publish(&data_msg);*/
 	if(ximuReceiver.isQuaternionGetReady()) {
 		QuaternionStruct quaternionStruct = ximuReceiver.getQuaternion();
 		Quaternion quaternion = Quaternion(quaternionStruct.w, quaternionStruct.x, quaternionStruct.y, quaternionStruct.z);
@@ -36,6 +35,6 @@ void loop() {
 		data_msg.PITCH = eulerAnglesStruct.pitch;
 		data_msg.YAW = eulerAnglesStruct.yaw;
 		pub.publish(&data_msg);
-		nh.spinOnce();
-	}*/
+	}
+	nh.spinOnce();
 }
