@@ -23,6 +23,9 @@ void setup() {
 void loop() {
 	delay(1000);
 	ErrorCode e = ERR_NO_ERROR;
+	while(Serial1.available() > 0) {
+		e = ximuReceiver.processNewChar(Serial1.read());
+	}
 	/*data_msg.ROLL = 5;
 	data_msg.PITCH = 10;
 	data_msg.YAW = 15;
