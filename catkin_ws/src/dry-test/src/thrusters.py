@@ -36,7 +36,7 @@ rospy.sleep(7)
 
 def forwards_test(t):
     while True:
-        print("- spinning at 25% max forwards force for 5s")
+        print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
 
         cmd = reset.copy()
         cmd[t-1] = force_to_microseconds(force_amt*MAX_FWD_FORCE)

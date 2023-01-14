@@ -3,39 +3,43 @@ teleop:
     type: topic
     message_type: std_msgs/Float64
     topic_name: surge
-    deadman_buttons: [4]
+    deadman_buttons: [8]
     axis_mappings:
       -
         axis: 1
         target: data
+        scale: 69.0624 
 
   sway:
     type: topic
     message_type: std_msgs/Float64
     topic_name: sway
-    deadman_buttons: [4]
+    deadman_buttons: [8]
     axis_mappings:
       -
         axis: 0
         target: data
+        scale: 69.0624  
 
   pitch:
     type: topic
     message_type: std_msgs/Float64
     topic_name: pitch
-    deadman_buttons: [4]
+    deadman_buttons: [8]
     axis_mappings:
       -
-        axis: 4
+        axis: 3
         target: data
+        scale: -138.1248
 
   yaw:
     type: topic
     message_type: std_msgs/Float64
     topic_name: yaw
-    deadman_buttons: [4]
+    deadman_buttons: [8]
     axis_mappings:
       -
-        axis: 3
+        axis: 2
         target: data
+        scale: 138.1248
 
