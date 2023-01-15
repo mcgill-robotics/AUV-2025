@@ -6,11 +6,13 @@ set(MSG_DEP_SET geometry_msgs std_msgs)
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	depth_sensor
+	imu
 	rospy
 )
 
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
 	depth_sensor
+	imu
 	rospy
 )
