@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>depth_sensor</build_depend>
+  <build_depend>auv_msgs</build_depend>
   <build_depend>imu</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>rospy</build_depend>
@@ -21,6 +22,7 @@
   <exec_depend>depth_sensor</exec_depend>
   <exec_depend>imu</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>auv_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 </package>
