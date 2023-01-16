@@ -4,9 +4,15 @@ import rospy
 import tf
 from geometry_msgs.msg import Point, Pose, Quaternion
 from state_variables import *
-
+from std_msgs.msg import Empty
 
 class State_Aggregator:
+
+
+    def imu_reset_cb(self):
+        rospy.set_param("theta_x_offset",self.theta_x.get())
+        rospy.set_param("theta_y_offset",self.theta_y.get())
+        rospy.set_param("theta_z_offset",self.theta_z.get())
 
     def __init__(self):
         # position
@@ -27,7 +33,7 @@ class State_Aggregator:
         self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
         self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
         self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
-
+        self.sub_imu_rest = rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb())
 
 
     def update_state(self, _):
