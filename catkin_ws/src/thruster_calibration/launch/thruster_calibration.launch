@@ -1,0 +1,4 @@
+<launch>
+	<node name="thruster_calibration" pkg="thruster_calibration" type="thruster_calibration.py" respawn="true" output="screen" cwd="node"/>
+</launch>
+
