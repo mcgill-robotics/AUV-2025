@@ -35,17 +35,17 @@ class Theta_X(_State_Var):
         super().__init__()
         rospy.Subscriber('imu_data', ImuData, self.theta_x_cb)
     def theta_x_cb(self,data):
-        self.val = data.ROLL
+        self.val = data.ROLL - rospy.get_param("~theta_x_offset",0.0)
 
 class Theta_Y(_State_Var):
     def __init__(self):
         super().__init__()
         rospy.Subscriber('imu_data', ImuData, self.theta_y_cb)
     def theta_y_cb(self,data):
-        self.val = data.PITCH
+        self.val = data.PITCH - rospy.get_param("~theta_y_offset",0.0)
 class Theta_Z(_State_Var):
     def __init__(self):
         super().__init__()
         rospy.Subscriber('imu_data', ImuData, self.theta_z_cb)
     def theta_z_cb(self,data):
-        self.val = data.YAW
+        self.val = data.YAW - rospy.get_param("~theta_z_offset",0.0)
