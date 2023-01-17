@@ -1,0 +1,10 @@
+train: train/images
+test: test/images
+val:  val/images
+
+# number of classes
+# can extend later as we increase our dataset
+nc: 1
+
+# class names
+names: ["lanemarker"]
