@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+import os
+from os import listdir
+from os.path import isfile, join
+>>>>>>> 343035667aceae4ec44d22cb5b3cbabaa936e701
 import cv2
 
 def brightnessAugment(samples):
@@ -50,43 +56,51 @@ def colorAugment(samples):
         out.append((green_img, label))
     return out
 
-def padToSize(samples, target_size):
-    out = []
-    for sample in samples:
-        image, label = sample
-        resized_img, resized_label = resize(image, label, target_size)
-        padded_img, padded_label = pad(resized_img, resized_label, target_size)
-        out.append((padded_img, padded_label))
-    return out
-
 def sendToFolders(samples, data_folder):
+    cv2.imwrite('out.png', image)
 
 def splitData(samples, splits):
+    pass
+
+def testAugmentation(img, aug):
+    cv2.imshow('og', img)
+    augmented_img = aug(img)
+    cv2.imshow('augmented',augmented_img)
 
 def loadInputData(source_folder):
-
+    samples = []
+    img_filenames = [f for f in listdir(source_folder + '/images') if isfile(join(source_folder + '/images', f))]
+    for img_filename in img_filenames:
+        label_filename = os.path.splitext(img_filename)[0] + ".txt"
+        with open(source_folder + "/labels/" + label_filename) as f:
+            bounding_box = f.read()
+            bounding_box = bounding_box.split(" ")
+        img = cv2.imread(img_filename)
+        samples.append( (img, bounding_box) )
+        #label = loadBoundingBox(img_file)
     return samples
 
 img_size = (416, 416)
 
 train_test_val_split = (0.7, 0.2, 0.1)
 
-out_folder = "clean-data"
+out_folder = os.path.realpath(os.path.dirname(__file__)) + "/clean-data"
+
+in_folder = os.path.realpath(os.path.dirname(__file__)) + "/raw-datasets"
 
 if __name__ == '__main__':
     #ensure there is an argument
-    data = loadInputData(cli_arg)
-    #not sure about all of these, may result in too many samples
-    augmented = brightnessAugment(augmented) # times 3
+    data = loadInputData(in_folder)
+    augmented = brightnessAugment(data) # times 3
     augmented = blurAugment(augmented) # times 2
     augmented = deContrast(augmented) # times 2
     augmented = noiseAugment(augmented) # times 2
     augmented = colorAugment(augmented) # times 3
-    final = padToSize(augmented, img_size)
+    augmented = decreaseQuality(augmented) # times 2
     train, test, val = splitData(final, train_test_val_split)
     sendToFolders(train, out_folder + "/train")
-    sendToFolders(train, out_folder + "/test")
-    sendToFolders(train, out_folder + "/val")
+    sendToFolders(test, out_folder + "/test")
+    sendToFolders(val, out_folder + "/val")
 
 
     #USE ALBUMENTATIONS!!

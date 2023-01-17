@@ -13,6 +13,12 @@ Pre-processing:
 
 pip install -U albumentations
 
+import albumentations as A
+import cv2
+
+
+
+
 NOTE: All images and labels to be pre-processed should be in the YOLO format, and their location on the filesystem passed as a CLI argument to preprocess.py
 
 Data in the argument folder is augmented and adapted to the target image size (modified versions of these images and their corresponding label files are generated)
