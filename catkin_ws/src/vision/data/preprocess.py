@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-=======
 import os
 from os import listdir
 from os.path import isfile, join
->>>>>>> 343035667aceae4ec44d22cb5b3cbabaa936e701
 import cv2
 
 def brightnessAugment(samples):
@@ -95,8 +92,7 @@ if __name__ == '__main__':
     augmented = blurAugment(augmented) # times 2
     augmented = deContrast(augmented) # times 2
     augmented = noiseAugment(augmented) # times 2
-    augmented = colorAugment(augmented) # times 3
-    augmented = decreaseQuality(augmented) # times 2
+    final = colorAugment(augmented) # times 3
     train, test, val = splitData(final, train_test_val_split)
     sendToFolders(train, out_folder + "/train")
     sendToFolders(test, out_folder + "/test")
