@@ -9,8 +9,9 @@ The format for annotation in the .txt files is:
     - each line describes one bounding box: "class, x_center, y_center, width, height"
     - The fields x, y, width, and height should be normalized to the dimensions of the image i.e. between 0 and 1
 
-
 Pre-processing:
+
+pip install -U albumentations
 
 NOTE: All images and labels to be pre-processed should be in the YOLO format, and their location on the filesystem passed as a CLI argument to preprocess.py
 
@@ -23,7 +24,7 @@ Data augmentation is necessary since YOLO recommends 2-3k samples images per cla
 
 YOLOv8:
 
-pip3 install ultralytics
+pip install ultralytics
 
 from ultralytics import YOLO
 

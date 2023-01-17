@@ -1,32 +1,3 @@
-
-def horizontalFlipAugment(samples):
-    out = samples
-    for sample in samples:
-        image, label = sample
-        flipped_img, flipped_label = horizontalFlip(image, label)
-        out.append((flipped_img, flipped_label))
-    return out
-
-def rotateAugment(samples):
-    out = samples
-    for sample in samples:
-        image, label = sample
-        rotated_img, rotated_label = rotate(image, label, 90)
-        out.append((rotated_img, rotated_label))
-        rotated_img, rotated_label = rotate(image, label, 180)
-        out.append((rotated_img, rotated_label))
-        rotated_img, rotated_label = rotate(image, label, 270)
-        out.append((rotated_img, rotated_label))
-    return out
-
-def cropAugment(samples):
-    out = samples
-    for sample in samples:
-        image, label = sample
-        cropped_img, cropped_label = crop(image, label, 'top-half')
-        out.append((cropped_img, cropped_label))
-    return out
-
 def brightnessAugment(samples):
     out = samples
     for sample in samples:
@@ -45,6 +16,13 @@ def blurAugment(samples):
         out.append((blurred_img, label))
     return out
 
+def deContrast(samples):
+    out = samples
+    for sample in samples:
+        image, label = sample
+        decontrasted_img = remove_contrast(image)
+        out.append((decontrasted_img, label))
+    return out
     
 def noiseAugment(samples):
     out = samples
@@ -59,12 +37,9 @@ def colorAugment(samples):
     for sample in samples:
         image, label = sample
         blue_img = change_color_balance(image, 'b')
-        red_img = change_color_balance(image, 'r')
         green_img = change_color_balance(image, 'g')
         out.append((blue_img, label))
-        out.append((red_img, label))
         out.append((green_img, label))
-        out.append((grayscale_img, label))
     return out
 
 def padToSize(samples, target_size):
@@ -94,13 +69,11 @@ if __name__ == '__main__':
     #ensure there is an argument
     data = loadInputData(cli_arg)
     #not sure about all of these, may result in too many samples
-    augmented = rotateAugment(augmented) # times 4
-    augmented = cropAugment(augmented) # times 2
-    augmented = horizontalFlipAugment(data) # times 2
     augmented = brightnessAugment(augmented) # times 3
     augmented = blurAugment(augmented) # times 2
+    augmented = deContrast(augmented) # times 2
     augmented = noiseAugment(augmented) # times 2
-    augmented = colorAugment(augmented) # times 4
+    augmented = colorAugment(augmented) # times 3
     final = padToSize(augmented, img_size)
     train, test, val = splitData(final, train_test_val_split)
     sendToFolders(train, out_folder + "/train")
