@@ -1,9 +1,14 @@
+import cv2
+
 def brightnessAugment(samples):
     out = samples
     for sample in samples:
         image, label = sample
-        bright_img = change_brightness(image, 1)
-        dark_img = change_brightness(image, -1)
+        beta = 120 
+        beta1 = -120
+        alpha = 1 
+        bright_img = cv2.convertScaleAbs(image, alpha=alpha, beta=beta) #beta is brightness [-127;127]
+        dark_img = cv2.convertScaleAbs(image, alpha=alpha, beta=beta1)
         out.append((bright_img, label))
         out.append((dark_img, label))
     return out
@@ -12,7 +17,8 @@ def blurAugment(samples):
     out = samples
     for sample in samples:
         image, label = sample
-        blurred_img = blur(image)
+        ksize = (10, 10) # lower to lower blur  
+        blurred_img = cv2.blur(image, ksize) 
         out.append((blurred_img, label))
     return out
 
@@ -20,7 +26,9 @@ def deContrast(samples):
     out = samples
     for sample in samples:
         image, label = sample
-        decontrasted_img = remove_contrast(image)
+        alpha = 0.5 # alpha is contrast, [0,1] to lower contrast and >1 to higher 
+        beta = 0 
+        decontrasted_img = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
         out.append((decontrasted_img, label))
     return out
     
