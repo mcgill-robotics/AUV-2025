@@ -2,6 +2,8 @@ import os
 from os import listdir
 from os.path import isfile, join
 import cv2
+import albumentations as A
+import copy
 
 def brightnessAugment(samples):
     out = []
@@ -42,17 +44,45 @@ def noiseAugment(samples):
     out = []
     for sample in samples:
         image, label = sample
-        noisy_img = add_noise(image)
+        transform = A.Compose([ A.augmentations.transforms.ISONoise(color_shift=(0.1, 0.1), intensity=(0.8, 0.8), always_apply=True) ])
+        noisy_img = transform(image=image)["image"]
         out.append((noisy_img, label))
     samples.extend(out)
     return samples
 
-def colorAugment(samples):
+def resolutionAugment(samples):
     out = []
     for sample in samples:
         image, label = sample
-        blue_img = change_color_balance(image, 'b')
-        green_img = change_color_balance(image, 'g')
+        transform = A.Compose([ A.augmentations.transforms.Downscale(scale_min=0.25, scale_max=0.25, interpolation=None, always_apply=True) ])
+        low_res_img = transform(image=image)["image"]
+        out.append((low_res_img, label))
+    samples.extend(out)
+    return samples
+
+def make_bluer(img, color_shift_intensity):
+    img = copy.deepcopy(img)
+    for row in img:
+        for pixel in row:
+            pixel[0] += color_shift_intensity
+            pixel[0] = min(pixel[0], 255)
+    return img
+
+def make_greener(img, color_shift_intensity):
+    img = copy.deepcopy(img)
+    for row in img:
+        for pixel in row:
+            pixel[1] += color_shift_intensity
+            pixel[1] = min(pixel[1], 255)
+    return img
+
+def colorAugment(samples):
+    out = []
+    color_shift_intensity = 255*0.25
+    for sample in samples:
+        image, label = sample
+        blue_img = make_bluer(image, color_shift_intensity)
+        green_img = make_greener(image, color_shift_intensity)
         out.append((blue_img, label))
         out.append((green_img, label))
     samples.extend(out)
@@ -69,7 +99,6 @@ def splitData(samples, splits):
 def testAugmentation(img, aug):
     cv2.imshow('og', img)
     cv2.waitKey(0)
-    print("test" + str(aug([(img, "")])))
     for augmented in aug([(img, "")])[1:]:
         cv2.imshow('augmented',augmented[0])
         cv2.waitKey(0)
@@ -98,19 +127,14 @@ in_folder = os.path.realpath(os.path.dirname(__file__)) + "/raw-datasets"
 if __name__ == '__main__':
     #ensure there is an argument
     data = loadInputData(in_folder)
-    testAugmentation(data[5][0], contrastAugment)
+    testAugmentation(data[5][0], colorAugment)
     #augmented = brightnessAugment(data) # times 3
     #augmented = blurAugment(augmented) # times 2
     #augmented = contrastAugment(augmented) # times 2
     #augmented = noiseAugment(augmented) # times 2
-    #augmented = qualityAugment() # times 2
+    #augmented = resolutionAugment(augmented) # times 2
     #final = colorAugment(augmented) # times 3
     #train, test, val = splitData(final, train_test_val_split)
     #sendToFolders(train, out_folder + "/train")
     #sendToFolders(test, out_folder + "/test")
     #sendToFolders(val, out_folder + "/val")
-
-
-    #USE ALBUMENTATIONS!!
-
-
