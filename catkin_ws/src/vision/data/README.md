@@ -11,26 +11,16 @@ The format for annotation in the .txt files is:
 
 Pre-processing:
 
-pip install -U albumentations
+Dependencies:
+    pip install albumentations
+    pip install opencv-python
+    pip install ultralytics
 
-import albumentations as A
-import cv2
-
-
-
-
-NOTE: All images and labels to be pre-processed should be in the YOLO format, and their location on the filesystem passed as a CLI argument to preprocess.py
-
-Data in the argument folder is augmented and adapted to the target image size (modified versions of these images and their corresponding label files are generated)
-All of the data is outputted into the /clean-data folder and split into the train, test, and val subfolders
+Data in the argument folder is augmented (modified versions of these images and their corresponding label files are generated)
+All of the data is outputted into the /clean-data folder and split into train, test, and val subfolders
 
 
-Data augmentation is necessary since YOLO recommends 2-3k samples images per class.
-
-
-YOLOv8:
-
-pip install ultralytics
+Model: YOLOv8
 
 from ultralytics import YOLO
 
