@@ -21,6 +21,7 @@ void setup() {
 }
 
 void loop() {
+	delay(100);
 	ErrorCode e = ERR_NO_ERROR;
 	while(Serial1.available() > 0) {
 		e = ximuReceiver.processNewChar(Serial1.read());
