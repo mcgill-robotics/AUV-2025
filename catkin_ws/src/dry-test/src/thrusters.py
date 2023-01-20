@@ -3,7 +3,7 @@
 import rospy
 from auv_msgs.msg import ThrusterMicroseconds
 
-force_amt = 0.15
+force_amt = 0.005
 
 #copied from thrust_mapper
 
