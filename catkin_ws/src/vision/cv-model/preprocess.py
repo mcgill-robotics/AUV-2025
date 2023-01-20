@@ -179,8 +179,8 @@ def loadInputData(source_folder):
 
 train_test_val_split = (0.7, 0.2, 0.1)
 pwd = os.path.realpath(os.path.dirname(__file__))
-out_folder = pwd + "/clean-data"
-in_folder = pwd + "/raw-datasets"
+out_folder = pwd + "/data/augmented"
+in_folder = pwd + "/data/raw"
 
 if __name__ == '__main__':
     print("Loading data...")
@@ -203,7 +203,6 @@ if __name__ == '__main__':
     data = contrastAugment(data) # times 2
     print("Augmenting blur...")
     data = blurAugment(data) # times 2
-    #overall times 144
     print("Splitting data...")
     train, test, val = splitData(data, train_test_val_split)
     print("Exporting training data...")

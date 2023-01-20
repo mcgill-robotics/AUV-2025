@@ -20,10 +20,9 @@ catkin_ws/.catkin_tools/
 **/*.vscode/*
 
 #datasets + yolo training files
-catkin_ws/src/vision/cv-model/clean-data/train/*
-catkin_ws/src/vision/cv-model/clean-data/test/*
-catkin_ws/src/vision/cv-model/clean-data/val/*
-catkin_ws/src/vision/cv-model/clean-data/*.yaml
-catkin_ws/src/vision/cv-model/raw-datasets/
-catkin_ws/src/vision/data/
-runs/
+catkin_ws/src/vision/cv-model/data/augmented/train/*
+catkin_ws/src/vision/cv-model/data/augmented/test/*
+catkin_ws/src/vision/cv-model/data/augmented/val/*
+catkin_ws/src/vision/cv-model/*.yaml
+catkin_ws/src/vision/cv-model/data/raw/images/*
+catkin_ws/src/vision/cv-model/data/raw/labels/*
