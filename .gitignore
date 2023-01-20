@@ -19,8 +19,11 @@ catkin_ws/.catkin_tools/
 # vscode files
 **/*.vscode/*
 
-#datasets
-catkin_ws/src/vision/data/clean-data/train/
-catkin_ws/src/vision/data/clean-data/test/
-catkin_ws/src/vision/data/clean-data/val/
-catkin_ws/src/vision/data/raw-datasets/
+#datasets + yolo training files
+catkin_ws/src/vision/cv-model/clean-data/train/*
+catkin_ws/src/vision/cv-model/clean-data/test/*
+catkin_ws/src/vision/cv-model/clean-data/val/*
+catkin_ws/src/vision/cv-model/clean-data/*.yaml
+catkin_ws/src/vision/cv-model/raw-datasets/
+catkin_ws/src/vision/data/
+runs/
