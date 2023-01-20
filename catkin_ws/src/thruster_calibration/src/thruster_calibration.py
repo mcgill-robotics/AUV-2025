@@ -123,7 +123,8 @@ if __name__ == '__main__':
 
     with open('data_calibration.csv', mode = 'a') as data_file:
         data_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        #Header of the CSV file : { force: {x: 20.0, y: 0.0, z: 0.0}, torque:{x: 0.0, y: 0.0, z: 0.0} }
+        #Header of the CSV file : force: {x: 20.0, y: 0.0, z: 0.0}, torque:{x: 0.0, y: 0.0, z: 0.0}
+        for i in thrusterForcesFinalArray:    
             data_writer.writerow(i)
 
         
