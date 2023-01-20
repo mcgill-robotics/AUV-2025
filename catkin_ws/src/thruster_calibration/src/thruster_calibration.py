@@ -3,6 +3,7 @@
 import rospy
 from auv_msgs.msg import ThrusterForces
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Wrench
 import csv, time
 import os
 import pathlib 
@@ -74,16 +75,17 @@ class States:
     
 def writeForces(data):
     global thrusterForcesArray
-    thrusterForcesArray = [data.SURGE_PORT, data.SURGE_STAR, data.SWAY_BOW, 
-    data.SWAY_STERN, data.HEAVE_BOW_PORT, data.HEAVE_BOW_STAR, 
-    data.HEAVE_STERN_STAR, data.HEAVE_STERN_STAR]
+    f = data.force
+    t = data.torque
+
+    thrusterForcesArray = [f.x, f.y, f.z, t.x, t.y, t.z]
    
     
 
 if __name__ == '__main__':
 
     number_of_repetion = 10
-    delta = 0.1 #stability value
+    delta = 5 #stability value
     
     counter = 0
     thrusterForcesArray = []
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     rospy.Subscriber('/state_theta_x', Float64, states.set_theta_x)
     rospy.Subscriber('/state_theta_y', Float64, states.set_theta_y)
     rospy.Subscriber('/state_theta_z', Float64, states.set_theta_z)
-    rospy.Subscriber('/propulsion/thruster_forces', ThrusterForces, writeForces)
+    rospy.Subscriber('/effort', Wrench, writeForces)
 
     
     for _ in range(number_of_repetion):
@@ -121,8 +123,7 @@ if __name__ == '__main__':
 
     with open('data_calibration.csv', mode = 'a') as data_file:
         data_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        #Header of the CSV file : SURGE_PORT, SURGE_STAR, SWAY_BOW, SWAY_STERN, HEAVE_BOW_PORT, HEAVE_BOW_STAR, HEAVE_STERN_STAR HEAVE_STERN_STAR
-        for i in thrusterForcesFinalArray:
+        #Header of the CSV file : { force: {x: 20.0, y: 0.0, z: 0.0}, torque:{x: 0.0, y: 0.0, z: 0.0} }
             data_writer.writerow(i)
 
         
