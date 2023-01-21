@@ -17,4 +17,3 @@ if __name__ == '__main__':
     # Use the model
     model.train(data=pwd+"/data.yaml", epochs=3, batch=16, degrees=360, flipud=0.5, fliplr=0.5, perspective=0.001, translate=0.5, scale=0.75, pretrained=True, rect=True)  # train the model
     model.val()
-    model.export(format="onnx")  # export the model to ONNX format
