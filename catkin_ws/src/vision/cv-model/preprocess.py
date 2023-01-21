@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os, shutil
 from os import listdir
 from os.path import isfile, join
@@ -6,10 +7,6 @@ import albumentations as A
 import copy
 import random
 import numpy as np
-
-#Authors
-#Antoine Dangeard
-#Elie-Dimitri Abdo
 
 #given a list of samples, make two copies of each sample that are darker/brighter to simulate differently lit environments
 def brightnessAugment(samples):

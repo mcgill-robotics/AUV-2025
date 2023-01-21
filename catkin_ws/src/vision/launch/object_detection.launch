@@ -1,0 +1,3 @@
+<launch>
+	<node name="object_detection" pkg="vision" type="object_detection.py" respawn="true" />
+</launch>
