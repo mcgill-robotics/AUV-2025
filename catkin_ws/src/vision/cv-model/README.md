@@ -14,7 +14,6 @@ Dependencies:
     pip install albumentations
     pip install opencv-python
     pip install ultralytics
-    pip install onnx
 
 Pre-processing:
 
