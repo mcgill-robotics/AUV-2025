@@ -30,7 +30,11 @@ const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
 Servo thrusters[8];
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
 
+unsigned long lastCommandTime = millis();
+unsigned long currentTime = millis();
+
 void updateThrusters(const uint16_t microseconds[8]){
+    unsigned long lastCommandTime = millis();
 	thrusters[SRG_P].writeMicroseconds(microseconds[SRG_P]);
 	thrusters[SRG_S].writeMicroseconds(microseconds[SRG_S]);
 	thrusters[SWY_BW].writeMicroseconds(microseconds[SWY_BW]);
@@ -76,6 +80,10 @@ void setup() {
 }
 
 void loop() {
+    // turn of thrusters if no command in 2s
+    if(currentTime - lastCommandTime > 1000)
+        thrustersOff();
+
 	// listen for commands
 	nh.spinOnce(); 
 }
