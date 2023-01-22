@@ -1,3 +1,10 @@
 <launch>
-	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"/>
+	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen">
+        <param name="surge_offset" type="double" value="0.0" />
+        <param name="sway_offset" type="double" value="0.0" />
+        <param name="heave_offset" type="double" value="0.0" />
+        <param name="roll_offset" type="double" value="0.0" />
+        <param name="pitch_offset" type="double" value="0.0" />
+        <param name="yaw_offset" type="double" value="0.0" />
+    </node>
 </launch>
