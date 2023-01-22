@@ -8,7 +8,7 @@ teleop:
       -
         axis: 1
         target: data
-        scale: 69.0624 
+        scale: 5 
 
   sway:
     type: topic
@@ -19,7 +19,7 @@ teleop:
       -
         axis: 0
         target: data
-        scale: 69.0624  
+        scale: 5  
 
   pitch:
     type: topic
@@ -30,7 +30,7 @@ teleop:
       -
         axis: 3
         target: data
-        scale: -138.1248
+        scale: -5
 
   yaw:
     type: topic
@@ -41,5 +41,5 @@ teleop:
       -
         axis: 2
         target: data
-        scale: 138.1248
+        scale: -5
 
