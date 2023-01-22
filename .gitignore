@@ -18,3 +18,11 @@ catkin_ws/.catkin_tools/
 
 # vscode files
 **/*.vscode/*
+
+#datasets + yolo training files
+catkin_ws/src/vision/cv-model/data/augmented/train/*
+catkin_ws/src/vision/cv-model/data/augmented/test/*
+catkin_ws/src/vision/cv-model/data/augmented/val/*
+catkin_ws/src/vision/cv-model/*.yaml
+catkin_ws/src/vision/cv-model/data/raw/images/*
+catkin_ws/src/vision/cv-model/data/raw/labels/*

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # set ROS_IP to the IP adress of this host machine
-IP=$(ip r | grep ^192 | awk '{print $9}');
-if [ -z '$IP' ]; then
+IP=$(ip addr show | grep wlp | grep inet | awk '{print $2}' | awk  'BEGIN{OFS=FS="/"};NF--');
+if [ -n "$IP" ]; then
     export ROS_IP=$IP;
 fi
 
