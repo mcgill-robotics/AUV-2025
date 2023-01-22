@@ -25,5 +25,5 @@ def state_cb(pose):
 
 if __name__ == '__main__':
     rospy.init_node('transform_broadcaster')
-    rospy.Subscriber('state', Pose, state_cb, queue_size=50)
+    rospy.Subscriber('pose', Pose, state_cb, queue_size=50)
     rospy.spin()

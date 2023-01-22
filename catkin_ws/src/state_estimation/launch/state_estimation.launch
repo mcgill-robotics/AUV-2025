@@ -1,4 +1,5 @@
 <launch>
+	<include file="$(find imu)/launch/imu.launch"/>
 	<include file="$(find depth_sensor)/launch/depth_sensor.launch"/>
 	<include file="$(find state_estimation)/launch/state_aggregator.launch"/>
 </launch>
