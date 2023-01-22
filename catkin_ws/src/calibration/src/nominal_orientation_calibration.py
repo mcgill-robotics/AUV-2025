@@ -14,7 +14,7 @@ if __name__ == '__main__':
 	rospy.init_node('nominal_orientation_calibration')
 	
 	# Move AUV down to submerge itself
-	# pub_z.publish(-0.5)
+	pub_z.publish(-0.0)
 	
 	# Want no roll (theta-x = 0)
 	# pub_theta_x.publish(0.0)
