@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="pinger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/pinger.dae</uri>
+                            <uri>../../../assets/common/pinger/pinger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pinger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/pinger.dae</uri>
+                            <uri>../../../assets/common/pinger/pinger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>

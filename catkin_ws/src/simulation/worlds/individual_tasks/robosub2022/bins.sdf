@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="bin_bootlegger_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/bin_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bin_bootlegger_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/bin_bootlegger.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/bin_bootlegger.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -63,14 +63,14 @@
                 <visual name="bootlegger_cover_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bootlegger_cover_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -84,14 +84,14 @@
                 <visual name="bin_gman_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/bin_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/bin_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="bin_gman_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/bin_gman.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/bin_gman.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -105,14 +105,14 @@
                 <visual name="gman_cover_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="gman_cover_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/cover.dae</uri>
+                            <uri>../../../assets/robosub2022/bins/cover.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>

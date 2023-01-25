@@ -21,14 +21,14 @@
                 <visual name="pool_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="pool_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/common/meshes/simple_pool.dae</uri>
+                            <uri>../../../assets/common/simple_pool/simple_pool.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
@@ -42,14 +42,14 @@
                 <visual name="gate_visual">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/gate.dae</uri>
+                            <uri>../../../assets/robosub2022/gate/gate.dae</uri>
                         </mesh>
                     </geometry>
                 </visual>
                 <collision name="gate_collision">
                     <geometry>
                         <mesh>
-                            <uri>../../../assets/robosub2022/meshes/gate.dae</uri>
+                            <uri>../../../assets/robosub2022/gate/gate.dae</uri>
                         </mesh>
                     </geometry>
                 </collision>
