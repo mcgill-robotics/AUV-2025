@@ -21,16 +21,12 @@ Data in the argument folder is augmented (modified versions of these images and 
 All of the data is outputted into the /clean-data folder and split into train, test, and val subfolders
 
 
-Model: YOLOv8
 
-from ultralytics import YOLO
+To train model on Google Colab:
+- Open .ipynb file in Google Colab
+- Ensure Colab is using GPU (set this in Edit > Notebook Settings > Hardware Acceleration)
+- Run all cells for installing and importing librairies, as well as those to set up directory structure and generate data.yaml file
+- Customize training label count and names in data.yaml file ('nc' and 'names' fields)
+- Upload training images and labels (in YOLO format) in content/data/raw/images/ and content/data/raw/labels/ respectively
+- Run the rest of the notebook
 
-# Load a model
-model = YOLO("yolov8n.yaml")  # build a new model from scratch
-model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
-
-# Use the model
-results = model.train(data="coco128.yaml", epochs=3)  # train the model
-results = model.val()  # evaluate model performance on the validation set
-results = model("https://ultralytics.com/images/bus.jpg")  # predict on an image
-success = model.export(format="onnx")  # export the model to ONNX format
