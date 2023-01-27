@@ -18,5 +18,5 @@ generate_arduino_firmware(${PROJECT_NAME}
 	# feels like a bit of a hack, look into above documentation for neater solution
 	SRCS ${ROS_LIB_DIR}/time.cpp
 	HDRS ${CMAKE_SOURCE_DIR}/depth_sensor/MS5803.h
-	PORT dev/ttyACM0 #TODO - udev rules map to dev/thrusters
+	PORT dev/depth_sensor #TODO - udev rules map to dev/thrusters
 )
