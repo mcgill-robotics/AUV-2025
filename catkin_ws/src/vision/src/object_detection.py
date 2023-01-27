@@ -2,7 +2,9 @@
 
 import numpy as np
 import rospy
+import cv2
 from cv_bridge import CvBridge
+import os
 
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame

@@ -11,16 +11,8 @@ The format for annotation in the .txt files is:
 
 
 Dependencies:
-    pip install albumentations
     pip install opencv-python
     pip install ultralytics
-
-Pre-processing:
-
-Data in the argument folder is augmented (modified versions of these images and their corresponding label files are generated)
-All of the data is outputted into the /clean-data folder and split into train, test, and val subfolders
-
-
 
 To train model on Google Colab:
 - Open .ipynb file in Google Colab
