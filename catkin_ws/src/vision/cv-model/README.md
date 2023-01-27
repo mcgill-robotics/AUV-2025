@@ -26,7 +26,7 @@ To train model on Google Colab:
 - Open .ipynb file in Google Colab
 - Ensure Colab is using GPU (set this in Edit > Notebook Settings > Hardware Acceleration)
 - Run all cells for installing and importing librairies, as well as those to set up directory structure and generate data.yaml file
-- Customize training label count and names in data.yaml file ('nc' and 'names' fields)
+- Customize (if necessary) training label count and names in data.yaml file ('nc' and 'names' fields)
 - Upload training images and labels (in YOLO format) in content/data/raw/images/ and content/data/raw/labels/ respectively
 - Run the rest of the notebook
 

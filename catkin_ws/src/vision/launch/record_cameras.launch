@@ -1,0 +1,3 @@
+<launch>
+	<node name="record_cameras" pkg="vision" type="record_cameras.py" respawn="true" />
+</launch>

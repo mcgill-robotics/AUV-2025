@@ -19,7 +19,7 @@ def detect_on_image(raw_img):
     bounding_box_width
     bounding_box_height
     for detection in detections:
-    print(detections)
+        print(detection)
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.objects = []
     detectionFrame.camera = camera_id
