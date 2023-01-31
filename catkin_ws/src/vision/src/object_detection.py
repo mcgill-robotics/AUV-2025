@@ -9,22 +9,34 @@ import os
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 
-def detect_on_image(raw_img):
+def detect_on_image(raw_img, camera_id):
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     detections = model(img)
-    for results in detections:
-        print()
-    detections = (detections.boxes.boxes.numpy())
-    classes = []
-    bounding_box_x
-    bounding_box_y
-    bounding_box_width
-    bounding_box_height
+    label = []
+    bounding_box_x = []
+    bounding_box_y = []
+    bounding_box_width = []
+    bounding_box_height = []
+    confidence = []
     for detection in detections:
-        print(detection)
+        box = detection.boxes
+        xywh = box.xywh.numpy()
+        bounding_box_x.append(xywh[0])
+        bounding_box_y.append(xywh[1])
+        bounding_box_width.append(xywh[2])
+        bounding_box_height.append(xywh[3])
+        confidence.append(box.conf.numpy()[0]) 
+        label.append(int(box.cls.numpy()[0]))
+
     detectionFrame = ObjectDetectionFrame()
-    detectionFrame.objects = []
+    detectionFrame.label = label
+    detectionFrame.bounding_box_x = bounding_box_x
+    detectionFrame.bounding_box_y = bounding_box_y
+    detectionFrame.bounding_box_width = bounding_box_width
+    detectionFrame.bounding_box_height = bounding_box_height
+    detectionFrame.confidence = confidence
     detectionFrame.camera = camera_id
+    
     pub.publish(detectionFrame)
 
 if __name__ == '__main__':
@@ -34,6 +46,6 @@ if __name__ == '__main__':
     model = YOLO(model_filename)
     rospy.init_node('object_detection')
     pub = rospy.Publisher('/viewframe_detection', ObjectDetectionFrame, queue_size=5)
-    camera_id = 0
-    sub = rospy.Subscriber('usb_cam/image_raw', Image, detect_on_image)
+    #copy paste subscriber for additional cameras (change integer so there is a unique int for each camera)
+    sub = rospy.Subscriber('usb_cam/image_raw', Image, detect_on_image, 0)
     rospy.spin()

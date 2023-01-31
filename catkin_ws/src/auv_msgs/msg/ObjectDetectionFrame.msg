@@ -1,5 +1,5 @@
 #array containing classes detected
-int16[] classes
+int16[] label
 #arrays containing bounding box dimensions
 float64[] bounding_box_x
 float64[] bounding_box_y

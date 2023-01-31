@@ -4,11 +4,11 @@ import numpy as np
 
 
 def thresholdRed(img):
-    img = cv2.resize(img, (0,0), fx=0.25, fy=0.25) 
+    img = cv2.resize(img, (0,0), fx=0.5, fy=0.5) 
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0
     img_g *= 0
-    tolerance = 0.4
+    tolerance = 0.3
     max_red = np.max(img_r)
     img_r = np.uint16(img_r)
     img_r -= int(max_red*(1.0-tolerance))
@@ -23,12 +23,15 @@ def thresholdRed(img):
 #i.e. if lane marker is not fully contained in image, will return one vector
 #otherwise should return two vectors
 def measure_headings(img):
+    cv2.imshow("out", img)
+    cv2.waitKey(0)
     img = thresholdRed(img)
     cv2.imshow("out", img)
     cv2.waitKey(0)
     edges = cv2.Canny(img,50,150,apertureSize = 3)
     cv2.imshow("out", edges)
-    lines = cv2.HoughLines(edges,5,np.pi/180,10)
+    cv2.waitKey(0)
+    lines = cv2.HoughLines(edges,1,np.pi/180,10)
     try:
         for rho,theta in lines[0]:
             a = np.cos(theta)
@@ -43,7 +46,7 @@ def measure_headings(img):
             cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
     except TypeError:
         slope1 = None
-    lines = cv2.HoughLines(edges,2,np.pi/180,10)
+    lines = cv2.HoughLines(edges,5,0.5*np.pi/180,10)
     try:
         for rho,theta in lines[0]:
             a = np.cos(theta)
@@ -67,6 +70,6 @@ if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     
-    test_image_filename = pwd + "/data/raw/images/frame44_jpg.rf.36a74eb74ab5692f83b66d8ff2cb12c6.jpg"
+    test_image_filename = pwd + "/data/raw\images/frame33_jpg.rf.29769214ff45b9d0c0ba9abbd6c4ef4b.jpg"
     test_image = cv2.imread(test_image_filename)
     print(measure_headings(test_image))
