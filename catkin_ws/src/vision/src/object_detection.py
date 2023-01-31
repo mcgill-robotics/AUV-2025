@@ -20,18 +20,19 @@ def detect_on_image(raw_img, camera_id):
     bounding_box_height = []
     confidence = []
     for detection in detections:
-        box = detection.boxes
-        print(box.xywh)
-        print(box.cls)
-        print(box.conf)
-        xywh = box.xywh.numpy()
-        bounding_box_x.append(xywh[0])
-        bounding_box_y.append(xywh[1])
-        bounding_box_width.append(xywh[2])
-        bounding_box_height.append(xywh[3])
-        confidence.append(box.conf.numpy()[0]) 
-        label.append(int(box.cls.numpy()[0]))
-
+        boxes = detection.boxes.numpy()
+        for box in boxes:
+            if float(list(box.conf)[0]) < min_prediction_confidence:
+                continue
+            bbox = list(box.xywh[0])
+            h, w, channels = img.shape
+            xywh = box.xywh.numpy()
+            bounding_box_x.append(bbox[0]/w)
+            bounding_box_y.append(bbox[1]/h)
+            bounding_box_width.append(bbox[2]/w)
+            bounding_box_height.append(bbox[3]/h)
+            confidence.append(box.conf.numpy()[0]) 
+            label.append(int(list(box.cls)[0]))
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
     detectionFrame.bounding_box_x = bounding_box_x
@@ -40,7 +41,6 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame.bounding_box_height = bounding_box_height
     detectionFrame.confidence = confidence
     detectionFrame.camera = camera_id
-    
     pub.publish(detectionFrame)
 
 if __name__ == '__main__':
