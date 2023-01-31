@@ -5,6 +5,7 @@ import rospy
 import cv2
 from cv_bridge import CvBridge
 import os
+from ultralytics import YOLO
 
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
@@ -20,6 +21,9 @@ def detect_on_image(raw_img, camera_id):
     confidence = []
     for detection in detections:
         box = detection.boxes
+        print(box.xywh)
+        print(box.cls)
+        print(box.conf)
         xywh = box.xywh.numpy()
         bounding_box_x.append(xywh[0])
         bounding_box_y.append(xywh[1])
@@ -42,7 +46,7 @@ def detect_on_image(raw_img, camera_id):
 if __name__ == '__main__':
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
-    model_filename = pwd + "/model.pt"
+    model_filename = pwd + "/last.pt"
     model = YOLO(model_filename)
     rospy.init_node('object_detection')
     pub = rospy.Publisher('/viewframe_detection', ObjectDetectionFrame, queue_size=5)

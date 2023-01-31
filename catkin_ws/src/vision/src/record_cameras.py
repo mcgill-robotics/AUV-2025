@@ -13,15 +13,15 @@ from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 
 def image_cb(raw_img, camera_name):
-    print("receiving image")
+    global imgs
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     if imgs.get(camera_name, None) == None:
         imgs[camera_name] = []
     imgs[camera_name].append(img)
 
 def save_images_to_video():
-    print("saving " + str(imgs))
     pwd = os.path.realpath(os.path.dirname(__file__))
+    print("saving " + str(len(imgs["downwards"])) + " images in " + pwd)
     for camera_name in list(imgs.keys()):
         if len(imgs.get(camera_name, [])) == 0: continue
         vid_filenames = [f for f in listdir(pwd + '/recordings') if isfile(join(pwd + '/recordings', f))]
@@ -31,7 +31,7 @@ def save_images_to_video():
         video_id = last_used_video_id + 1
         video_filename = camera_name + str(video_id) + ".mp4"
         height, width, colors = imgs[camera_name][0].shape
-        out = cv2.VideoWriter(video_filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+        out = cv2.VideoWriter(pwd + "/recordings/" + video_filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
         for i in imgs[camera_name]:
             out.write(i)
         out.release()
