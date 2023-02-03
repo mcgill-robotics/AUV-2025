@@ -29,47 +29,38 @@ def measure_headings(img):
     cv2.imshow("out", img)
     cv2.waitKey(0)
     edges = cv2.Canny(img,50,150,apertureSize = 3)
-    cv2.imshow("out", edges)
-    cv2.waitKey(0)
-    lines = cv2.HoughLines(edges,1,np.pi/180,10)
-    try:
-        for rho,theta in lines[0]:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a*rho
-            y0 = b*rho
-            x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
-            x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-            slope1 = (y2-y1)/(x2-x1)
-            cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
-    except TypeError:
-        slope1 = None
-    lines = cv2.HoughLines(edges,5,0.5*np.pi/180,10)
-    try:
-        for rho,theta in lines[0]:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a*rho
-            y0 = b*rho
-            x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
-            x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-            slope2 = (y2-y1)/(x2-x1)
-            cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
-    except TypeError:
-        slope2 = None
+    slopes = []
+    slope1 = 0
+    while slope1 != None and len(slopes) < 4:
+        cv2.imshow("out", edges)
+        cv2.waitKey(0)
+        lines = cv2.HoughLines(edges,1,np.pi/180,10)
+        try:
+            for rho,theta in lines[0]:
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a*rho
+                y0 = b*rho
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                slope1 = (y2-y1)/(x2-x1)
+                slopes.append(slope1)
+                cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+                cv2.line(edges,(x1,y1),(x2,y2),(0,0,255),5)
+        except TypeError:
+            slope1 = None
+
     cv2.imshow("out", img)
     cv2.waitKey(0)
-    return (slope1, slope2)
+    return slopes
 
 
 if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     
-    test_image_filename = pwd + "/data/raw\images/frame33_jpg.rf.29769214ff45b9d0c0ba9abbd6c4ef4b.jpg"
+    test_image_filename = pwd + "/ff.jpg"
     test_image = cv2.imread(test_image_filename)
     print(measure_headings(test_image))
