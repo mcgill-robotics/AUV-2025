@@ -26,3 +26,7 @@ catkin_ws/src/vision/cv-model/data/augmented/val/*
 catkin_ws/src/vision/cv-model/*.yaml
 catkin_ws/src/vision/cv-model/data/raw/images/*
 catkin_ws/src/vision/cv-model/data/raw/labels/*
+
+# submodules
+catkin_ws/src/auv-sim
+catkin_ws/src/ros_gz
