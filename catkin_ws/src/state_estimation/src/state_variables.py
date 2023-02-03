@@ -43,7 +43,7 @@ class Theta_X(_State_Var):
         if self.previousVal == None:
             self.previousVal = self.val
             return
-        if (self.previousVal - self.val) > self.valChangeTol: #assume large changes mean modulo came into effect
+        if abs(self.previousVal - self.val) > self.valChangeTol: #assume large changes mean modulo came into effect
             if self.val < self.previousVal: self.valModuloOffset += self.moduloAmt
             else: self.valModuloOffset -= self.moduloAmt
         self.previousVal = self.val
@@ -54,13 +54,6 @@ class Theta_Y(_State_Var):
         rospy.Subscriber('imu_data', ImuData, self.theta_y_cb, queue_size=1)
     def theta_y_cb(self,data):
         self.val = data.PITCH - rospy.get_param("theta_y_offset")
-        if self.previousVal == None:
-            self.previousVal = self.val
-            return
-        if (self.previousVal - self.val) > self.valChangeTol: #assume large changes mean modulo came into effect
-            if self.val < self.previousVal: self.valModuloOffset += self.moduloAmt
-            else: self.valModuloOffset -= self.moduloAmt
-        self.previousVal = self.val
 
 class Theta_Z(_State_Var):
     def __init__(self):
@@ -71,7 +64,7 @@ class Theta_Z(_State_Var):
         if self.previousVal == None:
             self.previousVal = self.val
             return
-        if (self.previousVal - self.val) > self.valChangeTol: #assume large changes mean modulo came into effect
+        if abs(self.previousVal - self.val) > self.valChangeTol: #assume large changes mean modulo came into effect
             if self.val < self.previousVal: self.valModuloOffset += self.moduloAmt
             else: self.valModuloOffset -= self.moduloAmt
         self.previousVal = self.val
