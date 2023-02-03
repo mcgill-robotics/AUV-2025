@@ -44,6 +44,7 @@ def detect_on_image(raw_img, camera_id):
     pub.publish(detectionFrame)
 
 if __name__ == '__main__':
+    min_prediction_confidence = 0.5
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
