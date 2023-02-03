@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(teledyne_navigator)
+project(dvl)
 
 find_package(catkin REQUIRED COMPONENTS
   genmsg
@@ -25,7 +25,6 @@ generate_messages(
 catkin_package(
   CATKIN_DEPENDS
   geometry_msgs
-  message_generation
   message_runtime
   rospy
   std_msgs
