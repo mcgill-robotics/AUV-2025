@@ -22,18 +22,21 @@ def thresholdRed(img):
 #given an image containing a lane marker, returns one vector per lane marker heading (relative to the image's x/y axis)
 #i.e. if lane marker is not fully contained in image, will return one vector
 #otherwise should return two vectors
-def measure_headings(img):
-    cv2.imshow("out", img)
-    cv2.waitKey(0)
+def measure_headings(img, debug=False):
+    if debug:
+        cv2.imshow("out", img)
+        cv2.waitKey(0)
     img = thresholdRed(img)
-    cv2.imshow("out", img)
-    cv2.waitKey(0)
+    if debug:
+        cv2.imshow("thresholded", img)
+        cv2.waitKey(0)
     edges = cv2.Canny(img,50,150,apertureSize = 3)
     slopes = []
     slope1 = 0
     while slope1 != None and len(slopes) < 4:
-        cv2.imshow("out", edges)
-        cv2.waitKey(0)
+        if debug:
+            cv2.imshow("remaining edges", edges)
+            cv2.waitKey(0)
         lines = cv2.HoughLines(edges,1,np.pi/180,10)
         try:
             for rho,theta in lines[0]:
@@ -51,9 +54,11 @@ def measure_headings(img):
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,255),5)
         except TypeError:
             slope1 = None
-
-    cv2.imshow("out", img)
-    cv2.waitKey(0)
+    if debug:
+        cv2.imshow("thresholded with lines", img)
+        cv2.waitKey(0)
+    #TODO - reduce 4 slope to average of pairs of most similar slopes
+    #TODO - convert two average slopes into heading in degrees using AUV state_theta_z
     return slopes
 
 
@@ -63,4 +68,4 @@ if __name__ == '__main__':
     
     test_image_filename = pwd + "/ff.jpg"
     test_image = cv2.imread(test_image_filename)
-    print(measure_headings(test_image))
+    print(measure_headings(test_image, debug=True))

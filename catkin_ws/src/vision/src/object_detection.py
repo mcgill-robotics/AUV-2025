@@ -6,9 +6,39 @@ import cv2
 from cv_bridge import CvBridge
 import os
 from ultralytics import YOLO
-
+import lane_marker_measure
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
+
+BOX_COLOR = (255, 255, 255) # White
+TEXT_COLOR = (0, 0, 0) # Black
+
+def visualize_bbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
+    x_center, y_center, w, h = bbox
+    x_min = x_center - w/2
+    y_min = y_center - h/2
+    x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
+    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=color, thickness=thickness)
+    ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, fontSize, 1)    
+    cv2.rectangle(img, (x_min, y_min - int(1.3 * text_height)), (x_min + text_width, y_min), BOX_COLOR, -1)
+    cv2.putText(
+        img,
+        text=class_name,
+        org=(x_min, y_min - int(0.3 * text_height)),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=fontSize, 
+        color=TEXT_COLOR, 
+        lineType=cv2.LINE_AA,
+    )
+    return img
+
+def cropToBbox(img, bbox):
+    x_center, y_center, w, h = bbox
+    x_min = x_center - w/2
+    y_min = y_center - h/2
+    x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
+    crop_img = img[y_min:y_max, x_min:x_max]
+    return crop_img
 
 def detect_on_image(raw_img, camera_id):
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
@@ -32,7 +62,16 @@ def detect_on_image(raw_img, camera_id):
             bounding_box_width.append(bbox[2]/w)
             bounding_box_height.append(bbox[3]/h)
             confidence.append(box.conf.numpy()[0]) 
-            label.append(int(list(box.cls)[0]))
+            cls_id = int(list(box.cls)[0])
+            label.append(cls_id)
+            if cls_id == 0: #add lane marker heading information to class name
+                cropped_img = cropToBbox(img, bbox)
+                headings = str(lane_marker_measure.measure_headings(cropped_img))
+                img = visualize_bbox(img, bbox, class_names[cls_id] + "(headings: {})".format(headings))
+            else:
+                img = visualize_bbox(img, bbox, class_names[cls_id])
+
+    
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
     detectionFrame.bounding_box_x = bounding_box_x
@@ -42,15 +81,22 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame.confidence = confidence
     detectionFrame.camera = camera_id
     pub.publish(detectionFrame)
+    img = bridge.cv2_to_imgmsg(img, "bgr8")
+    debug_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
+    class_names = ["Lane Marker"] #index should be class id
     min_prediction_confidence = 0.5
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
     model = YOLO(model_filename)
     rospy.init_node('object_detection')
-    pub = rospy.Publisher('/viewframe_detection', ObjectDetectionFrame, queue_size=5)
+    pub = rospy.Publisher('viewframe_detection', ObjectDetectionFrame, queue_size=5)
+    #one publisher per camera
+    debug_pubs = [
+        rospy.Publisher('downwards_cam_visual', Image, queue_size=1)
+    ]
     #copy paste subscriber for additional cameras (change integer so there is a unique int for each camera)
     sub = rospy.Subscriber('usb_cam/image_raw', Image, detect_on_image, 0)
     rospy.spin()

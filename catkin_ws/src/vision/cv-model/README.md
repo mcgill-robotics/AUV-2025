@@ -10,7 +10,7 @@ The format for annotation in the .txt files is:
     - The fields x, y, width, and height should be normalized to the dimensions of the image i.e. between 0 and 1
 
 
-Dependencies:
+Dependencies to use model in project:
     pip install opencv-python
     pip install ultralytics
 

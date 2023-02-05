@@ -8,12 +8,14 @@ import os
 from os import listdir
 from os.path import isfile, join
 import re
-
+import time
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 
 def image_cb(raw_img, camera_name):
     global imgs
+    if time.time() - lastFrameTime > videoSaveTime: save_images_to_video()
+    lastFrameTime = time.time()
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     if imgs.get(camera_name, None) == None:
         imgs[camera_name] = []
@@ -36,12 +38,12 @@ def save_images_to_video():
             out.write(i)
         out.release()
         imgs[camera_name] = []
-    
-
 
 if __name__ == '__main__':
     fps = 30
     imgs = {}
+    lastFrameTime = time.time()*10 #make sure first frame is not saved seperately even if startup takes a while
+    videoSaveTime = 2 #if 2 seconds go by with no frame received then save previous accumulated frames seperately
     bridge = CvBridge()
     rospy.init_node('record_cameras')
     sub = rospy.Subscriber('/usb_cam/image_raw', Image, image_cb, "downwards")
