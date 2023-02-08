@@ -8,7 +8,7 @@ def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0
     img_g *= 0
-    tolerance = 0.3
+    tolerance = 0.35
     max_red = np.max(img_r)
     img_r = np.uint16(img_r)
     img_r -= int(max_red*(1.0-tolerance))
@@ -66,6 +66,6 @@ if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     
-    test_image_filename = pwd + "/ff.jpg"
+    test_image_filename = pwd + "/images/frame154_jpg.rf.a7b746d4b3b3535ec382aa2cd9673f6b.jpg"
     test_image = cv2.imread(test_image_filename)
     print(measure_headings(test_image, debug=True))
