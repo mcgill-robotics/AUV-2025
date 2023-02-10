@@ -53,6 +53,7 @@ def detect_on_image(raw_img, camera_id):
     bounding_box_width = []
     bounding_box_height = []
     confidence = []
+    print(str(detections))
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
         for box in boxes:
@@ -89,10 +90,10 @@ def detect_on_image(raw_img, camera_id):
     debug_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 100
+    detect_every = 10
     i = 0
     class_names = ["Lane Marker"] #index should be class id
-    min_prediction_confidence = 0.5
+    min_prediction_confidence = 0.1
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
