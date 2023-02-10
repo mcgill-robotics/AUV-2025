@@ -15,7 +15,7 @@ pins 0 and 1 function differently.
 #define HVE_ST_S_PIN 	8
 #define HVE_ST_P_PIN 	9
 
-int lastCommand = millis();
+int lastCommand;
 
 /* less verbose identifiers
 	Pin numbers [0-7] from ThusterCommand.msg
@@ -73,6 +73,7 @@ ros::NodeHandle nh;
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("propulsion/thruster_microseconds", &commandCb);
 
 void setup() {
+	lastCommand = millis();
 	initThrusters();
 	nh.subscribe(sub);
 	nh.initNode();
