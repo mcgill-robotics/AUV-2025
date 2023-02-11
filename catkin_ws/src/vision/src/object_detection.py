@@ -72,9 +72,10 @@ def detect_on_image(raw_img, camera_id):
             if cls_id == 0: #add lane marker heading information to class name
                 cropped_img = cropToBbox(img, bbox)
                 headings = str(lane_marker_measure.measure_headings(cropped_img))
-                img = visualize_bbox(img, bbox, class_names[cls_id] + "(headings: {})".format(headings))
+                print(str(headings))
+                img = visualize_bbox(img, bbox, class_names[cls_id] + str(box.conf[0]*100) + "% " + "(headings: {})".format(headings))
             else:
-                img = visualize_bbox(img, bbox, class_names[cls_id])
+                img = visualize_bbox(img, bbox, class_names[cls_id] + str(box.conf[0]*100) + "%")
 
     
     detectionFrame = ObjectDetectionFrame()
