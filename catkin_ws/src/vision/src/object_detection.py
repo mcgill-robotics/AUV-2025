@@ -9,8 +9,10 @@ from ultralytics import YOLO
 import lane_marker_measure
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
+import math
 
 BOX_COLOR = (255, 255, 255) # White
+HEADING_COLOR = (0, 0, 255) # Red
 TEXT_COLOR = (0, 0, 0) # Black
 
 def visualize_bbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -56,7 +58,6 @@ def detect_on_image(raw_img, camera_id):
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
         for box in boxes:
-            print(str(box))
             if float(list(box.conf)[0]) < min_prediction_confidence:
                 continue
             bbox = list(box.xywh[0])
@@ -69,13 +70,26 @@ def detect_on_image(raw_img, camera_id):
             confidence.append(box.conf[0]) 
             cls_id = int(list(box.cls)[0])
             label.append(cls_id)
-            if cls_id == 0: #add lane marker heading information to class name
+            if cls_id == 0: #add lane marker heading lines to image
                 cropped_img = cropToBbox(img, bbox)
-                headings = str(lane_marker_measure.measure_headings(cropped_img))
-                img = visualize_bbox(img, bbox, class_names[cls_id] + "(headings: {})".format(headings))
-            else:
-                img = visualize_bbox(img, bbox, class_names[cls_id])
-
+                headings = lane_marker_measure.measure_headings(cropped_img)
+                line_thickness = 1 # in pixels
+                line_x_length = int(0.75*bbox[2]) #in pixels, will be 3/4 of bounding box width
+                for slope in headings:
+                    angle = math.degrees(math.atan(slope))
+                    heading_start = (max(bbox[0]-line_x_length, 0), max(bbox[1] - int(slope*line_x_length), 0)) # (x,y)
+                    heading_end = (bbox[0]+line_x_length, bbox[1] + int(slope*line_x_length)) # (x,y)
+                    cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
+                    cv2.putText(
+                        img,
+                        text=str(-1*angle) + " deg.",
+                        org=heading_end,
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.4, 
+                        color=HEADING_COLOR, 
+                        lineType=cv2.LINE_AA,
+                    )
+            img = visualize_bbox(img, bbox, class_names[cls_id] + " " + str(box.conf[0]*100) + "%")
     
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
@@ -93,7 +107,7 @@ if __name__ == '__main__':
     detect_every = 10
     i = 0
     class_names = ["Lane Marker"] #index should be class id
-    min_prediction_confidence = 0.3
+    min_prediction_confidence = 0.4
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
