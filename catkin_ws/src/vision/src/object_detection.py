@@ -11,6 +11,7 @@ from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 
 BOX_COLOR = (255, 255, 255) # White
+HEADING_COLOR = (0, 0, 255) # Red
 TEXT_COLOR = (0, 0, 0) # Black
 
 def visualize_bbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -69,14 +70,16 @@ def detect_on_image(raw_img, camera_id):
             confidence.append(box.conf[0]) 
             cls_id = int(list(box.cls)[0])
             label.append(cls_id)
-            if cls_id == 0: #add lane marker heading information to class name
+            if cls_id == 0: #add lane marker heading lines to image
                 cropped_img = cropToBbox(img, bbox)
                 headings = str(lane_marker_measure.measure_headings(cropped_img))
-                print(str(headings))
-                img = visualize_bbox(img, bbox, class_names[cls_id] + str(box.conf[0]*100) + "% " + "(headings: {})".format(headings))
-            else:
-                img = visualize_bbox(img, bbox, class_names[cls_id] + str(box.conf[0]*100) + "%")
-
+                line_thickness = 1 # in pixels
+                line_x_length = 0.75*bbox[2] #in pixels, will be 3/4 of bounding box width
+                for slope in headings:
+                    heading_start = (bbox[0]-line_x_length, bbox[1] - slope*line_x_length) # (x,y)
+                    heading_end = (bbox[0]+line_x_length, bbox[1] + slope*line_x_length) # (x,y)
+                    cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
+            img = visualize_bbox(img, bbox, class_names[cls_id] + " " + str(box.conf[0]*100) + "%")
     
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
