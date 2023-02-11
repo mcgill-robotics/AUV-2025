@@ -53,20 +53,20 @@ def detect_on_image(raw_img, camera_id):
     bounding_box_width = []
     bounding_box_height = []
     confidence = []
-    print(str(detections))
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
         for box in boxes:
+            print(str(box))
             if float(list(box.conf)[0]) < min_prediction_confidence:
                 continue
             bbox = list(box.xywh[0])
             h, w, channels = img.shape
-            xywh = box.xywh.numpy()
+            xywh = box.xywh
             bounding_box_x.append(bbox[0]/w)
             bounding_box_y.append(bbox[1]/h)
             bounding_box_width.append(bbox[2]/w)
             bounding_box_height.append(bbox[3]/h)
-            confidence.append(box.conf.numpy()[0]) 
+            confidence.append(box.conf[0]) 
             cls_id = int(list(box.cls)[0])
             label.append(cls_id)
             if cls_id == 0: #add lane marker heading information to class name
@@ -93,13 +93,13 @@ if __name__ == '__main__':
     detect_every = 10
     i = 0
     class_names = ["Lane Marker"] #index should be class id
-    min_prediction_confidence = 0.1
+    min_prediction_confidence = 0.3
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
     model = YOLO(model_filename)
     rospy.init_node('object_detection')
-    pub = rospy.Publisher('viewframe_detection', ObjectDetectionFrame, queue_size=5)
+    pub = rospy.Publisher('viewframe_detection', ObjectDetectionFrame, queue_size=1)
     #one publisher per camera
     debug_pubs = [
         rospy.Publisher('downwards_cam_visual', Image, queue_size=1)
