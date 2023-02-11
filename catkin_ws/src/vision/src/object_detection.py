@@ -57,7 +57,6 @@ def detect_on_image(raw_img, camera_id):
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
         for box in boxes:
-            print(str(box))
             if float(list(box.conf)[0]) < min_prediction_confidence:
                 continue
             bbox = list(box.xywh[0])
@@ -76,8 +75,9 @@ def detect_on_image(raw_img, camera_id):
                 line_thickness = 1 # in pixels
                 line_x_length = 0.75*bbox[2] #in pixels, will be 3/4 of bounding box width
                 for slope in headings:
-                    heading_start = (bbox[0]-line_x_length, bbox[1] - slope*line_x_length) # (x,y)
-                    heading_end = (bbox[0]+line_x_length, bbox[1] + slope*line_x_length) # (x,y)
+                    #on y the slope is inverted because y coordinates grow from the top down in images
+                    heading_start = (bbox[0]-line_x_length, bbox[1] + slope*line_x_length) # (x,y)
+                    heading_end = (bbox[0]+line_x_length, bbox[1] - slope*line_x_length) # (x,y)
                     cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
             img = visualize_bbox(img, bbox, class_names[cls_id] + " " + str(box.conf[0]*100) + "%")
     
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     detect_every = 10
     i = 0
     class_names = ["Lane Marker"] #index should be class id
-    min_prediction_confidence = 0.3
+    min_prediction_confidence = 0.4
     bridge = CvBridge()
     pwd = os.path.realpath(os.path.dirname(__file__))
     model_filename = pwd + "/last.pt"
