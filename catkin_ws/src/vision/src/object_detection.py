@@ -75,10 +75,20 @@ def detect_on_image(raw_img, camera_id):
                 line_thickness = 1 # in pixels
                 line_x_length = 0.75*bbox[2] #in pixels, will be 3/4 of bounding box width
                 for slope in headings:
+                    angle = math.degrees(math.atan(slope))
                     #on y the slope is inverted because y coordinates grow from the top down in images
                     heading_start = (bbox[0]-line_x_length, bbox[1] + slope*line_x_length) # (x,y)
                     heading_end = (bbox[0]+line_x_length, bbox[1] - slope*line_x_length) # (x,y)
                     cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
+                    cv2.putText(
+                        img,
+                        text=str(angle) + " deg.",
+                        org=heading_end,
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.4, 
+                        color=HEADING_COLOR, 
+                        lineType=cv2.LINE_AA,
+                    )
             img = visualize_bbox(img, bbox, class_names[cls_id] + " " + str(box.conf[0]*100) + "%")
     
     detectionFrame = ObjectDetectionFrame()
