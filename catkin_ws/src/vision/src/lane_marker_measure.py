@@ -1,7 +1,7 @@
 import cv2
 import os
 import numpy as np
-
+import math
 
 def thresholdRed(img):
     img = cv2.resize(img, (0,0), fx=0.5, fy=0.5) 
@@ -58,14 +58,20 @@ def measure_headings(img, debug=False):
         cv2.imshow("thresholded with lines", img)
         cv2.waitKey(0)
     #TODO - reduce 4 slope to average of pairs of most similar slopes
-    #TODO - convert two average slopes into heading in degrees using AUV state_theta_z
-    return slopes
+    finalSlopes=[]
+    for i in range(2):
+        s1 = min(slopes)
+        slopes.remove(s1)
+        s2 = min(slopes)
+        slopes.remove(s2)
+        finalSlopes.append((s1+s2)/2)
+    return finalSlopes
 
 
 if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     
-    test_image_filename = pwd + "/images/frame154_jpg.rf.a7b746d4b3b3535ec382aa2cd9673f6b.jpg"
+    test_image_filename = pwd + "/ff.jpg"
     test_image = cv2.imread(test_image_filename)
     print(measure_headings(test_image, debug=True))
