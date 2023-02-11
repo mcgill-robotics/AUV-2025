@@ -9,6 +9,7 @@ from ultralytics import YOLO
 import lane_marker_measure
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
+import math
 
 BOX_COLOR = (255, 255, 255) # White
 HEADING_COLOR = (0, 0, 255) # Red
@@ -71,18 +72,17 @@ def detect_on_image(raw_img, camera_id):
             label.append(cls_id)
             if cls_id == 0: #add lane marker heading lines to image
                 cropped_img = cropToBbox(img, bbox)
-                headings = str(lane_marker_measure.measure_headings(cropped_img))
+                headings = lane_marker_measure.measure_headings(cropped_img)
                 line_thickness = 1 # in pixels
-                line_x_length = 0.75*bbox[2] #in pixels, will be 3/4 of bounding box width
+                line_x_length = int(0.75*bbox[2]) #in pixels, will be 3/4 of bounding box width
                 for slope in headings:
                     angle = math.degrees(math.atan(slope))
-                    #on y the slope is inverted because y coordinates grow from the top down in images
-                    heading_start = (bbox[0]-line_x_length, bbox[1] + slope*line_x_length) # (x,y)
-                    heading_end = (bbox[0]+line_x_length, bbox[1] - slope*line_x_length) # (x,y)
+                    heading_start = (max(bbox[0]-line_x_length, 0), max(bbox[1] - int(slope*line_x_length), 0)) # (x,y)
+                    heading_end = (bbox[0]+line_x_length, bbox[1] + int(slope*line_x_length)) # (x,y)
                     cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
                     cv2.putText(
                         img,
-                        text=str(angle) + " deg.",
+                        text=str(-1*angle) + " deg.",
                         org=heading_end,
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=0.4, 

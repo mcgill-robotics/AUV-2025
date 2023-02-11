@@ -1,7 +1,7 @@
 import cv2
 import os
 import numpy as np
-
+import math
 
 def thresholdRed(img):
     img = cv2.resize(img, (0,0), fx=0.5, fy=0.5) 
@@ -66,6 +66,28 @@ if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     
-    test_image_filename = pwd + "/images/frame154_jpg.rf.a7b746d4b3b3535ec382aa2cd9673f6b.jpg"
-    test_image = cv2.imread(test_image_filename)
-    print(measure_headings(test_image, debug=True))
+    test_image_filename = pwd + "\images/frame69_jpg.rf.74f6f59c65c97414344b49e751b95eb2.jpg"
+    img = cv2.imread(test_image_filename)
+    headings = measure_headings(img, debug=True)
+    img = cv2.imread(test_image_filename)
+    print(headings)
+    line_thickness = 1 # in pixels
+    line_x_length = 0.1*img.shape[1] #in pixels, will be 3/4 of bounding box width
+    for slope in headings:
+        angle = math.degrees(math.atan(slope))
+        #on y the slope is inverted because y coordinates grow from the top down in images
+        heading_start = (int(max(0.5*img.shape[1] - line_x_length, 0)), int(0.5*img.shape[0] - slope*line_x_length)) # (x,y)
+        heading_end = (int(0.5*img.shape[1] + line_x_length), int(max(0.5*img.shape[0] + slope*line_x_length, 0))) # (x,y)
+        cv2.line(img, heading_start, heading_end, (0, 0, 255), line_thickness)
+        cv2.putText(
+            img,
+            text=str(-1*angle) + " deg.",
+            org=heading_end,
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.4, 
+            color=(0, 0, 255), 
+            lineType=cv2.LINE_AA,
+        )
+
+    cv2.imshow("out", img)
+    cv2.waitKey(0)
