@@ -1,8 +1,6 @@
 <launch>
-    <include file="$(find controls)/launch/superimposer.launch" />
     <include file="$(find controls)/launch/pid.launch" />
-    <!--
-    <include file="$(find controls)/launch/router.launch" />
+    <include file="$(find controls)/launch/superimposer.launch" />
     <include file="$(find controls)/launch/transform_broadcaster.launch" />
-    -->
+    <include file="$(find controls)/launch/state_controller_action_server.launch" />
 </launch>

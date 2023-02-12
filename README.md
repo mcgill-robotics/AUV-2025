@@ -57,6 +57,8 @@ Before building packages, make sure that the following additional ROS packages a
 
 	sudo apt-get install ros-noetic-rosserial-arduino
 	sudo apt-get install ros-noetic-pid
+	sudo apt-get install ros-noetic-joy
+	sudo apt-get install ros-noetic-joy-teleop
 
 *To build/launch/test an individual package, see the README.md in the respective package.*
 
@@ -78,6 +80,8 @@ binary file by connecting the Arduino via USB (currently hardcoded assumption US
 the generated make target:
 
     catkin build --no-deps  propulsion --make-args propulsion_embedded_thrusters-upload
+    catkin build --no-deps  depth_sensor --make-args depth_sensor_embedded_depth_sensor-upload
+    catkin build --no-deps  imu --make-args imu_embedded_imu-upload
     
 _Note: This will eventually be phased out and embedded software will be located in the AUV-embedded-2023 repository_
 
