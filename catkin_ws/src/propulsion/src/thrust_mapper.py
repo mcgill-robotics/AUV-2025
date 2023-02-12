@@ -91,14 +91,27 @@ def forces_to_microseconds_cb(forces_msg):
     micro_msg = ThrusterMicroseconds(micro_arr)
     pub.publish(micro_msg)
 
+#turns off the thursters when the node dies
 def shutdown():
     msg = ThrusterMicroseconds([1500]*8)
     pub.publish(msg)
 
+#sends the arming signal to the thursters upon startup
+def re_arm():
+    rospy.sleep(1)
+    msg1  = ThrusterMicroseconds([1500]*8)
+    msg2 = ThrusterMicroseconds([1540]*8)
+
+    pub.publish(msg1)
+    rospy.sleep(0.5)
+    pub.publish(msg2)
+    rospy.sleep(0.5)
+    pub.publish(msg1)
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
     pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=5)
     sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
     rospy.on_shutdown(shutdown)
+    re_arm()
     rospy.spin()
