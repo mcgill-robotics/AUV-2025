@@ -1,0 +1,5 @@
+<launch>
+	<node name="ps3_joystick" pkg="joy" type="joy_node" />
+    <rosparam file="$(find controls)/config/joy_teleop.yaml" command="load" />
+    <node name="joy_teleop" pkg="joy_teleop" type="joy_teleop.py" />
+</launch>

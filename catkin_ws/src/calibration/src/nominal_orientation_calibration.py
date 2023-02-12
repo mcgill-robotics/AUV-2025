@@ -14,15 +14,15 @@ if __name__ == '__main__':
 	rospy.init_node('nominal_orientation_calibration')
 	
 	# Move AUV down to submerge itself
-	pub_z.publish(-0.5)
+	pub_z.publish(-0.0)
 	
 	# Want no roll (theta-x = 0)
-	pub_theta_x.publish(0.0)
+	# pub_theta_x.publish(0.0)
 	
 	# Want the AUV to level itself (such that theta_y = 0)
 	pub_theta_y.publish(0.0)
 	
 	# Want 0 degree yaw
-	pub_theta_z.publish(0.0)
+	# pub_theta_z.publish(0.0)
 	
 	rospy.spin()

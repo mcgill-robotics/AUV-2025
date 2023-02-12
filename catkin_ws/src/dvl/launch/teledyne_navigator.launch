@@ -1,0 +1,19 @@
+<launch>
+  <arg name="port" default="/dev/dvl" doc="serial port"/>
+  <arg name="baudrate" default="9600" doc="serial baud rate"/>
+  <arg name="frame" default="dvl" doc="frame ID"/>
+  <arg name="timeout" default="1.0" doc="serial read timeout in seconds"/>
+
+  <node name="teledyne_navigator"
+        pkg="teledyne_navigator"
+        type="teledyne_navigator"
+        output="screen"
+        respawn="true"
+        respawn_delay="5">
+    <!-- Set ROS parameters -->
+    <param name="port" value="$(arg port)" type="str"/>
+    <param name="baudrate" value="$(arg baudrate)" type="int"/>
+    <param name="frame" value="$(arg frame)" type="str"/>
+    <param name="timeout" value="$(arg timeout)" type="double"/>
+  </node>
+</launch>
