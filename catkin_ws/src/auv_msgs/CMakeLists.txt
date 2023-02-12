@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(FILES
 	ThrusterMicroseconds.msg
 	ThrusterForces.msg
+	ObjectDetectionFrame.msg
 	ImuData.msg
 )
 
