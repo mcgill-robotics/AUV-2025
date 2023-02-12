@@ -15,6 +15,8 @@ pins 0 and 1 function differently.
 #define HVE_ST_S_PIN 	8
 #define HVE_ST_P_PIN 	9
 
+// int lastCommand;
+
 /* less verbose identifiers
 	Pin numbers [0-7] from ThusterCommand.msg
  */
@@ -31,6 +33,7 @@ Servo thrusters[8];
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
 
 void updateThrusters(const uint16_t microseconds[8]){
+		
 	thrusters[SRG_P].writeMicroseconds(microseconds[SRG_P]);
 	thrusters[SRG_S].writeMicroseconds(microseconds[SRG_S]);
 	thrusters[SWY_BW].writeMicroseconds(microseconds[SWY_BW]);
@@ -46,6 +49,7 @@ void thrustersOff(){
 }
 
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+	// lastCommand = millis();
 	const uint16_t* microseconds = tc.microseconds;
 	updateThrusters(microseconds);
 }
@@ -69,6 +73,7 @@ ros::NodeHandle nh;
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("propulsion/thruster_microseconds", &commandCb);
 
 void setup() {
+	// lastCommand = millis();
 	initThrusters();
 	nh.subscribe(sub);
 	nh.initNode();
@@ -76,6 +81,9 @@ void setup() {
 }
 
 void loop() {
+	// if(millis() - lastCommand >= 1000){
+	// 	thrustersOff();
+	// }
 	// listen for commands
 	nh.spinOnce(); 
 }
