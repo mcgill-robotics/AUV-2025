@@ -77,8 +77,8 @@ def detect_on_image(raw_img, camera_id):
                 line_x_length = int(0.75*bbox[2]) #in pixels, will be 3/4 of bounding box width
                 for slope in headings:
                     angle = math.degrees(math.atan(slope))
-                    heading_start = (max(bbox[0]-line_x_length, 0), max(bbox[1] - int(slope*line_x_length), 0)) # (x,y)
-                    heading_end = (bbox[0]+line_x_length, bbox[1] + int(slope*line_x_length)) # (x,y)
+                    heading_start = (int(max(bbox[0]-line_x_length, 0)), int(max(bbox[1] - slope*line_x_length, 0))) # (x,y)
+                    heading_end = (int(bbox[0]+line_x_length), int(bbox[1] + slope*line_x_length)) # (x,y)
                     cv2.line(img, heading_start, heading_end, HEADING_COLOR, line_thickness)
                     cv2.putText(
                         img,
