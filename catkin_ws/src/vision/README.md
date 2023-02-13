@@ -1,15 +1,76 @@
+# Vision
+
+
+## Overview
+
+
+The propulsion package is responsible for using the cameras on the AUV to help navigate the AUV relative to various objects in the pool.
+
 For training YOLO models on custom data, see /cv-model folder.
 
-Launching object_detection.launch file will:
-- start up usb_cam node to capture video from webcams and publish the images to specific topics (if not yet started)
-- run the models specified in object_detection.py on images received on the topics associated to the AUV cameras (one model per camera feed)
-- output the models' predictions as ObjectDetectionViewframe messages (defined in auv_msgs) to the /vision/viewframe_detection topic
-- create one visualization per camera feed showing the model's predictions (boundings boxes, labels, headings, ...) and publish them as images to /vision/[camera_name]_visual
+The vision package has been tested under ROS Noetic for Ubuntu 20.04.
 
-Launching record_cameras.launch file will:
-- start up usb_cam node to capture video from webcams and publish the images to specific topics (if not yet started)
-- record the image feed from the AUV cameras
-- save the images as a video file to the file location specified in record_cameras.py
+### License
 
-Launching vision.launch file will:
-- launch both record_cameras and object_detection nodes
+The source code is released under a GPLv3 license.
+
+## Package Interface
+
+### Published Topics
+
+| Topic | Message | description |
+| ------ | ------- | ---------- |
+| `/vision/viewframe_detection` | `auv_msgs/ObjectDetectionFrame` | Bounding box, confidence, class id, and camera on which detection was made of all objects in the viewframe of the AUV |
+| `/vision/down_visual` | `sensor_msgs/Image` | Visualization of all detections on the downwards camera of the AUV |
+
+### Subscribed Topics
+
+| Topic | Message | description |
+| ------ | ------- | ---------- |
+| `/vision/down_cam/image_raw` | `sensor_msgs/Image` | Images taken by the downwards camera |
+
+
+## Installation
+
+### Dependencies
+
+- `catkin`
+- `auv_msgs`
+- `sensor_msgs`
+- `ultralytics`
+- `opencv-python`
+- `ros-noetic-cv-bridge`
+- `ros-noetic-usb-cam`
+- `ros-noetic-image-view`
+
+### Building
+
+	source /opt/ros/noetic/setup.bash
+	cd <AUV-2020>/catkin_ws/src
+	catkin build vision
+
+After build is complete, make the packages visible to ROS
+
+	source ../devel/setup.bash
+
+### Running
+
+Note: usb_cam will display warnings and errors to the screen, this is normal.
+
+Launch all package nodes
+
+	roslaunch vision vision.launch
+
+Launch object detection node
+
+	roslaunch vision object_detection.launch
+
+Launch camera recording node (records camera feeds to file system as video files)
+
+	roslaunch vision record_cameras.launch
+	
+### Usage
+
+View the object detection visualization for downward camera: (ensure node is running first)
+	
+	rosrun image_view image_view image:=vision/down_visual
