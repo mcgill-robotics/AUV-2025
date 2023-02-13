@@ -4,7 +4,7 @@
 ## Overview
 
 
-The propulsion package is responsible for using the cameras on the AUV to help navigate the AUV relative to various objects in the pool.
+The vision package is responsible for using the cameras on the AUV to help navigate the AUV relative to various objects in the pool.
 
 For training YOLO models on custom data, see /cv-model folder.
 
