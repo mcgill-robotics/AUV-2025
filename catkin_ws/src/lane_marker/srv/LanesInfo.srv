@@ -1,7 +1,0 @@
-sensor_msgs/Image path_marker_img
----
-sensor_msgs/Image path_marker_result_img
-float32 path_marker_heading_to
-float32 path_marker_heading_from
-geometry_msgs/Point path_marker_center
-
