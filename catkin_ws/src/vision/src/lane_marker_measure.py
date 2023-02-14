@@ -20,9 +20,36 @@ def thresholdRed(img):
     ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
     return img
 
+#return the intersection point of two lines of the form (slope, y intercept)
+def getIntersection(l1, l2):
+    #if m, m' are slopes and b, b' are intercepts the intersection is at x which satisfies:
+    #mx+b=m'x+b'
+    #mx-m'x=b'-b
+    #x=(b'-b)/(m-m')
+    int_x = (l2[1]-l1[1])/(l1[0]-l2[0])
+    #y=mx+b
+    int_y = int_x*l2[0] + l2[1]
+    return (int(int_x), int(int_y))
+
+#given an array of the form (slope1UpperLine, slope1LowerLine), (slope2UpperLine, slope2LowerLine)
+#return the center point of the rectangle defined by the 4 lines
+def getCenterPoint(lines, img, debug):
+    #get intersection between the two upper lines
+    int1 = getIntersection(lines[0][0], lines[1][0])
+    #get intersection between the two lower lines
+    int2 = getIntersection(lines[0][1], lines[1][1])
+    #get point halfway between the two intersections
+    centerPoint = (int((int1[0]+int2[0])/2), int((int1[1]+int2[1])/2))
+    if debug:
+        cv2.circle(img, int1, radius=4, color=(255,0,0), thickness=-1)
+        cv2.circle(img, int2, radius=4, color=(255,0,0), thickness=-1)
+        cv2.circle(img, centerPoint, radius=5, color=(0,0,255), thickness=-1)
+        cv2.imshow("with center point", img)
+        cv2.waitKey(0)
+    return centerPoint
+
 #given an image containing a lane marker, returns one slope per lane marker heading (relative to the image's x/y axis)
-#i.e. if lane marker is not fully contained in image, should return one vector
-#otherwise should return two vectors
+#i.e should return two slopes
 #should also return center point of lane marker (or most central point if not completely contained in image)
 def measure_headings(img, debug=False):
     if debug:
@@ -34,9 +61,9 @@ def measure_headings(img, debug=False):
         cv2.waitKey(0)
     #get edges of thresholded image (should get the edges of the lane marker)
     edges = cv2.Canny(thresh_img,50,150,apertureSize = 3)
-    slopes = []
+    lines = []
     #only want up to 4 slopes (one per side of the lane marker)
-    while len(slopes) < 4:
+    while len(lines) < 4:
         if debug:
             cv2.imshow("remaining edges", edges)
             cv2.waitKey(0)
@@ -57,9 +84,13 @@ def measure_headings(img, debug=False):
                 y2 = int(y0 - 1000*(a))
                 #calculate slope from start and end points of line
                 slope = (y2-y1)/(x2-x1)
-                slopes.append(slope)
+                #y = mx+b
+                #slope is m, intercept is b
+                #therefore the slope is b = y-mx for any point on the line
+                intercept = y1-slope*x1
+                lines.append((slope, intercept))
                 #draw the new line we found on top of the original image
-                cv2.line(thresh_img,(x1,y1),(x2,y2),(0,0,255),2)
+                if debug: cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),5)
@@ -69,22 +100,58 @@ def measure_headings(img, debug=False):
         cv2.imshow("with lines", img)
         cv2.waitKey(0)
     #TODO - return mid point of lane marker as well
-    #combine the 4 slopes into 2 most different slopes
-    finalSlopes = []
+    #combine the 4 lines into 2 most different lines
+    finalLines = []
+    #array to hold the 4 lines, seperated by heading (2 lines per heading)
+    laneEdgeLines = []
     for i in range(2):
-        s1 = min(slopes)
-        slopes.remove(s1)
-        s2 = min(slopes)
-        slopes.remove(s2)
-        #average similar slopes to get better approximation of actual slope
-        finalSlopes.append((s1+s2)/2)
-    return finalSlopes
+        #get two smallest slopes
+        s1 = min(lines, key=lambda x: x[0])
+        lines.remove(s1)
+        s2 = min(lines, key=lambda x: x[0])
+        lines.remove(s2)
+        #average similar lines to get better approximation of actual lines
+        finalLines.append((s1[0]+s2[0])/2)
+        #get the upper and lower lines by comparing their y-intercept values
+        upper_line = min((s1,s2), key=lambda x: x[1])
+        lower_line = max((s1,s2), key=lambda x: x[1])
+        #save upper and lower line to the edge lines array
+        laneEdgeLines.append((upper_line,lower_line))
+    
+    #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
+    centerPoint = getCenterPoint(laneEdgeLines, img, debug)
+    return finalLines, centerPoint
 
+def visualizeLaneMarker(img):
+    #crop image to lane marker
+    line_thickness = 1 # in pixels
+    line_x_length = int(150) #in pixels, line will be 1/2 of bounding box width
+    #measure headings from lane marker
+    headings, center_point = measure_headings(img)
+    for slope in headings:
+        #get angle, line start and line end from heading slope
+        angle = -1*math.degrees(math.atan(slope))
+        line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
+        line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
+        #draw line on original image
+        cv2.line(img, line_start, line_end, (0, 0, 255) , line_thickness)
+        #add text with measured angle of line at the end of the line
+        cv2.putText(
+            img,
+            text=str(angle) + " deg.",
+            org=line_end,
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.4, 
+            color=(0, 0, 255) , 
+            lineType=cv2.LINE_AA,
+        )
+    cv2.circle(img, center_point, radius=5, color=(0, 0, 255) , thickness=-1)
+    return img
 
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "\ff.jpg"
+    test_image_filename = pwd + "/images/frame69_jpg.rf.74f6f59c65c97414344b49e751b95eb2.jpg"
+    headings, center_point = measure_headings(img, debug=True)
     img = cv2.imread(test_image_filename)
-    headings = measure_headings(img, debug=True)
-    print(headings)
+    print(headings, center_point)

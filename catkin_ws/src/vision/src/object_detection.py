@@ -49,18 +49,18 @@ def cropToBbox(img, bbox):
     crop_img = img[y_min:y_max, x_min:x_max]
     return crop_img
 
-def visualizeHeadings(img, bbox):
+def visualizeLaneMarker(img, bbox):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
     line_thickness = 1 # in pixels
     line_x_length = int(0.5*bbox[2]) #in pixels, line will be 1/2 of bounding box width
     #measure headings from lane marker
-    headings = lane_marker_measure.measure_headings(cropped_img)
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     for slope in headings:
         #get angle, line start and line end from heading slope
         angle = -1*math.degrees(math.atan(slope))
-        line_start = (int(max(bbox[0]-line_x_length/2, 0)), int(max(bbox[1] - slope*(line_x_length/2), 0))) # (x,y)
-        line_end = (int(bbox[0]+line_x_length/2), int(bbox[1] + slope*(line_x_length/2))) # (x,y)
+        line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
+        line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
         #draw line on original image
         cv2.line(img, line_start, line_end, HEADING_COLOR, line_thickness)
         #add text with measured angle of line at the end of the line
@@ -73,6 +73,7 @@ def visualizeHeadings(img, bbox):
             color=HEADING_COLOR, 
             lineType=cv2.LINE_AA,
         )
+    cv2.circle(img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return img
 
 #callback when an image is received
@@ -117,7 +118,7 @@ def detect_on_image(raw_img, camera_id):
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
             if cls_id == 0 and camera_id == 0:
-                img = visualizeHeadings(img, bbox)
+                img = visualizeLaneMarker(img, bbox)
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
