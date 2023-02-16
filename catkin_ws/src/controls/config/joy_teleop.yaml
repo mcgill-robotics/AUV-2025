@@ -28,7 +28,7 @@ teleop:
     deadman_buttons: [8]
     axis_mappings:
       -
-        axis: 3
+        axis: 2
         target: data
         scale: -5
 
