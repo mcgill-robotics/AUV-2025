@@ -48,6 +48,15 @@ def getCenterPoint(lines, img, debug):
         cv2.waitKey(0)
     return centerPoint
 
+def angleBetweenLines(l1, l2):
+    l1_angle = (180*math.atan(l1[0])/math.pi) #between -90 and 90
+    l2_angle = (180*math.atan(l2[0])/math.pi) #between -90 and 90
+    angle_diff = abs(l1_angle-l2_angle) # between 0 and 180
+    if angle_diff > 90:
+        return 180.0-angle_diff
+    else:
+        return angle_diff
+
 #given an image containing a lane marker, returns one slope per lane marker heading (relative to the image's x/y axis)
 #i.e should return two slopes
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
@@ -100,21 +109,23 @@ def measure_headings(img, debug=False):
     if debug:
         cv2.imshow("with lines", img)
         cv2.waitKey(0)
-    #TODO - return mid point of lane marker as well
     #combine the 4 lines into 2 most different lines
     finalLines = []
-    #array to hold the 4 lines, seperated by heading (2 lines per heading)
+    #array to hold the 4 lines, organized by heading (2 lines per heading, upper and lower)
     laneEdgeLines = []
     for i in range(2):
-        #get two smallest slopes
-        s1 = min(lines, key=lambda x: (180*math.atan(x[0])/3.1415) % 180)
+        #get slope
+        s1 = lines[0]
         lines.remove(s1)
-        s2 = min(lines, key=lambda x: (180*math.atan(x[0])/3.1415) % 180)
+        #get line with least angle from s1
+        s2 = min(lines, key=lambda x: angleBetweenLines(s1, x))
         lines.remove(s2)
-        #average similar lines to get better approximation of actual lines
+        #average the lines to get better approximation of actual line
         s1_angle = ((180*math.atan(s1[0])/math.pi) % 180)
         s2_angle = ((180*math.atan(s2[0])/math.pi) % 180)
-        finalLines.append(math.tan(math.pi*(s1_angle+s2_angle)/360))
+        avg_angle = (s1_angle+s2_angle)/2
+        avg_slope = math.tan(math.pi*avg_angle/180)
+        finalLines.append(avg_slope)
         #get the upper and lower lines by comparing their y-intercept values
         upper_line = min((s1,s2), key=lambda x: x[1])
         lower_line = max((s1,s2), key=lambda x: x[1])
