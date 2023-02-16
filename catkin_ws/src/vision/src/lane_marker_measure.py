@@ -50,6 +50,7 @@ def getCenterPoint(lines, img, debug):
 
 #given an image containing a lane marker, returns one slope per lane marker heading (relative to the image's x/y axis)
 #i.e should return two slopes
+#returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
 def measure_headings(img, debug=False):
     if debug:
@@ -78,10 +79,10 @@ def measure_headings(img, debug=False):
                 b = np.sin(theta)
                 x0 = a*rho
                 y0 = b*rho
-                x1 = int(x0 + 1000*(-b))
-                y1 = int(y0 + 1000*(a))
-                x2 = int(x0 - 1000*(-b))
-                y2 = int(y0 - 1000*(a))
+                x1 = int(x0 + 3000*(-b))
+                y1 = int(y0 + 3000*(a))
+                x2 = int(x0 - 3000*(-b))
+                y2 = int(y0 - 3000*(a))
                 #calculate slope from start and end points of line
                 slope = (y2-y1)/(x2-x1)
                 #y = mx+b
@@ -106,20 +107,25 @@ def measure_headings(img, debug=False):
     laneEdgeLines = []
     for i in range(2):
         #get two smallest slopes
-        s1 = min(lines, key=lambda x: x[0])
+        s1 = min(lines, key=lambda x: (180*math.atan(x[0])/3.1415) % 180)
         lines.remove(s1)
-        s2 = min(lines, key=lambda x: x[0])
+        s2 = min(lines, key=lambda x: (180*math.atan(x[0])/3.1415) % 180)
         lines.remove(s2)
         #average similar lines to get better approximation of actual lines
-        finalLines.append((s1[0]+s2[0])/2)
+        s1_angle = ((180*math.atan(s1[0])/math.pi) % 180)
+        s2_angle = ((180*math.atan(s2[0])/math.pi) % 180)
+        finalLines.append(math.tan(math.pi*(s1_angle+s2_angle)/360))
         #get the upper and lower lines by comparing their y-intercept values
         upper_line = min((s1,s2), key=lambda x: x[1])
         lower_line = max((s1,s2), key=lambda x: x[1])
         #save upper and lower line to the edge lines array
         laneEdgeLines.append((upper_line,lower_line))
-    
+        
     #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
     centerPoint = getCenterPoint(laneEdgeLines, img, debug)
+
+    #TODO: find which segment has most black pixels by comparing with thresh_img
+
     return finalLines, centerPoint
 
 def visualizeLaneMarker(img):
@@ -152,6 +158,6 @@ if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
     test_image_filename = pwd + "/images/frame69_jpg.rf.74f6f59c65c97414344b49e751b95eb2.jpg"
-    headings, center_point = measure_headings(img, debug=True)
     img = cv2.imread(test_image_filename)
-    print(headings, center_point)
+    headings, center_point = measure_headings(img, debug=True)
+    print([-1*math.degrees(math.atan(h))for h in headings], center_point)
