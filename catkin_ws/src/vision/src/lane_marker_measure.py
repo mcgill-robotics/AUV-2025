@@ -123,6 +123,9 @@ def measure_headings(img, debug=False):
         #average the lines to get better approximation of actual line
         s1_angle = ((180*math.atan(s1[0])/math.pi) % 180)
         s2_angle = ((180*math.atan(s2[0])/math.pi) % 180)
+        #ensure that angles are within 90 degrees of each other so we always average the acute angle between lines
+        if abs(s1_angle-s2_angle) > 90:
+            s1_angle = s1_angle-180
         avg_angle = (s1_angle+s2_angle)/2
         avg_slope = math.tan(math.pi*avg_angle/180)
         finalLines.append(avg_slope)
