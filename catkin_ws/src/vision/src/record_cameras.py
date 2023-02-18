@@ -3,6 +3,7 @@
 import numpy as np
 import rospy
 import cv2
+import pickle
 from cv_bridge import CvBridge
 import os
 from os import listdir
@@ -15,6 +16,7 @@ from auv_msgs.msg import ObjectDetectionFrame
 #callback for when a new image is received
 def image_cb(raw_img, camera_name):
     global imgs
+    global lastFrameTime
     #if time from when last image was received is greater than videoSaveTime we start a new video
     if time.time() - lastFrameTime > videoSaveTime: save_images_to_video()
     lastFrameTime = time.time()
@@ -28,6 +30,7 @@ def image_cb(raw_img, camera_name):
 #called when node shuts down
 #saves all accumulated images into a new video file somewhere
 def save_images_to_video():
+    global out
     print("saving " + str(len(list(imgs.keys()))) + " videos to " + out)
     #for each camera
     for camera_name in list(imgs.keys()):
@@ -43,6 +46,8 @@ def save_images_to_video():
         #write the video to file system
         height, width, colors = imgs[camera_name][0].shape
         out = cv2.VideoWriter(out + "/" + video_filename, cv2.VideoWriter_fourcc(*'mp4v'), fps[camera_name], (width, height))
+        with open(out + "/" + video_filename) as f:
+            pickle.dump(imgs[camera_name], f + ".pickle")
         for i in imgs[camera_name]:
             out.write(i)
         out.release()

@@ -25,13 +25,13 @@ def getIntersection(l1, l2):
     #if m, m' are slopes and b, b' are intercepts the intersection is at x which satisfies:
     #mx+b=m'x+b'
     #mx-m'x=b'-b
-    #x=(b'-b)/(m-m')
+    #x=(b'-b)/(m-m') 
     int_x = (l2[1]-l1[1])/(l1[0]-l2[0])
     #y=mx+b
     int_y = int_x*l2[0] + l2[1]
     return (int(int_x), int(int_y))
 
-#given an array of the form (slope1UpperLine, slope1LowerLine), (slope2UpperLine, slope2LowerLine)
+#given an array of the form ((slope1UpperLine, slope1LowerLine), (slope2UpperLine, slope2LowerLine))
 #return the center point of the rectangle defined by the 4 lines
 def getCenterPoint(lines, img, debug):
     #get intersection between the two upper lines
@@ -93,7 +93,10 @@ def measure_headings(img, debug=False):
                 x2 = int(x0 - 3000*(-b))
                 y2 = int(y0 - 3000*(a))
                 #calculate slope from start and end points of line
-                slope = (y2-y1)/(x2-x1)
+                if (x2-x1) == 0:
+                    slope = 1000000
+                else:
+                    slope = (y2-y1)/(x2-x1)
                 #y = mx+b
                 #slope is m, intercept is b
                 #therefore the slope is b = y-mx for any point on the line
@@ -103,7 +106,7 @@ def measure_headings(img, debug=False):
                 if debug: cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
-                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),5)
+                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),10)
         except TypeError:
             break
     if debug:
@@ -113,6 +116,8 @@ def measure_headings(img, debug=False):
     finalLines = []
     #array to hold the 4 lines, organized by heading (2 lines per heading, upper and lower)
     laneEdgeLines = []
+    if (len(lines) < 4):
+        return None, None
     for i in range(2):
         #get slope
         s1 = lines[0]

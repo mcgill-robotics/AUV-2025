@@ -56,6 +56,10 @@ def visualizeLaneMarker(img, bbox):
     line_x_length = int(0.5*bbox[2]) #in pixels, line will be 1/2 of bounding box width
     #measure headings from lane marker
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
+    if None in (headings, center_point): return img
+    center_point_x = center_point[0] + bbox[0] - bbox[2]/2
+    center_point_y = center_point[1] + bbox[1] -  bbox[3]/2
+    center_point =  (int(center_point_x),int( center_point_y))
     for slope in headings:
         #get angle, line start and line end from heading slope
         angle = -1*math.degrees(math.atan(slope))
@@ -136,7 +140,7 @@ def detect_on_image(raw_img, camera_id):
     debug_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 30 #run the model every _ frames received (to not eat up too much RAM)
+    detect_every = 60  #run the model every _ frames received (to not eat up too much RAM)
     #count for number of images received per camera
     i = [
         0
@@ -145,7 +149,7 @@ if __name__ == '__main__':
         ["Lane Marker"]
         ]
     #only report predictions with confidence at least 40%
-    min_prediction_confidence = 0.4
+    min_prediction_confidence = 0.6
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     #get and start models
@@ -164,6 +168,6 @@ if __name__ == '__main__':
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('vision/down_cam/image_raw', Image, detect_on_image, 0)
+        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
         ]
     rospy.spin()
