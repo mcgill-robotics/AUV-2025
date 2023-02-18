@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 	rospy
 	rosserial_arduino
 	rosserial_client
+    sbg_driver
 )
 
 catkin_package( CATKIN_DEPENDS
@@ -17,6 +18,7 @@ catkin_package( CATKIN_DEPENDS
 	rospy
 	rosserial_arduino
 	rosserial_client
+    sbg_driver
 )
 
 rosserial_generate_ros_lib(
