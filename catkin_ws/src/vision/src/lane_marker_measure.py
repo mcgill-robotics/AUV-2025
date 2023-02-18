@@ -142,10 +142,55 @@ def measure_headings(img, debug=False):
         
     #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
     centerPoint = getCenterPoint(laneEdgeLines, img, debug)
-
-    #TODO: find which segment has most black pixels by comparing with thresh_img
-
+    avgs = []
+    for slope in finalLines:
+        negAvg = getAvgColor(thresh_img, slope, -1, centerPoint)
+        posAvg = getAvgColor(thresh_img, slope, 1, centerPoint)
+        avgs.append([slope, posAvg, 1])
+        avgs.append([slope, negAvg, -1])
+    s1 = min(avgs, key=lambda x : x[1])
+    avgs.remove(s1)
+    s2 = min(avgs, key=lambda x : x[1])
+    angle1 = -1*math.degrees(math.atan(s1[0]))
+    angle2 = -1*math.degrees(math.atan(s2[0]))
+    if s1[2] < 0: #abs(angle) should be above 90
+        if abs(angle1) < 90:
+            if angle1 < 0:
+                angle1 += 180
+            else:
+                angle1 -= 180
+    else: #abs(angle) should be below 90
+        if abs(angle1) > 90:
+            if angle1 < 0:
+                angle1 += 180
+            else:
+                angle1 -= 180
+    if s2[2] < 0: #abs(angle) should be above 90
+        if abs(angle2) < 90:
+            if angle2 < 0:
+                angle2 += 180
+            else:
+                angle2 -= 180
+    else: #abs(angle) should be below 90
+        if abs(angle2) > 90:
+            if angle2 < 0:
+                angle2 += 180
+            else:
+                angle2 -= 180
+    finalLines = [angle1,angle2]
     return finalLines, centerPoint
+
+def getAvgColor(img, slope, direction, center_point):
+    x,y = center_point[1], center_point[1]
+    step = int(img.shape[1]/(2*20)) #step value
+    avgColor = 0
+    i = 0 
+    while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
+        avgColor += img[y][x]
+        x += step*direction
+        y += int(slope*step*direction)
+        i+=1
+    return avgColor/i
 
 def visualizeLaneMarker(img):
     #crop image to lane marker
@@ -176,7 +221,7 @@ def visualizeLaneMarker(img):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/frame69_jpg.rf.74f6f59c65c97414344b49e751b95eb2.jpg"
+    test_image_filename = pwd + "/ff.jpg"
     img = cv2.imread(test_image_filename)
     headings, center_point = measure_headings(img, debug=True)
-    print([-1*math.degrees(math.atan(h))for h in headings], center_point)
+    print([-1*math.degrees(math.atan(h)) for h in headings], center_point)
