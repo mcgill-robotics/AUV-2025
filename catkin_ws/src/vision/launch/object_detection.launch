@@ -4,8 +4,9 @@
         <!-- <param name="image_width" value="640" />
         <param name="image_height" value="480" />
         <param name="pixel_format" value="yuyv" />
-        <param name="camera_frame_id" value="usb_cam" />
         <param name="io_method" value="mmap"/> -->
+
+	<remap from="/usb_cam" to="/vision/down_cam"/>
     </node>
     <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
 </launch>
