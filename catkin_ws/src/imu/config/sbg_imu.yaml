@@ -9,7 +9,7 @@ driver:
   frequency: 400
 
 # Configuration of the device with ROS.
-confWithRos: false
+confWithRos: true
 
 # Uart configuration
 uartConf:
