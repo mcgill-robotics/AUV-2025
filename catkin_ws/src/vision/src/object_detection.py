@@ -58,11 +58,11 @@ def visualizeLaneMarker(img, bbox):
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
-    center_point_y = center_point[1] + bbox[1] -  bbox[3]/2
-    center_point =  (int(center_point_x),int( center_point_y))
-    for slope in headings:
+    center_point_y = center_point[1] + bbox[1] - bbox[3]/2
+    center_point = (int(center_point_x), int(center_point_y))
+    for angle in headings:
         #get angle, line start and line end from heading slope
-        angle = -1*math.degrees(math.atan(slope))
+        slope = math.tan((angle/-180)*math.pi)
         line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
         line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
         #draw line on original image

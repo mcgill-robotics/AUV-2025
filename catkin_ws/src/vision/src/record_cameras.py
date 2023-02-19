@@ -46,8 +46,8 @@ def save_images_to_video():
         #write the video to file system
         height, width, colors = imgs[camera_name][0].shape
         out = cv2.VideoWriter(out + "/" + video_filename, cv2.VideoWriter_fourcc(*'mp4v'), fps[camera_name], (width, height))
-        with open(out + "/" + video_filename) as f:
-            pickle.dump(imgs[camera_name], f + ".pickle")
+        with open(out + "/" + video_filename + ".pickle") as f:
+            pickle.dump(imgs[camera_name], f)
         for i in imgs[camera_name]:
             out.write(i)
         out.release()

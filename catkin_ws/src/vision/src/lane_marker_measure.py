@@ -139,7 +139,7 @@ def measure_headings(img, debug=False):
         lower_line = max((s1,s2), key=lambda x: x[1])
         #save upper and lower line to the edge lines array
         laneEdgeLines.append((upper_line,lower_line))
-        
+    
     #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
     centerPoint = getCenterPoint(laneEdgeLines, img, debug)
     avgs = []
@@ -151,8 +151,9 @@ def measure_headings(img, debug=False):
     s1 = min(avgs, key=lambda x : x[1])
     avgs.remove(s1)
     s2 = min(avgs, key=lambda x : x[1])
-    angle1 = -1*math.degrees(math.atan(s1[0]))
-    angle2 = -1*math.degrees(math.atan(s2[0]))
+    #negated because y axis is 0 at top of frame
+    angle1 = -180*(math.atan(s1[0])/math.pi)
+    angle2 = -180*(math.atan(s2[0])/math.pi)
     if s1[2] < 0: #abs(angle) should be above 90
         if abs(angle1) < 90:
             if angle1 < 0:
@@ -181,7 +182,7 @@ def measure_headings(img, debug=False):
     return finalLines, centerPoint
 
 def getAvgColor(img, slope, direction, center_point):
-    x,y = center_point[1], center_point[1]
+    x,y = center_point[0], center_point[1]
     step = int(img.shape[1]/(2*20)) #step value
     avgColor = 0
     i = 0 
@@ -221,7 +222,7 @@ def visualizeLaneMarker(img):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/ff.jpg"
+    test_image_filename = pwd + "/images/frame44_jpg.rf.36a74eb74ab5692f83b66d8ff2cb12c6.jpg"
     img = cv2.imread(test_image_filename)
-    headings, center_point = measure_headings(img, debug=True)
-    print([-1*math.degrees(math.atan(h)) for h in headings], center_point)
+    headings, center_point = measure_headings(img, debug=False)
+    print([str(h) + " deg." for h in headings], center_point)
