@@ -53,7 +53,7 @@ def visualizeLaneMarker(img, bbox):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
     line_thickness = 1 # in pixels
-    line_x_length = int(0.5*bbox[2]) #in pixels, line will be 1/2 of bounding box width
+    line_x_length = int(0.25*bbox[2]) #in pixels, line will be 1/4 of bounding box width
     #measure headings from lane marker
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return img
@@ -63,10 +63,12 @@ def visualizeLaneMarker(img, bbox):
     for angle in headings:
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
-        line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
-        line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
+        if abs(angle) > 90: #heading goes into negative x
+            line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
+        else: # heading goes into positive x
+            line_end = (int(center_point[0]+line_x_length), int(center_point[1] + slope*line_x_length)) # (x,y)
         #draw line on original image
-        cv2.line(img, line_start, line_end, HEADING_COLOR, line_thickness)
+        cv2.line(img, center_point, line_end, HEADING_COLOR, line_thickness)
         #add text with measured angle of line at the end of the line
         cv2.putText(
             img,
