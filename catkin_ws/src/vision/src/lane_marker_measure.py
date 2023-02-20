@@ -196,16 +196,24 @@ def getAvgColor(img, slope, direction, center_point):
 def visualizeLaneMarker(img):
     #crop image to lane marker
     line_thickness = 1 # in pixels
-    line_x_length = int(150) #in pixels, line will be 1/2 of bounding box width
+    line_length = int(0.25*img.shape[1]) #in pixels, line will be 1/4 of bounding box width
     #measure headings from lane marker
     headings, center_point = measure_headings(img)
-    for slope in headings:
+    for angle in headings:
         #get angle, line start and line end from heading slope
-        angle = -1*math.degrees(math.atan(slope))
-        line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
-        line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
+        slope = math.tan((angle/-180)*math.pi)
+        #calculate line x length from total length
+            #line_length = sqrt(line_x_length^2 + line_y_length^2)
+            #line_length^2 = line_x_length^2 + (line_x_length*slope)^2
+            #line_length^2 = line_x_length^2 * (1 + slope^2)
+            #line_x_length = sqrt(line_length^2 / (1 + slope^2))
+        line_x_length = math.sqrt((line_length ** 2) / (1 + slope ** 2))
+        if abs(angle) > 90: #heading goes into negative x
+            line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
+        else: # heading goes into positive x
+            line_end = (int(center_point[0]+line_x_length), int(center_point[1] + slope*line_x_length)) # (x,y)
         #draw line on original image
-        cv2.line(img, line_start, line_end, (0, 0, 255) , line_thickness)
+        cv2.line(img, center_point, line_end, (0,0,255), line_thickness)
         #add text with measured angle of line at the end of the line
         cv2.putText(
             img,
@@ -224,5 +232,6 @@ if __name__ == '__main__':
     pwd = os.path.realpath(os.path.dirname(__file__))
     test_image_filename = pwd + "/images/frame44_jpg.rf.36a74eb74ab5692f83b66d8ff2cb12c6.jpg"
     img = cv2.imread(test_image_filename)
-    headings, center_point = measure_headings(img, debug=False)
-    print([str(h) + " deg." for h in headings], center_point)
+    visualizeLaneMarker(img)
+    cv2.imshow("visualization", img)
+    cv2.waitKey(0)
