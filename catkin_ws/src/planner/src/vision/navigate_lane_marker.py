@@ -33,31 +33,50 @@ def rotateToHeading(timeout=30):
     rotationTolerance = 5 #in degrees
     startTime = time.time()
     laneMarkerInView = False
+    success = False
     pub = rospy.Publisher('/theta_z_setpoint', Float64, queue_size=5, latch=True)
-
+    #wait for state theta z update
     while state_theta_z == None:
         if time.time() > startTime + timeout:
-            print("Did not get state theta z update in time.")
+            print("Could not get state theta z.")
             return 'failure'
-
-    while abs(rotationError) > rotationTolerance:
-        if len(last_object_detection) > 0:
-            if rotationError == 9999:
-                #the first time we assume that the angle pointing "downwards" (i.e. abs() above 90) is the angle we are coming from
+    while not success:
+        while abs(rotationError) > rotationTolerance:
+            if len(last_object_detection) > 0:
+                #we assume that the angle pointing "downwards" (i.e. abs() above 90) is the angle we are coming from
                 #so our target angle is the one closest to 0 degrees (most forward angle)
                 rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
-            else:
-                #after the first time we assume our target heading is the one closest to our current theta_z_setpoint
-                rotationError = min(last_object_detection[4:6], key=lambda x : abs(z_setpoint-(state_theta_z + x)))
-            z_setpoint = state_theta_z + rotationError
-            pub.publish(Float64(state_theta_z))
-            startTime = time.time()
-            last_object_detection = []
-        else:
-            if time.time() > startTime + timeout:
-                print("Lane marker no longer sufficiently visible.")
+                #maybe? after the first time we assume our target heading is the one closest to our current theta_z_setpoint
+                #rotationError = min(last_object_detection[4:6], key=lambda x : abs(z_setpoint-(state_theta_z + x)))
+                z_setpoint = state_theta_z + rotationError
                 pub.publish(Float64(state_theta_z))
-                return 'failure'
+                startTime = time.time()
+                last_object_detection = []
+            else:
+                if time.time() > startTime + timeout:
+                    print("Lane marker no longer visible.")
+                    pub.publish(Float64(state_theta_z))
+                    return 'failure'
+        #when we're here we got a small error on rotation
+        success = True
+        verifications = 0
+        startTime = time.time()
+        #ensure our rotation error stays small for 10 more detections before success
+        while verifications < 10:
+            if len(last_object_detection) > 0:
+                startTime = time.time()
+                #assume target heading is the one closest to 0 degrees
+                rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
+                if abs(rotationError) > rotationTolerance:
+                    success = False
+                    break
+                else:
+                    verifications += 1
+            else:
+                if time.time() > startTime + timeout:
+                    print("Lane marker no longer visible.")
+                    pub.publish(Float64(state_theta_z))
+                    return 'failure'
 
     pub.publish(Float64(state_theta_z))
     return 'success'
@@ -91,7 +110,10 @@ def objectDetectCb(msg):
 
 def updateTheta(msg):
     global state_theta_z
-    state_theta_z = float(msg.data)
+    # freeze state_theta_z updates when we've detected a lane marker
+    # so that the rotation is somewhat synced with the image
+    if len(last_object_detection) == 0:
+        state_theta_z = float(msg.data)
 
 if __name__ == '__main__':
     rospy.init_node('navigate_lane_marker')
