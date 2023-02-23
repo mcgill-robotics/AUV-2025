@@ -23,5 +23,5 @@ def sbg_imu_cb(msg):
 
 if __name__ == '__main__':
     rospy.init_node('imu_repub')
-    rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, sbg_imu_cb)
+    rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, sbg_imu_cb, queue_size=1)
     rospy.spin()

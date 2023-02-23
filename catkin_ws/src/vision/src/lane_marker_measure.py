@@ -8,7 +8,7 @@ def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0 #remove blue color
     img_g *= 0 #remove green color
-    tolerance = 0.35
+    tolerance = 0.2
     max_red = np.max(img_r) #get largest value in red color channel
     img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
     img_r -= int(max_red*(1.0-tolerance)) #reduce all values in red color channel by a fraction of the maximum value
@@ -185,7 +185,7 @@ def getAvgColor(img, slope, direction, center_point):
     x,y = center_point[0], center_point[1]
     step = int(img.shape[1]/(2*20)) #step value
     avgColor = 0
-    i = 0 
+    i = 1 
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
         avgColor += img[y][x]
         x += step*direction

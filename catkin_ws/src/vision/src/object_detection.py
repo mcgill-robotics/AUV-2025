@@ -142,7 +142,7 @@ def detect_on_image(raw_img, camera_id):
     debug_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 60  #run the model every _ frames received (to not eat up too much RAM)
+    detect_every = 30  #run the model every _ frames received (to not eat up too much RAM)
     #count for number of images received per camera
     i = [
         0

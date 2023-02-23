@@ -6,7 +6,7 @@ driver:
   #       output frequency.
   #       The frequency can be reduced in order to reduce CPU consumption but
   #       it can lead to miss data frame and less accurate time stamping.
-  frequency: 400
+  frequency: 200
 
 # Configuration of the device with ROS.
 confWithRos: true
@@ -260,7 +260,7 @@ output:
   # Includes roll, pitch, yaw and their accuracies on each axis
   log_ekf_euler: 0
   # Includes the 4 quaternions values
-  log_ekf_quat: 8
+  log_ekf_quat: 20
   # Position and velocities in NED coordinates with the accuracies on each axis
   log_ekf_nav: 0
   # Heave, surge and sway and accelerations on each axis for up to 4 points
