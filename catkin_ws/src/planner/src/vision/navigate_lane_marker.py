@@ -15,17 +15,19 @@ def findLaneMarker(timeout=30):
 
     #surge forward until we see a lane marker or reach timeout
     pub.publish(forward)
+    print("moving forward")
     while len(last_object_detection) < 1:
         if time.time() > startTime + timeout:
             print("Did not find lane marker in time.")
             pub.publish(stop)
             return 'failure'
-    
+    print("lane marker in view!")
     pub.publish(stop)
     return 'success'
 
 def centerLaneMarker():
-    pass
+    # TODO
+    return 'success'
 
 def rotateToHeading(timeout=30):
     global last_object_detection
@@ -49,14 +51,17 @@ def rotateToHeading(timeout=30):
                 #maybe? after the first time we assume our target heading is the one closest to our current theta_z_setpoint
                 #rotationError = min(last_object_detection[4:6], key=lambda x : abs(z_setpoint-(state_theta_z + x)))
                 z_setpoint = state_theta_z + rotationError
+                print("Detection! Updating setpoint to", z_setpoint, "- current state is", state_theta_z)
                 pub.publish(Float64(state_theta_z))
                 startTime = time.time()
                 last_object_detection = []
             else:
+                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
                 if time.time() > startTime + timeout:
                     print("Lane marker no longer visible.")
                     pub.publish(Float64(state_theta_z))
                     return 'failure'
+        print("Rotational error small! Maintaining rotation to ensure it was not a fluke.")
         #when we're here we got a small error on rotation
         success = True
         verifications = 0
@@ -68,16 +73,20 @@ def rotateToHeading(timeout=30):
                 #assume target heading is the one closest to 0 degrees
                 rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
                 if abs(rotationError) > rotationTolerance:
+                    print("Detection! Rotational error large. Verirication failed. Restarting rotation.")
                     success = False
                     break
                 else:
                     verifications += 1
+                    print("Detection! Rotational error small. Verification " + str(verifications) + "/10 succeeded.")
             else:
+                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
                 if time.time() > startTime + timeout:
                     print("Lane marker no longer visible.")
                     pub.publish(Float64(state_theta_z))
                     return 'failure'
-
+    
+    print("Successfully rotated to lane marker!")
     pub.publish(Float64(state_theta_z))
     return 'success'
 
@@ -127,7 +136,9 @@ if __name__ == '__main__':
                 transitions={'success': 'success', 'failure':'failure'})
 
     last_object_detection = []
-    state_theta_z = None
+    #SET STATE_THETA_Z TO NONE WHEN TESTING WITH IMU + SETPOINTS
+    #state_theta_z = None
+    state_theta_z = 0
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
     theta_sub = rospy.Subscriber('state_theta_z', ObjectDetectionFrame, objectDetectCb)
 
