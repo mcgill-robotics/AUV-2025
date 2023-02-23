@@ -7,7 +7,7 @@ import math
 def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0 #remove blue color
-    img_g *= 0 #remove green color
+    #img_g *= 0 #remove green color
     tolerance = 0.35
     max_red = np.max(img_r) #get largest value in red color channel
     img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
@@ -17,6 +17,7 @@ def thresholdRed(img):
     img_r = np.uint8(img_r) #make array a uint8 array again (expected by cv2 merge)
     img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
+    cv2.imshow("green on", img)
     ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
     return img
 
