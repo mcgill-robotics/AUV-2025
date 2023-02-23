@@ -193,12 +193,12 @@ def getAvgColor(img, slope, direction, center_point):
         i+=1
     return avgColor/i
 
-def visualizeLaneMarker(img):
+def visualizeLaneMarker(img, debug=True):
     #crop image to lane marker
     line_thickness = 1 # in pixels
     line_length = int(0.25*img.shape[1]) #in pixels, line will be 1/4 of bounding box width
     #measure headings from lane marker
-    headings, center_point = measure_headings(img)
+    headings, center_point = measure_headings(img, debug)
     for angle in headings:
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
@@ -230,8 +230,8 @@ def visualizeLaneMarker(img):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/frame44_jpg.rf.36a74eb74ab5692f83b66d8ff2cb12c6.jpg"
+    test_image_filename = pwd + "/images/underwater_lane_marker.png"
     img = cv2.imread(test_image_filename)
-    visualizeLaneMarker(img)
+    visualizeLaneMarker(img, debug=True)
     cv2.imshow("visualization", img)
     cv2.waitKey(0)
