@@ -16,8 +16,9 @@ class Superimposer:
         self.sway = Superimposer.Degree_Of_Freedom('sway')
 
         # torque
-        self.axial_effort = Superimposer.Degree_Of_Freedom('axial_effort')
-        self.axis_of_rot = Superimposer.Axis('dtheta_state_axis')  
+        self.roll = Superimposer.Degree_Of_Freedom('roll')
+        self.pitch = Superimposer.Degree_Of_Freedom('pitch')  
+        self.yaw = Superimposer.Degree_Of_Freedom('yaw')
 
         # tf2 buffer
         self.tf_buffer = Buffer()
@@ -32,28 +33,12 @@ class Superimposer:
         # rospy.sleep(15.0)
 
     def update_effort(self, _):
-        self.header.stamp = rospy.Time(0)
-
-        # force and torque are vectors in the world ref. frame
-        # they need to be converted into the ref. frame of the robot
-        # before being published as wrench
-        force_world = Vector3(self.surge.val, self.sway.val, self.heave.val)
-        t = np.zeros(3, dtype=np.float64) \
-                if self.axis_of_rot.unit_vector is None \
-                else self.axial_effort.val * self.axis_of_rot.unit_vector
-        torque_world = Vector3(*t)
-        wrench_world = Wrench(force=force_world, torque=torque_world) 
+        # force & torque are in robot's reference frame
+        force = Vector3(self.surge.val, self.sway.val, self.heave.val)
+        torque = Vector3(self.roll.val, self.pitch.val, self.yaw.val)
+        wrench = Wrench(force=force, torque=torque) 
   
-        # transform is computed on stamped message
-        wrench_world_stmp = WrenchStamped(header=self.header, wrench=wrench_world)
-
-        try:
-            # TODO use message filters to assure tf/data is available
-            # force/torque vectors in robot's ref. frame
-            wrench_auv = self.tf_buffer.transform(wrench_world_stmp, "auv_base")
-            self.pub.publish(wrench_auv.wrench)
-        except Exception as e:
-            print(type(e), e)
+        self.pub.publish(wrench)
 
 
     class Degree_Of_Freedom:
