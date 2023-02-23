@@ -49,20 +49,33 @@ def cropToBbox(img, bbox):
     crop_img = img[y_min:y_max, x_min:x_max]
     return crop_img
 
-def visualizeLaneMarker(img, bbox):
+def measureLaneMarker(img, bbox):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
     line_thickness = 1 # in pixels
+<<<<<<< HEAD
     line_x_length = int(0.25*bbox[2]) #in pixels, line will be 1/4 of bounding box width
+=======
+    line_length = min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
+>>>>>>> 3a812ab47c981fdb912f4f041a21281743eebeb8
     #measure headings from lane marker
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
-    if None in (headings, center_point): return img
+    if None in (headings, center_point): return (None, None), (None, None), img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
     center_point = (int(center_point_x), int(center_point_y))
     for angle in headings:
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
+<<<<<<< HEAD
+=======
+        #calculate line x length from total length
+            #line_length = sqrt(line_x_length^2 + line_y_length^2)
+            #line_length^2 = line_x_length^2 + (line_x_length*slope)^2
+            #line_length^2 = line_x_length^2 * (1 + slope^2)
+            #line_x_length = sqrt(line_length^2 / (1 + slope^2))
+        line_x_length = math.sqrt((line_length ** 2) / (1 + slope ** 2))
+>>>>>>> 3a812ab47c981fdb912f4f041a21281743eebeb8
         if abs(angle) > 90: #heading goes into negative x
             line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
         else: # heading goes into positive x
@@ -80,7 +93,7 @@ def visualizeLaneMarker(img, bbox):
             lineType=cv2.LINE_AA,
         )
     cv2.circle(img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
-    return img
+    return headings, center_point, img
 
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
@@ -101,6 +114,10 @@ def detect_on_image(raw_img, camera_id):
     bounding_box_width = []
     bounding_box_height = []
     confidence = []
+    heading1 = []
+    heading2 = []
+    center_x = []
+    center_y = []
     #nested for loops get all predictions made by model
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
@@ -124,7 +141,16 @@ def detect_on_image(raw_img, camera_id):
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
             if cls_id == 0 and camera_id == 0:
-                img = visualizeLaneMarker(img, bbox)
+                headings, center, img = measureLaneMarker(img, bbox)
+                heading1.append(headings[0])
+                heading2.append(headings[1])
+                center_x.append(center[0])
+                center_y.append(center[1])
+            else:
+                heading1.append(None)
+                heading2.append(None)
+                center_x.append(None)
+                center_y.append(None)
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
@@ -136,6 +162,10 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame.bounding_box_height = bounding_box_height
     detectionFrame.confidence = confidence
     detectionFrame.camera = camera_id
+    detectionFrame.heading1 = heading1
+    detectionFrame.heading2 = heading2
+    detectionFrame.center_x = center_x
+    detectionFrame.center_y = center_y
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     img = bridge.cv2_to_imgmsg(img, "bgr8")

@@ -9,3 +9,8 @@ float64[] bounding_box_height
 float64[] confidence
 #which camera this was detected on
 uint8 camera
+#message info for lane markers (None for other objects)
+float64[] heading1
+float64[] heading2
+float64[] center_x
+float64[] center_y

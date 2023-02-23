@@ -18,8 +18,10 @@ def image_cb(raw_img, camera_name):
     global imgs
     global lastFrameTime
     #if time from when last image was received is greater than videoSaveTime we start a new video
-    if time.time() - lastFrameTime > videoSaveTime: save_images_to_video()
-    lastFrameTime = time.time()
+    if time.time() - lastFrameTime.get(camera_name, time.time()+10) > videoSaveTime: save_images_to_video(shutdown=False)
+    #save video in smaller increments (to avoid losing everything in case of crash)
+    if len(imgs.get(camera_name, [])) > maxFramesPerVideo: save_images_to_video(shutdown=False)
+    lastFrameTime[camera_name] = time.time()
     #convert sensor_msg image to cv2 image
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     #initialize image array
@@ -29,9 +31,9 @@ def image_cb(raw_img, camera_name):
 
 #called when node shuts down
 #saves all accumulated images into a new video file somewhere
-def save_images_to_video():
+def save_images_to_video(shutdown=True):
     global out
-    print("saving " + str(len(list(imgs.keys()))) + " videos to " + out)
+    #print("saving " + str(len(list(imgs.keys()))) + " videos to " + out)
     #for each camera
     for camera_name in list(imgs.keys()):
         if len(imgs.get(camera_name)) == 0: continue
@@ -42,15 +44,18 @@ def save_images_to_video():
         this_camera_filenames.append("-1") #in case there are no files, id will be set to -1 + 1 = 0
         last_used_video_id = max([int(re.search(r'\d+', f).group()) for f in this_camera_filenames])
         video_id = last_used_video_id + 1
-        video_filename = camera_name + str(video_id) + ".mp4"
-        #write the video to file system
-        height, width, colors = imgs[camera_name][0].shape
-        out = cv2.VideoWriter(out + "/" + video_filename, cv2.VideoWriter_fourcc(*'mp4v'), fps[camera_name], (width, height))
-        with open(out + "/" + video_filename + ".pickle") as f:
-            pickle.dump(imgs[camera_name], f)
-        for i in imgs[camera_name]:
-            out.write(i)
-        out.release()
+        video_filename = out + "/" + camera_name + str(video_id)
+        if shutdown: #if shutting down save as a pickle to go faster
+            #write the video as a pickle file (faster) to file system
+            with open(video_filename + ".pickle") as f:
+                pickle.dump(imgs[camera_name], f)
+        else:
+            #write the video to file system as a video (slower)
+            height, width, colors = imgs[camera_name][0].shape
+            out = cv2.VideoWriter(video_filename + ".mp4", cv2.VideoWriter_fourcc(*'mp4v'), fps[camera_name], (width, height))
+            for i in imgs[camera_name]:
+                out.write(i)
+            out.release()
         #clear image array
         imgs[camera_name] = []
 
@@ -62,9 +67,10 @@ if __name__ == '__main__':
         os.makedirs(out)
     fps = {"down":30} # fps of cameras
     imgs = {} #key = camera name, value = array of images
-    lastFrameTime = time.time()*10 #save last time a frame was received to automatically save video if feed is interrupted for a long period
+    lastFrameTime = {} #save last time a frame was received to automatically save video if feed is interrupted for a long period
     # initially a large value to make sure first frame is not saved seperately even if startup takes a while
     videoSaveTime = 2 #if 2 seconds go by with no frame received then save previous accumulated frames seperately
+    maxFramesPerVideo = fps*60 #one minute video increments
     bridge = CvBridge() #bridge is used to convert sensor_msg images to cv2 images
     rospy.init_node('record_cameras')
     #create subscriber callback for when new image is received on topic
@@ -72,3 +78,5 @@ if __name__ == '__main__':
     #add a subscriber for each camera with different argument for camera name
     rospy.on_shutdown(save_images_to_video)
     rospy.spin()
+
+        

@@ -7,7 +7,7 @@ import math
 def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0 #remove blue color
-    img_g *= 0 #remove green color
+    #img_g *= 0 #remove green color
     tolerance = 0.35
     max_red = np.max(img_r) #get largest value in red color channel
     img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
@@ -17,6 +17,7 @@ def thresholdRed(img):
     img_r = np.uint8(img_r) #make array a uint8 array again (expected by cv2 merge)
     img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
+    cv2.imshow("green on", img)
     ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
     return img
 
@@ -193,19 +194,27 @@ def getAvgColor(img, slope, direction, center_point):
         i+=1
     return avgColor/i
 
-def visualizeLaneMarker(img):
+def visualizeLaneMarker(img, debug=True):
     #crop image to lane marker
     line_thickness = 1 # in pixels
-    line_x_length = int(150) #in pixels, line will be 1/2 of bounding box width
+    line_length = int(0.25*img.shape[1]) #in pixels, line will be 1/4 of bounding box width
     #measure headings from lane marker
-    headings, center_point = measure_headings(img)
-    for slope in headings:
+    headings, center_point = measure_headings(img, debug)
+    for angle in headings:
         #get angle, line start and line end from heading slope
-        angle = -1*math.degrees(math.atan(slope))
-        line_start = (int(max(center_point[0]-line_x_length/2, 0)), int(max(center_point[1] - slope*(line_x_length/2), 0))) # (x,y)
-        line_end = (int(center_point[0]+line_x_length/2), int(center_point[1] + slope*(line_x_length/2))) # (x,y)
+        slope = math.tan((angle/-180)*math.pi)
+        #calculate line x length from total length
+            #line_length = sqrt(line_x_length^2 + line_y_length^2)
+            #line_length^2 = line_x_length^2 + (line_x_length*slope)^2
+            #line_length^2 = line_x_length^2 * (1 + slope^2)
+            #line_x_length = sqrt(line_length^2 / (1 + slope^2))
+        line_x_length = math.sqrt((line_length ** 2) / (1 + slope ** 2))
+        if abs(angle) > 90: #heading goes into negative x
+            line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
+        else: # heading goes into positive x
+            line_end = (int(center_point[0]+line_x_length), int(center_point[1] + slope*line_x_length)) # (x,y)
         #draw line on original image
-        cv2.line(img, line_start, line_end, (0, 0, 255) , line_thickness)
+        cv2.line(img, center_point, line_end, (0,0,255), line_thickness)
         #add text with measured angle of line at the end of the line
         cv2.putText(
             img,
@@ -222,7 +231,8 @@ def visualizeLaneMarker(img):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/frame44_jpg.rf.36a74eb74ab5692f83b66d8ff2cb12c6.jpg"
+    test_image_filename = pwd + "/images/underwater_lane_marker.png"
     img = cv2.imread(test_image_filename)
-    headings, center_point = measure_headings(img, debug=False)
-    print([str(h) + " deg." for h in headings], center_point)
+    visualizeLaneMarker(img, debug=True)
+    cv2.imshow("visualization", img)
+    cv2.waitKey(0)
