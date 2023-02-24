@@ -8,7 +8,7 @@ def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
     img_b *= 0 #remove blue color
     #img_g *= 0 #remove green color
-    tolerance = 0.35
+    tolerance = 0.5
     max_red = np.max(img_r) #get largest value in red color channel
     img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
     img_r -= int(max_red*(1.0-tolerance)) #reduce all values in red color channel by a fraction of the maximum value
@@ -17,7 +17,6 @@ def thresholdRed(img):
     img_r = np.uint8(img_r) #make array a uint8 array again (expected by cv2 merge)
     img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
-    cv2.imshow("green on", img)
     ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
     return img
 
@@ -26,7 +25,9 @@ def getIntersection(l1, l2):
     #if m, m' are slopes and b, b' are intercepts the intersection is at x which satisfies:
     #mx+b=m'x+b'
     #mx-m'x=b'-b
-    #x=(b'-b)/(m-m') 
+    #x=(b'-b)/(m-m')
+    if l1[0]-l2[0] == 0:
+        return (0, 0)
     int_x = (l2[1]-l1[1])/(l1[0]-l2[0])
     #y=mx+b
     int_y = int_x*l2[0] + l2[1]
@@ -186,7 +187,7 @@ def getAvgColor(img, slope, direction, center_point):
     x,y = center_point[0], center_point[1]
     step = int(img.shape[1]/(2*20)) #step value
     avgColor = 0
-    i = 0 
+    i = 1 
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
         avgColor += img[y][x]
         x += step*direction

@@ -53,11 +53,7 @@ def measureLaneMarker(img, bbox):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
     line_thickness = 1 # in pixels
-<<<<<<< HEAD
-    line_x_length = int(0.25*bbox[2]) #in pixels, line will be 1/4 of bounding box width
-=======
     line_length = min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
->>>>>>> 3a812ab47c981fdb912f4f041a21281743eebeb8
     #measure headings from lane marker
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return (None, None), (None, None), img
@@ -67,15 +63,12 @@ def measureLaneMarker(img, bbox):
     for angle in headings:
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
-<<<<<<< HEAD
-=======
         #calculate line x length from total length
             #line_length = sqrt(line_x_length^2 + line_y_length^2)
             #line_length^2 = line_x_length^2 + (line_x_length*slope)^2
             #line_length^2 = line_x_length^2 * (1 + slope^2)
             #line_x_length = sqrt(line_length^2 / (1 + slope^2))
         line_x_length = math.sqrt((line_length ** 2) / (1 + slope ** 2))
->>>>>>> 3a812ab47c981fdb912f4f041a21281743eebeb8
         if abs(angle) > 90: #heading goes into negative x
             line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
         else: # heading goes into positive x
@@ -105,6 +98,9 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
+    thresh_img = lane_marker_measure.thresholdRed(img)
+    thresh_img = bridge.cv2_to_imgmsg(thresh_img, "mono8")
+    debug_lm.publish(thresh_img)
     #run model on img
     detections = model[camera_id](img)
     #initialize empty arrays for object detection frame message
@@ -196,6 +192,7 @@ if __name__ == '__main__':
     debug_pubs = [
         rospy.Publisher('vision/down_visual', Image, queue_size=1)
         ]
+    debug_lm = rospy.Publisher('vision/thresh_lane_marker', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
