@@ -98,11 +98,12 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
+    #output thresholded image for debugging purposes
     thresh_img = lane_marker_measure.thresholdRed(img)
     thresh_img = bridge.cv2_to_imgmsg(thresh_img, "mono8")
-    debug_lm.publish(thresh_img)
+    thresh_pub.publish(thresh_img)
     #run model on img
-    detections = model[camera_id](img)
+    detections = model[camera_id].predict(img, device=0) #change device for cuda
     #initialize empty arrays for object detection frame message
     label = []
     bounding_box_x = []
@@ -165,10 +166,24 @@ def detect_on_image(raw_img, camera_id):
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     img = bridge.cv2_to_imgmsg(img, "bgr8")
-    debug_pubs[camera_id].publish(img)
+    visualisation_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 60  #run the model every _ frames received (to not eat up too much RAM)
+    detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
+    #only report predictions with confidence at least 40%
+    min_prediction_confidence = 0.6
+    #bridge is used to convert sensor_msg images to cv2
+    bridge = CvBridge()
+    #get and start models
+    pwd = os.path.realpath(os.path.dirname(__file__))
+    #init nodes and publishers/subscribers for each camera
+    rospy.init_node('object_detection')
+    
+    #CHANGE FOR NEW CAMERAS/MODELS:
+    down_cam_model_filename = pwd + "/models/model_v2.pt"
+    model = [
+        YOLO(down_cam_model_filename)
+        ]
     #count for number of images received per camera
     i = [
         0
@@ -176,27 +191,16 @@ if __name__ == '__main__':
     class_names = [ #one array per camera, name index should be class id
         ["Lane Marker"]
         ]
-    #only report predictions with confidence at least 40%
-    min_prediction_confidence = 0.6
-    #bridge is used to convert sensor_msg images to cv2
-    bridge = CvBridge()
-    #get and start models
-    pwd = os.path.realpath(os.path.dirname(__file__))
-    down_cam_model_filename = pwd + "/last.pt"
-    model = [
-        YOLO(down_cam_model_filename)
-        ]
-    #init nodes and publishers/subscribers for each camera
-    rospy.init_node('object_detection')
     #one publisher per camera
-    debug_pubs = [
+    visualisation_pubs = [
         rospy.Publisher('vision/down_visual', Image, queue_size=1)
         ]
-    debug_lm = rospy.Publisher('vision/thresh_lane_marker', Image, queue_size=1)
-    pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
         ]
+        
+    thresh_pub = rospy.Publisher('vision/lane_marker_threshold', Image, queue_size=1)
+    pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()

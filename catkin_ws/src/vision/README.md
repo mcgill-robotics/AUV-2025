@@ -22,13 +22,15 @@ The source code is released under a GPLv3 license.
 | ------ | ------- | ---------- |
 | `/vision/viewframe_detection` | `auv_msgs/ObjectDetectionFrame` | Bounding box, confidence, class id, and camera on which detection was made of all objects in the viewframe of the AUV |
 | `/vision/down_visual` | `sensor_msgs/Image` | Visualization of all detections on the downwards camera of the AUV |
+| `/vision/lane_marker_threshold` | `sensor_msgs/Image` | Visualization of thresholding to identify pixels that belong to a lane marker on the downwards camera input image |
 
 ### Subscribed Topics
 
 | Topic | Message | description |
 | ------ | ------- | ---------- |
 | `/vision/down_cam/image_raw` | `sensor_msgs/Image` | Images taken by the downwards camera |
-
+| `/vision/down_visual` | `sensor_msgs/Image` | Visualization of all detections on the downwards camera of the AUV |
+| `/vision/lane_marker_threshold` | `sensor_msgs/Image` | Visualization of thresholding to identify pixels that belong to a lane marker on the downwards camera input image |
 
 ## Installation
 
@@ -38,15 +40,18 @@ The source code is released under a GPLv3 license.
 - `auv_msgs`
 - `sensor_msgs`
 - `ultralytics`
+- `pickle5`
 - `opencv-python`
 - `ros-noetic-cv-bridge`
 - `ros-noetic-usb-cam`
 - `ros-noetic-image-view`
+- `ros-noetic-rqt-gui`
+- `ros-noetic-rqt-gui-image-view`
 
 ### Building
 
 	source /opt/ros/noetic/setup.bash
-	cd <AUV-2020>/catkin_ws/src
+	cd <AUV-2023>/catkin_ws/src
 	catkin build vision
 
 After build is complete, make the packages visible to ROS
@@ -61,16 +66,11 @@ Launch all package nodes
 
 	roslaunch vision vision.launch
 
-Launch object detection node
+Launch object detection node and rqt-gui with vision perspective loaded
 
 	roslaunch vision object_detection.launch
 
-Launch camera recording node (records camera feeds to file system as video files)
+Launch feed recording node (records feeds to file system as video files in one minute increments)
 
-	roslaunch vision record_cameras.launch
+	roslaunch vision record_feeds.launch
 	
-### Usage
-
-View the object detection visualization for downward camera: (ensure node is running first)
-	
-	rosrun image_view image_view image:=vision/down_visual
