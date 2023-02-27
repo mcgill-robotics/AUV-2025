@@ -2,14 +2,26 @@ import cv2
 import os
 import numpy as np
 import math
-from colormath.color_objects import sRGBColor, LabColor
-from colormath.color_conversions import convert_color
-from colormath.color_diff import delta_e_cie2000
+from sklearn.cluster import KMeans
+
+
+def get_colors(img):
+    flat_img = np.reshape(img,(-1,3))
+    kmeans = KMeans(n_clusters=10,n_init='auto')
+    kmeans.fit(flat_img)
+    dominant_colors = np.array(kmeans.cluster_centers_,dtype='uint')
+    percentages = (np.unique(kmeans.labels_,return_counts=True)[1])/flat_img.shape[0]
+    p_and_c = zip(percentages,dominant_colors)
+    colors = []
+    for p,c in p_and_c:
+        if p > 0.1:
+            colors.append(c)
+    return np.array(colors)
 
 #return True if basically the same color
 #otherwise return False
 #assuming color in BGR
-def areTheSame(c1, c2, tolerance=0.7):
+def areTheSame(c1, c2, tolerance=0.55):
     for i in (0, 1, 2):
         if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-tolerance):
             return False
@@ -17,10 +29,13 @@ def areTheSame(c1, c2, tolerance=0.7):
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
-    img_b, img_g, img_r = cv2.split(img) #split by channel
+    colors = get_colors(img)
+    img_b, img_g, img_r = colors[:, 0], colors[:, 1], colors[:, 2] #split by channel
     ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
-    max_pixel = img[math.floor(max_i/img.shape[1])][max_i%img.shape[1]]
+    max_pixel = colors[max_i]
+    #max_pixel = img[math.floor(max_i/colors.shape[1])][max_i%colors.shape[1]]
+
     def mask(x):
         #return black (0,0,0) if similar to max_red within tolerance
         #otherwise return white (255,255,255)
@@ -256,7 +271,7 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/lm (4).png"
+    test_image_filename = pwd + "/images/lm (5).png"
     img = cv2.imread(test_image_filename)
     visualizeLaneMarker(img, debug=True)
     cv2.imshow("visualization", img)
