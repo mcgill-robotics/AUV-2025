@@ -27,7 +27,7 @@ def getIntersection(l1, l2):
     #mx-m'x=b'-b
     #x=(b'-b)/(m-m')
     if l1[0]-l2[0] == 0:
-        return (0, 0)
+        return None
     int_x = (l2[1]-l1[1])/(l1[0]-l2[0])
     #y=mx+b
     int_y = int_x*l2[0] + l2[1]
@@ -40,6 +40,7 @@ def getCenterPoint(lines, img, debug):
     int1 = getIntersection(lines[0][0], lines[1][0])
     #get intersection between the two lower lines
     int2 = getIntersection(lines[0][1], lines[1][1])
+    if None in (int1, int2): return None
     #get point halfway between the two intersections
     centerPoint = (int((int1[0]+int2[0])/2), int((int1[1]+int2[1])/2))
     if debug:
@@ -77,8 +78,9 @@ def measure_headings(img, debug=False):
     #only want up to 4 slopes (one per side of the lane marker)
     while len(lines) < 4:
         if debug:
-            cv2.imshow("remaining edges", edges)
-            cv2.waitKey(0)
+            #cv2.imshow("remaining edges", edges)
+            #cv2.waitKey(0)
+            pass
         #find most prominent line in the image
         line = cv2.HoughLines(edges,1,np.pi/180,10)
         # we use a try statement in case no lines are found
@@ -105,15 +107,18 @@ def measure_headings(img, debug=False):
                 intercept = y1-slope*x1
                 lines.append((slope, intercept))
                 #draw the new line we found on top of the original image
-                if debug: cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
+                if debug: 
+                    #cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
+                    pass
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),10)
         except TypeError:
             break
     if debug:
-        cv2.imshow("with lines", img)
-        cv2.waitKey(0)
+        #cv2.imshow("with lines", img)
+        #cv2.waitKey(0)
+        pass
     #combine the 4 lines into 2 most different lines
     finalLines = []
     #array to hold the 4 lines, organized by heading (2 lines per heading, upper and lower)
@@ -144,6 +149,7 @@ def measure_headings(img, debug=False):
     
     #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
     centerPoint = getCenterPoint(laneEdgeLines, img, debug)
+    if centerPoint == None: return None, None
     avgs = []
     for slope in finalLines:
         negAvg = getAvgColor(thresh_img, slope, -1, centerPoint)
@@ -201,6 +207,7 @@ def visualizeLaneMarker(img, debug=True):
     line_length = int(0.25*img.shape[1]) #in pixels, line will be 1/4 of bounding box width
     #measure headings from lane marker
     headings, center_point = measure_headings(img, debug)
+    if None in (headings, center_point): return img
     for angle in headings:
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
@@ -232,7 +239,7 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/underwater_lane_marker.png"
+    test_image_filename = pwd + "/images/lm (2).png"
     img = cv2.imread(test_image_filename)
     visualizeLaneMarker(img, debug=True)
     cv2.imshow("visualization", img)
