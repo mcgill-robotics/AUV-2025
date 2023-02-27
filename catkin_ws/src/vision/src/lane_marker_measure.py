@@ -2,21 +2,13 @@ import cv2
 import os
 import numpy as np
 import math
-from sklearn.cluster import KMeans
-
+from util.k_means import KMeans
 
 def get_colors(img):
-    flat_img = np.reshape(img,(-1,3))
-    kmeans = KMeans(n_clusters=10,n_init='auto')
-    kmeans.fit(flat_img)
-    dominant_colors = np.array(kmeans.cluster_centers_,dtype='uint')
-    percentages = (np.unique(kmeans.labels_,return_counts=True)[1])/flat_img.shape[0]
-    p_and_c = zip(percentages,dominant_colors)
-    colors = []
-    for p,c in p_and_c:
-        if p > 0.1:
-            colors.append(c)
-    return np.array(colors)
+    flat_img = np.reshape(img,(-1,3)) / 255
+    kmeans = KMeans(n_clusters=10, max_iter=10, init_method='var_part')
+    clusters, centers = kmeans.fit(flat_img)
+    return np.array(clusters*255)
 
 #return True if basically the same color
 #otherwise return False
@@ -223,12 +215,14 @@ def measure_headings(img, debug=False):
 
 def getAvgColor(img, slope, direction, center_point):
     x,y = center_point[0], center_point[1]
-    step = int(img.shape[1]/(2*20)) #step value
+    step = img.shape[1]/(2*20) #step value
+    if slope >1: #big slopes 
+        step=step*(1/slope)
     avgColor = 0
     i = 1 
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
         avgColor += img[y][x]
-        x += step*direction
+        x += int(step*direction)
         y += int(slope*step*direction)
         i+=1
     return avgColor/i
@@ -271,8 +265,8 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/lm (5).png"
+    test_image_filename = pwd + "/images/lm (7).png"
     img = cv2.imread(test_image_filename)
-    visualizeLaneMarker(img, debug=True)
+    visualizeLaneMarker(img, debug=False)
     cv2.imshow("visualization", img)
     cv2.waitKey(0)
