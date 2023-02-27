@@ -5,7 +5,10 @@ import math
 from util.k_means import KMeans
 
 def get_colors(img):
-    flat_img = np.reshape(img,(-1,3)) / 255
+    resize_amt = 0.1
+    reduced_size = (int(img.shape[0]*resize_amt), int(img.shape[1]*resize_amt))
+    resized = cv2.resize(img, (reduced_size), interpolation = cv2.INTER_AREA)
+    flat_img = np.reshape(resized,(-1,3)) / 255
     kmeans = KMeans(n_clusters=10, max_iter=10, init_method='var_part')
     clusters, centers = kmeans.fit(flat_img)
     return np.array(clusters*255)
