@@ -2,23 +2,40 @@ import cv2
 import os
 import numpy as np
 import math
+from colormath.color_objects import sRGBColor, LabColor
+from colormath.color_conversions import convert_color
+from colormath.color_diff import delta_e_cie2000
+
+#return True if basically the same color
+#otherwise return False
+#assuming color in BGR
+def areTheSame(c1, c2, tolerance=0.7):
+    for i in (0, 1, 2):
+        if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-tolerance):
+            return False
+    return True
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
     img_b, img_g, img_r = cv2.split(img) #split by channel
-    img_b *= 0 #remove blue color
-    #img_g *= 0 #remove green color
-    tolerance = 0.5
-    max_red = np.max(img_r) #get largest value in red color channel
-    img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
-    img_r -= int(max_red*(1.0-tolerance)) #reduce all values in red color channel by a fraction of the maximum value
-            #this makes it so that only the largest values (within the tolerance) in the red channel will still be positive
-    np.clip(img_r, 0, 255, out=img_r) #clip all negative values to 0
-    img_r = np.uint8(img_r) #make array a uint8 array again (expected by cv2 merge)
-    img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
-    ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
-    return img
+    ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
+    max_i = np.argmax(ratio_img) #get largest value in red color channel
+    max_pixel = img[math.floor(max_i/img.shape[1])][max_i%img.shape[1]]
+    def mask(x):
+        #return black (0,0,0) if similar to max_red within tolerance
+        #otherwise return white (255,255,255)
+        if areTheSame(x, max_pixel):
+            return (0,0,0)
+        else:
+            return (255,255,255)
+    thresh_img = np.uint8(np.zeros(img.shape))
+    for r in range(len(img)):
+        for p in range(len(img[r])):
+            thresh_img[r][p] = mask(img[r][p])
+    thresh_img = cv2.blur(thresh_img, (int(0.06*thresh_img.shape[0]),int(0.06*thresh_img.shape[1])))     
+    thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
+    ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
+    return thresh_img
 
 #return the intersection point of two lines of the form (slope, y intercept)
 def getIntersection(l1, l2):
@@ -78,8 +95,8 @@ def measure_headings(img, debug=False):
     #only want up to 4 slopes (one per side of the lane marker)
     while len(lines) < 4:
         if debug:
-            #cv2.imshow("remaining edges", edges)
-            #cv2.waitKey(0)
+            cv2.imshow("remaining edges", edges)
+            cv2.waitKey(0)
             pass
         #find most prominent line in the image
         line = cv2.HoughLines(edges,1,np.pi/180,10)
@@ -239,7 +256,7 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/lm (2).png"
+    test_image_filename = pwd + "/images/lm (4).png"
     img = cv2.imread(test_image_filename)
     visualizeLaneMarker(img, debug=True)
     cv2.imshow("visualization", img)
