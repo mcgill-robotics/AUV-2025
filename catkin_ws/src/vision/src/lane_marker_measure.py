@@ -3,10 +3,16 @@ import os
 import numpy as np
 import math
 
+downscale_amt = 0.2
+color_tolerance = 0.35
+blur1_amt = 0.1
+blur2_amt = 0.06
+
+
 #return True if basically the same color
 #otherwise return False
 #assuming color in BGR
-def areTheSame(c1, c2, tolerance=0.55):
+def areTheSame(c1, c2, tolerance=color_tolerance):
     for i in (0, 1, 2):
         if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-tolerance):
             return False
@@ -14,8 +20,8 @@ def areTheSame(c1, c2, tolerance=0.55):
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
-    downscaled = cv2.resize(img, dsize=(int(img.shape[1]*0.25), int(img.shape[0]*0.25)), interpolation=cv2.INTER_AREA)
-    blurred = cv2.blur(downscaled, (int(0.1*downscaled.shape[0]),int(0.1*downscaled.shape[1])))
+    downscaled = cv2.resize(img, dsize=(int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt)), interpolation=cv2.INTER_AREA)
+    blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
     img_b, img_g, img_r = cv2.split(blurred)
     ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
@@ -33,7 +39,7 @@ def thresholdRed(img):
         for p in range(len(downscaled[r])):
             thresh_img[r][p] = mask(downscaled[r][p])
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
-    thresh_img = cv2.blur(thresh_img, (int(0.06*thresh_img.shape[0]),int(0.06*thresh_img.shape[1])))     
+    thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
     ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
     return thresh_img
@@ -82,11 +88,13 @@ def angleBetweenLines(l1, l2):
 #i.e should return two slopes
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
-def measure_headings(img, debug=False):
+def measure_headings(img, debug=False, publisher=None):
     if debug:
         cv2.imshow("original", img)
         cv2.waitKey(0)
     thresh_img = thresholdRed(img)
+    if publisher != None:
+	    publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "mono8"))
     if debug:
         cv2.imshow("thresholded/black and white", thresh_img)
         cv2.waitKey(0)

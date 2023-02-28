@@ -55,7 +55,7 @@ def measureLaneMarker(img, bbox):
     line_thickness = 1 # in pixels
     line_length = min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
     #measure headings from lane marker
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img)
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img, publisher=None)
     if None in (headings, center_point): return (None, None), (None, None), img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
@@ -98,10 +98,6 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
-    #output thresholded image for debugging purposes
-    thresh_img = lane_marker_measure.thresholdRed(img)
-    thresh_img = bridge.cv2_to_imgmsg(thresh_img, "mono8")
-    thresh_pub.publish(thresh_img)
     #run model on img
     detections = model[camera_id].predict(img, device=0) #change device for cuda
     #initialize empty arrays for object detection frame message
@@ -137,7 +133,7 @@ def detect_on_image(raw_img, camera_id):
             confidence.append(conf) 
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
-            if cls_id == 0 and camera_id == 0:
+            if cls_id == 0 and camera_id == 0 and False:
                 headings, center, img = measureLaneMarker(img, bbox)
                 heading1.append(headings[0])
                 heading2.append(headings[1])
