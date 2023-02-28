@@ -2,23 +2,50 @@ import cv2
 import os
 import numpy as np
 import math
+from util.k_means import KMeans
+
+def get_colors(img):
+    resize_amt = 0.1
+    reduced_size = (int(img.shape[0]*resize_amt), int(img.shape[1]*resize_amt))
+    resized = cv2.resize(img, (reduced_size), interpolation = cv2.INTER_AREA)
+    flat_img = np.reshape(resized,(-1,3)) / 255
+    kmeans = KMeans(n_clusters=10, max_iter=10, init_method='var_part')
+    clusters, centers = kmeans.fit(flat_img)
+    return np.array(clusters*255)
+
+#return True if basically the same color
+#otherwise return False
+#assuming color in BGR
+def areTheSame(c1, c2, tolerance=0.55):
+    for i in (0, 1, 2):
+        if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-tolerance):
+            return False
+    return True
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
-    img_b, img_g, img_r = cv2.split(img) #split by channel
-    img_b *= 0 #remove blue color
-    #img_g *= 0 #remove green color
-    tolerance = 0.5
-    max_red = np.max(img_r) #get largest value in red color channel
-    img_r = np.uint16(img_r) #convert array to uint16 to avoid under/overflow
-    img_r -= int(max_red*(1.0-tolerance)) #reduce all values in red color channel by a fraction of the maximum value
-            #this makes it so that only the largest values (within the tolerance) in the red channel will still be positive
-    np.clip(img_r, 0, 255, out=img_r) #clip all negative values to 0
-    img_r = np.uint8(img_r) #make array a uint8 array again (expected by cv2 merge)
-    img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
-    ret,img = cv2.threshold(img,70,255,0) #convert grayscale to black and white with a threshold
-    return img
+    colors = get_colors(img)
+    img_b, img_g, img_r = colors[:, 0], colors[:, 1], colors[:, 2] #split by channel
+    ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
+    max_i = np.argmax(ratio_img) #get largest value in red color channel
+    max_pixel = colors[max_i]
+    #max_pixel = img[math.floor(max_i/colors.shape[1])][max_i%colors.shape[1]]
+
+    def mask(x):
+        #return black (0,0,0) if similar to max_red within tolerance
+        #otherwise return white (255,255,255)
+        if areTheSame(x, max_pixel):
+            return (0,0,0)
+        else:
+            return (255,255,255)
+    thresh_img = np.uint8(np.zeros(img.shape))
+    for r in range(len(img)):
+        for p in range(len(img[r])):
+            thresh_img[r][p] = mask(img[r][p])
+    thresh_img = cv2.blur(thresh_img, (int(0.06*thresh_img.shape[0]),int(0.06*thresh_img.shape[1])))     
+    thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
+    ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
+    return thresh_img
 
 #return the intersection point of two lines of the form (slope, y intercept)
 def getIntersection(l1, l2):
@@ -78,8 +105,8 @@ def measure_headings(img, debug=False):
     #only want up to 4 slopes (one per side of the lane marker)
     while len(lines) < 4:
         if debug:
-            #cv2.imshow("remaining edges", edges)
-            #cv2.waitKey(0)
+            cv2.imshow("remaining edges", edges)
+            cv2.waitKey(0)
             pass
         #find most prominent line in the image
         line = cv2.HoughLines(edges,1,np.pi/180,10)
@@ -191,12 +218,14 @@ def measure_headings(img, debug=False):
 
 def getAvgColor(img, slope, direction, center_point):
     x,y = center_point[0], center_point[1]
-    step = int(img.shape[1]/(2*20)) #step value
+    step = img.shape[1]/(2*20) #step value
+    if slope >1: #big slopes 
+        step=step*(1/slope)
     avgColor = 0
     i = 1 
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
         avgColor += img[y][x]
-        x += step*direction
+        x += int(step*direction)
         y += int(slope*step*direction)
         i+=1
     return avgColor/i
@@ -239,8 +268,8 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/lm (2).png"
+    test_image_filename = pwd + "/images/lm (7).png"
     img = cv2.imread(test_image_filename)
-    visualizeLaneMarker(img, debug=True)
+    visualizeLaneMarker(img, debug=False)
     cv2.imshow("visualization", img)
     cv2.waitKey(0)
