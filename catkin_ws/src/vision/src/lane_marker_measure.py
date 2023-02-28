@@ -2,16 +2,6 @@ import cv2
 import os
 import numpy as np
 import math
-from util.k_means import KMeans
-
-def get_colors(img):
-    resize_amt = 0.1
-    reduced_size = (int(img.shape[0]*resize_amt), int(img.shape[1]*resize_amt))
-    resized = cv2.resize(img, (reduced_size), interpolation = cv2.INTER_AREA)
-    flat_img = np.reshape(resized,(-1,3)) / 255
-    kmeans = KMeans(n_clusters=10, max_iter=10, init_method='var_part')
-    clusters, centers = kmeans.fit(flat_img)
-    return np.array(clusters*255)
 
 #return True if basically the same color
 #otherwise return False
@@ -24,12 +14,12 @@ def areTheSame(c1, c2, tolerance=0.55):
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
-    colors = get_colors(img)
-    img_b, img_g, img_r = colors[:, 0], colors[:, 1], colors[:, 2] #split by channel
+    downscaled = cv2.resize(img, dsize=(int(img.shape[1]*0.25), int(img.shape[0]*0.25)), interpolation=cv2.INTER_AREA)
+    blurred = cv2.blur(downscaled, (int(0.1*downscaled.shape[0]),int(0.1*downscaled.shape[1])))
+    img_b, img_g, img_r = cv2.split(blurred)
     ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
-    max_pixel = colors[max_i]
-    #max_pixel = img[math.floor(max_i/colors.shape[1])][max_i%colors.shape[1]]
+    max_pixel = blurred[math.floor(max_i/blurred.shape[1])][max_i%blurred.shape[1]]
 
     def mask(x):
         #return black (0,0,0) if similar to max_red within tolerance
@@ -38,10 +28,11 @@ def thresholdRed(img):
             return (0,0,0)
         else:
             return (255,255,255)
-    thresh_img = np.uint8(np.zeros(img.shape))
-    for r in range(len(img)):
-        for p in range(len(img[r])):
-            thresh_img[r][p] = mask(img[r][p])
+    thresh_img = np.uint8(np.zeros(downscaled.shape))
+    for r in range(len(downscaled)):
+        for p in range(len(downscaled[r])):
+            thresh_img[r][p] = mask(downscaled[r][p])
+    thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
     thresh_img = cv2.blur(thresh_img, (int(0.06*thresh_img.shape[0]),int(0.06*thresh_img.shape[1])))     
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
     ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
@@ -219,7 +210,7 @@ def measure_headings(img, debug=False):
 def getAvgColor(img, slope, direction, center_point):
     x,y = center_point[0], center_point[1]
     step = img.shape[1]/(2*20) #step value
-    if slope >1: #big slopes 
+    if slope > 1: #big slopes 
         step=step*(1/slope)
     avgColor = 0
     i = 1 
@@ -268,8 +259,9 @@ def visualizeLaneMarker(img, debug=True):
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
     pwd = os.path.realpath(os.path.dirname(__file__))
-    test_image_filename = pwd + "/images/lm (7).png"
-    img = cv2.imread(test_image_filename)
-    visualizeLaneMarker(img, debug=False)
-    cv2.imshow("visualization", img)
-    cv2.waitKey(0)
+    for img_i in [1,2,3,4,5,6,7]:
+        test_image_filename = pwd + "/images/lm (" + str(img_i) + ").png"
+        img = cv2.imread(test_image_filename)
+        visualizeLaneMarker(img, debug=False)
+        cv2.imshow("visualization " + str(img_i), img)
+        cv2.waitKey(0)
