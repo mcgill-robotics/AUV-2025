@@ -6,6 +6,10 @@ from auv_msgs.msg import ObjectDetectionFrame
 from std_msgs.msg import Float64
 import time
 
+targetScale = 0.5
+heave_p_value = 10
+
+
 #move until a lane marker is detected
 def findLaneMarker(timeout=30):
     startTime = time.time()
@@ -25,11 +29,87 @@ def findLaneMarker(timeout=30):
     pub.publish(stop)
     return 'success'
 
-def centerLaneMarker():
-    # TODO
+def scaleLaneMarker(timeout=5):
+    global last_object_detection
+    scalingError = 9999
+    scalingTolerance = 0.05 #ratio
+    startTime = time.time()
+    laneMarkerInView = False
+    success = False
+    pub = rospy.Publisher('/heave', Float64, queue_size=5, latch=True)
+    
+    
+    while abs(scalingError) > scalingTolerance:
+        if len(last_object_detection) > 0:
+            
+            
+            width = last_object_detection[2]
+            height = last_object_detection[3]
+            currentScale = max(width, height)
+            scalingError = abs(currentScale - targetScale)
+           
+            heaveValue = (currentScale - targetScale)*heave_p_value
+            
+            pub.publish(Float64(heaveValue))
+            startTime = time.time()
+            last_object_detection = []
+        else:
+            print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
+            if time.time() > startTime + timeout:
+                print("Lane marker no longer visible.")
+                pub.publish(Float64(0))
+                return 'failure'
+
+        
+    
+    print("Successfully rotated to lane marker!")
+    pub.publish(Float64(0))
     return 'success'
 
-def rotateToHeading(timeout=30):
+
+def centerLaneMarker():    
+    global last_object_detection
+    centeringError = 9999
+    centeringTolerance = 0.05 #ratio
+    startTime = time.time()
+    laneMarkerInView = False
+    success = False
+    pubx = rospy.Publisher('/surge', Float64, queue_size=5, latch=True)
+    puby = rospy.Publisher('/sway', Float64, queue_size=5, latch=True)
+    
+    
+    while abs(centeringError) > centeringTolerance:
+        if len(last_object_detection) > 0:
+            
+            
+            width = last_object_detection[2]
+            height = last_object_detection[3]
+            currentScale = max(width, height)
+            scalingError = abs(currentScale - targetScale)
+           
+            heaveValue = (currentScale - targetScale)*heave_p_value
+            
+            pub.publish(Float64(heaveValue))
+            startTime = time.time()
+            last_object_detection = []
+        else:
+            print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
+            if time.time() > startTime + timeout:
+                print("Lane marker no longer visible.")
+                pub.publish(Float64(0))
+                return 'failure'
+
+        
+    
+    print("Successfully rotated to lane marker!")
+    pub.publish(Float64(0))
+    return 'success'
+
+def rotateToHeading(timeout=5):
+    #TEMPORARY
+    return "success"
+    
+    
     global last_object_detection
     rotationError = 9999
     rotationTolerance = 5 #in degrees
@@ -129,7 +209,9 @@ if __name__ == '__main__':
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find', findLaneMarker(),
-                transitions={'success': 'center', 'failure':'failure'})
+                transitions={'success': 'scale', 'failure':'failure'})
+        smach.StateMachine.add('scale', scaleLaneMarker(), 
+                transitions={'success': 'rotate', 'failure':'failure'})
         smach.StateMachine.add('center', centerLaneMarker(), 
                 transitions={'success': 'rotate', 'failure':'failure'})
         smach.StateMachine.add('rotate', rotateToHeading(), 
