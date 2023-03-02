@@ -5,9 +5,31 @@ import math
 
 
 downscale_amt = None
-color_tolerance = None
 blur1_amt = None
+color_tolerance = None
 blur2_amt = None
+
+downscale_publisher = None
+blur1_publisher = None
+tol_publisher = None
+blur2_publisher = None
+thresh_publisher = None
+
+def setDownscalePublisher(pub):
+    global downscale_publisher
+    downscale_publisher = pub
+def setBlur1Publisher(pub):
+    global blur1_publisher
+    blur1_publisher = pub
+def setTolerancePublisher(pub):
+    global tol_publisher
+    tol_publisher = pub
+def setBlur2Publisher(pub):
+    global blur2_publisher
+    blur2_publisher = pub
+def setThreshPublisher(pub):
+    global thresh_publisher
+    thresh_publisher = pub
 
 #return True if basically the same color
 #otherwise return False
@@ -21,7 +43,9 @@ def areTheSame(c1, c2):
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img):
     downscaled = cv2.resize(img, dsize=(int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt)), interpolation=cv2.INTER_AREA)
+    if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
     blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
+    if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
     img_b, img_g, img_r = cv2.split(blurred)
     ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
@@ -38,10 +62,13 @@ def thresholdRed(img):
     for r in range(len(downscaled)):
         for p in range(len(downscaled[r])):
             thresh_img[r][p] = mask(downscaled[r][p])
+    if tol_publisher != None: tol_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
     thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
+    if blur2_publisher != None: blur2_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
     ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
+    if thresh_publisher != None: thresh_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "mono8")) #FOR ADJUSTING VALUES
     return thresh_img
 
 #return the intersection point of two lines of the form (slope, y intercept)
@@ -110,15 +137,13 @@ def getParameters():
 #i.e should return two slopes
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
-def measure_headings(img, debug=False, publisher=None):
+def measure_headings(img, debug=False):
     getParameters()
     if debug:
         cv2.imshow("original", img)
         cv2.waitKey(0)
     thresh_img = thresholdRed(img)
-    if publisher != None:
-	    publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "mono8"))
-    if debug or publisher==True:
+    if debug:
         cv2.imshow("thresholded/black and white", thresh_img)
         cv2.waitKey(0)
     #get edges of thresholded image (should get the edges of the lane marker)

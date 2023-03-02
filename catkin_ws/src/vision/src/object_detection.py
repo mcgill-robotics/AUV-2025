@@ -55,7 +55,7 @@ def measureLaneMarker(img, bbox):
     line_thickness = 1 # in pixels
     line_length = min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
     #measure headings from lane marker
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img, publisher=None)
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return (None, None), (None, None), img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
@@ -197,6 +197,16 @@ if __name__ == '__main__':
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
         ]
         
-    thresh_pub = rospy.Publisher('vision/lane_marker_threshold', Image, queue_size=1)
+    downscale_pub = rospy.Publisher('vision/debug/lane_marker_downscale', Image, queue_size=1)
+    lane_marker_measure.setDownscalePublisher(downscale_pub)
+    blur1_pub = rospy.Publisher('vision/debug/lane_marker_blur1', Image, queue_size=1)
+    lane_marker_measure.setBlur1Publisher(blur1_pub)
+    tol_pub = rospy.Publisher('vision/debug/lane_marker_tolerance', Image, queue_size=1)
+    lane_marker_measure.setTolerancePublisher(tol_pub)
+    blur2_pub = rospy.Publisher('vision/debug/lane_marker_blur2', Image, queue_size=1)
+    lane_marker_measure.setBlur2Publisher(blur2_pub)
+    thresh_pub = rospy.Publisher('vision/debug/lane_marker_threshold', Image, queue_size=1)
+    lane_marker_measure.setThreshPublisher(thresh_pub)
+    
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
