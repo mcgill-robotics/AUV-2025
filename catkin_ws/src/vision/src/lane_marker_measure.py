@@ -3,10 +3,23 @@ import os
 import numpy as np
 import math
 
-downscale_amt = 0.2
-color_tolerance = 0.35
-blur1_amt = 0.1
-blur2_amt = 0.06
+# Read the values for downscaling, bluring and color tolerance from a text file
+values = []
+with open('values.txt', 'r') as file:
+    # Read the file line by line
+    for line in file:
+        # Ignore lines that start with "#"
+        if line[0] != '#' :
+            # Extract the values from the line
+            value = line.strip()
+            if value != '\n' and value != '':
+                values.append(float(value))
+
+downscale_amt = values[0]
+color_tolerance = values[1]
+blur1_amt = values[2]
+blur2_amt = values[3]
+
 
 
 #return True if basically the same color
