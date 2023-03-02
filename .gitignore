@@ -19,7 +19,5 @@ catkin_ws/.catkin_tools/
 # vscode files
 **/*.vscode/*
 
-#training files + recorded videos
+#recorded videos
 *.mp4
-*.jpg
-*.txt

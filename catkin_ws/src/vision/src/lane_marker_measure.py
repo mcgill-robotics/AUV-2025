@@ -3,31 +3,18 @@ import os
 import numpy as np
 import math
 
-# Read the values for downscaling, bluring and color tolerance from a text file
-values = []
-with open('values.txt', 'r') as file:
-    # Read the file line by line
-    for line in file:
-        # Ignore lines that start with "#"
-        if line[0] != '#' :
-            # Extract the values from the line
-            value = line.strip()
-            if value != '\n' and value != '':
-                values.append(float(value))
 
-downscale_amt = values[0]
-color_tolerance = values[1]
-blur1_amt = values[2]
-blur2_amt = values[3]
-
-
+downscale_amt = None
+color_tolerance = None
+blur1_amt = None
+blur2_amt = None
 
 #return True if basically the same color
 #otherwise return False
 #assuming color in BGR
-def areTheSame(c1, c2, tolerance=color_tolerance):
+def areTheSame(c1, c2):
     for i in (0, 1, 2):
-        if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-tolerance):
+        if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-color_tolerance):
             return False
     return True
 
@@ -80,12 +67,12 @@ def getCenterPoint(lines, img, debug):
     if None in (int1, int2): return None
     #get point halfway between the two intersections
     centerPoint = (int((int1[0]+int2[0])/2), int((int1[1]+int2[1])/2))
-    if debug:
-        cv2.circle(img, int1, radius=4, color=(255,0,0), thickness=-1)
-        cv2.circle(img, int2, radius=4, color=(255,0,0), thickness=-1)
-        cv2.circle(img, centerPoint, radius=5, color=(0,0,255), thickness=-1)
-        cv2.imshow("with center point", img)
-        cv2.waitKey(0)
+    #if debug:
+    #    cv2.circle(img, int1, radius=4, color=(255,0,0), thickness=-1)
+    #    cv2.circle(img, int2, radius=4, color=(255,0,0), thickness=-1)
+    #    cv2.circle(img, centerPoint, radius=5, color=(0,0,255), thickness=-1)
+    #    cv2.imshow("with center point", img)
+    #    cv2.waitKey(0)
     return centerPoint
 
 def angleBetweenLines(l1, l2):
@@ -97,18 +84,41 @@ def angleBetweenLines(l1, l2):
     else:
         return angle_diff
 
+def getParameters():
+    global downscale_amt
+    global color_tolerance
+    global blur1_amt
+    global blur2_amt
+    # Read the values for downscaling, bluring and color tolerance from a text file
+    values = []
+    with open(pwd + '/thresholding_values.txt', 'r') as file:
+        # Read the file line by line
+        for line in file:
+            # Ignore lines that start with "#"
+            if line[0] != '#' :
+                # Extract the values from the line
+                value = line.strip()
+                if value != '\n' and value != '':
+                    values.append(float(value))
+    downscale_amt = values[0]
+    color_tolerance = values[1]
+    blur1_amt = values[2]
+    blur2_amt = values[3]
+
+
 #given an image containing a lane marker, returns one slope per lane marker heading (relative to the image's x/y axis)
 #i.e should return two slopes
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
 def measure_headings(img, debug=False, publisher=None):
+    getParameters()
     if debug:
         cv2.imshow("original", img)
         cv2.waitKey(0)
     thresh_img = thresholdRed(img)
     if publisher != None:
 	    publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "mono8"))
-    if debug:
+    if debug or publisher==True:
         cv2.imshow("thresholded/black and white", thresh_img)
         cv2.waitKey(0)
     #get edges of thresholded image (should get the edges of the lane marker)
@@ -117,8 +127,8 @@ def measure_headings(img, debug=False, publisher=None):
     #only want up to 4 slopes (one per side of the lane marker)
     while len(lines) < 4:
         if debug:
-            cv2.imshow("remaining edges", edges)
-            cv2.waitKey(0)
+            #cv2.imshow("remaining edges", edges)
+            #cv2.waitKey(0)
             pass
         #find most prominent line in the image
         line = cv2.HoughLines(edges,1,np.pi/180,10)
@@ -146,9 +156,6 @@ def measure_headings(img, debug=False, publisher=None):
                 intercept = y1-slope*x1
                 lines.append((slope, intercept))
                 #draw the new line we found on top of the original image
-                if debug: 
-                    #cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
-                    pass
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),10)
@@ -263,7 +270,7 @@ def visualizeLaneMarker(img, debug=True):
         else: # heading goes into positive x
             line_end = (int(center_point[0]+line_x_length), int(center_point[1] + slope*line_x_length)) # (x,y)
         #draw line on original image
-        cv2.line(img, center_point, line_end, (0,0,255), line_thickness)
+        cv2.line(img, center_point, line_end, (255, 0, 0), line_thickness)
         #add text with measured angle of line at the end of the line
         cv2.putText(
             img,
@@ -271,18 +278,18 @@ def visualizeLaneMarker(img, debug=True):
             org=line_end,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.4, 
-            color=(0, 0, 255) , 
+            color= (255, 0, 0), 
             lineType=cv2.LINE_AA,
         )
-    cv2.circle(img, center_point, radius=5, color=(0, 0, 255) , thickness=-1)
+    cv2.circle(img, center_point, radius=5, color=(255, 0, 0), thickness=-1)
     return img
 
+pwd = os.path.realpath(os.path.dirname(__file__))
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
-    pwd = os.path.realpath(os.path.dirname(__file__))
     for img_i in [1,2,3,4,5,6,7]:
         test_image_filename = pwd + "/images/lm (" + str(img_i) + ").png"
         img = cv2.imread(test_image_filename)
-        visualizeLaneMarker(img, debug=False)
+        visualizeLaneMarker(img, debug=True)
         cv2.imshow("visualization " + str(img_i), img)
         cv2.waitKey(0)

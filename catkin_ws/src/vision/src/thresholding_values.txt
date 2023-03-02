@@ -1,0 +1,8 @@
+# downscale amount
+0.2
+# color tolerance 
+0.35
+# blur 1 amount
+0.1
+# blur 2 amount
+0.06

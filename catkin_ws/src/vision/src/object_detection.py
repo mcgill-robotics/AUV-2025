@@ -12,7 +12,7 @@ from auv_msgs.msg import ObjectDetectionFrame
 import math
 
 BOX_COLOR = (255, 255, 255) # White
-HEADING_COLOR = (0, 0, 255) # Red
+HEADING_COLOR = (255, 0, 0) # Blue
 TEXT_COLOR = (0, 0, 0) # Black
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
