@@ -29,7 +29,7 @@ class StateControlActionServer():
         
         self.server.start()
 
-        self.point = None
+        self.position = None
         self.roll = None
         self.pitch = None
         self.yaw = None
@@ -37,8 +37,8 @@ class StateControlActionServer():
         self.sub = rospy.Subscriber("pose",Pose,self.set)
     
     def set(self,data):
-        self.point = data.point
-        self.roll, self.pitch, self.yaw = euler_from_quaternion(data.quaternion)
+        self.position = data.position
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
 
     #stolen from the internet
     def euler_from_quaternion(x, y, z, w):
@@ -94,16 +94,16 @@ class StateControlActionServer():
         self.server.set_succeeded(self.result)
 
     def check_status(self,pose):
-        if(self.point == None or self.roll == None or self.pitch == None or self.yaw == None):
+        if(self.position == None or self.roll == None or self.pitch == None or self.yaw == None):
             return False
 
-        roll, pitch, yaw = euler_from_quaternion(pose.quaternion)
-        tolerance_point = 0.5
-        tolerance_roation = 1
+        roll, pitch, yaw = euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        tolerance_position = 0.5
+        tolerance_orientation = 1
 
-        x_diff = abs(self.point.x - pose.point.x) <= tolerance_point
-        y_diff = abs(self.point.y - pose.point.x) <= tolerance_point
-        z_diff = abs(self.point.z - pose.point.x) <= tolerance_point
+        x_diff = abs(self.position.x - pose.position.x) <= tolerance_position
+        y_diff = abs(self.position.y - pose.position.x) <= tolerance_position
+        z_diff = abs(self.position.z - pose.position.x) <= tolerance_orientation
         theta_x_diff = abs(self.roll - roll) <= tolerance_roation
         theta_y_diff = abs(self.pitch - pitch) <= tolerance_roation
         theta_z_diff = abs(self.yaw - yaw) <= tolerance_roation
@@ -112,10 +112,10 @@ class StateControlActionServer():
 
 
     def publish_setpoints(self,pose):
-        roll, pitch, yaw = euler_from_quaternion(pose.quaternion)
-        self.pub_x.Publish(Float64(pose.point.x))
-        self.pub_y.Publish(Float64(pose.point.y))
-        self.pub_z.Publish(Float64(pose.point.y))
+        roll, pitch, yaw = euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        self.pub_x.Publish(Float64(pose.position.x))
+        self.pub_y.Publish(Float64(pose.position.y))
+        self.pub_z.Publish(Float64(pose.position.y))
         self.pub_theta_x.Publish(Float64(roll))
         self.pub_theta_y.Publish(Float64(pitch))
         self.pub_theta_z.Publish(Float64(yaw))
