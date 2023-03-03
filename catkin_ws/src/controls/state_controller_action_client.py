@@ -27,6 +27,6 @@ if __name__ == '__main__':
     pose.position.z = 0
     pose.orientation.x = 0
     pose.orientation.y = 0
-    pose.orientation.z = 0
-    pose.orientation.w = 2
+    pose.orientation.z = 2
+    pose.orientation.w = 0
     s = StateControlActionClient(pose)

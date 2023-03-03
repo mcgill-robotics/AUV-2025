@@ -37,7 +37,7 @@ class StateControlActionServer():
         self.sub = rospy.Subscriber("pose",Pose,self.set)
     
     def set(self,data):
-        print("updated pose")
+        #print("updated pose")
         self.position = data.position
         self.roll, self.pitch, self.yaw = self.euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
 
@@ -65,10 +65,10 @@ class StateControlActionServer():
         return roll_x, pitch_y, yaw_z # in radians
 
     def callback(self, goal):
-        print("got a message")
+        #print("got a message")
         # set the PIDs
         pose = goal.pose
-        print(goal.pose)
+        #print(goal.pose)
 
         self.publish_setpoints(pose)
 
@@ -106,7 +106,7 @@ class StateControlActionServer():
         self.pub_theta_x.publish(Float64(roll))
         self.pub_theta_y.publish(Float64(pitch))
         self.pub_theta_z.publish(Float64(yaw))
-        print("published setpoints")
+        #print("published setpoints")
 
 
 if __name__ == "__main__":
