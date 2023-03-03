@@ -14,6 +14,10 @@ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
 
+d = 0.224 #m
+D_1 = 0.895 #m
+D_2 = 0.778 #m
+
 # forces produced by T200 thruster at 14V (N)
 MAX_FWD_FORCE = 4.52*9.81*0.5 # Limit to 15% while testing
 MAX_BKWD_FORCE = -3.52*9.81*0.5 # Limit to 15% while testing
