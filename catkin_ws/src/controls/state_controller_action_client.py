@@ -12,6 +12,8 @@ class StateControlActionClient():
         print("Waiting for server")
         self.state_client.wait_for_server()
         self.send_goal(pose)
+        self.state_client.wait_for_result()
+        print(self.state_client.get_result())
 
     def send_goal(self, pose):
         goal = StateGoal()

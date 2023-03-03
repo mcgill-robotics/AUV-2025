@@ -16,8 +16,8 @@ class StateControlActionServer():
 
     def __init__(self) -> None:
         self.server = actionlib.SimpleActionServer('state_control_action', StateAction, execute_cb= self.callback, auto_start = False)
-        self.feedback = StateFeedback()
-        self.result = StateResult()
+        #self.feedback = StateFeedback()
+        #self.result = StateResult()
 
         #self.pub_x = rospy.Publisher('', Float64, queue_size=50)
         #self.pub_y = rospy.Publisher('', Float64, queue_size=50)
@@ -76,9 +76,10 @@ class StateControlActionServer():
         while(not self.check_status(pose)):
             rospy.sleep(0.1)
 
-        self.result = self.feedback
+        result = StateResult()
+        result.status.data = True
         rospy.loginfo("Succeeded")
-        self.server.set_succeeded(self.result)
+        self.server.set_succeeded(result)
 
     def check_status(self,pose):
         if(self.position == None or self.roll == None or self.pitch == None or self.yaw == None):
