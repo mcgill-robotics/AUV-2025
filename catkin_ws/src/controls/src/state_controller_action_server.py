@@ -41,7 +41,7 @@ class StateControlActionServer():
         self.roll, self.pitch, self.yaw = euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
 
     #stolen from the internet
-    def euler_from_quaternion(x, y, z, w):
+    def euler_from_quaternion(self,x, y, z, w):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
         roll is rotation around x in radians (counterclockwise)
@@ -63,20 +63,6 @@ class StateControlActionServer():
      
         return roll_x, pitch_y, yaw_z # in radians
 
-    # receives a new goal 
-    # def callback(self, goal):
-
-    #     # set the PIDs
-    #     self.pub.publish(goal.setpoint)
-
-    #     # monitor when reached pose
-    #     while(self.depth < goal.setpoint - 0.5 or self.depth > goal.setpoint + 0.5):
-    #         continue
-
-    #     self.result = self.feedback
-    #     rospy.loginfo("Succeeded")
-    #     self.server.set_succeeded(self.result)
-
     def callback(self, goal):
 
         # set the PIDs
@@ -97,7 +83,7 @@ class StateControlActionServer():
         if(self.position == None or self.roll == None or self.pitch == None or self.yaw == None):
             return False
 
-        roll, pitch, yaw = euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        roll, pitch, yaw = self.euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         tolerance_position = 0.5
         tolerance_orientation = 1
 
@@ -112,7 +98,7 @@ class StateControlActionServer():
 
 
     def publish_setpoints(self,pose):
-        roll, pitch, yaw = euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        roll, pitch, yaw = self.euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         #self.pub_x.Publish(Float64(pose.position.x))
         #self.pub_y.Publish(Float64(pose.position.y))
         self.pub_z.Publish(Float64(pose.position.y))
