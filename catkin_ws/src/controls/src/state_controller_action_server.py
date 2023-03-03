@@ -19,12 +19,12 @@ class StateControlActionServer():
         self.feedback = StateFeedback()
         self.result = StateResult()
 
-        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+        #self.pub_x = rospy.Publisher('', Float64, queue_size=50)
+        #self.pub_y = rospy.Publisher('', Float64, queue_size=50)
+        self.pub_z = rospy.Publisher('z_setpoint', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
         self.depth = 0
         
         self.server.start()
@@ -101,8 +101,8 @@ class StateControlActionServer():
         tolerance_position = 0.5
         tolerance_orientation = 1
 
-        x_diff = abs(self.position.x - pose.position.x) <= tolerance_position
-        y_diff = abs(self.position.y - pose.position.x) <= tolerance_position
+        #x_diff = abs(self.position.x - pose.position.x) <= tolerance_position
+        #y_diff = abs(self.position.y - pose.position.x) <= tolerance_position
         z_diff = abs(self.position.z - pose.position.x) <= tolerance_orientation
         theta_x_diff = abs(self.roll - roll) <= tolerance_roation
         theta_y_diff = abs(self.pitch - pitch) <= tolerance_roation
@@ -113,8 +113,8 @@ class StateControlActionServer():
 
     def publish_setpoints(self,pose):
         roll, pitch, yaw = euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
-        self.pub_x.Publish(Float64(pose.position.x))
-        self.pub_y.Publish(Float64(pose.position.y))
+        #self.pub_x.Publish(Float64(pose.position.x))
+        #self.pub_y.Publish(Float64(pose.position.y))
         self.pub_z.Publish(Float64(pose.position.y))
         self.pub_theta_x.Publish(Float64(roll))
         self.pub_theta_y.Publish(Float64(pitch))
