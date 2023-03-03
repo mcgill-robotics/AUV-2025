@@ -37,8 +37,9 @@ class StateControlActionServer():
         self.sub = rospy.Subscriber("pose",Pose,self.set)
     
     def set(self,data):
+        print("updated pose")
         self.position = data.position
-        self.roll, self.pitch, self.yaw = euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
+        self.roll, self.pitch, self.yaw = self.euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
 
     #stolen from the internet
     def euler_from_quaternion(self,x, y, z, w):
@@ -64,10 +65,10 @@ class StateControlActionServer():
         return roll_x, pitch_y, yaw_z # in radians
 
     def callback(self, goal):
-
+        print("got a message")
         # set the PIDs
         pose = goal.pose
-
+        print(goal.pose)
 
         self.publish_setpoints(pose)
 
@@ -88,32 +89,24 @@ class StateControlActionServer():
         tolerance_orientation = 1
 
         #x_diff = abs(self.position.x - pose.position.x) <= tolerance_position
-        #y_diff = abs(self.position.y - pose.position.x) <= tolerance_position
-        z_diff = abs(self.position.z - pose.position.x) <= tolerance_orientation
-        theta_x_diff = abs(self.roll - roll) <= tolerance_roation
-        theta_y_diff = abs(self.pitch - pitch) <= tolerance_roation
-        theta_z_diff = abs(self.yaw - yaw) <= tolerance_roation
+        #y_diff = abs(self.position.y - pose.position.y) <= tolerance_position
+        z_diff = abs(self.position.z - pose.position.z) <= tolerance_position
+        theta_x_diff = abs(self.roll - roll) <= tolerance_orientation
+        theta_y_diff = abs(self.pitch - pitch) <= tolerance_orientation
+        theta_z_diff = abs(self.yaw - yaw) <= tolerance_orientation
 
-        return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
+        return z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
 
 
     def publish_setpoints(self,pose):
         roll, pitch, yaw = self.euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         #self.pub_x.Publish(Float64(pose.position.x))
         #self.pub_y.Publish(Float64(pose.position.y))
-        self.pub_z.Publish(Float64(pose.position.y))
-        self.pub_theta_x.Publish(Float64(roll))
-        self.pub_theta_y.Publish(Float64(pitch))
-        self.pub_theta_z.Publish(Float64(yaw))
-
-
-
-
-
-    
-    def move_position(self, value):
-        
-        self.depth = value.data
+        self.pub_z.publish(Float64(pose.position.y))
+        self.pub_theta_x.publish(Float64(roll))
+        self.pub_theta_y.publish(Float64(pitch))
+        self.pub_theta_z.publish(Float64(yaw))
+        print("published setpoints")
 
 
 if __name__ == "__main__":

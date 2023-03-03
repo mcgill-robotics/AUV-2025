@@ -3,7 +3,7 @@
 import rospy
 import actionlib
 from geometry_msgs.msg import Pose
-from auv_msgs.msg import StateAction
+from auv_msgs.msg import StateAction, StateGoal
 
 class StateControlActionClient():
 
@@ -14,20 +14,19 @@ class StateControlActionClient():
         self.send_goal(pose)
 
     def send_goal(self, pose):
-        action = StateAction()
-        action.pose = pose
-        goal_pose = auv_msgs.msg.StateActionGoal()
-        self.state_client.send_goal_and_wait(action)
+        goal = StateGoal()
+        goal.pose = pose
+        self.state_client.send_goal_and_wait(goal)
 
 
 if __name__ == '__main__':
     rospy.init_node('state_action_controller')
     pose = Pose()
-    pose.position.x = 1
-    pose.position.y = 2 
-    pose.position.z = 3
-    pose.orientation.x = 4
-    pose.orientation.y = 5
-    pose.orientation.z = 6
-    pose.orientation.w = 7
+    pose.position.x = 0
+    pose.position.y = 0 
+    pose.position.z = 0
+    pose.orientation.x = 0
+    pose.orientation.y = 0
+    pose.orientation.z = 0
+    pose.orientation.w = 2
     s = StateControlActionClient(pose)
