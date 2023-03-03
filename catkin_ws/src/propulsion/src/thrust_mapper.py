@@ -74,14 +74,14 @@ def forces_to_pwm_publisher(forces_msg):
     Publish pwm signals
     """
     pwm_arr = [None]*8
-    pwm_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_pwm(forces_msg.SURGE_PORT)
-    pwm_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_pwm(forces_msg.SURGE_STAR) 
-    pwm_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_pwm(forces_msg.SWAY_BOW)
-    pwm_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_pwm(forces_msg.SWAY_STERN) 
-    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_pwm(forces_msg.HEAVE_BOW_PORT) 
-    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_pwm(forces_msg.HEAVE_BOW_STAR) 
-    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(forces_msg.HEAVE_STERN_STAR) 
-    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT)
+    pwm_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_pwm(forces_msg.SURGE_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
+    pwm_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_pwm(forces_msg.SURGE_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
+    pwm_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_pwm(forces_msg.SWAY_BOW,MAX_FWD_FORCE,MAX_BKWD_FORCE)
+    pwm_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_pwm(forces_msg.SWAY_STERN,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_pwm(forces_msg.HEAVE_BOW_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_pwm(forces_msg.HEAVE_BOW_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(forces_msg.HEAVE_STERN_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
 
     pwm_msg = ThrusterMicroseconds(pwm_arr)
     pub.publish(pwm_msg)
