@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import math
 import rospy
 import datetime
-from teledyne_navigator.msg import Ensemble
+from dvl.msg import Ensemble
 from teledyne_navigator import TeledyneNavigator
 
 
