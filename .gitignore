@@ -19,7 +19,13 @@ catkin_ws/.catkin_tools/
 # vscode files
 **/*.vscode/*
 
+
 #training files + recorded videos
 *.mp4
 *.jpg
 *.txt
+
+# submodules
+catkin_ws/src/auv-sim
+catkin_ws/src/ros_gz
+
