@@ -14,18 +14,9 @@ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
 
-"""---------------------Constants------------------"""
-# distance between surge thrusters
-d = 0.224
-# distance between sway thrusters 
-D_1 = 0.895 
-# distance (length-wise) between bow and stern
-D_2 = 0.778
-
-#Maximum force thrusters can exert in either direction (ie, spin forward or backward)
-#Limit to 15% while testing
-MAX_FWD_FORCE = 4.52*9.81*0.15 
-MAX_BKWD_FORCE = -3.52*9.81*0.15
+# forces produced by T200 thruster at 14V (N)
+MAX_FWD_FORCE = 4.52*9.81*0.5 # Limit to 15% while testing
+MAX_BKWD_FORCE = -3.52*9.81*0.5 # Limit to 15% while testing
 
 #Matrix representation of the system of equations representing the thrust to wrench conversion
 #Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
@@ -91,10 +82,27 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_msg = ThrusterMicroseconds(pwm_arr)
     pub.publish(pwm_msg)
 
+#turns off the thursters when the node dies
+def shutdown():
+    msg = ThrusterMicroseconds([1500]*8)
+    pub.publish(msg)
+
+#sends the arming signal to the thursters upon startup
+def re_arm():
+    rospy.sleep(1)
+    msg1  = ThrusterMicroseconds([1500]*8)
+    msg2 = ThrusterMicroseconds([1540]*8)
+
+    pub.publish(msg1)
+    rospy.sleep(0.5)
+    pub.publish(msg2)
+    rospy.sleep(0.5)
+    pub.publish(msg1)
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
     pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=5)
     sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
-
+    rospy.on_shutdown(shutdown)
+    re_arm()
     rospy.spin()
