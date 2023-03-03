@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
 
+"""
+
+Description: Thrust mapper node subscribes to effort topic, converts the wrench readings to forces, 
+and then finally converts the forces to pwm signals and publishes them.
+
+"""
+
 import numpy as np
 import rospy
-
+from thrust_mapper_utils import *
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
-d = 0.224 # m
-D_1 = 0.895 # m
-D_2 = 0.778 # m
 
-# forces produced by T200 thruster at 14V (N)
-MAX_FWD_FORCE = 4.52*9.81*0.15 # Limit to 15% while testing
-MAX_BKWD_FORCE = -3.52*9.81*0.15 # Limit to 15% while testing
+"""---------------------Constants------------------"""
+# distance between surge thrusters
+d = 0.224
+# distance between sway thrusters 
+D_1 = 0.895 
+# distance (length-wise) between bow and stern
+D_2 = 0.778
 
-rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
+#Maximum force thrusters can exert in either direction (ie, spin forward or backward)
+#Limit to 15% while testing
+MAX_FWD_FORCE = 4.52*9.81*0.15 
+MAX_BKWD_FORCE = -3.52*9.81*0.15
 
+#Matrix representation of the system of equations representing the thrust to wrench conversion
+#Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
 T = np.matrix(
         [[1., 1., 0., 0., 0., 0., 0., 0.],
         [0., 0., 1., -1., 0., 0., 0., 0.],
@@ -25,12 +38,16 @@ T = np.matrix(
         [-d/2, d/2, D_1/2, D_1/2, 0., 0., 0., 0.]]
         )
 
-T_inv = np.linalg.pinv(T) # matrix transformation wrench -> thrust  
+#matrix transformation wrench -> thrust 
+T_inv = np.linalg.pinv(T) 
+"""--------------------------------------------------"""
+rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
+
+
 
 def wrench_to_thrust(w):
     '''
-    wrench_to_thrust maps a Wrench into a force in kg f
-    for each thruster
+    A callback function that maps a Wrench into a force produced by T200 thruster at 14V (N)
     '''
     a = np.array(
             [[w.force.x],
@@ -41,55 +58,38 @@ def wrench_to_thrust(w):
             [w.torque.z]]
             )
 
-    #sample wrenches
-    #   rostopic pub -1 /effort geometry_msgs/Wrench
-    #   "{ force: {x: 20.0, y: 0.0, z: 0.0}, torque:{x: 0.0, y: 0.0, z: 0.0} }"
-
-    b = np.matmul(T_inv, a) 
+    converted_w = np.matmul(T_inv, a) 
     tf = ThrusterForces() 
 
-    tf.SURGE_PORT = b[0]
-    tf.SURGE_STAR = b[1]
-    tf.SWAY_BOW = b[2]
-    tf.SWAY_STERN = b[3]
-    tf.HEAVE_BOW_PORT = b[4]
-    tf.HEAVE_BOW_STAR = b[5]
-    tf.HEAVE_STERN_STAR = b[6]
-    tf.HEAVE_STERN_PORT = b[7]
+    tf.SURGE_PORT = converted_w[0]
+    tf.SURGE_STAR = converted_w[1]
+    tf.SWAY_BOW = converted_w[2]
+    tf.SWAY_STERN = converted_w[3]
+    tf.HEAVE_BOW_PORT = converted_w[4]
+    tf.HEAVE_BOW_STAR = converted_w[5]
+    tf.HEAVE_STERN_STAR = converted_w[6]
+    tf.HEAVE_STERN_PORT = converted_w[7]
 
-    forces_to_microseconds_cb(tf)
+    #Convert forces to pwm signals and publish
+    forces_to_pwm_publisher(tf)
 
-def negativeForceCurve(force):
-    return 1.4701043632380542*(10**3) + force*2.3999978362959104*(10**2) + (force**2)*2.5705773429064880*(10**2) + (force**3)*3.1133962497995367*(10**2) + (force**4)*2.1943237103469241*(10**2) + (force**5)*8.4596303821198617*(10**1) + (force**6)*1.6655229499580056*(10**1) + (force**7)*1.3116834437073399
 
-def positiveForceCurve(force):
-    return 1.5299083405100268*(10**3) + force*1.9317247519327023*(10**2) + (force**2)*-1.6227874418158476*(10**2) + (force**3)*1.4980771349508325*(10**2) + (force**4)*-8.0478019175136623*(10**1) + (force**5)*2.3661746039755371*(10**1) + (force**6)*-3.5559291204780612 + (force**7)*2.1398707591286295*(10**-1)
+def forces_to_pwm_publisher(forces_msg):
+    """
+    Publish pwm signals
+    """
+    pwm_arr = [None]*8
+    pwm_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_pwm(forces_msg.SURGE_PORT)
+    pwm_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_pwm(forces_msg.SURGE_STAR) 
+    pwm_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_pwm(forces_msg.SWAY_BOW)
+    pwm_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_pwm(forces_msg.SWAY_STERN) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_pwm(forces_msg.HEAVE_BOW_PORT) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_pwm(forces_msg.HEAVE_BOW_STAR) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(forces_msg.HEAVE_STERN_STAR) 
+    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT)
 
-def force_to_microseconds(force):
-        # cap our input force at maximum fwd/bkwd speeds
-        force = min(max(force, MAX_BKWD_FORCE), MAX_FWD_FORCE)
-        #two different curves (negative and positive forces)
-        if force > 0.0:
-            return int(positiveForceCurve(force/9.81))
-        elif force < 0.0:
-            return int(negativeForceCurve(force/9.81))
-        else: return 1500 #middle value is 1500
-
-# functions or relevant code
-def forces_to_microseconds_cb(forces_msg):
-    # array message to publish
-    micro_arr = [None]*8
-    micro_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_microseconds(forces_msg.SURGE_PORT)
-    micro_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_microseconds(forces_msg.SURGE_STAR) 
-    micro_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_microseconds(forces_msg.SWAY_BOW)
-    micro_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_microseconds(forces_msg.SWAY_STERN) 
-    micro_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_microseconds(forces_msg.HEAVE_BOW_PORT) 
-    micro_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_microseconds(forces_msg.HEAVE_BOW_STAR) 
-    micro_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_microseconds(forces_msg.HEAVE_STERN_STAR) 
-    micro_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_microseconds(forces_msg.HEAVE_STERN_PORT)
-
-    micro_msg = ThrusterMicroseconds(micro_arr)
-    pub.publish(micro_msg)
+    pwm_msg = ThrusterMicroseconds(pwm_arr)
+    pub.publish(pwm_msg)
 
 
 if __name__ == '__main__':
