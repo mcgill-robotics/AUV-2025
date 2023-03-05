@@ -3,30 +3,32 @@
 import rospy
 import actionlib
 from geometry_msgs.msg import Pose
-import auv_msgs.msg
+from auv_msgs.msg import StateAction, StateGoal
 
 class StateControlActionClient():
 
-    def __init__(self, depth: float):
-        self.state_client = actionlib.SimpleActionClient('state_control_action', auv_msgs.msg.StateAction)
+    def __init__(self, pose):
+        self.state_client = actionlib.SimpleActionClient('state_control_action', StateAction)
         print("Waiting for server")
         self.state_client.wait_for_server()
-        self.send_goal(depth)
+        self.send_goal(pose)
+        self.state_client.wait_for_result()
+        print(self.state_client.get_result())
 
-    def send_goal(self, depth):
-        goal_pose = auv_msgs.msg.StateActionGoal()
-        pose = Pose()
-        pose.position.z = depth
-        goal_pose.goal.setpoint = pose.position.z
-        self.state_client.send_goal_and_wait(goal_pose)
+    def send_goal(self, pose):
+        goal = StateGoal()
+        goal.pose = pose
+        self.state_client.send_goal_and_wait(goal)
 
 
 if __name__ == '__main__':
     rospy.init_node('state_action_controller')
-    depth = 1.0
-    s = StateControlActionClient(depth)
-
-
-
-
-
+    pose = Pose()
+    pose.position.x = 0
+    pose.position.y = 0 
+    pose.position.z = 0
+    pose.orientation.x = 0
+    pose.orientation.y = 0
+    pose.orientation.z = 2
+    pose.orientation.w = 0
+    s = StateControlActionClient(pose)
