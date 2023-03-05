@@ -131,7 +131,7 @@ class rotateToHeading(smach.State):
         If it loses sight of the lane marker for more than timeout, returns "failure".
         Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
         '''
-        return "success" #TEMPORARY UNTIL HEADING MEASUREMENT WORKS MORE RELIABLY
+        return "success" #TEMPORARY UNTIL IMU MEASUREMENT WORKS MORE RELIABLY
     
         timeout = 5
         global last_object_detection
@@ -195,6 +195,40 @@ class rotateToHeading(smach.State):
         pub.publish(Float64(state_theta_z))
         return 'success'
 
+
+class descend(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['success'])
+        
+    def execute(self, ud):
+        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub.publish(Float64(-2.0)) 
+        rospy.sleep(20)
+        return 'done'
+        
+   
+class ascendWithFailure(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['success'])
+        
+    def execute(self, ud):
+        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub.publish(Float64(0)) 
+        rospy.sleep(20)
+        return 'success'
+        
+    
+class ascendWithSuccess(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['success'])
+        
+    def execute(self, ud):
+        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub.publish(Float64(0)) 
+        rospy.sleep(20)
+        return 'success'
+
+
 #ignore unnecessary object detection information and make object detection event one array
 #returns first object detection that is valid (assumes no duplicate lane markers in viewframe)
 def parseMessage(msg):
@@ -235,20 +269,25 @@ if __name__ == '__main__':
     rospy.init_node('navigate_lane_marker')
     last_object_detection = []
     firstMessage = False
-    #SET STATE_THETA_Z TO NONE WHEN TESTING WITH IMU + SETPOINTS
-    #state_theta_z = None
-    state_theta_z = 0
+    state_theta_z = None
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
     theta_sub = rospy.Subscriber('state_theta_z', ObjectDetectionFrame, objectDetectCb)
 
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
+        smach.StateMachine.add('descend', descend(),
+                transitions={'success': 'find'})
         smach.StateMachine.add('find', findLaneMarker(),
-                transitions={'success': 'scale_and_center', 'failure':'failure'})
+                transitions={'success': 'scale_and_center', 'failure':'ascend_fail'})
         smach.StateMachine.add('scale_and_center', centerAndScale(), 
-                transitions={'success': 'rotate', 'failure':'failure'})
+                transitions={'success': 'rotate', 'failure':'ascend_fail'})
         smach.StateMachine.add('rotate', rotateToHeading(), 
-                transitions={'success': 'success', 'failure':'failure'})
+                transitions={'success': 'ascend_success', 'failure':'ascend_fail'})
+        smach.StateMachine.add('ascend_fail', ascendWithFailure(),
+                transitions={'success': 'fail'})
+        smach.StateMachine.add('ascend_success', ascendWithSuccess(),
+                transitions={'success': 'success'})
     while not firstMessage: pass
-    log("Received first detection message.")
+    log("Received first detection message. Starting state machine.")
     res = sm.execute()
+    log("Ending state machine.")

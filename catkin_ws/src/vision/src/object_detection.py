@@ -111,8 +111,8 @@ def detect_on_image(raw_img, camera_id):
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     
-    #FOR TESTING
-    img = make_bluer(img, color_shift_intensity=int(0.2*255))
+    #FOR TESTING IN MEDN
+    #img = make_bluer(img, color_shift_intensity=int(0.2*255))
     
     #run model on img
     detections = model[camera_id].predict(img, device=0) #change device for cuda
