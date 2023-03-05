@@ -1,0 +1,3 @@
+Received first detection message.
+moving forward
+Did not find lane marker in time.

@@ -57,6 +57,8 @@ Before building packages, make sure that the following additional ROS packages a
 
 	sudo apt-get install ros-noetic-rosserial-arduino
 	sudo apt-get install ros-noetic-pid
+	sudo apt-get install ros-noetic-joy
+	sudo apt-get install ros-noetic-joy-teleop
 
 *To build/launch/test an individual package, see the README.md in the respective package.*
 

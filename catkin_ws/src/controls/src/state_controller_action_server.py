@@ -12,40 +12,30 @@ class StateControlActionServer():
         self.server = actionlib.SimpleActionServer('state_control_action', StateAction, execute_cb= self.callback, auto_start = False)
         self.feedback = StateFeedback()
         self.result = StateResult()
-        self.pub = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
+        self.pub = rospy.Publisher('z_setpoint', Float64, queue_size=50)
+        self.depth = 0
+        self.depth_sub = rospy.Subscriber('state_z', Float64, self.move_position)
         self.server.start()
 
+
+    # receives a new goal 
     def callback(self, goal):
-        rate = rospy.Rate(1)
-        success = True
-        depth = Pose.position.z
 
-        rospy.loginfo('%s: Executing State Action Controller')
+        # set the PIDs
+        self.pub.publish(goal.setpoint)
 
-        while(depth < goal.setpoint - 0.5 or depth > goal.setpoint + 0.5):
+        # monitor when reached pose
+        while(self.depth < goal.setpoint - 0.5 or self.depth > goal.setpoint + 0.5):
+            continue
 
-            if self.server.is_preempt_requested():
-                rospy.loginfo("Preempted")
-                self.server.set_preempted()
-                success = False
-                self.feedback.status = False
-                break
-
-            depth = rospy.Subscriber('state_theta_z', Float64, self.move_position)
-            self.pub.publish(depth)
-            self.server.publish_feedback(depth)
-            
-            rate.sleep()
-
-            if success:
-                self.result = self.feedback
-                rospy.loginfo("Succeeded")
-                self.server.set_succeeded(self.result)
+        self.result = self.feedback
+        rospy.loginfo("Succeeded")
+        self.server.set_succeeded(self.result)
 
     
-    def move_position(self):
+    def move_position(self, value):
         
-        return Pose.position.z
+        self.depth = value.data
 
 
 if __name__ == "__main__":

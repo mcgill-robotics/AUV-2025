@@ -91,10 +91,14 @@ def forces_to_microseconds_cb(forces_msg):
     micro_msg = ThrusterMicroseconds(micro_arr)
     pub.publish(micro_msg)
 
+def shutdown():
+    msg = ThrusterMicroseconds([1500]*8)
+    pub.publish(msg)
+
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
     pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=5)
     sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
-
+    rospy.on_shutdown(shutdown)
     rospy.spin()

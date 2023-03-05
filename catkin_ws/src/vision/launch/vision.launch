@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find vision)/launch/record_feeds.launch" />
+    <include file="$(find vision)/launch/object_detection.launch" />
+</launch>
