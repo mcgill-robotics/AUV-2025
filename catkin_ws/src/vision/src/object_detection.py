@@ -52,9 +52,11 @@ def cropToBbox(img, bbox):
 def measureLaneMarker(img, bbox):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
-    line_thickness = 1 # in pixels
-    line_length = min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
+    line_thickness = 2 # in pixels
+    line_length = 0.25*min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
     #measure headings from lane marker
+    cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
+    cropped_img_pub.publish(cropped_img_to_pub)
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return (None, None), (None, None), img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
@@ -88,6 +90,16 @@ def measureLaneMarker(img, bbox):
     cv2.circle(img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, img
 
+#increase intensity of blues in given image
+def make_bluer(img, color_shift_intensity):
+    img_b, img_g, img_r = cv2.split(img) #split by channel
+    img_b = np.uint16(img_b)
+    img_b += color_shift_intensity
+    np.clip(img_b, 0, 255, out=img_b)
+    img_b = np.uint8(img_b)
+    img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
+    return img
+
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
@@ -98,6 +110,10 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
+    
+    #FOR TESTING
+    img = make_bluer(img, color_shift_intensity=int(0.2*255))
+    
     #run model on img
     detections = model[camera_id].predict(img, device=0) #change device for cuda
     #initialize empty arrays for object detection frame message
@@ -133,7 +149,7 @@ def detect_on_image(raw_img, camera_id):
             confidence.append(conf) 
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
-            if cls_id == 0 and camera_id == 0 and False:
+            if cls_id == 0 and camera_id == 0:
                 headings, center, img = measureLaneMarker(img, bbox)
                 heading1.append(headings[0])
                 heading2.append(headings[1])
@@ -196,17 +212,7 @@ if __name__ == '__main__':
     subs = [
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
         ]
-        
-    downscale_pub = rospy.Publisher('vision/debug/lane_marker_downscale', Image, queue_size=1)
-    lane_marker_measure.setDownscalePublisher(downscale_pub)
-    blur1_pub = rospy.Publisher('vision/debug/lane_marker_blur1', Image, queue_size=1)
-    lane_marker_measure.setBlur1Publisher(blur1_pub)
-    tol_pub = rospy.Publisher('vision/debug/lane_marker_tolerance', Image, queue_size=1)
-    lane_marker_measure.setTolerancePublisher(tol_pub)
-    blur2_pub = rospy.Publisher('vision/debug/lane_marker_blur2', Image, queue_size=1)
-    lane_marker_measure.setBlur2Publisher(blur2_pub)
-    thresh_pub = rospy.Publisher('vision/debug/lane_marker_threshold', Image, queue_size=1)
-    lane_marker_measure.setThreshPublisher(thresh_pub)
-    
+ 	
+    cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()

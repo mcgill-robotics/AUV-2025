@@ -2,52 +2,37 @@ import cv2
 import os
 import numpy as np
 import math
-
+from cv_bridge import CvBridge
 
 downscale_amt = None
 blur1_amt = None
 color_tolerance = None
 blur2_amt = None
-
-downscale_publisher = None
-blur1_publisher = None
-tol_publisher = None
-blur2_publisher = None
-thresh_publisher = None
-
-def setDownscalePublisher(pub):
-    global downscale_publisher
-    downscale_publisher = pub
-def setBlur1Publisher(pub):
-    global blur1_publisher
-    blur1_publisher = pub
-def setTolerancePublisher(pub):
-    global tol_publisher
-    tol_publisher = pub
-def setBlur2Publisher(pub):
-    global blur2_publisher
-    blur2_publisher = pub
-def setThreshPublisher(pub):
-    global thresh_publisher
-    thresh_publisher = pub
+bridge = CvBridge()
 
 #return True if basically the same color
 #otherwise return False
 #assuming color in BGR
 def areTheSame(c1, c2):
+    #make color brightnesses the same (just care about color ratios, not brightness/saturation) by making max value 255 in any channel
+    c1 += min((255,255,255)-c1)
+    c2 += min((255,255,255)-c2)
     for i in (0, 1, 2):
-        if min(c1[i], c2[i]) <  max(c1[i], c2[i])*(1.0-color_tolerance):
+        if max(c1[i], c2[i]) - min(c1[i], c2[i]) > color_tolerance*255:
             return False
     return True
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
-def thresholdRed(img):
-    downscaled = cv2.resize(img, dsize=(int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt)), interpolation=cv2.INTER_AREA)
+def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publisher=None, blur2_publisher=None, thresh_publisher=None):
+    getParameters()
+    downscaled_size = (int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt))
+    downscaled = cv2.resize(img, dsize=downscaled_size, interpolation=cv2.INTER_AREA)
     if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
-    blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
+    if blur1_amt > 0: blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
+    else: blurred = downscaled
     if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
     img_b, img_g, img_r = cv2.split(blurred)
-    ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.ones(img_b.shape))
+    ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.uint32(img_r) + np.ones(img_b.shape))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
     max_pixel = blurred[math.floor(max_i/blurred.shape[1])][max_i%blurred.shape[1]]
 
@@ -58,10 +43,10 @@ def thresholdRed(img):
             return (0,0,0)
         else:
             return (255,255,255)
-    thresh_img = np.uint8(np.zeros(downscaled.shape))
-    for r in range(len(downscaled)):
-        for p in range(len(downscaled[r])):
-            thresh_img[r][p] = mask(downscaled[r][p])
+    thresh_img = np.uint8(np.zeros(blurred.shape))
+    for r in range(len(blurred)):
+        for p in range(len(blurred[r])):
+            thresh_img[r][p] = mask(blurred[r][p])
     if tol_publisher != None: tol_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
     thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
@@ -113,8 +98,8 @@ def angleBetweenLines(l1, l2):
 
 def getParameters():
     global downscale_amt
-    global color_tolerance
     global blur1_amt
+    global color_tolerance
     global blur2_amt
     # Read the values for downscaling, bluring and color tolerance from a text file
     values = []
@@ -128,8 +113,8 @@ def getParameters():
                 if value != '\n' and value != '':
                     values.append(float(value))
     downscale_amt = values[0]
-    color_tolerance = values[1]
-    blur1_amt = values[2]
+    blur1_amt = values[1]
+    color_tolerance = values[2]
     blur2_amt = values[3]
 
 
@@ -138,7 +123,6 @@ def getParameters():
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
 def measure_headings(img, debug=False):
-    getParameters()
     if debug:
         cv2.imshow("original", img)
         cv2.waitKey(0)
@@ -152,8 +136,8 @@ def measure_headings(img, debug=False):
     #only want up to 4 slopes (one per side of the lane marker)
     while len(lines) < 4:
         if debug:
-            #cv2.imshow("remaining edges", edges)
-            #cv2.waitKey(0)
+            cv2.imshow("remaining edges", edges)
+            cv2.waitKey(0)
             pass
         #find most prominent line in the image
         line = cv2.HoughLines(edges,1,np.pi/180,10)
@@ -183,7 +167,7 @@ def measure_headings(img, debug=False):
                 #draw the new line we found on top of the original image
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
-                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),10)
+                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),15)
         except TypeError:
             break
     if debug:
@@ -312,7 +296,7 @@ def visualizeLaneMarker(img, debug=True):
 pwd = os.path.realpath(os.path.dirname(__file__))
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
-    for img_i in [1,2,3,4,5,6,7]:
+    for img_i in [1]:#,2,3,4,5,6,7]:
         test_image_filename = pwd + "/images/lm (" + str(img_i) + ").png"
         img = cv2.imread(test_image_filename)
         visualizeLaneMarker(img, debug=True)
