@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	actionlib
 	rospy
+	vision
 	smach
 	tf
 )
@@ -15,6 +16,7 @@ catkin_package(	CATKIN_DEPENDS
 	${MSG_DEP_SET}
 	actionlib
 	rospy
+	vision
 	smach
 	tf
 )

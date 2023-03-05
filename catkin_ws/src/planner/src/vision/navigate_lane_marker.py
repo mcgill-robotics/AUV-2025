@@ -19,6 +19,7 @@ class findLaneMarker(smach.State):
         super().__init__(outcomes=['success', 'failure'])
         
     def execute(self, ud):
+        log("Starting search for lane marker.")
         '''
         Moves the AUV forward until a lane marker is detected.
         If it cannot find the lane marker within the timeout, returns "failure".
@@ -31,13 +32,13 @@ class findLaneMarker(smach.State):
 
         #surge forward until we see a lane marker or reach timeout
         pub.publish(forward)
-        log("moving forward")
+        log("Moving forward (surge " + str(forward) + ")")
         while len(last_object_detection) < 1:
             if time.time() > startTime + timeout:
                 log("Did not find lane marker in time.")
                 pub.publish(stop)
                 return 'failure'
-        log("lane marker in view!")
+        log("Lane marker in view!")
         pub.publish(stop)
         return 'success'
 
@@ -51,6 +52,7 @@ class centerAndScale(smach.State):
         Once the lane marker is centered and scale, it returns success.
         If it loses sight of the lane marker for more than timeout, returns "failure".
         '''
+        log("Starting centering and scaling of lane marker.")
         global last_object_detection
         timeout = 5
         startTime = time.time()
@@ -131,8 +133,8 @@ class rotateToHeading(smach.State):
         If it loses sight of the lane marker for more than timeout, returns "failure".
         Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
         '''
-        return "success" #TEMPORARY UNTIL IMU MEASUREMENT WORKS MORE RELIABLY
-    
+        #return "success" #TEMPORARY UNTIL IMU MEASUREMENT WORKS MORE RELIABLY
+        log("Starting rotation of AUV to target heading.")
         timeout = 5
         global last_object_detection
         rotationError = 9999
@@ -201,9 +203,10 @@ class descend(smach.State):
         super().__init__(outcomes=['success'])
         
     def execute(self, ud):
-        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
         pub.publish(Float64(-2.0)) 
-        rospy.sleep(20)
+        log("Descending AUV 2.0 meters underwater. Waiting 10 secs.")
+        rospy.sleep(10)
         return 'done'
         
    
@@ -212,9 +215,10 @@ class ascendWithFailure(smach.State):
         super().__init__(outcomes=['success'])
         
     def execute(self, ud):
-        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
         pub.publish(Float64(0)) 
-        rospy.sleep(20)
+        log("Ascending AUV. Waiting 10 secs.")
+        rospy.sleep(10)
         return 'success'
         
     
@@ -223,17 +227,21 @@ class ascendWithSuccess(smach.State):
         super().__init__(outcomes=['success'])
         
     def execute(self, ud):
-        pub = rospy.Publisher(topic, Float64, queue_size=50)
+        pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
         pub.publish(Float64(0)) 
-        rospy.sleep(20)
+        log("Ascending AUV. Waiting 10 secs.")
+        rospy.sleep(10)
         return 'success'
 
 
 #ignore unnecessary object detection information and make object detection event one array
 #returns first object detection that is valid (assumes no duplicate lane markers in viewframe)
 def parseMessage(msg):
-    for i in range(len(msg.camera)):
-        if msg.camera[i] != 0: #ignore detection on stereo cameras
+    detection = []
+    for i in range(len(msg.label)):
+        if len(detection) > 0 and detection[8] > msg.confidence[i]: #keep highest confidence prediction
+            continue
+        if msg.camera != 0: #ignore detection on stereo cameras
             continue
         if msg.label[i] != 0: #ignore detection of objects other than lane marker
             continue
@@ -248,15 +256,19 @@ def parseMessage(msg):
             msg.heading1[i]-90, #-90 because 90 degrees orientation on unit circle is 0 degrees for AUV
             msg.heading2[i]-90,
             msg.center_x[i],
-            msg.center_y[i]]
-        return detection
-    return []
+            msg.center_y[i],
+            msg.confidence[i]]
+    log(str(detection))
+    return detection
 
 def objectDetectCb(msg):
     global last_object_detection
     global firstMessage
     firstMessage = True
-    last_object_detection = parseMessage(msg)
+    try:
+        last_object_detection = parseMessage(msg)
+    except Exception as e:
+        log(str(e))
 
 def updateTheta(msg):
     global state_theta_z
@@ -269,7 +281,8 @@ if __name__ == '__main__':
     rospy.init_node('navigate_lane_marker')
     last_object_detection = []
     firstMessage = False
-    state_theta_z = None
+    #state_theta_z = None
+    stat_theta_z = 0 #TEMPORARY UNTIL IMU WORKS
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
     theta_sub = rospy.Subscriber('state_theta_z', ObjectDetectionFrame, objectDetectCb)
 
@@ -284,7 +297,7 @@ if __name__ == '__main__':
         smach.StateMachine.add('rotate', rotateToHeading(), 
                 transitions={'success': 'ascend_success', 'failure':'ascend_fail'})
         smach.StateMachine.add('ascend_fail', ascendWithFailure(),
-                transitions={'success': 'fail'})
+                transitions={'success': 'failure'})
         smach.StateMachine.add('ascend_success', ascendWithSuccess(),
                 transitions={'success': 'success'})
     while not firstMessage: pass

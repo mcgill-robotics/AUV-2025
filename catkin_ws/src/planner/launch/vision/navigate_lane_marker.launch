@@ -1,7 +1,7 @@
 <launch>
-    <include file="$(find propulsion)/launch/propulsion.launch" />
-    <include file="$(find state_estimation)/launch/state_estimation.launch" />
-    <include file="$(find controls)/launch/controls.launch" />
+    <!--	<include file="$(find propulsion)/launch/propulsion.launch" /> -->
+    <!--	<include file="$(find state_estimation)/launch/state_estimation.launch" /> -->
+    <!--	<include file="$(find controls)/launch/controls.launch" /> -->
     <include file="$(find vision)/launch/object_detection.launch" />
-	<node name="navigate_lane_marker" pkg="planner" type="navigate_lane_marker.py" respawn="false" output="screen"/>
+	<node name="navigate_lane_marker" pkg="planner" type="navigate_lane_marker.py" respawn="true" output="screen"/>
 </launch>
