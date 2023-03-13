@@ -27,7 +27,7 @@ class findLaneMarker(smach.State):
         startTime = time.time()
         forward = Float64(10.0)
         stop = Float64(0.0)
-        pub = rospy.Publisher("surge", Float64, queue_size=50)
+        pub = rospy.Publisher("surge_offset", Float64, queue_size=50)
         timeout=60
 
         #surge forward until we see a lane marker or reach timeout
@@ -56,9 +56,9 @@ class centerAndScale(smach.State):
         global last_object_detection
         timeout = 5
         startTime = time.time()
-        pubx = rospy.Publisher('/surge', Float64, queue_size=1, latch=True)
-        puby = rospy.Publisher('/sway', Float64, queue_size=1, latch=True)
-        pubz = rospy.Publisher('/heave', Float64, queue_size=1, latch=True)
+        pubx = rospy.Publisher('/surge_offset', Float64, queue_size=1, latch=True)
+        puby = rospy.Publisher('/sway_offset', Float64, queue_size=1, latch=True)
+        pubz = rospy.Publisher('/z_setpoint', Float64, queue_size=1, latch=True)
         targetCenterX = 0.5
         targetCenterY = 0.5
         targetScale = 0.5
@@ -69,6 +69,12 @@ class centerAndScale(smach.State):
         heave_p_value = 10
         surge_p_value = 10
         sway_p_value = 10
+
+        while state_z == None:
+            if time.time() > startTime + timeout:
+                log("Could not get state z.")
+                return 'failure'
+        startTime = time.time()
 
         while not (centered and scaled):
             if len(last_object_detection) > 0:
@@ -83,12 +89,12 @@ class centerAndScale(smach.State):
 
                 if scaling_error > scaling_tolerance:
                     heaveValue = (currentScale - targetScale)*heave_p_value
-                    pubz.publish(Float64(heaveValue))
-                    log("Heaving {}".format(heaveValue))
+                    pubz.publish(Float64(state_z + heaveValue))
+                    log("Moving Z setpoint by {}".format(heaveValue))
                     scaled = False
                 else:
                     log("Lane marker scaled!")
-                    pubz.publish(Float64(0))
+                    pubz.publish(Float64(state_z))
                     scaled = True
 
                 if centering_error > centering_tolerance: #isn't centered
@@ -113,13 +119,13 @@ class centerAndScale(smach.State):
                     log("Lane marker no longer visible.")
                     pubx.publish(Float64(0))
                     puby.publish(Float64(0))
-                    pubz.publish(Float64(0))
+                    pubz.publish(Float64(state_z))
                     return 'failure'
                     
         log("Successfully positioned above lane marker!")
         pubx.publish(Float64(0))
         puby.publish(Float64(0))
-        pubz.publish(Float64(0))
+        pubz.publish(Float64(state_z))
         return 'success'
 
 class rotateToHeading(smach.State):
@@ -148,6 +154,7 @@ class rotateToHeading(smach.State):
             if time.time() > startTime + timeout:
                 log("Could not get state theta z.")
                 return 'failure'
+        startTime = time.time()
         while not success:
             while abs(rotationError) > rotationTolerance:
                 if len(last_object_detection) > 0:
@@ -156,10 +163,10 @@ class rotateToHeading(smach.State):
                     #since we make our target heading get closer to 0 we can choose the most forward angle at every iteration
                     rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
                     #maybe? after the first time we assume our target heading is the one closest to our current theta_z_setpoint
-                    #rotationError = min(last_object_detection[4:6], key=lambda x : abs(z_setpoint-(state_theta_z + x)))
-                    z_setpoint = state_theta_z + rotationError
-                    log("Detection! Updating setpoint to", z_setpoint, "- current state is", state_theta_z, "(relative heading is", str(rotationError) + ")")
-                    pub.publish(Float64(z_setpoint))
+                    #rotationError = min(last_object_detection[4:6], key=lambda x : abs(theta_z_setpoint-(state_theta_z + x)))
+                    theta_z_setpoint = state_theta_z + rotationError
+                    log("Detection! Updating setpoint to", theta_z_setpoint, "- current state is", state_theta_z, "(relative heading is", str(rotationError) + ")")
+                    pub.publish(Float64(theta_z_setpoint))
                     startTime = time.time()
                     last_object_detection = []
                 else:
@@ -277,14 +284,39 @@ def updateTheta(msg):
     if len(last_object_detection) == 0:
         state_theta_z = float(msg.data)
 
+def updateZPos(msg):
+    global state_z
+    # freeze state_theta_z updates when we've detected a lane marker
+    # so that the rotation is somewhat synced with the image
+    state_z = float(msg.data)
+
+def shutdown():
+    pub_thetaz = rospy.Publisher('/theta_z_setpoint', Float64, queue_size=5, latch=True)
+    pub_z = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
+    pub_surge = rospy.Publisher('/surge', Float64, queue_size=1, latch=True)
+    pub_sway = rospy.Publisher('/sway', Float64, queue_size=1, latch=True)
+    pub_heave = rospy.Publisher('/heave_offset', Float64, queue_size=1, latch=True)
+    if state_theta_z is None:
+        pub_thetaz.publish(Float64(0))
+    else:
+        pub_thetaz.publish(Float64(state_theta_z))
+    pub_z.publish(Float64(0))
+    pub_surge.publish(Float64(0))
+    pub_sway.publish(Float64(0))
+    pub_heave.publish(Float64(0))
+
+
 if __name__ == '__main__':
     rospy.init_node('navigate_lane_marker')
+    rospy.on_shutdown(shutdown)
     last_object_detection = []
     firstMessage = False
     #state_theta_z = None
-    stat_theta_z = 0 #TEMPORARY UNTIL IMU WORKS
+    state_theta_z = 0 #TEMPORARY UNTIL IMU WORKS
+    state_z = None
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
-    theta_sub = rospy.Subscriber('state_theta_z', ObjectDetectionFrame, objectDetectCb)
+    theta_sub = rospy.Subscriber('state_theta_z', Float64, updateTheta)
+    z_pos_sub = rospy.Subscriber('state_z', Float64, state_z)
 
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
