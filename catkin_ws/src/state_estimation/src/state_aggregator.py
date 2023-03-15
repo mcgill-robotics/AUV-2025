@@ -2,14 +2,12 @@
 
 import rospy
 import tf
-import math
 import numpy as np
 import quaternion
 from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
 
 from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
 from sbg_driver.msg import SbgEkfQuat
-from state_variables import *
 from std_msgs.msg import Empty, Float64
 
 
@@ -17,7 +15,7 @@ from std_msgs.msg import Empty, Float64
 # are assumed to wrap around
 ANGLE_CHANGE_TOL = 90 
 
-DEG_PER_RAD = 180/math.pi
+DEG_PER_RAD = 180/np.pi
 
 class State_Aggregator:
 
