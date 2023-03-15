@@ -5,8 +5,9 @@ import tf
 import math
 import numpy as np
 import quaternion
+from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
 
-from geometry_msgs.msg import Point, Pose, Quaternion
+from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
 from sbg_driver.msg import SbgEkfQuat
 from state_variables import *
 from std_msgs.msg import Empty, Float64
@@ -27,9 +28,9 @@ class State_Aggregator:
         self.z = 0.0
 
         # orientation
-        self.quat = np.quaternion(1, 0, 0, 0) # w, x, y, z - relative to quat_ref
-        self.quat_ref = np.quaternion(1, 0, 0, 0) # nominal orientation - allows imu reset
-        self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens 
+        self.q_auv = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
+        self.q_world = np.quaternion(1, 0, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
+        self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
         # publishers
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
@@ -45,13 +46,22 @@ class State_Aggregator:
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
 
+        '''
+        TODO - use tf2 instead of publishing pose?
+        # transform broadcasters
+        self.br_world = TransformBroadcaster()
+        self.br_auv_base = StaticTransformBroadcaster()
+        
+        # transform messages
+        self.tf_world = TransformStamped()
+        self.tf_auv_base = TransformStamped()
+        '''
 
-    def imu_cb(self, imu_msg):
-        q = imu_msg.quaternion
-        self.quat = np.quaternion(q.w, q.x, q.y, q.z)*self.quat_ref.inverse()
 
+    def update_euler(self):
         # calculate euler angles
-        angles = quaternion.as_euler_angles(self.quat)*DEG_PER_RAD
+        # TODO - this gives incorrect results for assumed XYZ
+        angles = quaternion.as_euler_angles(self.q_auv)*DEG_PER_RAD
 
         # allow angles to wind up to preserve continuity
         for i in range(3):
@@ -63,18 +73,26 @@ class State_Aggregator:
                 self.euler[i] = angles[i]
 
 
+    def imu_cb(self, imu_msg):
+        # quaternion in global (imu) frame
+        q_imu = imu_msg.quaternion
+        q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
+
+        # quaternion in world frame
+        self.q_auv= self.q_world.inverse()*q_imu
+        self.update_euler()
+
+
     def depth_sensor_cb(self, depth_msg):
         # TODO - have depth microcontroller publish ready value
         self.z = depth_msg.data*-1
 
 
     def update_state(self, _):
-
         # publish pose
         position = Point(self.x, self.y, self.z)
-       	pose  = Pose(position, self.quat)
+       	pose  = Pose(position, self.q_auv)
         self.pub.publish(pose)
-
 
         # publish individual degrees of freedom
         self.pub_x.publish(self.x)
@@ -87,13 +105,17 @@ class State_Aggregator:
 
 
     def imu_reset_cb(self, _):
-        # this will only propogate on the next imu_cb 
-        # q = self.quat
-        # new reference rotation is compound of current reference rotation 
-        # and the current rotation (wrt current reference rotation) 
-        # this is same as getting the reference rotation relative 
-        # to a global frame of the original imu quaternion readings
-        # self.quat_ref = np.quaternion(q.w, q.x, q.y, q.z)*self.quat_ref
+        # copy of q_auv in (old) world frame
+        q_auv = self.q_auv
+        q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
+
+        # new world quaternion is q_auv in global (imu) frame
+        self.q_world = self.q_world.inverse()*q_auv
+
+        # q_auv is still relative to old q_world, so is recalculated
+        # by definition, it is aligned with the frame of q_world 
+        self.q_auv = np.quaternion(1, 0, 0, 0) 
+        self.update_euler()
 
 
 if __name__ == '__main__':
