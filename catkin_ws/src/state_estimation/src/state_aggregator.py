@@ -1,67 +1,136 @@
 #!/usr/bin/env python3
 
 import rospy
-import tf
-from geometry_msgs.msg import Point, Pose, Quaternion
-from state_variables import *
-from std_msgs.msg import Empty
+import numpy as np
+import quaternion
+from tf import transformations
+
+from geometry_msgs.msg import Point, Pose, Quaternion 
+from sbg_driver.msg import SbgEkfQuat
+from std_msgs.msg import Empty, Float64
+
+
+# angles that change by more than 90 degrees between readings 
+# are assumed to wrap around
+ANGLE_CHANGE_TOL = 90 
+
+DEG_PER_RAD = 180/np.pi
 
 class State_Aggregator:
 
-
-    def imu_reset_cb(self, data):
-        rospy.set_param("theta_x_offset",self.theta_x.get())
-        rospy.set_param("theta_y_offset",self.theta_y.get())
-        rospy.set_param("theta_z_offset",self.theta_z.get())
-
     def __init__(self):
         # position
-        self.x = X()
-        self.y = Y()
-        self.z = Z()
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
 
         # orientation
-        self.theta_x = Theta_X()
-        self.theta_y = Theta_Y()
-        self.theta_z = Theta_Z()
+        self.q_auv = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
+        self.q_world = np.quaternion(1, 0, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
+        self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
+        # publishers
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
-
         self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
         self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
         self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
         self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
         self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
         self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
-        self.sub_imu_rest = rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
+
+        # subscribers
+        rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
+        rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
+        rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
+
+        '''
+        TODO - use tf2 instead of publishing pose?
+        # transform broadcasters
+        self.br_world = TransformBroadcaster()
+        self.br_auv_base = StaticTransformBroadcaster()
+        
+        # transform messages
+        self.tf_world = TransformStamped()
+        self.tf_auv_base = TransformStamped()
+        '''
+
+
+    def update_euler(self):
+        # calculate euler angles
+        # *note* the tf.transformations module is used instead of
+        # quaternion package because it gives the euler angles
+        # as roll/pitch/yaw (XYZ) whereas the latter chooses
+        # a different euler angle convention (ZYZ)
+        # tf.transformations uses quaternion defined as [x, y, z, w]
+        # whereas quaternion is ordered [w, x, y, z]
+        q = self.q_auv
+        q = np.array([q.x, q.y, q.z, q.w])
+        
+        # rotations are applied to ‘s’tatic or ‘r’otating frame
+        # we're just getting the first angle - this assumes
+        # that the other angles are fixed 
+        # TODO - these angles don't combine, only to be treated individually
+        theta_x = transformations.euler_from_quaternion(q, 'rxyz')[0]
+        theta_y = transformations.euler_from_quaternion(q, 'ryxz')[0]
+        theta_z = transformations.euler_from_quaternion(q, 'rzyx')[0]
+
+        # euler_from_quaternion returns 3-tuple of radians
+        # convert to numpy array of degrees
+        angles = np.array([theta_x, theta_y, theta_z])*DEG_PER_RAD
+
+        # allow angles to wind up to preserve continuity
+        for i in range(3):
+            if angles[i] - self.euler[i] > ANGLE_CHANGE_TOL:
+                self.euler[i] = angles[i] - 360
+            elif self.euler[i] - angles[i] > ANGLE_CHANGE_TOL:
+                self.euler[i] = angles[i] + 360
+            else:
+                self.euler[i] = angles[i]
+
+
+    def imu_cb(self, imu_msg):
+        # quaternion in global (imu) frame
+        q_imu = imu_msg.quaternion
+        q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
+
+        # quaternion in world frame
+        self.q_auv= self.q_world.inverse()*q_imu
+        self.update_euler()
+
+
+    def depth_sensor_cb(self, depth_msg):
+        # TODO - have depth microcontroller publish ready value
+        self.z = depth_msg.data*-1
 
 
     def update_state(self, _):
         # publish pose
-        position = Point(
-                self.x.get(),
-                self.y.get(),
-                self.z.get())
-        quaternion = tf.transformations.quaternion_from_euler(
-                self.theta_x.get(),
-                self.theta_y.get(),
-                self.theta_z.get())
-        orientation = Quaternion(
-                quaternion[0],
-                quaternion[1],
-                quaternion[2],
-                quaternion[3])
-       	pose  = Pose(position, orientation)
+        position = Point(self.x, self.y, self.z)
+       	pose  = Pose(position, self.q_auv)
         self.pub.publish(pose)
 
         # publish individual degrees of freedom
-        self.pub_x.publish(self.x.get())
-        self.pub_y.publish(self.y.get())
-        self.pub_z.publish(self.z.get())
-        self.pub_theta_x.publish(self.theta_x.get())
-        self.pub_theta_y.publish(self.theta_y.get())
-        self.pub_theta_z.publish(self.theta_z.get())
+        self.pub_x.publish(self.x)
+        self.pub_y.publish(self.y)
+        self.pub_z.publish(self.z)
 
+        self.pub_theta_x.publish(self.euler[0])
+        self.pub_theta_y.publish(self.euler[1])
+        self.pub_theta_z.publish(self.euler[2])
+
+
+    def imu_reset_cb(self, _):
+        # copy of q_auv in (old) world frame
+        q_auv = self.q_auv
+        q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
+
+        # new world quaternion is q_auv in global (imu) frame
+        self.q_world = self.q_world.inverse()*q_auv
+
+        # q_auv is still relative to old q_world, so is recalculated
+        # by definition, it is aligned with the frame of q_world 
+        self.q_auv = np.quaternion(1, 0, 0, 0) 
+        self.euler = np.array([0.0, 0.0, 0.0])
 
 
 if __name__ == '__main__':
