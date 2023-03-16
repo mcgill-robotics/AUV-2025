@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import rospy
-import tf
 import numpy as np
 import quaternion
 from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
+from tf import transformations
 
 from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
 from sbg_driver.msg import SbgEkfQuat
@@ -58,8 +58,26 @@ class State_Aggregator:
 
     def update_euler(self):
         # calculate euler angles
-        # TODO - this gives incorrect results for assumed XYZ
-        angles = quaternion.as_euler_angles(self.q_auv)*DEG_PER_RAD
+        # *note* the tf.transformations module is used instead of
+        # quaternion package because it gives the euler angles
+        # as roll/pitch/yaw (XYZ) whereas the latter chooses
+        # a different euler angle convention (ZYZ)
+        # tf.transformations uses quaternion defined as [x, y, z, w]
+        # whereas quaternion is ordered [w, x, y, z]
+        q = self.q_auv
+        q = np.array([q.x, q.y, q.z, q.w])
+        
+        # rotations are applied to ‘s’tatic or ‘r’otating frame
+        # we're just getting the first angle - this assumes
+        # that the other angles are fixed 
+        # TODO - these angles don't combine, only to be treated individually
+        theta_x = transformations.euler_from_quaternion(q, 'rxyz')[0]
+        theta_y = transformations.euler_from_quaternion(q, 'ryxz')[0]
+        theta_z = transformations.euler_from_quaternion(q, 'rzyx')[0]
+
+        # euler_from_quaternion returns 3-tuple of radians
+        # convert to numpy array of degrees
+        angles = np.array([theta_x, theta_y, theta_z])*DEG_PER_RAD
 
         # allow angles to wind up to preserve continuity
         for i in range(3):
@@ -113,7 +131,7 @@ class State_Aggregator:
         # q_auv is still relative to old q_world, so is recalculated
         # by definition, it is aligned with the frame of q_world 
         self.q_auv = np.quaternion(1, 0, 0, 0) 
-        self.update_euler()
+        self.euler = np.array([0.0, 0.0, 0.0])
 
 
 if __name__ == '__main__':
