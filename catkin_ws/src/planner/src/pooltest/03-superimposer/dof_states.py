@@ -24,6 +24,46 @@ class DOFMotion(smach.State):
     def update(self, _):
         self.pub.publish(self.effort) 
 
+class Rotate(smach.State):
+    def __init__(self,effort=10.0):
+        super().__init__(outcomes=['done'])
+        self.effort = effort
+        self.theta_z = 0
+        self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
+        self.pub = rospy.Publisher('yaw', Float64, queue_size=50)
+
+    def set_theta_z(self,data):
+        self.theta_z = data.data
+
+    def execute(self,ud):
+        start = self.theta_z
+        DELTA = 2
+        rate = rospy.Rate(60)
+        while(abs(self.theta_z - start) < 180 - DELTA):
+            self.pub.publish(self.effort)
+            rate.sleep()
+        
+        self.pub.publish(Float64(0))
+        return 'done'
+
+class descend(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['done'])
+        self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
+        
+    def execute(self, ud):
+        self.pub.publish(Float64(-2.0)) 
+        rospy.sleep(10)
+        return 'done'
+
+class ascend(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['done'])
+        self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
+    def execute(self, ud):
+        self.pub.publish(Float64(0)) 
+        rospy.sleep(10)
+        return 'done'
 
 class Surge(DOFMotion):
     def __init__(self, effort, duration=10.0):

@@ -45,7 +45,7 @@ class StateControlActionServer():
     def euler_from_quaternion(self,x, y, z, w):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
-        roll is rotation around x in radians (counterclockwise)
+        roll is rotation apub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)round x in radians (counterclockwise)
         pitch is rotation around y in radians (counterclockwise)
         yaw is rotation around z in radians (counterclockwise)
         """
