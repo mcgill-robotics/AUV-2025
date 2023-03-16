@@ -2,7 +2,7 @@
 
 import rospy
 
-from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
+from tf2_ros import TransformBroadcaster 
 from geometry_msgs.msg import TransformStamped, Pose
 
 def state_cb(pose):
