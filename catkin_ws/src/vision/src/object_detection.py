@@ -192,7 +192,7 @@ if __name__ == '__main__':
     rospy.init_node('object_detection')
     
     #CHANGE FOR NEW CAMERAS/MODELS:
-    down_cam_model_filename = pwd + "/models/model_v2.pt"
+    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
     model = [
         YOLO(down_cam_model_filename)
         ]

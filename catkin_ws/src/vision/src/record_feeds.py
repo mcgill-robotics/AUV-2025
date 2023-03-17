@@ -19,10 +19,10 @@ def image_cb(raw_img, feed_name):
     global lastFrameTime
     #if time from when last image was received is greater than videoSaveTime we start a new video
     if time.time() - lastFrameTime.get(feed_name, time.time()+10) > videoSaveTime:
-    	save_images_to_video(shutdown=False)
+        save_images_to_video(shutdown=False)
     #save video in smaller increments (to avoid losing everything in case of crash)
     if len(imgs.get(feed_name, [])) > maxFramesPerVideo[feed_name]:
-    	save_images_to_video(shutdown=False)
+        save_images_to_video(shutdown=False)
     lastFrameTime[feed_name] = time.time()
     #convert sensor_msg image to cv2 image
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
