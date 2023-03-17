@@ -1,9 +1,8 @@
 #include <ros.h>
 
-#define USE_USBCON
-#include <ros.h>
+//#define USE_USBCON
 #include "MS5803.h"
-#include "std_msgs/Float64.h"
+#include <std_msgs/Float64.h>
 #define DELAY 1000 
 #define RHO 1000
 #define G_VALUE 9.81
