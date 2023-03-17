@@ -27,7 +27,7 @@ class findLaneMarker(smach.State):
         startTime = time.time()
         forward = Float64(10.0)
         stop = Float64(0.0)
-        pub = rospy.Publisher("surge_offset", Float64, queue_size=50)
+        pub = rospy.Publisher("surge", Float64, queue_size=50)
         timeout=60
 
         #surge forward until we see a lane marker or reach timeout
@@ -56,8 +56,8 @@ class centerAndScale(smach.State):
         global last_object_detection
         timeout = 5
         startTime = time.time()
-        pubx = rospy.Publisher('/global_x', Float64, queue_size=1, latch=True)
-        puby = rospy.Publisher('/global_y', Float64, queue_size=1, latch=True)
+        pubx = rospy.Publisher('/surge', Float64, queue_size=1, latch=True)
+        puby = rospy.Publisher('/sway', Float64, queue_size=1, latch=True)
         pubz = rospy.Publisher('/z_setpoint', Float64, queue_size=1, latch=True)
         targetCenterX = 0.5
         targetCenterY = 0.5
@@ -66,7 +66,7 @@ class centerAndScale(smach.State):
         scaling_tolerance = 0.05
         centered = False
         scaled = True
-        z_offset_value = 1
+        z_increment = 1
         surge_p_value = 10
         sway_p_value = 10
 
@@ -88,7 +88,7 @@ class centerAndScale(smach.State):
                 log("Lane marker in view at: x:{}, y:{}, w:{}, h:{}!".format(center_x, center_y, width, height))
 
                 if scaling_error > scaling_tolerance:
-                    offsetZ = scaling_error*z_offset_value
+                    offsetZ = scaling_error*z_increment
                     pubz.publish(Float64(state_z + offsetZ))
                     log("Moving Z setpoint by {}".format(offsetZ))
                     scaled = False
@@ -293,8 +293,8 @@ def updateZPos(msg):
 def shutdown():
     pub_thetaz = rospy.Publisher('/theta_z_setpoint', Float64, queue_size=5, latch=True)
     pub_z = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
-    pug_global_x = rospy.Publisher('/global_x', Float64, queue_size=1, latch=True)
-    pug_global_y = rospy.Publisher('/global_y', Float64, queue_size=1, latch=True)
+    pug_global_x = rospy.Publisher('/surge', Float64, queue_size=1, latch=True)
+    pug_global_y = rospy.Publisher('/sway', Float64, queue_size=1, latch=True)
     if state_theta_z is None:
         pub_thetaz.publish(Float64(0))
     else:
