@@ -40,14 +40,14 @@ class Rotate(smach.State):
         DELTA = 2
         rate = rospy.Rate(60)
         while(abs(self.theta_z - start) < 180 - DELTA):
-            self.pub.publish(self.effort)
+            self.pub.publish(Float64(self.effort))
             rate.sleep()
         
         self.pub.publish(Float64(0))
         return 'done'
 
 class descend(smach.State):
-    def __init__(self):
+    def __init__(self, duration=10.0):
         super().__init__(outcomes=['done'])
         self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
         
@@ -57,7 +57,7 @@ class descend(smach.State):
         return 'done'
 
 class ascend(smach.State):
-    def __init__(self):
+    def __init__(self, duration=10.0):
         super().__init__(outcomes=['done'])
         self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
     def execute(self, ud):
