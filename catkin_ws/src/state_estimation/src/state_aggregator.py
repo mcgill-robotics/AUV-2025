@@ -26,7 +26,7 @@ class State_Aggregator:
 
         # orientation
         self.q_auv = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
-        self.q_world = np.quaternion(1, 0, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
+        self.q_world = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
         self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
         # publishers
