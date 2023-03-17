@@ -1,3 +1,5 @@
+#include <ros.h>
+
 #define USE_USBCON
 #include <ros.h>
 #include "MS5803.h"
@@ -30,7 +32,7 @@ void loop() {
   float pressure = pressureSensor.getPressure();
   //Serial.print("Pressure is: ");
   //Serial.println(pressure);
-  depthmsg.data = getDepth();
+  depthmsg.data = (-1)*getDepth();
   depth.publish(&depthmsg);
   nh.spinOnce();
   //pressureSensor.readCoefficients();
