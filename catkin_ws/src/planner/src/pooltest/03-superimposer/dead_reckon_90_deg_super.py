@@ -3,7 +3,7 @@
 import rospy
 import smach
 
-from dof_states import Surge, Rotate, Pause, descend, ascend
+from dof_states import Surge, YawIMU, Pause, changeZ
 
 if __name__ == '__main__':
     rospy.init_node('pool_testing_heave')
@@ -12,19 +12,19 @@ if __name__ == '__main__':
     with sm:
         smach.StateMachine.add('startup', Pause(duration=2.0), 
             transitions={'done':'descend'})
-        smach.StateMachine.add('descend', descend(), 
+        smach.StateMachine.add('descend', changeZ(-2.0), 
             transitions={'done':'surge1'})
         smach.StateMachine.add('surge1', Surge(effort=15, duration=5.0), 
             transitions={'done':'pause1'})
         smach.StateMachine.add('pause1', Pause(duration=2.0), 
             transitions={'done':'rotate'})
-        smach.StateMachine.add('rotate', Rotate(effort=15), 
+        smach.StateMachine.add('rotate', YawIMU(effort=15), 
             transitions={'done':'pause2'})
         smach.StateMachine.add('pause2', Pause(duration=2.0), 
             transitions={'done':'surge2'})
         smach.StateMachine.add('surge2', Surge(effort=15, duration=5.0), 
             transitions={'done':'ascend'})
-        smach.StateMachine.add('ascend', ascend(), 
+        smach.StateMachine.add('ascend', changeZ(0.0), 
             transitions={'done':'off'})
         smach.StateMachine.add('off', Pause(), 
             transitions={'done':'finished'})

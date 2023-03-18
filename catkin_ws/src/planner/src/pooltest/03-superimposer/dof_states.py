@@ -25,12 +25,12 @@ class DOFMotion(smach.State):
         self.pub.publish(self.effort) 
 
 class Rotate(smach.State):
-    def __init__(self,effort=10.0):
+    def __init__(self,topic_pub,topic_sub,effort=10.0, pause=0.0):
         super().__init__(outcomes=['done'])
         self.effort = effort
         self.theta_z = 0
-        self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
-        self.pub = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.sub = rospy.Subscriber(topic_sub,Float64,self.set_theta_z)
+        self.pub = rospy.Publisher(topic_pub, Float64, queue_size=50)
 
     def set_theta_z(self,data):
         self.theta_z = data.data
@@ -46,22 +46,26 @@ class Rotate(smach.State):
         self.pub.publish(Float64(0))
         return 'done'
 
-class descend(smach.State):
-    def __init__(self, duration=10.0):
-        super().__init__(outcomes=['done'])
-        self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
-        
-    def execute(self, ud):
-        self.pub.publish(Float64(-2.0)) 
-        rospy.sleep(10)
-        return 'done'
+class RollIMU(Rotate):
+    def __init__(self,effort,pause=0.0):
+        super().__init__("roll","state_theta_z",effort,pause=pause)
 
-class ascend(smach.State):
-    def __init__(self, duration=10.0):
+class PitchIMU(Rotate):
+    def __init__(self,effort,pause=0.0):
+        super().__init__("pitch","state_theta_y",effort,pause=pause)
+
+class YawIMU(Rotate):
+    def __init__(self,effort,pause=0.0):
+        super().__init__("yaw","state_theta_z",effort,pause=pause)
+
+
+class changeZ(smach.State):
+    def __init__(self, setpoint=0.0, duration=10.0):
         super().__init__(outcomes=['done'])
         self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
+        self.setpoint = setpoint
     def execute(self, ud):
-        self.pub.publish(Float64(0)) 
+        self.pub.publish(Float64(self.setpoint)) 
         rospy.sleep(10)
         return 'done'
 
