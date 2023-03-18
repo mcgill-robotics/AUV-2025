@@ -1,0 +1,3 @@
+<launch>
+	<node name="test_03_dead_reckon" pkg="planner" type="dead_reckon_super.py" respawn="false" output="screen"/>
+</launch>
