@@ -1,0 +1,3 @@
+<launch>
+	<node name="bag_record_vision" pkg="rosbag" type="record" args="-o $(find vision)/bag/vision /imag_raw" output="screen"/>
+</launch>

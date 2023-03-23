@@ -61,12 +61,13 @@ class YawIMU(Rotate):
         super().__init__("yaw","state_theta_z",effort,pause=pause, angle=angle)
 
 
-class ascend(smach.State):
-    def __init__(self, duration=10.0):
+class changeZ(smach.State):
+    def __init__(self, setpoint=0.0, duration=10.0):
         super().__init__(outcomes=['done'])
         self.pub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)
+        self.setpoint = setpoint
     def execute(self, ud):
-        self.pub.publish(Float64(0)) 
+        self.pub.publish(Float64(self.setpoint)) 
         rospy.sleep(10)
         return 'done'
 
