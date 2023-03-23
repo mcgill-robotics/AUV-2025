@@ -1,5 +1,5 @@
 <launch>
-    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="log">
+    <node name="usb_cam1" pkg="usb_cam" type="usb_cam_node" output="log">
         <param name="video_device" value="/dev/video0" />
         <!-- <param name="image_width" value="640" />
         <param name="image_height" value="480" />
@@ -8,7 +8,7 @@
 
 	<remap from="/usb_cam" to="/vision/down_cam"/>
     </node>
-    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
-    <node name="test_thresholding" pkg="vision" type="test_thresholding.py" respawn="true"  output="screen"/>
-    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/rqt-gui-config/vision.perspective"/>
+    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/> 
+    <node name="test_thresholding" pkg="vision" type="test_thresholding.py" respawn="true"  output="screen"/> 
+    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/rqt-gui-config/vision.perspective"/> 
 </launch>

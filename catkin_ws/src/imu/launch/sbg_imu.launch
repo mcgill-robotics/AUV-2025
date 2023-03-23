@@ -2,4 +2,7 @@
 	<node name="sbg_device" pkg="sbg_driver" type="sbg_device" output="screen" respawn="true">
 		<rosparam command="load" file="$(find imu)/config/sbg_imu.yaml"/>
 	</node>
+	<!-- <include file="$(find imu)/launch/bag_imu.launch"/> 
+	remove this comment if you want to record the imu separately -->
+	
 </launch>
