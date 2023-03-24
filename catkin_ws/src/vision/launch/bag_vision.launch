@@ -1,3 +1,4 @@
 <launch>
 	<node name="bag_record_vision" pkg="rosbag" type="record" args="-o $(find vision)/bag/vision /imag_raw" output="screen"/>
 </launch>
+<!-- Make sure there is a folder with the name "bag" in vision -->
