@@ -1,6 +1,6 @@
 #include <ros.h>
 
-//#define USE_USBCON
+#define USE_USBCON
 #include "MS5803.h"
 #include <std_msgs/Float64.h>
 #define DELAY 1000 
