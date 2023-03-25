@@ -100,13 +100,13 @@ class State_Aggregator:
 
     def depth_sensor_cb(self, depth_msg):
         # TODO - have depth microcontroller publish ready value
-        self.z = depth_msg.data*-1
+        self.z = depth_msg.data
 
 
     def update_state(self, _):
         # publish pose
         position = Point(self.x, self.y, self.z)
-       	pose  = Pose(position, self.q_auv)
+        pose = Pose(position, self.q_auv)
         self.pub.publish(pose)
 
         # publish individual degrees of freedom
