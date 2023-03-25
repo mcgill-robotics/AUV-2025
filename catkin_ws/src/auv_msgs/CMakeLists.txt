@@ -19,6 +19,7 @@ add_message_files(FILES
 	ThrusterForces.msg
 	ObjectDetectionFrame.msg
 	ImuData.msg
+	Ensemble.msg
 )
 
 add_action_files(FILES

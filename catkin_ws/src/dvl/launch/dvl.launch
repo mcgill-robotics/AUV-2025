@@ -1,6 +1,6 @@
 <launch>
   <arg name="port" default="/dev/dvl" doc="serial port"/>
-  <arg name="baudrate" default="9600" doc="serial baud rate"/>
+  <arg name="baudrate" default="115200" doc="serial baud rate"/>
   <arg name="frame" default="dvl" doc="frame ID"/>
   <arg name="timeout" default="1.0" doc="serial read timeout in seconds"/>
 

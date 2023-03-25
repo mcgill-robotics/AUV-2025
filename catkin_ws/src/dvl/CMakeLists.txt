@@ -7,13 +7,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   rospy
   std_msgs
+  auv_msgs
 )
 
 catkin_python_setup()
 
 add_message_files(
   FILES
-  Ensemble.msg
 )
 
 generate_messages(
@@ -28,6 +28,7 @@ catkin_package(
   message_runtime
   rospy
   std_msgs
+  auv_msgs
 )
 
 install(PROGRAMS
