@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find planner)/launch/test-03-superimposer/test-03-surge.launch" />
+	<include file="$(find controls)/launch/controls.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch" />
+</launch>

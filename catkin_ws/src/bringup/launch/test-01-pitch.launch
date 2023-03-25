@@ -1,0 +1,4 @@
+<launch>
+	<include file="$(find planner)/launch/test-01-thrusters/test-01-pitch.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch" />
+</launch>
