@@ -11,10 +11,12 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>auv_msgs</build_depend>
+  <build_depend>gscam</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>rospy</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
+  <exec_depend>gscam</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
 
