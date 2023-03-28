@@ -10,10 +10,7 @@ import lane_marker_measure
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 import math
-
-BOX_COLOR = (255, 255, 255) # White
-HEADING_COLOR = (255, 0, 0) # Blue
-TEXT_COLOR = (0, 0, 0) # Black
+import torch
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -39,6 +36,25 @@ def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=
         lineType=cv2.LINE_AA,
     )
     return img
+
+def updateX(msg):
+    global state_x
+    state_x = float(msg.data)
+def updateY(msg):
+    global state_y
+    state_y = float(msg.data)
+def updateZ(msg):
+    global state_z
+    state_z = float(msg.data)
+def updateThetaX(msg):
+    global state_theta_x
+    state_theta_x = float(msg.data)
+def updateThetaY(msg):
+    global state_theta_y
+    state_theta_y = float(msg.data)
+def updateThetaZ(msg):
+    global state_theta_z
+    state_theta_z = float(msg.data)
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
 def cropToBbox(img, bbox):
@@ -90,19 +106,11 @@ def measureLaneMarker(img, bbox):
     cv2.circle(img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, img
 
-#increase intensity of blues in given image
-def make_bluer(img, color_shift_intensity):
-    img_b, img_g, img_r = cv2.split(img) #split by channel
-    img_b = np.uint16(img_b)
-    img_b += color_shift_intensity
-    np.clip(img_b, 0, 255, out=img_b)
-    img_b = np.uint8(img_b)
-    img = cv2.merge((img_b, img_g, img_r)) #merge adjusted channels
-    return img
-
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
+    current_state = (state_x, state_y, state_z, state_theta_x, state_theta_y, state_theta_z)
+    if None in current_state: return
     #only predict if i has not reached detect_every yet
     global i
     i[camera_id] += 1
@@ -111,11 +119,8 @@ def detect_on_image(raw_img, camera_id):
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     
-    #FOR TESTING IN MEDN
-    #img = make_bluer(img, color_shift_intensity=int(0.2*255))
-    
     #run model on img
-    detections = model[camera_id].predict(img, device=0) #change device for cuda
+    detections = model[camera_id].predict(img, device=torch.device('cuda')) #change device for cuda
     #initialize empty arrays for object detection frame message
     label = []
     bounding_box_x = []
@@ -123,10 +128,12 @@ def detect_on_image(raw_img, camera_id):
     bounding_box_width = []
     bounding_box_height = []
     confidence = []
+    obj_x = []
+    obj_y = []
+    obj_z = []
+    obj_theta_z = []
     heading1 = []
     heading2 = []
-    center_x = []
-    center_y = []
     #nested for loops get all predictions made by model
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
@@ -151,15 +158,54 @@ def detect_on_image(raw_img, camera_id):
             #if a lane marker is detected on down cam then add heading visualization to image
             if cls_id == 0 and camera_id == 0:
                 headings, center, img = measureLaneMarker(img, bbox)
-                heading1.append(headings[0])
-                heading2.append(headings[1])
-                center_x.append(center[0])
-                center_y.append(center[1])
-            else:
+                heading1.append(state_theta_z + (headings[0]-90))
+                heading2.append(state_theta_z + (headings[1]-90))
+                obj_theta_z.append(state_theta_z + (headings[0]-90))
+                #for x and y:
+                    #assuming for now AUV is flat in orientation
+                    #assuming no lens distortion
+                    #assuming FOV increases linearly with distance from center pixel
+                x_center_offset = (center[0]-(w/2)) / w
+                x_angle_offset = down_cam_hfov*x_center_offset
+                x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
+                global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
+                down_cam_vfov = down_cam_hfov*(h/w)
+                y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                y_angle_offset = down_cam_vfov*y_center_offset
+                y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
+                global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
+
+                obj_x.append(global_center_x)
+                obj_y.append(global_center_y)
+                obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
+            elif camera_id==0:
+                #use custom object measurements to get theta_z
                 heading1.append(None)
                 heading2.append(None)
-                center_x.append(None)
-                center_y.append(None)
+                obj_theta_z.append(None)
+
+                x_center_offset = (bbox[0]-(w/2)) / w
+                x_angle_offset = down_cam_hfov*x_center_offset
+                x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
+                global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
+                down_cam_vfov = down_cam_hfov*(h/w)
+                y_center_offset = ((h/2)-bbox[1]) / h #negated since y goes from top to bottom
+                y_angle_offset = down_cam_vfov*y_center_offset
+                y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
+                global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
+
+                obj_x.append(global_center_x)
+                obj_y.append(global_center_y)
+                obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
+            else:
+                #measure with stereo depth to get x,y,z
+                #use custom object measurements to get theta_z
+                obj_x.append(None)
+                obj_y.append(None)
+                obj_z.append(None)
+                obj_theta_z.append(None)
+                heading1.append(None)
+                heading2.append(None)
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
@@ -171,19 +217,43 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame.bounding_box_height = bounding_box_height
     detectionFrame.confidence = confidence
     detectionFrame.camera = camera_id
+    detectionFrame.obj_x = obj_x
+    detectionFrame.obj_y = obj_y
+    detectionFrame.obj_z = obj_z
+    detectionFrame.obj_theta_z = obj_theta_z
     detectionFrame.heading1 = heading1
     detectionFrame.heading2 = heading2
-    detectionFrame.center_x = center_x
-    detectionFrame.center_y = center_y
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     img = bridge.cv2_to_imgmsg(img, "bgr8")
     visualisation_pubs[camera_id].publish(img)
 
+BOX_COLOR = (255, 255, 255) # White
+HEADING_COLOR = (255, 0, 0) # Blue
+TEXT_COLOR = (0, 0, 0) # Black
+
+state_x = 0 #set to None when implemented
+state_y = 0 #set to None when implemented
+state_z = None #set to None when implemented
+state_theta_x = None #set to None when implemented
+state_theta_y = None #set to None when implemented
+state_theta_z = None #set to None when implemented
+
+detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
+min_prediction_confidence = 0.6 #only report predictions with confidence at least 60%
+
+pool_depth = 4
+
 if __name__ == '__main__':
-    detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
-    #only report predictions with confidence at least 40%
-    min_prediction_confidence = 0.6
+    x_pos_sub = rospy.Subscriber('state_x', Float64, updateX)
+    y_pos_sub = rospy.Subscriber('state_y', Float64, updateY)
+    z_pos_sub = rospy.Subscriber('state_z', Float64, updateZ)
+    theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateThetaX)
+    theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateThetaY)
+    theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateThetaZ)
+
+    down_cam_hfov = 75
+
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     #get and start models
@@ -196,6 +266,7 @@ if __name__ == '__main__':
     model = [
         YOLO(down_cam_model_filename)
         ]
+    for m in model: m.to(torch.device('cuda'))
     #count for number of images received per camera
     i = [
         0
