@@ -57,7 +57,7 @@ class TeledyneNavigator(object):
             message (str): Message.
         """
         rospy.logdebug("Writing: %s", message)
-        self._conn.write(message)
+        self._conn.write(message.encode())
 
     def read(self, size=1):
         """Reads serial data.
