@@ -2,10 +2,13 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 import cv2
+import numpy as np
 
 Gst.init(None)
 
 def on_new_sample(sink, appsrc):
+    print(sink)
+    print(appsrc)
     sample = sink.emit("pull-sample")
     if sample:
         buf = sample.get_buffer()
@@ -14,20 +17,25 @@ def on_new_sample(sink, appsrc):
             # Get frame number from buffer metadata
             caps = sample.get_caps()
             structure = caps.get_structure(0)
+            print(structure)
             frame_number = structure.get_value('frame_number')
+            print(frame_number)
+            # Convert buffer to numpy array
+            data = buf.extract_dup(0, buf.get_size())
+            print(data)
+            arr = np.frombuffer(data, np.uint8)
+            print(arr)
             
-            # Display every 10th frame
-            if frame_number % 10 == 0:
-                # Convert buffer to numpy array
-                data = buf.extract_dup(0, buf.get_size())
-                arr = np.frombuffer(data, np.uint8)
-                img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-                
-                # Display the frame
-                cv2.imshow("Frame", img)
-                cv2.waitKey(1)
-                
+            img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+            
+            print(img)
+
+            # Display the frame
+            cv2.imshow("Frame", img)
+            cv2.waitKey(1)
+
         buf.unmap(mapinfo)
+
 
 pipeline = Gst.Pipeline()
 
@@ -48,8 +56,10 @@ nvvidconv_2 = Gst.ElementFactory.make("nvvidconv", "nvvidconv-2")
 
 videoconvert = Gst.ElementFactory.make("videoconvert", "video-convert")
 
-sink = Gst.ElementFactory.make("autovideosink", "video-output")
+sink = Gst.ElementFactory.make("appsink", "app-output")
+sink.set_property("emit-signals", True)
 sink.set_property("sync", False)
+sink.set_property("max-buffers", 1)
 
 pipeline.add(src)
 pipeline.add(caps_filter_1)
@@ -65,6 +75,7 @@ nvvidconv_1.link(caps_filter_2)
 caps_filter_2.link(nvvidconv_2)
 nvvidconv_2.link(videoconvert)
 videoconvert.link(sink)
+
 
 sink.connect("new-sample", on_new_sample, src)
 
