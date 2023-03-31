@@ -1,11 +1,25 @@
 <launch>
-	<node name="stream_cameras" pkg="vision" type="stream_cameras.py" respawn="true"  output="screen">
+	<node name="down_cam" pkg="vision" type="stream_cameras.py" respawn="true"  output="screen">
 		<param name="sensor_id" value="0" />
 		<param name="inputImgWidth" value="4032" />
 		<param name="inputImgHeight" value="3040" />
 		<param name="outputImgWidth" value="1920" />
 		<param name="outputImgHeight" value="1080" />
 		<param name="framerate" value="30" />
+		<param name="stereo" value="false" />
 		<param name="outputTopic" value="/vision/down_cam/image_raw" />
 	</node>
+	
+	<node name="stereo_cams" pkg="vision" type="stream_cameras.py" respawn="true"  output="screen">
+		<param name="sensor_id" value="0" />
+		<param name="inputImgWidth" value="2028" />
+		<param name="inputImgHeight" value="1520" />
+		<param name="outputImgWidth" value="1440" />
+		<param name="outputImgHeight" value="1080" />
+		<param name="framerate" value="40" />
+		<param name="stereo" value="true" />
+		<param name="outputTopicLeft" value="/vision/front_left_cam/image_raw" />
+		<param name="outputTopicRight" value="/vision/front_right_cam/image_raw" />
+	</node>
+	
 </launch>
