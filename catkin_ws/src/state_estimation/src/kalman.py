@@ -3,7 +3,7 @@ import rospy
 
 class KalmanXY:
 
-    def __init__(self,vx,vy, cov=np.eye(2),Q=np.eye(2)*0.1,R=np.eye(2),initial_state = np.array([0,0])):
+    def __init__(self,vx,vy, cov=np.eye(2),Q=np.eye(2)*0.1,R=np.eye(2)*0.05,initial_state = np.array([0,0])):
         self.prev_v = np.array([vx,vy])
         self.prev_t = rospy.get_time()
         self.covariance = cov
