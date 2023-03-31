@@ -7,32 +7,20 @@ import numpy as np
 Gst.init(None)
 
 def on_new_sample(sink, appsrc):
-    print(sink)
-    print(appsrc)
+    print("new sample")
     sample = sink.emit("pull-sample")
     if sample:
         buf = sample.get_buffer()
+        print(buf.get_size())
         result, mapinfo = buf.map(Gst.MapFlags.READ)
         if result:
-            # Get frame number from buffer metadata
             caps = sample.get_caps()
             structure = caps.get_structure(0)
-            print(structure)
-            frame_number = structure.get_value('frame_number')
-            print(frame_number)
-            # Convert buffer to numpy array
-            data = buf.extract_dup(0, buf.get_size())
-            print(data)
-            arr = np.frombuffer(data, np.uint8)
-            print(arr)
-            
-            img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-            
-            print(img)
-
-            # Display the frame
-            cv2.imshow("Frame", img)
-            cv2.waitKey(1)
+            width = int(structure.get_value('width'))
+            height = int(structure.get_value('height'))
+            channels = 3
+            arr = np.ndarray((height, width, channels), buffer=buf.extract_dup(0, buf.get_size()), dtype=np.uint8)
+            print(buf.extract())
 
         buf.unmap(mapinfo)
 
@@ -80,6 +68,8 @@ videoconvert.link(sink)
 sink.connect("new-sample", on_new_sample, src)
 
 pipeline.set_state(Gst.State.PLAYING)
+
+print("started stream")
 
 try:
     loop = GLib.MainLoop()
