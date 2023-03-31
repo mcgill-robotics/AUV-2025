@@ -123,17 +123,13 @@ def detect_on_image(raw_img, camera_id):
     detections = model[camera_id].predict(img, device=torch.device('cuda')) #change device for cuda
     #initialize empty arrays for object detection frame message
     label = []
-    bounding_box_x = []
-    bounding_box_y = []
-    bounding_box_width = []
-    bounding_box_height = []
-    confidence = []
+    detection_confidence = []
     obj_x = []
     obj_y = []
     obj_z = []
     obj_theta_z = []
-    heading1 = []
-    heading2 = []
+    position_confidence = []
+    extra_field = []
     #nested for loops get all predictions made by model
     for detection in detections:
         boxes = detection.boxes.cpu().numpy()
@@ -148,24 +144,18 @@ def detect_on_image(raw_img, camera_id):
             #add bbox and class id to viewframe arrays
             #scale bbox so it is a fraction of image size and not in pixels
             h, w, channels = img.shape
-            xywh = box.xywh
-            bounding_box_x.append(bbox[0]/w)
-            bounding_box_y.append(bbox[1]/h)
-            bounding_box_width.append(bbox[2]/w)
-            bounding_box_height.append(bbox[3]/h)
-            confidence.append(conf) 
+            detection_confidence.append(conf) 
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
             if cls_id == 0 and camera_id == 0:
                 headings, center, img = measureLaneMarker(img, bbox)
-                heading1.append(state_theta_z + (headings[0]-90))
-                heading2.append(state_theta_z + (headings[1]-90))
                 obj_theta_z.append(state_theta_z + (headings[0]-90))
+                extra_field.append(state_theta_z + (headings[1]-90))
                 #for x and y:
                     #assuming for now AUV is flat in orientation
                     #assuming no lens distortion
                     #assuming FOV increases linearly with distance from center pixel
-                x_center_offset = (center[0]-(w/2)) / w
+                x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
                 x_angle_offset = down_cam_hfov*x_center_offset
                 x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                 global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
@@ -175,16 +165,23 @@ def detect_on_image(raw_img, camera_id):
                 y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
                 global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
 
+                #confidence model:
+                    # 0.5 at edges 
+                    # 1.0 at center
+                    # product of both axes
+                x_conf = 1.0 - abs(x_center_offset)
+                y_conf = 1.0 - abs(y_center_offset)
+                position_confidence.append(x_conf*y_conf) 
+
                 obj_x.append(global_center_x)
                 obj_y.append(global_center_y)
                 obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             elif camera_id==0:
                 #use custom object measurements to get theta_z
-                heading1.append(None)
-                heading2.append(None)
+                extra_field.append(None)
                 obj_theta_z.append(None)
 
-                x_center_offset = (bbox[0]-(w/2)) / w
+                x_center_offset = (bbox[0]-(w/2)) / w #-0.5 to 0.5
                 x_angle_offset = down_cam_hfov*x_center_offset
                 x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                 global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
@@ -193,6 +190,14 @@ def detect_on_image(raw_img, camera_id):
                 y_angle_offset = down_cam_vfov*y_center_offset
                 y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
                 global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
+                
+                #confidence model:
+                    # 0.5 at edges 
+                    # 1.0 at center
+                    # product of both axes
+                x_conf = 1.0 - abs(x_center_offset)
+                y_conf = 1.0 - abs(y_center_offset)
+                position_confidence.append(x_conf*y_conf) 
 
                 obj_x.append(global_center_x)
                 obj_y.append(global_center_y)
@@ -204,25 +209,20 @@ def detect_on_image(raw_img, camera_id):
                 obj_y.append(None)
                 obj_z.append(None)
                 obj_theta_z.append(None)
-                heading1.append(None)
-                heading2.append(None)
+                extra_field.append(None)
+                position_confidence.append(None)  #make inversely proportional to distance from object
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
-    detectionFrame.bounding_box_x = bounding_box_x
-    detectionFrame.bounding_box_y = bounding_box_y
-    detectionFrame.bounding_box_width = bounding_box_width
-    detectionFrame.bounding_box_height = bounding_box_height
-    detectionFrame.confidence = confidence
-    detectionFrame.camera = camera_id
+    detectionFrame.detection_confidence = detection_confidence
     detectionFrame.obj_x = obj_x
     detectionFrame.obj_y = obj_y
     detectionFrame.obj_z = obj_z
     detectionFrame.obj_theta_z = obj_theta_z
-    detectionFrame.heading1 = heading1
-    detectionFrame.heading2 = heading2
+    detectionFrame.position_confidence = position_confidence
+    detectionFrame.extra_field = extra_field
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     img = bridge.cv2_to_imgmsg(img, "bgr8")
@@ -287,3 +287,26 @@ if __name__ == '__main__':
     cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
+
+
+#arrays containing bounding box dimensions
+#float64[] bounding_box_x
+#float64[] bounding_box_y
+#float64[] bounding_box_width
+#float64[] bounding_box_height
+#which camera this was detected on
+#uint8 camera
+
+#bounding_box_x = []
+#bounding_box_y = []
+#bounding_box_width = []
+#bounding_box_height = []
+#bounding_box_x.append(bbox[0]/w)
+#bounding_box_y.append(bbox[1]/h)
+#bounding_box_width.append(bbox[2]/w)
+#bounding_box_height.append(bbox[3]/h)
+#detectionFrame.camera = camera_id
+#detectionFrame.bounding_box_x = bounding_box_x
+#detectionFrame.bounding_box_y = bounding_box_y
+#detectionFrame.bounding_box_width = bounding_box_width
+#detectionFrame.bounding_box_height = bounding_box_height
