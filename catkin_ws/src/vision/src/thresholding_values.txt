@@ -3,6 +3,6 @@
 # blur 1 amount
 0.05
 # color tolerance
-0.3
+0.15
 # blur 2 amount
 0.06

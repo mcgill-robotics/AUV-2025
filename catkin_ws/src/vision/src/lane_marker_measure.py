@@ -27,15 +27,18 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
     getParameters()
     downscaled_size = (int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt))
     downscaled = cv2.resize(img, dsize=downscaled_size, interpolation=cv2.INTER_AREA)
-    if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
     if blur1_amt > 0: blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
     else: blurred = downscaled
-    if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
     img_b, img_g, img_r = cv2.split(blurred)
-    ratio_img = np.uint32(img_r)/(np.uint32(img_g) + np.uint32(img_b) + np.uint32(img_r) + np.ones(img_b.shape))
+    #normalize colors so that the max color channel in every pixel is 255
+    max_brightness_increase = np.min(255-blurred, axis=2)
+    ratio_img = np.uint32(img_r+max_brightness_increase)/(np.uint32(img_g+max_brightness_increase) + np.uint32(img_b+max_brightness_increase) + np.uint32(img_r+max_brightness_increase))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
     max_pixel = blurred[math.floor(max_i/blurred.shape[1])][max_i%blurred.shape[1]]
 
+    if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
+    if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
+    
     def mask(x):
         #return black (0,0,0) if similar to max_red within tolerance
         #otherwise return white (255,255,255)
@@ -43,17 +46,24 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
             return (0,0,0)
         else:
             return (255,255,255)
+
     thresh_img = np.uint8(np.zeros(blurred.shape))
     for r in range(len(blurred)):
         for p in range(len(blurred[r])):
             thresh_img[r][p] = mask(blurred[r][p])
+
     if tol_publisher != None: tol_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
+
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
     thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
+    
     if blur2_publisher != None: blur2_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
+    
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
     ret,thresh_img = cv2.threshold(thresh_img,70,255,0) #convert grayscale to black and white with a threshold
+    
     if thresh_publisher != None: thresh_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "mono8")) #FOR ADJUSTING VALUES
+    
     return thresh_img
 
 #return the intersection point of two lines of the form (slope, y intercept)
@@ -71,7 +81,7 @@ def getIntersection(l1, l2):
 
 #given an array of the form ((slope1UpperLine, slope1LowerLine), (slope2UpperLine, slope2LowerLine))
 #return the center point of the rectangle defined by the 4 lines
-def getCenterPoint(lines, img, debug):
+def getCenterPoint(lines):
     #get intersection between the two upper lines
     int1 = getIntersection(lines[0][0], lines[1][0])
     #get intersection between the two lower lines
@@ -79,12 +89,6 @@ def getCenterPoint(lines, img, debug):
     if None in (int1, int2): return None
     #get point halfway between the two intersections
     centerPoint = (int((int1[0]+int2[0])/2), int((int1[1]+int2[1])/2))
-    #if debug:
-    #    cv2.circle(img, int1, radius=4, color=(255,0,0), thickness=-1)
-    #    cv2.circle(img, int2, radius=4, color=(255,0,0), thickness=-1)
-    #    cv2.circle(img, centerPoint, radius=5, color=(0,0,255), thickness=-1)
-    #    cv2.imshow("with center point", img)
-    #    cv2.waitKey(0)
     return centerPoint
 
 def angleBetweenLines(l1, l2):
@@ -140,7 +144,7 @@ def measure_headings(img, debug=False):
             cv2.waitKey(0)
             pass
         #find most prominent line in the image
-        line = cv2.HoughLines(edges,1,np.pi/180,10)
+        line = cv2.HoughLines(edges,1,np.pi/180,25)
         # we use a try statement in case no lines are found
         #when no lines are found a typeerror is thrown
         try:
@@ -167,96 +171,136 @@ def measure_headings(img, debug=False):
                 #draw the new line we found on top of the original image
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
-                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),15)
+                line_thickness = int(0.05*max(edges.shape))
+                cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),line_thickness)
+                cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
         except TypeError:
             break
     if debug:
-        #cv2.imshow("with lines", img)
-        #cv2.waitKey(0)
+        cv2.imshow("remaining edges", edges)
+        cv2.waitKey(0)
         pass
-    #combine the 4 lines into 2 most different lines
-    finalLines = []
-    #array to hold the 4 lines, organized by heading (2 lines per heading, upper and lower)
-    laneEdgeLines = []
-    if (len(lines) < 4):
+
+    if (len(lines) < 2):
         return None, None
-    for i in range(2):
+    elif (len(lines) < 4):
+        #if there arent 4 lines we can assume the lane marker is straight i.e. we only consider two lines
+        if len(lines) == 3:
+            #remove line that is most different from the other two
+            l0l1_angle = angleBetweenLines(lines[0], lines[1])
+            l0l2_angle = angleBetweenLines(lines[0], lines[2])
+            l1l2_angle = angleBetweenLines(lines[1], lines[2])
+            if min(l0l1_angle, l0l2_angle, l1l2_angle) == l1l2_angle:
+                lines.pop(0)
+            elif min(l0l1_angle, l0l2_angle, l1l2_angle) == l0l2_angle:
+                lines.pop(1)
+            else:
+                lines.pop(2)
         #get slope
         s1 = lines[0]
-        lines.remove(s1)
-        #get line with least angle from s1
-        s2 = min(lines, key=lambda x: angleBetweenLines(s1, x))
-        lines.remove(s2)
+        s2 = lines[1]
         #average the lines to get better approximation of actual line
         s1_angle = ((180*math.atan(s1[0])/math.pi) % 180)
         s2_angle = ((180*math.atan(s2[0])/math.pi) % 180)
         #ensure that angles are within 90 degrees of each other so we always average the acute angle between lines
         if abs(s1_angle-s2_angle) > 90:
             s1_angle = s1_angle-180
-        avg_angle = (s1_angle+s2_angle)/2
+        #negate since y starts at top of image
+        avg_angle = -(s1_angle+s2_angle)/2
         avg_slope = math.tan(math.pi*avg_angle/180)
-        finalLines.append(avg_slope)
-        #get the upper and lower lines by comparing their y-intercept values
-        upper_line = min((s1,s2), key=lambda x: x[1])
-        lower_line = max((s1,s2), key=lambda x: x[1])
-        #save upper and lower line to the edge lines array
-        laneEdgeLines.append((upper_line,lower_line))
-    
-    #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
-    centerPoint = getCenterPoint(laneEdgeLines, img, debug)
-    if centerPoint == None: return None, None
-    avgs = []
-    for slope in finalLines:
-        negAvg = getAvgColor(thresh_img, slope, -1, centerPoint)
-        posAvg = getAvgColor(thresh_img, slope, 1, centerPoint)
-        avgs.append([slope, posAvg, 1])
-        avgs.append([slope, negAvg, -1])
-    s1 = min(avgs, key=lambda x : x[1])
-    avgs.remove(s1)
-    s2 = min(avgs, key=lambda x : x[1])
-    #negated because y axis is 0 at top of frame
-    angle1 = -180*(math.atan(s1[0])/math.pi)
-    angle2 = -180*(math.atan(s2[0])/math.pi)
-    if s1[2] < 0: #abs(angle) should be above 90
-        if abs(angle1) < 90:
-            if angle1 < 0:
-                angle1 += 180
-            else:
-                angle1 -= 180
-    else: #abs(angle) should be below 90
-        if abs(angle1) > 90:
-            if angle1 < 0:
-                angle1 += 180
-            else:
-                angle1 -= 180
-    if s2[2] < 0: #abs(angle) should be above 90
-        if abs(angle2) < 90:
-            if angle2 < 0:
-                angle2 += 180
-            else:
-                angle2 -= 180
-    else: #abs(angle) should be below 90
-        if abs(angle2) > 90:
-            if angle2 < 0:
-                angle2 += 180
-            else:
-                angle2 -= 180
-    finalLines = [angle1,angle2]
-    return finalLines, centerPoint
+        
+        angle1 = avg_angle
+        if angle1 > 0: angle2 = angle1-180
+        else: angle2 = angle1+180
 
-def getAvgColor(img, slope, direction, center_point):
+        finalLines = [angle1,angle2]
+
+        M = cv2.moments(255-thresh_img)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        centerPoint = (cX, cY)
+
+        return finalLines, centerPoint
+    else:
+        #combine the 4 lines into 2 most different lines
+        finalLines = []
+        #array to hold the 4 lines, organized by heading (2 lines per heading, upper and lower)
+        linesToFindCenter = []
+        for i in range(2):
+            #get slope
+            s1 = lines[0]
+            lines.remove(s1)
+            #get line with least angle from s1
+            s2 = min(lines, key=lambda x: angleBetweenLines(s1, x))
+            lines.remove(s2)
+            #average the lines to get better approximation of actual line
+            s1_angle = ((180*math.atan(s1[0])/math.pi) % 180)
+            s2_angle = ((180*math.atan(s2[0])/math.pi) % 180)
+            #ensure that angles are within 90 degrees of each other so we always average the acute angle between lines
+            if abs(s1_angle-s2_angle) > 90:
+                s1_angle = s1_angle-180
+            avg_angle = (s1_angle+s2_angle)/2
+            avg_slope = math.tan(math.pi*avg_angle/180)
+            finalLines.append(avg_slope)
+            #get the upper and lower lines by comparing their y-intercept values
+            upper_line = min((s1,s2), key=lambda x: x[1])
+            lower_line = max((s1,s2), key=lambda x: x[1])
+            #save upper and lower line to the edge lines array
+            linesToFindCenter.append((upper_line,lower_line))
+        
+        #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
+        centerPoint = getCenterPoint(linesToFindCenter)
+        if centerPoint == None: return None, None
+        avgs = []
+        for slope in finalLines:
+            negStepsWithLM = getStepsWithLM(thresh_img, slope, -1, centerPoint)
+            posStepsWithLM = getStepsWithLM(thresh_img, slope, 1, centerPoint)
+            avgs.append([slope, posStepsWithLM, 1])
+            avgs.append([slope, negStepsWithLM, -1])
+        s1 = max(avgs, key=lambda x : x[1])
+        avgs.remove(s1)
+        s2 = max(avgs, key=lambda x : x[1])
+        #negated because y axis is 0 at top of frame
+        angle1 = -180*(math.atan(s1[0])/math.pi)
+        angle2 = -180*(math.atan(s2[0])/math.pi)
+        if s1[2] < 0: #abs(angle) should be above 90
+            if abs(angle1) < 90:
+                if angle1 < 0:
+                    angle1 += 180
+                else:
+                    angle1 -= 180
+        else: #abs(angle) should be below 90
+            if abs(angle1) > 90:
+                if angle1 < 0:
+                    angle1 += 180
+                else:
+                    angle1 -= 180
+        if s2[2] < 0: #abs(angle) should be above 90
+            if abs(angle2) < 90:
+                if angle2 < 0:
+                    angle2 += 180
+                else:
+                    angle2 -= 180
+        else: #abs(angle) should be below 90
+            if abs(angle2) > 90:
+                if angle2 < 0:
+                    angle2 += 180
+                else:
+                    angle2 -= 180
+        finalLines = [angle1,angle2]
+        return finalLines, centerPoint
+
+def getStepsWithLM(img, slope, direction, center_point, lm_color=0):
     x,y = center_point[0], center_point[1]
-    step = img.shape[1]/(2*20) #step value
+    step = img.shape[1]/(2*50) #step value
     if slope > 1: #big slopes 
         step=step*(1/slope)
-    avgColor = 0
-    i = 1 
+    stepsWithLM = 0
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
-        avgColor += img[y][x]
+        if img[y][x] == lm_color: stepsWithLM += 1
         x += int(step*direction)
         y += int(slope*step*direction)
-        i+=1
-    return avgColor/i
+    return stepsWithLM
 
 def visualizeLaneMarker(img, debug=True):
     #crop image to lane marker
@@ -296,9 +340,14 @@ def visualizeLaneMarker(img, debug=True):
 pwd = os.path.realpath(os.path.dirname(__file__))
 if __name__ == '__main__':
     #run this script to see the heading detection step by step
-    for img_i in [1]:#,2,3,4,5,6,7]:
+    for img_i in [1,2,3,4,5,6,7]:
+        test_image_filename = pwd + "/images/lm (" + str(img_i) + ") straight.png"
+        img = cv2.imread(test_image_filename)
+        visualizeLaneMarker(img, debug=False)
+        cv2.imshow("visualization " + str(img_i), img)
+        cv2.waitKey(0)
         test_image_filename = pwd + "/images/lm (" + str(img_i) + ").png"
         img = cv2.imread(test_image_filename)
-        visualizeLaneMarker(img, debug=True)
+        visualizeLaneMarker(img, debug=False)
         cv2.imshow("visualization " + str(img_i), img)
         cv2.waitKey(0)
