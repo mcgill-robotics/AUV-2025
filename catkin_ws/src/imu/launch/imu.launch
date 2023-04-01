@@ -7,5 +7,4 @@
 -->
     
 	<include file="$(find imu)/launch/sbg_imu.launch"/>
-	<include file="$(find imu)/launch/bag_imu.launch"/>
 </launch>

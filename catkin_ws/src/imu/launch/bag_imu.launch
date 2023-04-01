@@ -1,3 +1,0 @@
-<launch>
-	<node name="bag_record_imu" pkg="rosbag" type="record" args="-o $(find imu)/bag/imu /sbg/ekf_quat" output="screen"/>
-</launch>

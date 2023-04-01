@@ -5,4 +5,6 @@
 	<include file="$(find controls)/launch/controls.launch" />
 	<include file="$(find propulsion)/launch/propulsion.launch" />
 	<include file="$(find state_estimation)/launch/state_estimation.launch" />
+
+	<node name="bag_record_bringup" pkg="rosbag" type="record" args="-o $(find bringup)/bag/rosbag /sbg/ekf_quat /imag_raw" output="screen"/>
 </launch>

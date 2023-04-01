@@ -10,5 +10,4 @@
     </node>
     <node name="test_thresholding" pkg="vision" type="test_thresholding.py" respawn="true"  output="screen"/>
     <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/rqt-gui-config/vision.perspective"/>
-    <node name="bag_record_cam" pkg="rosbag" type="record" args="record -o $(find bagfiles)/bag_record_cam"/>
 </launch>
