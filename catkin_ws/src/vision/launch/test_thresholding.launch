@@ -1,4 +1,4 @@
 <launch>
-    <include file="$(find vision)/launch/stream_cameras.launch" />
+    <include file="$(find vision)/launch/stream-down-cam.launch" />
     <node name="test_thresholding" pkg="vision" type="test_thresholding.py" respawn="true"  output="screen"/>
 </launch>

@@ -1,4 +1,4 @@
 <launch>
-    <include file="$(find vision)/launch/stream_cameras.launch" />
+    <include file="$(find vision)/launch/stream-down-cam.launch" />
     <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
 </launch>
