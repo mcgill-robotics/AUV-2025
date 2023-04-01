@@ -8,6 +8,6 @@
 
 	<remap from="/usb_cam" to="/vision/down_cam"/>
     </node>
-    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
-    <node name="test_thresholding" pkg="vision" type="test_thresholding.py" respawn="true"  output="screen"/>
+    <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true"  output="screen"/>
+    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/gui-config/vision.perspective"/>
 </launch>
