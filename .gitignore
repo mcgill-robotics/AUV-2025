@@ -24,3 +24,6 @@ catkin_ws/src/ros_gz
 =========
 #recorded videos
 *.mp4
+#training images
+*.png
+*.jpg
