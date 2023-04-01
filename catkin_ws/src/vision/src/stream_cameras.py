@@ -18,18 +18,19 @@ if __name__ == '__main__':
     stereo = rospy.get_param('~stereo')
     
     if stereo:
-        pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
+        pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
         outputTopicLeft = rospy.get_param('~outputTopicLeft')
-        outputTopicRight = rospy.get_param('~outputTopicLeft')
+        outputTopicRight = rospy.get_param('~outputTopicRight')
         pubL = rospy.Publisher(outputTopicLeft, Image, queue_size=1)
         pubR = rospy.Publisher(outputTopicRight, Image, queue_size=1)
         def process_frame(f):
             #process frame to seperate into left and right images
             w = f.shape[1]
             fl = f[:, :int(w/2)]
-            fl = f[:, int(w/2):]
+            fr = f[:, int(w/2):]
             return fl, fr
-        def publish(fl,fr):
+        def publish(f):
+            fl,fr = f
             pubL.publish(bridge.cv2_to_imgmsg(fl, "bgr8"))
             pubR.publish(bridge.cv2_to_imgmsg(fr, "bgr8"))
     else:
