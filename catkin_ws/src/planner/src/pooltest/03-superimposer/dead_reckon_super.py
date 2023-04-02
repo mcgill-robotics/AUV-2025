@@ -18,7 +18,7 @@ if __name__ == '__main__':
             transitions={'done':'pause1'})
         smach.StateMachine.add('pause1', Pause(duration=2.0), 
             transitions={'done':'yaw'})
-        smach.StateMachine.add('yaw', Yaw(effort=15, duration=7.0), 
+        smach.StateMachine.add('yaw', Yaw(effort=5, duration=7.0), 
             transitions={'done':'pause2'})
         smach.StateMachine.add('pause2', Pause(duration=2.0), 
             transitions={'done':'surge2'})
