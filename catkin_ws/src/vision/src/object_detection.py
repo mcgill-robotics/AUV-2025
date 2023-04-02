@@ -128,7 +128,7 @@ def detect_on_image(raw_img, camera_id):
     obj_y = []
     obj_z = []
     obj_theta_z = []
-    position_confidence = []
+    pose_confidence = []
     extra_field = []
     #nested for loops get all predictions made by model
     for detection in detections:
@@ -171,7 +171,7 @@ def detect_on_image(raw_img, camera_id):
                     # product of both axes
                 x_conf = 1.0 - abs(x_center_offset)
                 y_conf = 1.0 - abs(y_center_offset)
-                position_confidence.append(x_conf*y_conf) 
+                pose_confidence.append(x_conf*y_conf) 
 
                 obj_x.append(global_center_x)
                 obj_y.append(global_center_y)
@@ -197,7 +197,7 @@ def detect_on_image(raw_img, camera_id):
                     # product of both axes
                 x_conf = 1.0 - abs(x_center_offset)
                 y_conf = 1.0 - abs(y_center_offset)
-                position_confidence.append(x_conf*y_conf) 
+                pose_confidence.append(x_conf*y_conf) 
 
                 obj_x.append(global_center_x)
                 obj_y.append(global_center_y)
@@ -210,7 +210,7 @@ def detect_on_image(raw_img, camera_id):
                 obj_z.append(None)
                 obj_theta_z.append(None)
                 extra_field.append(None)
-                position_confidence.append(None)  #make inversely proportional to distance from object
+                pose_confidence.append(None)  #make inversely proportional to distance from object
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
@@ -221,7 +221,7 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame.obj_y = obj_y
     detectionFrame.obj_z = obj_z
     detectionFrame.obj_theta_z = obj_theta_z
-    detectionFrame.position_confidence = position_confidence
+    detectionFrame.pose_confidence = pose_confidence
     detectionFrame.extra_field = extra_field
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
@@ -243,6 +243,7 @@ detect_every = 10  #run the model every _ frames received (to not eat up too muc
 min_prediction_confidence = 0.6 #only report predictions with confidence at least 60%
 
 pool_depth = 4
+down_cam_hfov = 75
 
 if __name__ == '__main__':
     x_pos_sub = rospy.Subscriber('state_x', Float64, updateX)
@@ -251,8 +252,6 @@ if __name__ == '__main__':
     theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateThetaX)
     theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateThetaY)
     theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateThetaZ)
-
-    down_cam_hfov = 75
 
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
@@ -287,26 +286,3 @@ if __name__ == '__main__':
     cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
-
-
-#arrays containing bounding box dimensions
-#float64[] bounding_box_x
-#float64[] bounding_box_y
-#float64[] bounding_box_width
-#float64[] bounding_box_height
-#which camera this was detected on
-#uint8 camera
-
-#bounding_box_x = []
-#bounding_box_y = []
-#bounding_box_width = []
-#bounding_box_height = []
-#bounding_box_x.append(bbox[0]/w)
-#bounding_box_y.append(bbox[1]/h)
-#bounding_box_width.append(bbox[2]/w)
-#bounding_box_height.append(bbox[3]/h)
-#detectionFrame.camera = camera_id
-#detectionFrame.bounding_box_x = bounding_box_x
-#detectionFrame.bounding_box_y = bounding_box_y
-#detectionFrame.bounding_box_width = bounding_box_width
-#detectionFrame.bounding_box_height = bounding_box_height
