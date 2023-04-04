@@ -38,20 +38,20 @@ if __name__ == '__main__':
     if stereo:
         outputTopicLeft = rospy.get_param('~outputTopicLeft')
         outputTopicRight = rospy.get_param('~outputTopicRight')
-        camInfoL = loadFromFile("camera_calibrations/" + outputTopicLeft + ".caminfo")
-        camInfoR = loadFromFile("camera_calibrations/" + outputTopicRight + ".caminfo")
+        camInfoL = loadFromFile("camera_calibrations/" + outputTopicLeft + ".pickle")
+        camInfoR = loadFromFile("camera_calibrations/" + outputTopicRight + ".pickle")
 
         def setLeftCameraInfo(req, rsp):
             global camInfoL
             camInfoL = req.camera_info
-            saveToFile(camInfoL, "camera_calibrations/" + outputTopicLeft + ".caminfo")
+            saveToFile(camInfoL, "camera_calibrations/" + outputTopicLeft + ".pickle")
             rsp.success = True
             return rsp
 
         def setRightCameraInfo(req, rsp):
             global camInfoR
             camInfoR = req.camera_info
-            saveToFile(camInfoR, "camera_calibrations/" + outputTopicRight + ".caminfo")
+            saveToFile(camInfoR, "camera_calibrations/" + outputTopicRight + ".pickle")
             rsp.success = True
             return rsp
 
@@ -100,12 +100,12 @@ if __name__ == '__main__':
             camInfoR_pub.publish(camInfoR)
     else:
         outputTopic = rospy.get_param('~outputTopic')
-        camInfo = loadFromFile("camera_calibrations/" + outputTopic + ".caminfo")
+        camInfo = loadFromFile("camera_calibrations/" + outputTopic + ".pickle")
 
         def setCameraInfo(req, rsp):
             global camInfo
             camInfo = req.camera_info
-            saveToFile(camInfo, "camera_calibrations/" + outputTopic + ".caminfo")
+            saveToFile(camInfo, "camera_calibrations/" + outputTopic + ".pickle")
             rsp.success = True
             return rsp
 
