@@ -23,7 +23,7 @@ if __name__ == '__main__':
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     rospy.init_node('debug_thresholding')
-    sub = rospy.Subscriber('vision/debug/cropped', Image, threshold_image)
+    sub = rospy.Subscriber('vision/down_cam/cropped', Image, threshold_image)
     downscale_pub = rospy.Publisher('vision/debug/lane_marker_downscale', Image, queue_size=1)
     blur1_pub = rospy.Publisher('vision/debug/lane_marker_blur1', Image, queue_size=1)
     tol_pub = rospy.Publisher('vision/debug/lane_marker_tolerance', Image, queue_size=1)
