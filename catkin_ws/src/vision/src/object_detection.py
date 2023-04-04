@@ -9,8 +9,28 @@ from ultralytics import YOLO
 import lane_marker_measure
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
+from auv_msgs.msg import ObjectMap
 import math
 import torch
+
+def updateX(msg):
+    global state_x
+    state_x = float(msg.data)
+def updateY(msg):
+    global state_y
+    state_y = float(msg.data)
+def updateZ(msg):
+    global state_z
+    state_z = float(msg.data)
+def updateThetaX(msg):
+    global state_theta_x
+    state_theta_x = float(msg.data)
+def updateThetaY(msg):
+    global state_theta_y
+    state_theta_y = float(msg.data)
+def updateThetaZ(msg):
+    global state_theta_z
+    state_theta_z = float(msg.data)
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -36,25 +56,6 @@ def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=
         lineType=cv2.LINE_AA,
     )
     return img
-
-def updateX(msg):
-    global state_x
-    state_x = float(msg.data)
-def updateY(msg):
-    global state_y
-    state_y = float(msg.data)
-def updateZ(msg):
-    global state_z
-    state_z = float(msg.data)
-def updateThetaX(msg):
-    global state_theta_x
-    state_theta_x = float(msg.data)
-def updateThetaY(msg):
-    global state_theta_y
-    state_theta_y = float(msg.data)
-def updateThetaZ(msg):
-    global state_theta_z
-    state_theta_z = float(msg.data)
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
 def cropToBbox(img, bbox):
@@ -147,13 +148,19 @@ def detect_on_image(raw_img, camera_id):
             detection_confidence.append(conf) 
             label.append(cls_id)
             #if a lane marker is detected on down cam then add heading visualization to image
-            if cls_id == 0 and camera_id == 0:
-                headings, center, img = measureLaneMarker(img, bbox)
-                obj_theta_z.append(state_theta_z + (headings[0]-90))
-                extra_field.append(state_theta_z + (headings[1]-90))
+            if camera_id == 0:
+                if cls_id == 0:
+                    headings, center, img = measureLaneMarker(img, bbox)
+                    obj_theta_z.append(state_theta_z + (headings[0]-90))
+                    extra_field.append(state_theta_z + (headings[1]-90))
+                #ADD ELIFs HERE TO MEASURE THE ROTATION OF OTHER CLASSES OF OBJECTS
+                else:
+                    extra_field.append(None)
+                    obj_theta_z.append(None)
+                    center = bbox
+                
                 #for x and y:
-                    #assuming for now AUV is flat in orientation
-                    #assuming no lens distortion
+                    #assuming for now AUV is flat in orientation (TODO!!)
                     #assuming FOV increases linearly with distance from center pixel
                 x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
                 x_angle_offset = down_cam_hfov*x_center_offset
@@ -166,35 +173,9 @@ def detect_on_image(raw_img, camera_id):
                 global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
 
                 #confidence model:
+                    # 0.25 at corners
                     # 0.5 at edges 
                     # 1.0 at center
-                    # product of both axes
-                x_conf = 1.0 - abs(x_center_offset)
-                y_conf = 1.0 - abs(y_center_offset)
-                pose_confidence.append(x_conf*y_conf) 
-
-                obj_x.append(global_center_x)
-                obj_y.append(global_center_y)
-                obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
-            elif camera_id==0:
-                #use custom object measurements to get theta_z
-                extra_field.append(None)
-                obj_theta_z.append(None)
-
-                x_center_offset = (bbox[0]-(w/2)) / w #-0.5 to 0.5
-                x_angle_offset = down_cam_hfov*x_center_offset
-                x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-                global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
-                down_cam_vfov = down_cam_hfov*(h/w)
-                y_center_offset = ((h/2)-bbox[1]) / h #negated since y goes from top to bottom
-                y_angle_offset = down_cam_vfov*y_center_offset
-                y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-                global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
-                
-                #confidence model:
-                    # 0.5 at edges 
-                    # 1.0 at center
-                    # product of both axes
                 x_conf = 1.0 - abs(x_center_offset)
                 y_conf = 1.0 - abs(y_center_offset)
                 pose_confidence.append(x_conf*y_conf) 
