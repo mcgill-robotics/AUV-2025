@@ -49,6 +49,7 @@ def updateMap(obj_i, observation):
         #average chance of correct classification with current and observed labels
         new_label_conf = ((1.0-chance_of_misclassification) + current_label_conf + observation_label_conf)/3.0
     else: #might need to update label
+        # use num_observations?
         if current_label_conf < observation_label_conf: #change label
             new_label = observed_label
             new_label_conf = (observation_label_conf + (1.0-current_label_conf))/2.0
@@ -62,14 +63,24 @@ def updateMap(obj_i, observation):
     new_x = (observation_pose_conf*observed_x + num_observations*current_pose_conf*current_x) / (current_pose_conf*num_observations + observation_pose_conf)
     new_y = (observation_pose_conf*observed_y + num_observations*current_pose_conf*current_y) / (current_pose_conf*num_observations + observation_pose_conf)
     new_z = (observation_pose_conf*observed_z + num_observations*current_pose_conf*current_z) / (current_pose_conf*num_observations + observation_pose_conf)
-    new_theta_z = (observation_pose_conf*observed_theta_z + num_observations*current_pose_conf*current_theta_z) / (current_pose_conf*num_observations + observation_pose_conf)
+    if observed_theta_z == None:
+        new_theta_z = current_theta_z
+    elif current_theta_z == None:
+        new_theta_z = observed_theta_z
+    else:
+        new_theta_z = (observation_pose_conf*observed_theta_z + num_observations*current_pose_conf*current_theta_z) / (current_pose_conf*num_observations + observation_pose_conf)
 
     #CALCULATE EXTRA FIELD WHEN APPLICABLE
     if observed_label == current_label:
-        if new_label == 0: # LANE MARKER
-            #WEIGHTED AVERAGE USING CONFIDENCE AND NUM. OBSERVATIONS AS WEIGHT
-            new_extra_field = (observation_pose_conf*observed_extra_field + current_pose_conf*num_observations*current_extra_field) / (observation_pose_conf + current_pose_conf*num_observations)
-        # ADD ADDITIONAL ELIF STATEMENTS FOR OTHER LABELS
+        if observed_extra_field == None:
+            new_extra_field = current_extra_field
+        elif current_extra_field == None:
+            new_extra_field = observed_extra_field
+        else:
+            if new_label == 0: # LANE MARKER
+                #WEIGHTED AVERAGE USING CONFIDENCE AND NUM. OBSERVATIONS AS WEIGHT
+                new_extra_field = (observation_pose_conf*observed_extra_field + current_pose_conf*num_observations*current_extra_field) / (observation_pose_conf + current_pose_conf*num_observations)
+            # ADD ADDITIONAL ELIF STATEMENTS FOR OTHER LABELS
     else:
         if observed_label == new_label:
             new_extra_field = observed_extra_field
