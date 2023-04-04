@@ -8,12 +8,13 @@ from sensor_msgs.msg import CameraInfo
 from sensor_msgs.srv import SetCameraInfo
 import numpy as np
 import os
+import pickle
 
 pwd = os.path.realpath(os.path.dirname(__file__))
 
 def saveToFile(data, file):
     with open(pwd + "/" + file, 'wb') as f:
-        pickle.dumps(data, f)
+        pickle.dump(data, f)
 
 def loadFromFile(file):
     try:
@@ -38,30 +39,28 @@ if __name__ == '__main__':
     if stereo:
         outputTopicLeft = rospy.get_param('~outputTopicLeft')
         outputTopicRight = rospy.get_param('~outputTopicRight')
-        camInfoL = loadFromFile("camera_calibrations/" + outputTopicLeft + ".caminfo")
-        camInfoR = loadFromFile("camera_calibrations/" + outputTopicRight + ".caminfo")
+        camInfoL = loadFromFile("camera_calibrations" + outputTopicLeft + ".pickle")
+        camInfoR = loadFromFile("camera_calibrations" + outputTopicRight + ".pickle")
 
-        def setLeftCameraInfo(req, rsp):
+        def setLeftCameraInfo(req):
             global camInfoL
             camInfoL = req.camera_info
-            saveToFile(camInfoL, "camera_calibrations/" + outputTopicLeft + ".caminfo")
-            rsp.success = True
-            return rsp
+            saveToFile(camInfoL, "camera_calibrations" + outputTopicLeft + ".pickle")
+            return True, "success"
 
-        def setRightCameraInfo(req, rsp):
+        def setRightCameraInfo(req):
             global camInfoR
             camInfoR = req.camera_info
-            saveToFile(camInfoR, "camera_calibrations/" + outputTopicRight + ".caminfo")
-            rsp.success = True
-            return rsp
+            saveToFile(camInfoR, "camera_calibrations" + outputTopicRight + ".pickle")
+            return True, "success"
 
         pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
-        servL = rospy.Service(outputTopicLeft + 'set_camera_info', SetCameraInfo, setLeftCameraInfo)
-        servR = rospy.Service(outputTopicRight + 'set_camera_info', SetCameraInfo, setRightCameraInfo)
-        pubL = rospy.Publisher(outputTopicLeft + 'image_raw', Image, queue_size=1)
-        pubR = rospy.Publisher(outputTopicRight + 'image_raw', Image, queue_size=1)
-        camInfo_pubL = rospy.Publisher(outputTopicLeft + 'camera_info', CameraInfo, queue_size=1)
-        camInfo_pubR = rospy.Publisher(outputTopicRight + 'camera_info', CameraInfo, queue_size=1)
+        servL = rospy.Service("/vision" + outputTopicLeft + '/set_camera_info', SetCameraInfo, setLeftCameraInfo)
+        servR = rospy.Service("/vision" + outputTopicRight + '/set_camera_info', SetCameraInfo, setRightCameraInfo)
+        pubL = rospy.Publisher("/vision" + outputTopicLeft + '/image_raw', Image, queue_size=1)
+        pubR = rospy.Publisher("/vision" + outputTopicRight + '/image_raw', Image, queue_size=1)
+        camInfo_pubL = rospy.Publisher("/vision" + outputTopicLeft + '/camera_info', CameraInfo, queue_size=1)
+        camInfo_pubR = rospy.Publisher("/vision" + outputTopicRight + '/camera_info', CameraInfo, queue_size=1)
         
         def publish(f):
             global camInfoL
@@ -100,19 +99,18 @@ if __name__ == '__main__':
             camInfoR_pub.publish(camInfoR)
     else:
         outputTopic = rospy.get_param('~outputTopic')
-        camInfo = loadFromFile("camera_calibrations/" + outputTopic + ".caminfo")
+        camInfo = loadFromFile("camera_calibrations" + outputTopic + ".pickle")
 
-        def setCameraInfo(req, rsp):
+        def setCameraInfo(req):
             global camInfo
             camInfo = req.camera_info
-            saveToFile(camInfo, "camera_calibrations/" + outputTopic + ".caminfo")
-            rsp.success = True
-            return rsp
+            saveToFile(camInfo, "camera_calibrations" + outputTopic + ".caminfo")
+            return True, "success"
 
         pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
-        servL = rospy.Service(outputTopic + '/set_camera_info', SetCameraInfo, setCameraInfo)
-        pub = rospy.Publisher(outputTopic + 'image_raw', Image, queue_size=1)
-        camInfo_pub = rospy.Publisher(outputTopic + 'camera_info', CameraInfo, queue_size=1)
+        serv = rospy.Service("/vision" + outputTopic + '/set_camera_info', SetCameraInfo, setCameraInfo)
+        pub = rospy.Publisher("/vision" + outputTopic + '/image_raw', Image, queue_size=1)
+        camInfo_pub = rospy.Publisher("/vision" + outputTopic + '/camera_info', CameraInfo, queue_size=1)
 
         def publish(f):
             global camInfo

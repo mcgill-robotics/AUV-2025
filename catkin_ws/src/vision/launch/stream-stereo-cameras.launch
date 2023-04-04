@@ -7,8 +7,8 @@
 		<param name="outputImgHeight" value="270" />
 		<param name="framerate" value="50" />
 		<param name="stereo" value="true" />
-		<param name="outputTopicLeft" value="/vision/left_cam/" />
-		<param name="outputTopicRight" value="/vision/right_cam/" />
+		<param name="outputTopicLeft" value="/left_cam" />
+		<param name="outputTopicRight" value="/right_cam" />
 	</node>
 	
 </launch>
