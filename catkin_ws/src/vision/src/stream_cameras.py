@@ -104,7 +104,7 @@ if __name__ == '__main__':
         def setCameraInfo(req):
             global camInfo
             camInfo = req.camera_info
-            saveToFile(camInfo, "camera_calibrations" + outputTopic + ".caminfo")
+            saveToFile(camInfo, "camera_calibrations" + outputTopic + ".pickle")
             return True, "success"
 
         pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
