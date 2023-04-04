@@ -1,5 +1,0 @@
-<launch>
-    <include file="$(find vision)/launch/stream-down-cam.launch" />
-    <include file="$(find vision)/launch/gui.launch" />
-    <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true" output="screen"/>
-</launch>
