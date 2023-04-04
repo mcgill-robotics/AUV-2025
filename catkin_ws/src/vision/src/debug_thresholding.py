@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import cv2
 import rospy
-from cv_bridge import CvBridge
 import lane_marker_measure
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 #callback when an image is received

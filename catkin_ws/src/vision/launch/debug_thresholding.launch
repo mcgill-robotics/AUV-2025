@@ -1,5 +1,5 @@
 <launch>
     <include file="$(find vision)/launch/stream-down-cam.launch" />
+    <include file="$(find vision)/launch/gui.launch" />
     <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true" output="screen"/>
-    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/gui-config/vision.perspective"/>
 </launch>

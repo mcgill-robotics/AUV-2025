@@ -6,7 +6,9 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.srv import SetCameraInfo
-    
+import numpy as np
+
+
 if __name__ == '__main__':
     bridge = CvBridge()
     rospy.init_node('stream_cameras')
