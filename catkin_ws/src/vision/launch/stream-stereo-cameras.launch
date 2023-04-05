@@ -3,12 +3,12 @@
 		<param name="sensor_id" value="0" />
 		<param name="inputImgWidth" value="2028" />
 		<param name="inputImgHeight" value="1080" />
-		<param name="outputImgWidth" value="520" />
-		<param name="outputImgHeight" value="135" />
+		<param name="outputImgWidth" value="832" />
+		<param name="outputImgHeight" value="216" />
 		<param name="framerate" value="50" />
 		<param name="stereo" value="true" />
-		<param name="outputTopic1" value="/stereo/left" />
-		<param name="outputTopic2" value="/stereo/right" />
+		<param name="outputTopic1" value="/stereo/right" />
+		<param name="outputTopic2" value="/stereo/left" />
 	</node>
 	
 	<node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" ns="vision/stereo"/>
