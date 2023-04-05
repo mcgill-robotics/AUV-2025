@@ -7,10 +7,10 @@
 		<param name="outputImgHeight" value="270" />
 		<param name="framerate" value="50" />
 		<param name="stereo" value="true" />
-		<param name="outputTopicLeft" value="/stereo/left" />
-		<param name="outputTopicRight" value="/stereo/right" />
+		<param name="outputTopic1" value="/stereo/left" />
+		<param name="outputTopic2" value="/stereo/right" />
 	</node>
 	
-	<node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" ns="vision/stereo"/>
+	<!-- <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" ns="vision/stereo"/> -->
 	
 </launch>

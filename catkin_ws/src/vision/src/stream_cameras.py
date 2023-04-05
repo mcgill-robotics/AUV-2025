@@ -37,8 +37,8 @@ if __name__ == '__main__':
     distortion_model = rospy.get_param('~distortion_model', 'plumb_bob')
     
     if stereo:
-        outputTopicLeft = rospy.get_param('~outputTopicLeft')
-        outputTopicRight = rospy.get_param('~outputTopicRight')
+        outputTopicLeft = rospy.get_param('~outputTopic1')
+        outputTopicRight = rospy.get_param('~outputTopic2')
         camInfoL = loadFromFile("camera_calibrations" + outputTopicLeft + ".pickle")
         camInfoR = loadFromFile("camera_calibrations" + outputTopicRight + ".pickle")
 
@@ -59,16 +59,16 @@ if __name__ == '__main__':
         servR = rospy.Service("/vision" + outputTopicRight + '/set_camera_info', SetCameraInfo, setRightCameraInfo)
         pubL = rospy.Publisher("/vision" + outputTopicLeft + '/image_raw', Image, queue_size=1)
         pubR = rospy.Publisher("/vision" + outputTopicRight + '/image_raw', Image, queue_size=1)
-        camInfo_pubL = rospy.Publisher("/vision" + outputTopicLeft + '/camera_info', CameraInfo, queue_size=1)
-        camInfo_pubR = rospy.Publisher("/vision" + outputTopicRight + '/camera_info', CameraInfo, queue_size=1)
+        camInfoL_pub = rospy.Publisher("/vision" + outputTopicLeft + '/camera_info', CameraInfo, queue_size=1)
+        camInfoR_pub = rospy.Publisher("/vision" + outputTopicRight + '/camera_info', CameraInfo, queue_size=1)
         
         def publish(f):
             global camInfoL
             global camInfoR
             #process frame to seperate into left and right images
-            w = f.shape[1]
-            fl = f[:, :int(w/2)-2]
-            fr = f[:, int(w/2)-2:]
+            w = f.shape[1]*2
+            fl = f[:, :int(w/2)]
+            fr = f[:, int(w/2):]
             msgL = bridge.cv2_to_imgmsg(fl, "bgr8")
             msgR = bridge.cv2_to_imgmsg(fr, "bgr8")
             pubL.publish(msgL)
