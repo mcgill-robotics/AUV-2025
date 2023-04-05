@@ -66,7 +66,7 @@ if __name__ == '__main__':
             global camInfoL
             global camInfoR
             #process frame to seperate into left and right images
-            w = f.shape[1]*2
+            w = f.shape[1]
             fl = f[:, :int(w/2)]
             fr = f[:, int(w/2):]
             msgL = bridge.cv2_to_imgmsg(fl, "bgr8")
@@ -75,26 +75,28 @@ if __name__ == '__main__':
             pubR.publish(msgR)
             #publish left camera info
             if camInfoL == None: #default values if not yet calibrated
+                print("MUST CALIBRATE CAMERAS")
                 camInfoL = CameraInfo()
                 camInfoL.height = msgL.height
                 camInfoL.width = msgL.width
                 camInfoL.distortion_model = distortion_model
-                camInfoL.D = np.zeros((5))
-                camInfoL.K = np.zeros((3,3))
-                camInfoL.R = np.zeros((3,3))
-                camInfoL.P = np.zeros((3,4))
+                camInfoL.D = [0,0,0,0,0]
+                camInfoL.K = np.zeros((9,3))
+                camInfoL.R = np.zeros((9,3))
+                camInfoL.P = np.zeros((9,4))
             camInfoL.header = msgL.header
             camInfoL_pub.publish(camInfoL)
             #publish right camera info
             if camInfoR == None: #default values if not yet calibrated
+                print("MUST CALIBRATE CAMERAS")
                 camInfoR = CameraInfo()
                 camInfoR.height = msgR.height
                 camInfoR.width = msgR.width
                 camInfoR.distortion_model = distortion_model
                 camInfoR.D = np.zeros((5))
-                camInfoR.K = np.zeros((3,3))
-                camInfoR.R = np.zeros((3,3))
-                camInfoR.P = np.zeros((3,4))
+                camInfoR.K = np.zeros((9,3))
+                camInfoR.R = np.zeros((9,3))
+                camInfoR.P = np.zeros((9,4))
             camInfoR.header = msgR.header
             camInfoR_pub.publish(camInfoR)
     else:
