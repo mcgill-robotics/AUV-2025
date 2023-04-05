@@ -21,12 +21,12 @@ class KalmanXY:
 
         v_pred = np.matmul(A,self.prev_v) + np.matmul(B,accel)
         residual = dvl - v_pred
-        cov = np.matmul(A,np.matmul(self.covariance,A)) + self.Q
+        cov = np.matmul(A,np.matmul(self.covariance,np.transpose(A))) + self.Q
         S = cov + self.R
         S_inv = np.linalg.inv(S)
         K = np.matmul(cov,S_inv)
         final = v_pred + np.matmul(K,residual)
-        self.covariance = cov - np.matmul(cov,np.matmul(S_inv,cov))
+        self.covariance = cov - np.matmul(K,cov)
 
         self.prev_v = final
 
