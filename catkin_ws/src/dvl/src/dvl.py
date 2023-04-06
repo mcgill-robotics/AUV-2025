@@ -4,18 +4,48 @@ import rospy
 import serial
 import datetime
 import math
-from std_msgs.msg import Float64
+from auv_msgs.msg import DvlData
 
 def get_float(token):
     stripped = token.strip()
     return float(stripped)
 
+def parse_BD(line):
+    tokens = line.split(",")
+    north = get_float(tokens[1])
+    east = get_float(tokens[2])
+    up = get_float(tokens[3])
+    range = get_float(tokens[4])
+    time = get_float(tokens[5])
+    return north, east, up, range, time
+
+def parse_TS(line):
+    tokens = line.split(",")
+    salinity = get_float(tokens[2])
+    temp = get_float(tokens[3])
+    depth = get_float(tokens[4])
+    return salinity, temp, depth
+    
+def parse_SA(line):
+    tokens = line.split(",")
+    roll = get_float(tokens[1])
+    pitch = get_float(tokens[2])
+    heading = get_float(tokens[3])
+    return roll, pitch, heading
+
+def parse_BE(line):
+    tokens = line.split(",")
+    north = get_float(tokens[1])
+    east = get_float(tokens[2])
+    up = get_float(tokens[3])
+    valid_char = tokens[3].strip()
+    valid = True if valid_char == "A" else False
+    return north, east, up, valid
+
+
 
 def main():
     rospy.init_node("teledyne_navigator")
-
-    n_pub = rospy.Publisher("dvl_east",Float64)
-    e_pub = rospy.Publisher("dvl_north",Float64)
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
@@ -34,6 +64,8 @@ def main():
     conn.send_break()
     conn.send_break()
     conn.flush()
+
+    data = DvlData()
 
     
 
@@ -55,20 +87,43 @@ def main():
     conn.write("CS\n".encode('ascii'))
     conn.flush()
     
- 
+    pub = rospy.Publisher("dvl_data",DvlData, queue_size=50)
+  
+
 
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
     while conn.is_open:
         #print("-------------------------")
         line = conn.readline().decode('ascii')#print(conn.readline().decode('ascii'))
+        print(line)
         if(line.startswith(":BD")):
-            tokens = line.split(",")
-            north = get_float(tokens[1])
-            east = get_float(tokens[2])
-
-            n_pub.publish(north)
-            e_pub.publish(east)
+            north, east, up, range, time = parse_BD(line)
+            data.north_displacement = north
+            data.east_displacement = east
+            data.upward_displacement = up
+            data.range_to_bottom = range
+            data.time_since_good = time
+            pub.publish(data)
+        elif(line.startswith(":TS")):
+            salinity, temp, depth = parse_TS(line)
+            data.salinity = salinity
+            data.temperature = temp
+            data.depth = depth
+            pub.publish(data)
+        elif(line.startswith(":SA")):
+            roll, pitch, heading = parse_SA(line)
+            data.roll = roll
+            data.pitch = pitch
+            data.heading = heading
+            pub.publish(data)
+        elif(line.startswith(":BE")):
+            north, east, up, valid = parse_BE(line)
+            data.north_velocity = north
+            data.east_velocity = east
+            data.upward_velocity = up
+            data.velocity_valid = valid
+            pub.publish(data)
 
 if __name__ == "__main__":
     try:

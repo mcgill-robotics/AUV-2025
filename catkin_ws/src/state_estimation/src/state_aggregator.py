@@ -8,6 +8,7 @@ from tf import transformations
 from geometry_msgs.msg import Point, Pose, Quaternion 
 from sbg_driver.msg import SbgEkfQuat
 from std_msgs.msg import Empty, Float64
+from auv_msgs.msg import DvlData
 
 
 # angles that change by more than 90 degrees between readings 
@@ -42,8 +43,7 @@ class State_Aggregator:
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
-        rospy.Subscriber("dvl_east",Float64, self.dvl_east_cb)
-        rospy.Subscriber("dvl_east",Float64, self.dvl_north_cb)
+        rospy.Subscriber("dvl_data",DvlData, self.dvl_cb)
 
         '''
         TODO - use tf2 instead of publishing pose?
@@ -56,12 +56,10 @@ class State_Aggregator:
         self.tf_auv_base = TransformStamped()
         '''
 
-    def dvl_north_cb(self,data):
-        self.x = data.data
-
-
-    def dvl_east_cb(self,data):
-        self.y = data.data
+    def dvl_cb(self,data):
+        #THIS IS TEMPORARY
+        self.x = data.north_displacement
+        self.y = data.east_displacement
 
     def update_euler(self):
         # calculate euler angles
