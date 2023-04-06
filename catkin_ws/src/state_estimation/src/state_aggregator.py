@@ -42,6 +42,8 @@ class State_Aggregator:
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
+        rospy.Subscriber("dvl_east",Float64, self.dvl_east_cb)
+        rospy.Subscriber("dvl_east",Float64, self.dvl_north_cb)
 
         '''
         TODO - use tf2 instead of publishing pose?
@@ -54,6 +56,12 @@ class State_Aggregator:
         self.tf_auv_base = TransformStamped()
         '''
 
+    def dvl_north_cb(self,data):
+        self.x = data.data
+
+
+    def dvl_east_cb(self,data):
+        self.y = data.data
 
     def update_euler(self):
         # calculate euler angles

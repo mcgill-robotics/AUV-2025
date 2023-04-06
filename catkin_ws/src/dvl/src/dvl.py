@@ -14,8 +14,8 @@ def get_float(token):
 def main():
     rospy.init_node("teledyne_navigator")
 
-    x_pub = rospy.Publisher("state_x",Float64)
-    y_pub = rospy.Publisher("state_y",Float64)
+    n_pub = rospy.Publisher("dvl_east",Float64)
+    e_pub = rospy.Publisher("dvl_north",Float64)
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
@@ -23,6 +23,8 @@ def main():
     timeout = rospy.get_param("~timeout")
 
     conn = serial.Serial(port)
+    # dvl's baud has been set to 115200 but its default is 9600. 
+    # There is a way to set the baudrate of the dvl through a command.
     conn.baudrate = baudrate
 
 
@@ -65,8 +67,8 @@ def main():
             north = get_float(tokens[1])
             east = get_float(tokens[2])
 
-            x_pub.publish(north)
-            y_pub.publish(east)
+            n_pub.publish(north)
+            e_pub.publish(east)
 
 if __name__ == "__main__":
     try:
