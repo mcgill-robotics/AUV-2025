@@ -11,7 +11,7 @@ def get_float(token):
     return float(stripped)
 
 
-if __name__ == "__main__":
+def main():
     rospy.init_node("teledyne_navigator")
 
     x_pub = rospy.Publisher("state_x",Float64)
@@ -41,26 +41,22 @@ if __name__ == "__main__":
     # conn.write(msg.encode('ascii'))
     # conn.flush()
 
-    # Set PD5 output format.
-
     
-    # Set earth coordinate transformation.
-    
+    # Set PD6 output format.
     conn.write("PD6\n".encode('ascii'))
     conn.flush()
+    # Set earth coordinate transformation.
     conn.write("EX11111\n".encode('ascii'))
     conn.flush()
 
+    # Start pinging.
     conn.write("CS\n".encode('ascii'))
     conn.flush()
     
-    # Start pinging.
-    
-    
-
  
 
-
+    # Only grabbing data we care about but this dvl can be used for more.
+    # Refer to work horse manual for more info
     while conn.is_open:
         #print("-------------------------")
         line = conn.readline().decode('ascii')#print(conn.readline().decode('ascii'))
@@ -72,6 +68,8 @@ if __name__ == "__main__":
             x_pub.publish(north)
             y_pub.publish(east)
 
-
-
-
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        exit()
