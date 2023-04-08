@@ -1,4 +1,0 @@
-<launch>
-	<node name="test_05_square" pkg="planner" type="test_05_square.py" respawn="false" output="screen"/>
-    <node name="bag_record_imu" pkg="rosbag" type="record" args="-o $(find imu)/bag/pooltests/test-05/imu /sbg/ekf_quat" output="screen"/>
-</launch>

@@ -3,7 +3,7 @@
 import rospy
 import smach
 
-from states import *
+from sub_states import *
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner')

@@ -2,8 +2,7 @@
 
 import rospy
 import smach
-from auv_msgs.msg import ObjectDetectionFrame
-from std_msgs.msg import Float64
+from utility import *
 import time, math
 import os
 
@@ -304,7 +303,7 @@ def shutdown():
     pug_global_y.publish(Float64(0))
 
 
-if __name__ == '__main__':
+def startGridSearch(obj_class):
     rospy.init_node('navigate_lane_marker')
     rospy.on_shutdown(shutdown)
     last_object_detection = []

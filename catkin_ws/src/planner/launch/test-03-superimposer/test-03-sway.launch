@@ -1,3 +1,0 @@
-<launch>
-	<node name="test_03_sway" pkg="planner" type="test_03_sway.py" respawn="false" output="screen"/>
-</launch>

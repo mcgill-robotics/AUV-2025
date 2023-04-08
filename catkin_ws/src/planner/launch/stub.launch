@@ -1,3 +1,0 @@
-<launch>
-	<node name="mission" pkg="planner" type="stub.py" respawn="false" output="screen"/>
-</launch>
