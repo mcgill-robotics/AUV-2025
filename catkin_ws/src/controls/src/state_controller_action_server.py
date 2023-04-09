@@ -2,6 +2,7 @@
 
 import rospy
 import actionlib
+from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
 from std_msgs.msg import Float64
@@ -30,50 +31,38 @@ class StateControlActionServer():
         self.server.start()
 
         self.position = None
-        self.roll = None
-        self.pitch = None
-        self.yaw = None
+        self.theta_x = None
+        self.theta_y = None
+        self.theta_z = None
 
-        self.sub = rospy.Subscriber("pose",Pose,self.set)
+        self.sub = rospy.Subscriber("pose",Pose,self.set_position)
+        self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
+        self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
+        self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
+        
     
-    def set(self,data):
+    def set_position(self,data):
         #print("updated pose")
         self.position = data.position
-        self.roll, self.pitch, self.yaw = self.euler_from_quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
-
-    #stolen from the internet
-    def euler_from_quaternion(self,x, y, z, w):
-        """
-        Convert a quaternion into euler angles (roll, pitch, yaw)
-        roll is rotation apub = rospy.Publisher("/z_setpoint", Float64, queue_size=50)round x in radians (counterclockwise)
-        pitch is rotation around y in radians (counterclockwise)
-        yaw is rotation around z in radians (counterclockwise)
-        """
-        t0 = +2.0 * (w * x + y * z)
-        t1 = +1.0 - 2.0 * (x * x + y * y)
-        roll_x = math.atan2(t0, t1)
-     
-        t2 = +2.0 * (w * y - z * x)
-        t2 = +1.0 if t2 > +1.0 else t2
-        t2 = -1.0 if t2 < -1.0 else t2
-        pitch_y = math.asin(t2)
-     
-        t3 = +2.0 * (w * z + x * y)
-        t4 = +1.0 - 2.0 * (y * y + z * z)
-        yaw_z = math.atan2(t3, t4)
-     
-        return roll_x, pitch_y, yaw_z # in radians
+    
+    def set_theta_x(self,data):
+        self.theta_x = data.data
+    def set_theta_y(self,data):
+        self.theta_y = data.data
+    def set_theta_z(self,data):
+        self.theta_z = data.data
 
     def callback(self, goal):
         #print("got a message")
         # set the PIDs
-        pose = goal.pose
         #print(goal.pose)
+        goal_position = goal.position
+        goal_rotation = goal.rotation
 
-        self.publish_setpoints(pose)
+        self.publish_setpoints(goal_position,goal_rotation)
 
         # monitor when reached pose
-        while(not self.check_status(pose)):
+        while(not self.check_status(goal_position,goal_rotation)):
             rospy.sleep(0.1)
 
         result = StateResult()
@@ -81,32 +70,30 @@ class StateControlActionServer():
         rospy.loginfo("Succeeded")
         self.server.set_succeeded(result)
 
-    def check_status(self,pose):
-        if(self.position == None or self.roll == None or self.pitch == None or self.yaw == None):
+    def check_status(self,position,rotation):
+        if(self.position == None or self.theta_x == None or self.theta_y == None or self.theta_z == None):
             return False
 
-        roll, pitch, yaw = self.euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         tolerance_position = 0.5
         tolerance_orientation = 1
 
-        #x_diff = abs(self.position.x - pose.position.x) <= tolerance_position
-        #y_diff = abs(self.position.y - pose.position.y) <= tolerance_position
-        z_diff = abs(self.position.z - pose.position.z) <= tolerance_position
-        theta_x_diff = abs(self.roll - roll) <= tolerance_orientation
-        theta_y_diff = abs(self.pitch - pitch) <= tolerance_orientation
-        theta_z_diff = abs(self.yaw - yaw) <= tolerance_orientation
+        #x_diff = abs(self.position.x - position.x) <= tolerance_position
+        #y_diff = abs(self.position.y - position.y) <= tolerance_position
+        z_diff = abs(self.position.z - position.z) <= tolerance_position
+        theta_x_diff = abs(self.theta_x - rotation.x) <= tolerance_orientation
+        theta_y_diff = abs(self.theta_y - rotation.y) <= tolerance_orientation
+        theta_z_diff = abs(self.theta_z - rotation.z) <= tolerance_orientation
 
         return z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
 
 
-    def publish_setpoints(self,pose):
-        roll, pitch, yaw = self.euler_from_quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
-        #self.pub_x.Publish(Float64(pose.position.x))
-        #self.pub_y.Publish(Float64(pose.position.y))
-        self.pub_z.publish(Float64(pose.position.y))
-        self.pub_theta_x.publish(Float64(roll))
-        self.pub_theta_y.publish(Float64(pitch))
-        self.pub_theta_z.publish(Float64(yaw))
+    def publish_setpoints(self,position,rotation):
+        #self.pub_x.Publish(Float64(position.x))
+        #self.pub_y.Publish(Float64(position.y))
+        self.pub_z.publish(Float64(position.y))
+        self.pub_theta_x.publish(Float64(rotation.x))
+        self.pub_theta_y.publish(Float64(rotation.y))
+        self.pub_theta_z.publish(Float64(rotation.z))
         #print("published setpoints")
 
 
