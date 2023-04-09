@@ -10,10 +10,6 @@ import time
 
 
 
-import math
- 
-
-
 class MoveServer():
 
     def __init__(self) -> None:
@@ -72,7 +68,7 @@ class MoveServer():
         return goal.position, goal.rotation
 
     def wait_for_settled(self,goal_position,goal_rotation):
-        interval = 0.3
+        interval = 1
 
         settled = False
 
@@ -120,6 +116,23 @@ class DisplaceServer(MoveServer):
     def __init__(self):
         super.__init__()
         self.server = actionlib.SimpleActionServer('displace_server', StateAction, execute_cb= self.callback, auto_start = False)
+
+    def callback(self, goal):
+        #print("got a message")
+        # set the PIDs
+        #print(goal.pose)
+        goal_position, goal_rotation = self.get_goal(goal)
+
+
+        self.publish_setpoints(goal_position,goal_rotation)
+
+        # monitor when reached pose
+        self.wait_for_settled(goal_position,goal_rotation)
+        result = StateResult()
+        result.status.data = True
+        rospy.loginfo("Succeeded")
+        self.server.set_succeeded(result)
+
     def get_goal(self, goal):
         goal_x = goal.position.x + self.position.x
         goal_y = goal.position.y + self.position.y
