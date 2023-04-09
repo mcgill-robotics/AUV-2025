@@ -10,7 +10,7 @@ import time
 
 
 
-class MoveServer():
+class StateServer():
 
     def __init__(self) -> None:
         #self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
@@ -75,7 +75,7 @@ class MoveServer():
         while not settled:
             start = time.time()
             while self.check_status(goal_position,goal_rotation):
-                if(time.time() - start < interval):
+                if(time.time() - start > interval):
                     settled = True
                     break
                 rospy.sleep(0.01)
@@ -106,13 +106,13 @@ class MoveServer():
         self.pub_theta_z.publish(Float64(rotation.z))
         #print("published setpoints")
 
-class StateControlActionServer(MoveServer):
+class StateControlActionServer(StateServer):
     def __init__(self):
         super.__init__()
         self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
 
 
-class DisplaceServer(MoveServer):
+class DisplaceServer(StateServer):
     def __init__(self):
         super.__init__()
         self.server = actionlib.SimpleActionServer('displace_server', StateAction, execute_cb= self.callback, auto_start = False)
@@ -153,3 +153,4 @@ class DisplaceServer(MoveServer):
         goal_rotation.z = goal_theta_z
 
         return goal_position, goal_rotation
+        
