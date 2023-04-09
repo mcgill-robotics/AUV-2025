@@ -1,0 +1,8 @@
+# goal
+geometry_msgs/Quaternion rotation
+---
+# result
+std_msgs/Bool status
+---
+# feedback 
+std_msgs/Bool status

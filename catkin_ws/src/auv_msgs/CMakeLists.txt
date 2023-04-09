@@ -25,6 +25,7 @@ add_message_files(FILES
 add_action_files(FILES
     Direct.action
     State.action
+	QuaternionRotation.action
 )
 
 generate_messages(DEPENDENCIES

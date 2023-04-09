@@ -1,6 +1,6 @@
 import rospy
 
-from servers.MoveServers import StateControlActionServer, DisplaceServer
+from servers.MoveServers import *
 
 if __name__ == "__main__":
     rospy.init_node("state_server")
