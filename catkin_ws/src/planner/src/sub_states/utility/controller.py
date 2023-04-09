@@ -5,34 +5,46 @@ import rospy
 ##ANTHONY TODO WITH ACTIONS
 
 #rotate to this rotation
-def rotate(x,y,z,callback):
+def rotate(ang,callback):
+    x,y,z = ang
     pass
 
 #rotate by this amount
-def rotateDelta(x,y,z,callback):
+def rotateDelta(ang,callback):
+    x,y,z = ang
     pass
 
 #move to setpoint
-def move(x,y,z,callback):
+def move(pos,callback):
+    x,y,z = pos
     pass
 
 #move by this amount
-def moveDelta(x,y,z,callback):
+def moveDelta(pos,callback):
+    x,y,z = pos
     pass
 
-#rotate by this amount from now on (add to velocity required to maintain state) (deg/s)
-def deltaAngularVelocity(x,y,z):
+#rotate by this amount from now on (add to velocity required to maintain state)
+def deltaAngularVelocity(ang):
+    x,y,z = ang
     pass
 
-#move by this amount from now on (add to velocity required to maintain state) (m/s)
-def deltaVelocity(x,y,z):
+#move by this amount from now on (add to velocity required to maintain state)
+def deltaVelocity(pos):
+    x,y,z = pos
     pass
 
-#rotate by this amount from now on (deg/s)
-def angularVelocity(x,y,z):
+#rotate by this amount from now on
+def angularVelocity(ang):
+    x,y,z = ang
     pass
 
-#move by this amount from now on (m/s)
-def velocity(x,y,z):
+#move by this amount from now on
+def velocity(pos):
+    x,y,z = pos
+    pass
+
+#preempt the current action
+def preemptCurrentAction():
     pass
 
