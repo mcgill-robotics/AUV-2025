@@ -1,27 +1,8 @@
-#! /usr/bin/env python3
+class DisplaceServer():
 
-import rospy
-import actionlib
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import Pose
-from auv_msgs.msg import StateAction, StateFeedback, StateResult
-from std_msgs.msg import Float64
+    def __init__(self):
+        self.server = actionlib.SimpleActionServer('displace_server', StateAction, execute_cb= self.callback, auto_start = False)
 
-
-
-import math
- 
-
-
-class StateControlActionServer():
-
-    def __init__(self) -> None:
-        self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
-        #self.feedback = StateFeedback()
-        #self.result = StateResult()
-
-        #self.pub_x = rospy.Publisher('', Float64, queue_size=50)
-        #self.pub_y = rospy.Publisher('', Float64, queue_size=50)
         self.pub_z = rospy.Publisher('z_setpoint', Float64, queue_size=50)
         self.pub_theta_x = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
         self.pub_theta_y = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
@@ -38,8 +19,7 @@ class StateControlActionServer():
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
-        
-    
+
     def set_position(self,data):
         #print("updated pose")
         self.position = data.position
@@ -51,12 +31,28 @@ class StateControlActionServer():
     def set_theta_z(self,data):
         self.theta_z = data.data
 
+
     def callback(self, goal):
         #print("got a message")
         # set the PIDs
         #print(goal.pose)
-        goal_position = goal.position
-        goal_rotation = goal.rotation
+        goal_x = goal.position.x + self.position.x
+        goal_y = goal.position.y + self.position.y
+        goal_z = goal.position.z + self.position.z
+
+        goal_theta_x = goal.rotation.x + self.theta_x
+        goal_theta_y = goal.rotation.y + self.theta_y
+        goal_theta_z = goal.rotation.z + self.theta_z
+
+        goal_position = Point()
+        goal_position.x = goal_x
+        goal_position.y = goal_y
+        goal_position.z = goal_z
+
+        goal_rotation = Point()
+        goal_rotation.x = goal_theta_x
+        goal_rotation.y = goal_theta_y
+        goal_rotation.z = goal_theta_z
 
         self.publish_setpoints(goal_position,goal_rotation)
 
