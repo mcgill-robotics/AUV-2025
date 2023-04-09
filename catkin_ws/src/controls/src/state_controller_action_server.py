@@ -6,6 +6,7 @@ from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
 from std_msgs.msg import Float64
+import time
 
 
 
@@ -61,13 +62,24 @@ class StateControlActionServer():
         self.publish_setpoints(goal_position,goal_rotation)
 
         # monitor when reached pose
-        while(not self.check_status(goal_position,goal_rotation)):
-            rospy.sleep(0.1)
-
+        self.wait_for_settled(goal_position,goal_rotation)
         result = StateResult()
         result.status.data = True
         rospy.loginfo("Succeeded")
         self.server.set_succeeded(result)
+
+    def wait_for_settled(self,goal_position,goal_rotation):
+        interval = 0.3
+
+        settled = False
+
+        while not settled:
+            start = time.time()
+            while self.check_status(goal_position,goal_rotation):
+                if(time.time() - start < interval):
+                    settled = True
+                    break
+                rospy.sleep(0.01)
 
     def check_status(self,position,rotation):
         if(self.position == None or self.theta_x == None or self.theta_y == None or self.theta_z == None):
