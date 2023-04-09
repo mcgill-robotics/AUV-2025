@@ -15,80 +15,111 @@ class centerAndScale(smach.State):
         Once the lane marker is centered and scale, it returns success.
         If it loses sight of the lane marker for more than timeout, returns "failure".
         '''
-        log("Starting centering and scaling of lane marker.")
+        print("Starting centering and scaling of lane marker.")
         global last_object_detection
+
         timeout = 5
-        startTime = time.time()
-        pubx = rospy.Publisher('/surge', Float64, queue_size=1, latch=True)
-        puby = rospy.Publisher('/sway', Float64, queue_size=1, latch=True)
-        pubz = rospy.Publisher('/z_setpoint', Float64, queue_size=1, latch=True)
         targetCenterX = 0.5
         targetCenterY = 0.5
         targetScale = 0.5
-        centering_tolerance = 0.05
-        scaling_tolerance = 0.05
+        centering_tolerance = 0.1
+        scaling_tolerance = 0.1
         centered = False
-        scaled = True
+        scaled = False
         z_increment = 1
-        surge_p_value = 10
-        sway_p_value = 10
+        x_increment = 1
+        y_increment = 1
 
-        while state_z == None:
-            if time.time() > startTime + timeout:
-                log("Could not get state z.")
-                return 'failure'
         startTime = time.time()
 
         while not (centered and scaled):
             if len(last_object_detection) > 0:
+                startTime = time.time()
                 center_x = last_object_detection[6]
                 center_y = last_object_detection[7]
                 width = last_object_detection[2]
                 height = last_object_detection[3]
-                centering_error = math.sqrt((center_x - targetCenterX)**2 + (center_y - targetCenterY)**2)
-                scaling_error = abs(max(width, height) - targetScale)
-                
-                log("Lane marker in view at: x:{}, y:{}, w:{}, h:{}!".format(center_x, center_y, width, height))
+                last_object_detection = []
 
-                if scaling_error > scaling_tolerance:
-                    offsetZ = scaling_error*z_increment
-                    pubz.publish(Float64(state_z + offsetZ))
-                    log("Moving Z setpoint by {}".format(offsetZ))
+                print("Lane marker in view at: x:{}, y:{}, w:{}, h:{}!".format(center_x, center_y, width, height))
+
+                scaling_error = max(width, height) - targetScale
+                
+                if abs(scaling_error) > scaling_tolerance:
+                    delta_z = scaling_error*z_increment
+                    print("Moving z by {}".format(delta_z))
+                    controller.moveDeltaLocal((0,0,delta_z))
                     scaled = False
+                    continue
                 else:
-                    log("Lane marker scaled!")
-                    pubz.publish(Float64(state_z))
                     scaled = True
+                
+                centering_error = math.sqrt((center_x - targetCenterX)**2 + (center_y - targetCenterY)**2)
 
                 if centering_error > centering_tolerance: #isn't centered
-                    surgeValue = (targetCenterX - center_x)*surge_p_value
-                    swayValue = (targetCenterY - center_y)*sway_p_value
-                    log("Surging {}".format(surgeValue))
-                    log("Swaying {}".format(swayValue))
-                    pubx.publish(Float64(surgeValue))
-                    puby.publish(Float64(swayValue))
+                    delta_y = (targetCenterX - center_x)*y_increment
+                    delta_x = (targetCenterY - center_y)*x_increment
+                    print("Surging {}".format(delta_x))
+                    print("Swaying {}".format(delta_y))
+                    controller.moveDeltaLocal((delta_x,delta_y,0))
                     centered = False
+                    continue
                 else:
-                    log("Lane marker centered!")
-                    pubx.publish(Float64(0))
-                    puby.publish(Float64(0))
                     centered = True
+            else:
+                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
+                if time.time() > startTime + timeout:
+                    print("Lane marker no longer visible.")
+                    return 'failure'
                     
+        print("Successfully positioned above lane marker!")
+        return 'success'
+
+class measureLaneMarker(smach.State):
+    def __init__(self):
+        super().__init__(outcomes=['success', 'failure'])
+        
+    def execute(self, ud):
+        '''
+        Rotates the AUV until lane marker target heading is within rotational tolerance.
+        Once the lane marker heading is facing forward, it returns success.
+        If it loses sight of the lane marker for more than timeout, returns "failure".
+        Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
+        '''
+        print("Starting measurement of lane marker headings.")
+        global last_object_detection
+        global target_heading
+        measurements = []
+        min_measurements = 20
+        startTime = time.time()
+        timeout = 5
+
+        #get measurements
+        while len(measurements) < min_measurements:
+            if len(last_object_detection) > 0:
+                if abs(last_object_detection[4]) < abs(last_object_detection[5]):
+                    measurements.append(last_object_detection[4])
+                else:
+                    measurements.append(last_object_detection[5])
                 startTime = time.time()
                 last_object_detection = []
             else:
-                log("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
+                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
                 if time.time() > startTime + timeout:
-                    log("Lane marker no longer visible.")
-                    pubx.publish(Float64(0))
-                    puby.publish(Float64(0))
-                    pubz.publish(Float64(state_z))
+                    print("Lane marker no longer visible.")
                     return 'failure'
-                    
-        log("Successfully positioned above lane marker!")
-        pubx.publish(Float64(0))
-        puby.publish(Float64(0))
-        pubz.publish(Float64(state_z))
+
+        slopes = [math.tan((angle/180)*math.pi) for angle in measurements]
+
+        avg_slope = sum(slopes)/len(slopes)
+
+        avg_angle = ((180*math.atan(avg_slope)/math.pi) % 180)
+        if abs(avg_angle) > 90
+
+
+        #find most "common" measurement
+        target_heading = heading
+        
         return 'success'
 
 class rotateToHeading(smach.State):
@@ -102,69 +133,10 @@ class rotateToHeading(smach.State):
         If it loses sight of the lane marker for more than timeout, returns "failure".
         Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
         '''
-        #return "success" #TEMPORARY UNTIL IMU MEASUREMENT WORKS MORE RELIABLY
-        log("Starting rotation of AUV to target heading.")
-        timeout = 5
-        global last_object_detection
-        rotationError = 9999
-        rotationTolerance = 5 #in degrees
-        startTime = time.time()
-        laneMarkerInView = False
-        success = False
-        pub = rospy.Publisher('/theta_z_setpoint', Float64, queue_size=5, latch=True)
-        #wait for state theta z update
-        while state_theta_z == None:
-            if time.time() > startTime + timeout:
-                log("Could not get state theta z.")
-                return 'failure'
-        startTime = time.time()
-        while not success:
-            while abs(rotationError) > rotationTolerance:
-                if len(last_object_detection) > 0:
-                    #we assume that the angle pointing most "downwards" (i.e. highest abs() angle) is the angle we are coming from
-                    #so our target angle is the one closest to 0 degrees (most forward angle)
-                    #since we make our target heading get closer to 0 we can choose the most forward angle at every iteration
-                    rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
-                    #maybe? after the first time we assume our target heading is the one closest to our current theta_z_setpoint
-                    #rotationError = min(last_object_detection[4:6], key=lambda x : abs(theta_z_setpoint-(state_theta_z + x)))
-                    theta_z_setpoint = state_theta_z + rotationError
-                    log("Detection! Updating setpoint to", theta_z_setpoint, "- current state is", state_theta_z, "(relative heading is", str(rotationError) + ")")
-                    pub.publish(Float64(theta_z_setpoint))
-                    startTime = time.time()
-                    last_object_detection = []
-                else:
-                    log("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
-                    if time.time() > startTime + timeout:
-                        log("Lane marker no longer visible.")
-                        pub.publish(Float64(state_theta_z))
-                        return 'failure'
-            log("Rotational error small! Maintaining rotation to ensure it was not a fluke.")
-            #when we're here we got a small error on rotation
-            success = True
-            verifications = 0
-            startTime = time.time()
-            #ensure our rotation error stays small for 10 more detections before success
-            while verifications < 10:
-                if len(last_object_detection) > 0:
-                    startTime = time.time()
-                    #assume target heading is the one closest to 0 degrees
-                    rotationError = min(last_object_detection[4:6], key=lambda x : abs(x))
-                    if abs(rotationError) > rotationTolerance:
-                        log("Detection! Rotational error large. Verirication failed. Restarting rotation.")
-                        success = False
-                        break
-                    else:
-                        verifications += 1
-                        log("Detection! Rotational error small. Verification " + str(verifications) + "/10 succeeded.")
-                else:
-                    log("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
-                    if time.time() > startTime + timeout:
-                        log("Lane marker no longer visible.")
-                        pub.publish(Float64(state_theta_z))
-                        return 'failure'
-        
-        log("Successfully rotated to lane marker!")
-        pub.publish(Float64(state_theta_z))
+        if target_heading is None: return 'failure'
+        print("Starting rotation of AUV to target heading.")
+        controller.rotateDelta((0,0,target_heading))
+        print("Successfully rotated to lane marker!")
         return 'success'
 
 #ignore unnecessary object detection information and make object detection event one array
@@ -191,39 +163,34 @@ def parseMessage(msg):
             msg.center_x[i],
             msg.center_y[i],
             msg.confidence[i]]
-    log(str(detection))
     return detection
+
+target_heading = None
+last_object_detection = []
+firstMessage = False
 
 def objectDetectCb(msg):
     global last_object_detection
     global firstMessage
     firstMessage = True
-    try:
-        last_object_detection = parseMessage(msg)
-    except Exception as e:
-        log(str(e))
+    last_object_detection = parseMessage(msg)
 
 class NavigateLaneMarker(smach.State):
     def __init__(self):
         super().__init__(outcomes=['success'])
         
     def execute(self, ud):
-        last_object_detection = []
-        firstMessage = False
-        #state_theta_z = None
-        state_theta_z = 0 #TEMPORARY UNTIL IMU WORKS
-        state_z = None
         obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
-        theta_sub = rospy.Subscriber('state_theta_z', Float64, updateTheta)
-        z_pos_sub = rospy.Subscriber('state_z', Float64, state_z)
 
         sm = smach.StateMachine(outcomes=['success', 'failure']) 
         with sm:
             smach.StateMachine.add('scale_and_center', centerAndScale(), 
+                    transitions={'success': 'measure', 'failure':'failure'})
+            smach.StateMachine.add('measure', measureLaneMarker(), 
                     transitions={'success': 'rotate', 'failure':'failure'})
             smach.StateMachine.add('rotate', rotateToHeading(), 
                     transitions={'success': 'success', 'failure':'failure'})
         while not firstMessage: pass
-        log("Received first detection message. Starting state machine.")
+        print("Received first detection message. Starting state machine.")
         res = sm.execute()
-        log("Ending state machine.")
+        print("Ending state machine.")
