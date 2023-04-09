@@ -16,7 +16,7 @@ import math
 class StateControlActionServer():
 
     def __init__(self) -> None:
-        self.server = actionlib.SimpleActionServer('state_control_action', StateAction, execute_cb= self.callback, auto_start = False)
+        self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
@@ -98,7 +98,7 @@ class StateControlActionServer():
 
 
 if __name__ == "__main__":
-    rospy.init_node("state_control_action_server")
+    rospy.init_node("state_server")
     s = StateControlActionServer()
     rospy.spin()
 
