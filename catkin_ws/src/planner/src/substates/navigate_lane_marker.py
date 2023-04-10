@@ -4,6 +4,7 @@ import rospy
 import smach
 from utility import *
 import time, math
+import numpy as np
 
 class centerAndScale(smach.State):
     def __init__(self):
@@ -90,7 +91,7 @@ class measureLaneMarker(smach.State):
         global last_object_detection
         global target_heading
         measurements = []
-        min_measurements = 20
+        min_measurements = 25
         startTime = time.time()
         timeout = 5
 
@@ -109,16 +110,8 @@ class measureLaneMarker(smach.State):
                     print("Lane marker no longer visible.")
                     return 'failure'
 
-        slopes = [math.tan((angle/180)*math.pi) for angle in measurements]
-
-        avg_slope = sum(slopes)/len(slopes)
-
-        avg_angle = ((180*math.atan(avg_slope)/math.pi) % 180)
-        if abs(avg_angle) > 90
-
-
-        #find most "common" measurement
-        target_heading = heading
+        #remove outliers with median
+        target_heading = np.median(measurements)
         
         return 'success'
 
