@@ -55,12 +55,12 @@ if __name__ == '__main__':
             return True, "success"
 
         pipeline = "nvarguscamerasrc sensor-id={} ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw(memory:NVMM),width={},height={},framerate={}/1 ! nvvidconv ! video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink".format(sensor_id, inputImgWidth, inputImgHeight, framerate, outputImgWidth, outputImgHeight, framerate)
-        servL = rospy.Service("/vision" + outputTopicLeft + '/set_camera_info', SetCameraInfo, setLeftCameraInfo)
-        servR = rospy.Service("/vision" + outputTopicRight + '/set_camera_info', SetCameraInfo, setRightCameraInfo)
-        pubL = rospy.Publisher("/vision" + outputTopicLeft + '/image_raw', Image, queue_size=1)
-        pubR = rospy.Publisher("/vision" + outputTopicRight + '/image_raw', Image, queue_size=1)
-        camInfoL_pub = rospy.Publisher("/vision" + outputTopicLeft + '/camera_info', CameraInfo, queue_size=1)
-        camInfoR_pub = rospy.Publisher("/vision" + outputTopicRight + '/camera_info', CameraInfo, queue_size=1)
+        servL = rospy.Service("/vision/stereo" + outputTopicLeft + '/set_camera_info', SetCameraInfo, setLeftCameraInfo)
+        servR = rospy.Service("/vision/stereo" + outputTopicRight + '/set_camera_info', SetCameraInfo, setRightCameraInfo)
+        pubL = rospy.Publisher("/vision/stereo" + outputTopicLeft + '/image_raw', Image, queue_size=1)
+        pubR = rospy.Publisher("/vision/stereo" + outputTopicRight + '/image_raw', Image, queue_size=1)
+        camInfoL_pub = rospy.Publisher("/vision/stereo" + outputTopicLeft + '/camera_info', CameraInfo, queue_size=1)
+        camInfoR_pub = rospy.Publisher("/vision/stereo" + outputTopicRight + '/camera_info', CameraInfo, queue_size=1)
         
         def publish(f):
             global camInfoL
