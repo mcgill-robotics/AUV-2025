@@ -183,14 +183,16 @@ def detect_on_image(raw_img, camera_id):
                 else:
                     #assuming FOV increases linearly with distance from center pixel
                     x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
-                    x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
-                    x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-                    global_center_x = state.x + abs(-pool_depth - state.z)*x_slope_offset
                     y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                    x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
                     y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
+                    x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                     y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-                    global_center_y = state.y + abs(-pool_depth - state.z)*y_slope_offset
-
+                    local_offset_x = abs(-pool_depth - state.z)*x_slope_offset
+                    local_offset_y = abs(-pool_depth - state.z)*y_slope_offset
+                    #convert local offset to location in world space using AUV position + yaw
+                    global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z+90))
+                    global_center_y = state.y + local_offset_x*-math.cos(math.radians(state.theta_z+90)) + local_offset_y*math.sin(math.radians(state.theta_z+90))
                     #confidence model:
                         # 0.25 at corners
                         # 0.5 at edges 
@@ -198,7 +200,6 @@ def detect_on_image(raw_img, camera_id):
                     x_conf = 1.0 - abs(x_center_offset)
                     y_conf = 1.0 - abs(y_center_offset)
                     pose_confidence.append(x_conf*y_conf) 
-
                     obj_x.append(global_center_x)
                     obj_y.append(global_center_y)
                     obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
