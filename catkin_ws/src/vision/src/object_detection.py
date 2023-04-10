@@ -12,25 +12,33 @@ from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
 import math
 import torch
-
-def updateX(msg):
-    global state_x
-    state_x = float(msg.data)
-def updateY(msg):
-    global state_y
-    state_y = float(msg.data)
-def updateZ(msg):
-    global state_z
-    state_z = float(msg.data)
-def updateThetaX(msg):
-    global state_theta_x
-    state_theta_x = float(msg.data)
-def updateThetaY(msg):
-    global state_theta_y
-    state_theta_y = float(msg.data)
-def updateThetaZ(msg):
-    global state_theta_z
-    state_theta_z = float(msg.data)
+class State:
+    def __init__(self):
+        self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
+        self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
+        self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
+        self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
+        self.x = None
+        self.y = None
+        self.z = None
+        self.theta_x = None
+        self.theta_y = None
+        self.theta_z = None
+        #add depth map here
+def updateX(self, msg):
+    self.x = float(msg.data)
+def updateY(self, msg):
+    self.y = float(msg.data)
+def updateZ(self, msg):
+    self.z = float(msg.data)
+def updateThetaX(self, msg):
+    self.theta_x = float(msg.data)
+def updateThetaY(self, msg):
+    self.theta_y = float(msg.data)
+def updateThetaZ(self, msg):
+    self.theta_z = float(msg.data)
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -110,7 +118,7 @@ def measureLaneMarker(img, bbox):
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
-    current_state = (state_x, state_y, state_z, state_theta_x, state_theta_y, state_theta_z)
+    current_state = (state.x, state.y, state.z, state.theta_x, state.theta_y, state.theta_z)
     if None in current_state: return
     #only predict if i has not reached detect_every yet
     global i
@@ -151,38 +159,49 @@ def detect_on_image(raw_img, camera_id):
             if camera_id == 0:
                 if cls_id == 0:
                     headings, center, img = measureLaneMarker(img, bbox)
-                    obj_theta_z.append(state_theta_z + (headings[0]-90))
-                    extra_field.append(state_theta_z + (headings[1]-90))
+                    if None in headings:
+                        extra_field.append(None)
+                        obj_theta_z.append(None)
+                        center = bbox
+                    else:
+                        obj_theta_z.append(state.theta_z + (headings[0]-90))
+                        extra_field.append(state.theta_z + (headings[1]-90))
                 #ADD ELIFs HERE TO MEASURE THE ROTATION OF OTHER CLASSES OF OBJECTS
                 else:
                     extra_field.append(None)
                     obj_theta_z.append(None)
                     center = bbox
-                
-                #for x and y:
-                    #assuming for now AUV is flat in orientation (TODO!!)
-                    #assuming FOV increases linearly with distance from center pixel
-                x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
-                x_angle_offset = down_cam_hfov*x_center_offset
-                x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-                global_center_x = state_x + abs(-pool_depth - state_z)*x_slope_offset
+                #POSITION FOR OBJECTS ON DOWN CAM
+                #ASSUME THEY ARE ON THE BOTTOM OF THE POOL, USE FOV TO FIND APPROXIMATE LOCATION
+                #check that all of the down camera viewframe faces the pool bottom
                 down_cam_vfov = down_cam_hfov*(h/w)
-                y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
-                y_angle_offset = down_cam_vfov*y_center_offset
-                y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-                global_center_y = state_y + abs(-pool_depth - state_z)*y_slope_offset
+                if abs(state.theta_x) + down_cam_hfov/2 >= 90 or abs(state.theta_y) + down_cam_vfov/2 >= 90: 
+                    obj_x.append(None)
+                    obj_y.append(None)
+                    obj_z.append(None)
+                    pose_confidence.append(None)
+                else:
+                    #assuming FOV increases linearly with distance from center pixel
+                    x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
+                    x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
+                    x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
+                    global_center_x = state.x + abs(-pool_depth - state.z)*x_slope_offset
+                    y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                    y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
+                    y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
+                    global_center_y = state.y + abs(-pool_depth - state.z)*y_slope_offset
 
-                #confidence model:
-                    # 0.25 at corners
-                    # 0.5 at edges 
-                    # 1.0 at center
-                x_conf = 1.0 - abs(x_center_offset)
-                y_conf = 1.0 - abs(y_center_offset)
-                pose_confidence.append(x_conf*y_conf) 
+                    #confidence model:
+                        # 0.25 at corners
+                        # 0.5 at edges 
+                        # 1.0 at center
+                    x_conf = 1.0 - abs(x_center_offset)
+                    y_conf = 1.0 - abs(y_center_offset)
+                    pose_confidence.append(x_conf*y_conf) 
 
-                obj_x.append(global_center_x)
-                obj_y.append(global_center_y)
-                obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
+                    obj_x.append(global_center_x)
+                    obj_y.append(global_center_y)
+                    obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
                 #measure with stereo depth to get x,y,z
                 #use custom object measurements to get theta_z
@@ -213,13 +232,6 @@ BOX_COLOR = (255, 255, 255) # White
 HEADING_COLOR = (255, 0, 0) # Blue
 TEXT_COLOR = (0, 0, 0) # Black
 
-state_x = 0 #set to None when implemented
-state_y = 0 #set to None when implemented
-state_z = None #set to None when implemented
-state_theta_x = None #set to None when implemented
-state_theta_y = None #set to None when implemented
-state_theta_z = None #set to None when implemented
-
 detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
 min_prediction_confidence = 0.6 #only report predictions with confidence at least 60%
 
@@ -227,12 +239,7 @@ pool_depth = 4
 down_cam_hfov = 75
 
 if __name__ == '__main__':
-    x_pos_sub = rospy.Subscriber('state_x', Float64, updateX)
-    y_pos_sub = rospy.Subscriber('state_y', Float64, updateY)
-    z_pos_sub = rospy.Subscriber('state_z', Float64, updateZ)
-    theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateThetaX)
-    theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateThetaY)
-    theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateThetaZ)
+    state = State()
 
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()

@@ -11,6 +11,7 @@ def objectDetectCb(msg):
 
 def addObservation(msg):
     for i in range(len(msg.label)):
+        if msg.obj_x[i] == None or msg.obj_y[i] == None or msg.obj_z[i] == None: continue
         obj_i = findObject([msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i]])
         if obj_i == -1:
             object_map.append([msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i], msg.obj_theta_z[i], msg.extra_field[i], msg.detection_confidence[i], msg.pose_confidence[i], 1])
