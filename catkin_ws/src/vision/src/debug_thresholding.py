@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+import cv2
 from cv_bridge import CvBridge
 import lane_marker_measure
 from sensor_msgs.msg import Image
