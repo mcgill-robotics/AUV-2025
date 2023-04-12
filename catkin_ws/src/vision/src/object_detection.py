@@ -190,24 +190,29 @@ def detect_on_image(raw_img, camera_id):
                     y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
                     local_offset_x = abs(-pool_depth - state.z)*x_slope_offset
                     local_offset_y = abs(-pool_depth - state.z)*y_slope_offset
-                    #NOT SURE ABOUT THE MATH HERE
-                    #convert local offset to location in world space using AUV position + yaw
-                    global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
-                    global_center_y = state.y + local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
-                    #global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z+90))
-                    #global_center_y = state.y + local_offset_x*-math.cos(math.radians(state.theta_z+90)) + local_offset_y*math.sin(math.radians(state.theta_z+90))
-                    
-                    
-                    #confidence model:
-                        # 0.25 at corners
-                        # 0.5 at edges 
-                        # 1.0 at center
-                    x_conf = 1.0 - abs(x_center_offset)
-                    y_conf = 1.0 - abs(y_center_offset)
-                    pose_confidence.append(x_conf*y_conf) 
-                    obj_x.append(global_center_x)
-                    obj_y.append(global_center_y)
-                    obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
+                    #don't use position calculations for objects which are very far away
+                    # (in case down cam picks up on an object which is not on the floor of the pool)
+                    localization_max_distance = pool_depth*2
+                    if abs(local_offset_x) > localization_max_distance or abs(local_offset_y) > localization_max_distance:
+                        obj_x.append(None)
+                        obj_y.append(None)
+                        obj_z.append(None)
+                        pose_confidence.append(None)
+                    else:
+                        #convert local offset to location in world space using AUV position + yaw
+                        global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
+                        global_center_y = state.y + local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
+                                            
+                        #confidence model:
+                            # 0.25 at corners
+                            # 0.5 at edges 
+                            # 1.0 at center
+                        x_conf = 1.0 - abs(x_center_offset)
+                        y_conf = 1.0 - abs(y_center_offset)
+                        pose_confidence.append(x_conf*y_conf) 
+                        obj_x.append(global_center_x)
+                        obj_y.append(global_center_y)
+                        obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
                 #measure with stereo depth to get x,y,z
                 #use custom object measurements to get theta_z
