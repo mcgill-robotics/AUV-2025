@@ -291,15 +291,21 @@ def measure_headings(img, debug=False):
         return finalLines, centerPoint
 
 def getStepsWithLM(img, slope, direction, center_point, lm_color=0):
-    x,y = center_point[0], center_point[1]
-    step = img.shape[1]/(2*50) #step value
-    if slope > 1: #big slopes 
-        step=step*(1/slope)
+    x,y = center_point
+    num_steps = 50
+    if abs(slope) > 1: #slopes that change faster in y than x 
+        step_y = img.shape[0]/(2*num_steps)
+        if slope < 0: step_y *= -1.0 #step_y must always have same sign as the slope
+        step_x = abs(step_y/slope) # step_x must always be positive
+    else:
+        step_x = img.shape[1]/(2*num_steps)
+        step_y = slope*step_x
+        
     stepsWithLM = 0
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
-        if img[y][x] == lm_color: stepsWithLM += 1
-        x += int(step*direction)
-        y += int(slope*step*direction)
+        if img[int(y)][int(x)] == lm_color: stepsWithLM += 1
+        x += step_x*direction
+        y += step_y*direction
     return stepsWithLM
 
 def visualizeLaneMarker(img, debug=True):

@@ -181,7 +181,7 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
+    detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
     min_prediction_confidence = 0.6
     #bridge is used to convert sensor_msg images to cv2
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
+        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0, queue_size=None)
         ]
  	
     cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
