@@ -210,7 +210,7 @@ if __name__ == '__main__':
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0, queue_size=None)
+        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0, queue_size=1)
         ]
  	
     cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
