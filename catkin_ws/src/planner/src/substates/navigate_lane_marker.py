@@ -166,6 +166,7 @@ def objectDetectCb(msg):
     global last_object_detection
     global firstMessage
     firstMessage = True
+    #in the future replace with finding lane marker nearby if any
     last_object_detection = parseMessage(msg)
 
 class NavigateLaneMarker(smach.State):
@@ -173,7 +174,8 @@ class NavigateLaneMarker(smach.State):
         super().__init__(outcomes=['success'])
         
     def execute(self, ud):
-        obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
+        self.detector = vision.ObjectDetector(msgHandler=objectDetectCb)
+        self.detector.start()
 
         sm = smach.StateMachine(outcomes=['success', 'failure']) 
         with sm:
@@ -186,4 +188,5 @@ class NavigateLaneMarker(smach.State):
         while not firstMessage: pass
         print("Received first detection message. Starting state machine.")
         res = sm.execute()
+        self.detector.stop()
         print("Ending state machine.")

@@ -6,7 +6,7 @@ import smach
 from sub_states import *
 from sub_states.utility import *
 
-def descend(depth=-2.0):
+def descend(depth):
     descended = False
     def done():
         global descended
@@ -30,10 +30,10 @@ def testRotationsMission():
     endMission("Finished rotation test mission.")
 
 def laneMarkerGridSearchMission():
-    descend(depth=-2.0)
+    descend(depth=-0.5)
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('gridsearch', grid_search.GridSearch(target_class=0, timeout=60, min_consecutive_detections=5), 
+        smach.StateMachine.add('gridsearch', grid_search.GridSearch(timeout=60, target_classes=[0]), 
                 transitions={'success': 'navigateLaneMarker', 'failure':'failure'})
         smach.StateMachine.add('navigateLaneMarker', navigate_lane_marker.NavigateLaneMarker(), 
                 transitions={'success': 'success', 'failure':'failure'})
