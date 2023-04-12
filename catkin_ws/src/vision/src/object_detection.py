@@ -190,9 +190,14 @@ def detect_on_image(raw_img, camera_id):
                     y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
                     local_offset_x = abs(-pool_depth - state.z)*x_slope_offset
                     local_offset_y = abs(-pool_depth - state.z)*y_slope_offset
+                    #NOT SURE ABOUT THE MATH HERE
                     #convert local offset to location in world space using AUV position + yaw
-                    global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z+90))
-                    global_center_y = state.y + local_offset_x*-math.cos(math.radians(state.theta_z+90)) + local_offset_y*math.sin(math.radians(state.theta_z+90))
+                    global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
+                    global_center_y = state.y + local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
+                    #global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z+90))
+                    #global_center_y = state.y + local_offset_x*-math.cos(math.radians(state.theta_z+90)) + local_offset_y*math.sin(math.radians(state.theta_z+90))
+                    
+                    
                     #confidence model:
                         # 0.25 at corners
                         # 0.5 at edges 
