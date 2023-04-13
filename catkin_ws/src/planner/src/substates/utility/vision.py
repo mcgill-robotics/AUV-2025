@@ -11,7 +11,7 @@ class ObjectDetector:
             for cl in target_classes:
                 int(cl)
         except:
-            raise ValueError("target_class argument must be a list fo integers")
+            raise ValueError("target_class argument must be a list of integers")
         if callback == None and detectionHandler == self.defaultDetectionCb:
             raise ValueError("must pass at least one of callback or detectionHandler arguments")
 
