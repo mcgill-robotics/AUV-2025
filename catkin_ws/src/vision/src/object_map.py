@@ -6,6 +6,7 @@ import math
 def objectDetectCb(msg):
     try:
         addObservation(msg)
+        publishMap()
     except Exception as e:
         log(str(e))
 
@@ -99,12 +100,21 @@ def updateMap(obj_i, observation):
     if observed_label == current_label: object_map[obj_i][8] += 1
     else: object_map[obj_i][8] = 1
     
-
 def dist(obj1, obj2):
     x1, y1, z1 = obj1
     x2, y2, z2 = obj2
     return math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
     
+def publishMap():
+    confirmedMap = [obj for obj in object_map if obj[8] > min_observations]
+    map_msg = ObjectMap()
+    map_msg.x = [obj[1] for obj in confirmedMap]
+    map_msg.y = [obj[2] for obj in confirmedMap]
+    map_msg.z = [obj[3] for obj in confirmedMap]
+    map_msg.theta_z = [obj[4] for obj in confirmedMap]
+    map_msg.extra_field = [obj[5] for obj in confirmedMap]
+    obj_pub.publish(map_msg)
+
 max_lane_markers = 2
 max_gates = 1
 max_buoys = 1
@@ -112,9 +122,13 @@ max_torpedo_target = 1
 max_bins = 2
 max_octagon = 1
 
+min_observations = 5
+object_map = []
+
 sameObjectRadius = 1 #in same units as state_x, y, z etc
 
 
 if __name__ == '__main__':
-    object_map = []
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
+    obj_pub = rospy.Publisher('vision/object_map', ObjectMap, queue_size=1)
+    rospy.spin()
