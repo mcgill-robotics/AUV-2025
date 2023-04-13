@@ -20,12 +20,14 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
+        self.depth_sub = rospy.Subscriber('vision/depth_map', Image, self.updateDepthMap)
         self.x = None
         self.y = None
         self.z = None
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
+        self.depth_map= None
         #add depth map here
 def updateX(self, msg):
     self.x = float(msg.data)
@@ -39,6 +41,8 @@ def updateThetaY(self, msg):
     self.theta_y = float(msg.data)
 def updateThetaZ(self, msg):
     self.theta_z = float(msg.data)
+def updateDepthMap(self, msg):
+    self.depth_map = bridge.imgmsg_to_cv2(msg, "passthrough")
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -174,7 +178,6 @@ def detect_on_image(raw_img, camera_id):
                 #POSITION FOR OBJECTS ON DOWN CAM
                 #ASSUME THEY ARE ON THE BOTTOM OF THE POOL, USE FOV TO FIND APPROXIMATE LOCATION
                 #check that all of the down camera viewframe faces the pool bottom
-                down_cam_vfov = down_cam_hfov*(h/w)
                 if abs(state.theta_x) + down_cam_hfov/2 >= 90 or abs(state.theta_y) + down_cam_vfov/2 >= 90: 
                     obj_x.append(None)
                     obj_y.append(None)
@@ -214,14 +217,30 @@ def detect_on_image(raw_img, camera_id):
                         obj_y.append(global_center_y)
                         obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
-                #measure with stereo depth to get x,y,z
-                #use custom object measurements to get theta_z
-                obj_x.append(None)
-                obj_y.append(None)
-                obj_z.append(None)
+                #TODO: estimate depth from camera using depth map and bbox
+                dist_from_camera = 0 ####
+
+                #TODO MATH TO FIGURE OUT RELATIVE POSITION OF OBJECT USING AUV ORIENTATION AND DISTANCE FROM CAMERA
+                #assuming FOV increases linearly with distance from center pixel
+                x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
+                y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                x_angle_offset = state.theta_z + front_cam_hfov*x_center_offset
+                y_angle_offset = state.theta_y + front_cam_vfov*y_center_offset
+                x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
+                y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
+                local_offset_y = dist_from_camera*x_slope_offset
+                local_offset_z = dist_from_camera*y_slope_offset
+                
+                x_conf = 1.0 - abs(x_center_offset)
+                y_conf = 1.0 - abs(y_center_offset)
+                pose_confidence.append(x_conf*y_conf*(min(1.0, 1.0/dist_from_camera))) 
+                obj_x.append(global_center_x)
+                obj_y.append(global_center_y)
+                obj_z.append(global_center_z) 
+
+                #GET EXTRA FIELD / THETA Z FROM CUSTOM OBJECT MEASUREMENTS
                 obj_theta_z.append(None)
                 extra_field.append(None)
-                pose_confidence.append(None)  #make inversely proportional to distance from object
             #add bbox visualization to img
             img = visualizeBbox(img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
     #create object detection frame message and publish it
@@ -247,7 +266,8 @@ detect_every = 10  #run the model every _ frames received (to not eat up too muc
 min_prediction_confidence = 0.6 #only report predictions with confidence at least 60%
 
 pool_depth = 4
-down_cam_hfov = 75
+down_cam_hfov = 109
+down_cam_vfov = 59
 
 if __name__ == '__main__':
     state = State()
