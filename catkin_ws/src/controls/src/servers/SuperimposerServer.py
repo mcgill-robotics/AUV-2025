@@ -2,7 +2,7 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
-from auv_msgs.msg import SuperimposerAction, SuperimposeFeedback, SuperimposerResult, StateGoal, StateAction
+from auv_msgs.msg import SuperimposerAction, SuperimposeFeedback, SuperimposerGoal, SuperimposerResult, StateGoal, StateAction
 from std_msgs.msg import Float64, Bool
 import time
 
@@ -12,6 +12,8 @@ class SuperimposerServer():
 
     def __init__(self) -> None:
         self.server = None
+
+        self.goal = None
 
         self.position = None
         self.theta_x = None
@@ -39,35 +41,51 @@ class SuperimposerServer():
 
     def callback(self, goal):
 
-        self.goal = goal
+        if(goal.displace):
+            self.goal = self.displace_goal(goal)
+        else:
+            self.goal = goal
         #unset pids
         if(goal.do_surge):
             self.pub_x_enable(Bool(False))
-            self.pub_x.publish(goal.effort.force.x)
+            self.pub_x.publish(self.goal.effort.force.x)
         if(goal.do_sway):
             #unset pids
             self.pub_y_enable(Bool(False))
-            self.pub_y.publish(goal.effort.force.y)
+            self.pub_y.publish(self.goal.effort.force.y)
         if(goal.do_heave):
             #unset pids
             self.pub_z_enable(Bool(False))
-            self.pub_z.publish(goal.effort.force.z)
+            self.pub_z.publish(self.goal.effort.force.z)
         if(goal.do_roll):
             #unset pids
             self.pub_theta_x_enable(Bool(False))
-            self.pub_theta_x.publish(goal.effort.torque.x)
+            self.pub_theta_x.publish(self.goal.effort.torque.x)
         if(goal.do_pitch):
             #unset pids
             self.pub_theta_y_enable(Bool(False))
-            self.pub_theta_y.publish(goal.effort.torque.y)
+            self.pub_theta_y.publish(self.goal.effort.torque.y)
         if(goal.do_yaw):
             #unset pids
             self.pub_theta_z_enable(Bool(False))
-            self.pub_theta_z.publish(goal.effort.torque.z)
+            self.pub_theta_z.publish(self.goal.effort.torque.z)
 
         fb = SuperimposeFeedback()
         fb.moving = True
         self.server.publish_feedback(fb)
+
+    def displace_goal(self,displace):
+        if(self.goal == None):
+            return displace
+
+        new_goal = self.goal
+        new_goal.force.x += displace.force.x
+        new_goal.force.y += displace.force.y
+        new_goal.force.z += displace.force.z
+        new_goal.torque.x += displace.torque.x
+        new_goal.torque.y += displace.torque.y
+        new_goal.torque.z += displace.torque.z
+        return new_goal
     
     def cancel(self):
             

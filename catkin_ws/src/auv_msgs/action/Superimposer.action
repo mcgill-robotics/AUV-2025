@@ -6,7 +6,7 @@ std_msgs/Bool do_heave
 std_msgs/Bool do_roll
 std_msgs/Bool do_pitch
 std_msgs/Bool do_yaw
-
+std_msgs/Bool displace
 ---
 # result
 std_msgs/Bool stopped
