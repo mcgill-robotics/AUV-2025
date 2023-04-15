@@ -7,8 +7,10 @@ import time, math
 import numpy as np
 
 class centerAndScale(smach.State):
-    def __init__(self):
+    def __init__(self, control=None):
         super().__init__(outcomes=['success', 'failure'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         
     def execute(self, ud):
         '''
@@ -49,7 +51,7 @@ class centerAndScale(smach.State):
                 if abs(scaling_error) > scaling_tolerance:
                     delta_z = scaling_error*z_increment
                     print("Moving z by {}".format(delta_z))
-                    controller.moveDeltaLocal((0,0,delta_z))
+                    self.control.moveDeltaLocal((0,0,delta_z))
                     scaled = False
                     continue
                 else:
@@ -62,7 +64,7 @@ class centerAndScale(smach.State):
                     delta_x = (targetCenterY - center_y)*x_increment
                     print("Surging {}".format(delta_x))
                     print("Swaying {}".format(delta_y))
-                    controller.moveDeltaLocal((delta_x,delta_y,0))
+                    self.control.moveDeltaLocal((delta_x,delta_y,0))
                     centered = False
                     continue
                 else:
@@ -116,8 +118,10 @@ class measureLaneMarker(smach.State):
         return 'success'
 
 class rotateToHeading(smach.State):
-    def __init__(self):
+    def __init__(self, control=None):
         super().__init__(outcomes=['success', 'failure'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         
     def execute(self, ud):
         '''
@@ -128,7 +132,7 @@ class rotateToHeading(smach.State):
         '''
         if target_heading is None: return 'failure'
         print("Starting rotation of AUV to target heading.")
-        controller.rotateDelta((0,0,target_heading))
+        self.control.rotateDelta((0,0,target_heading))
         print("Successfully rotated to lane marker!")
         return 'success'
 
@@ -170,8 +174,10 @@ def objectDetectCb(msg):
     last_object_detection = parseMessage(msg)
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self):
+    def __init__(self, control=None):
         super().__init__(outcomes=['success'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         
     def execute(self, ud):
         self.detector = vision.ObjectDetector(msgHandler=objectDetectCb)
@@ -179,14 +185,15 @@ class NavigateLaneMarker(smach.State):
 
         sm = smach.StateMachine(outcomes=['success', 'failure']) 
         with sm:
-            smach.StateMachine.add('scale_and_center', centerAndScale(), 
+            smach.StateMachine.add('scale_and_center', centerAndScale(control=self.control), 
                     transitions={'success': 'measure', 'failure':'failure'})
             smach.StateMachine.add('measure', measureLaneMarker(), 
                     transitions={'success': 'rotate', 'failure':'failure'})
-            smach.StateMachine.add('rotate', rotateToHeading(), 
+            smach.StateMachine.add('rotate', rotateToHeading(control=self.control), 
                     transitions={'success': 'success', 'failure':'failure'})
         while not firstMessage: pass
         print("Received first detection message. Starting state machine.")
         res = sm.execute()
         self.detector.stop()
+        del self.detector
         print("Ending state machine.")
