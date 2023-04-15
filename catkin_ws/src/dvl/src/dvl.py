@@ -94,9 +94,7 @@ def main():
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
     while conn.is_open:
-        #print("-------------------------")
         line = conn.readline().decode('ascii')#print(conn.readline().decode('ascii'))
-        print(line)
         if(line.startswith(":BD")):
             north, east, up, range, time = parse_BD(line)
             data.north_displacement = north

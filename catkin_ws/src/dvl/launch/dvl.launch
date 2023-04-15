@@ -1,5 +1,5 @@
 <launch>
-  <arg name="port" default="/dev/ttyUSB2" doc="serial port"/>
+  <arg name="port" default="/dev/ttyUSB0" doc="serial port"/>
   <arg name="baudrate" default="115200" doc="serial baud rate"/>
   <arg name="frame" default="dvl" doc="frame ID"/>
   <arg name="timeout" default="1.0" doc="serial read timeout in seconds"/>
