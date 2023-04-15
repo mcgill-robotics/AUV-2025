@@ -11,26 +11,7 @@ import time
 class SuperimposerServer():
 
     def __init__(self) -> None:
-        self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
-        #self.feedback = StateFeedback()
-        #self.result = StateResult()
-
-        self.pub_x = rospy.Publisher('surge', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('sway', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('heave', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
-
-
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
-        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
-        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
-        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
-        
-        self.server.start()
+        self.server = None
 
         self.position = None
         self.theta_x = None
@@ -89,24 +70,6 @@ class SuperimposerServer():
         self.server.publish_feedback(fb)
     
     def cancel(self):
-        # if(self.goal.do_surge):
-        #     #unset pids
-        #     self.pub_x.publish(Float64(0))
-        # if(self.goal.do_sway):
-        #     #unset pids
-        #     self.pub_y.publish(Float64(0))
-        # if(self.goal.do_heave):
-        #     #unset pids
-        #     self.pub_z.publish(Float64(0))
-        # if(self.goal.do_roll):
-        #     #unset pids
-        #     self.pub_theta_x.publish(Float64(0))
-        # if(self.goal.do_pitch):
-        #     #unset pids
-        #     self.pub_theta_y.publish(Float64(0))
-        # if(self.goal.do_yaw):
-        #     #unset pids
-        #     self.pub_theta_z.publish(Float64(0))
             
         server = actionlib.SimpleActionClient('state_server', StateAction)
         server.wait_for_server()
@@ -119,5 +82,51 @@ class SuperimposerServer():
         
 
         
+class LocalSuperimposerServer(SuperimposerServer):
+    def __init__(self):
+        super.__init__()
+        self.server = actionlib.SimpleActionServer('superimposer_local_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
+        #self.feedback = StateFeedback()
+        #self.result = StateResult()
 
+        self.pub_x = rospy.Publisher('surge', Float64, queue_size=50)
+        self.pub_y = rospy.Publisher('sway', Float64, queue_size=50)
+        self.pub_z = rospy.Publisher('heave', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
+
+
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+        
+        self.server.start()
+
+class GlobalSuperimposerServer(SuperimposerServer):
+    def __init__(self):
+        super.__init__()
+        self.server = actionlib.SimpleActionServer('superimposer_global_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
+        #self.feedback = StateFeedback()
+        #self.result = StateResult()
+
+        self.pub_x = rospy.Publisher('global_x', Float64, queue_size=50)
+        self.pub_y = rospy.Publisher('global_y', Float64, queue_size=50)
+        self.pub_z = rospy.Publisher('global_z', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
+
+
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+        
+        self.server.start()
     

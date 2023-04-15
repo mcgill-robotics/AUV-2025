@@ -5,6 +5,7 @@ import actionlib
 from geometry_msgs.msg import Pose
 from std_msgs.msg import Float64
 from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
+from math import hypot
 
 ##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
 
@@ -12,6 +13,8 @@ class Controller:
 
     def __init__(self):
         self.servers = []
+        self.effort = 15
+        self.seconds_per_meter = 1
         self.StateServer = actionlib.SimpleActionClient('state_server', StateAction)
         self.servers.append(self.StateServer)
         self.StateServer.wait_for_server()
@@ -106,19 +109,26 @@ class Controller:
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in world space
     def moveDelta(self,delta,callback=None):
-        seconds_per_meter = 1 #etc
-        #do some math to figure out how much time effort should be done
-
         #if callback = None make this a blocking call
         x,y,z = delta
 
+        dist = hypot([x,y])
+        x_effort = x * self.effort / dist
+        y_effort = y * self.effort / dist
+
+        time = self.seconds_per_meter * dist
+
         self.preemptCurrentAction()
         #if callback = None make this a blocking call
-        goal = self.get_superimposer_goal([x,y,z,0,0,0],[True,True,True,False,False,False])
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
-        else:
-            self.StateServer.send_goal(goal,done_cb=callback)
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False])
+        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False])
+
+        self.StateServer.send_goal_and_wait(goal_state)
+        self.SuperimposerServer.send_goal(goal_super)
+        rospy.sleep(time)
+        self.preemptCurrentAction()
+        if(callback != None):
+            callback()
 
 
     #rotate by this amount
@@ -136,7 +146,7 @@ class Controller:
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(delta,callback=None):
-        seconds_per_meter = 1 #etc
+        
         #do some math to figure out how much time effort should be done
 
         #if callback = None make this a blocking call

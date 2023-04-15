@@ -143,6 +143,7 @@ class StateControlActionServer(StateServer):
         super.__init__()
         self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
         self.server.register_preempt_callback(self.cancel)
+        self.server.start()
 
 
 class DisplaceServer(StateServer):
@@ -150,6 +151,7 @@ class DisplaceServer(StateServer):
         super.__init__()
         self.server = actionlib.SimpleActionServer('displace_server', StateAction, execute_cb= self.callback, auto_start = False)
         self.server.register_preempt_callback(self.cancel)
+        self.server.start()
 
     def callback(self, goal):
         #print("got a message")
