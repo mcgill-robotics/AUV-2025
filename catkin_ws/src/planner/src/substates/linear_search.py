@@ -8,8 +8,10 @@ import threading
 
 #ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
 class LinearSearch(smach.State):
-    def __init__(self, timeout, forward_speed, target_classes=[]):
+    def __init__(self, timeout, forward_speed, target_classes=[], control=None):
         super().__init__(outcomes=['success', 'failure'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         self.detector = vision.ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
         self.forward_speed = forward_speed
@@ -22,20 +24,20 @@ class LinearSearch(smach.State):
         print("Starting linear search.")
         self.detectedObject = False
         try:
-            controller.deltaVelocity((self.forward_speed, 0, 0))
+            self.control.deltaVelocityLocal((self.forward_speed, 0, 0))
             startTime = time.time()
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:
-                    controller.deltaVelocity((0,0,0))
+                    self.control.deltaVelocity((0,0,0))
                     print("Found object!")
                     return 'success'
             print("Linear search timed out.")
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
-            controller.preemptCurrentAction()
-            controller.deltaVelocity((0,0,0))
+            self.control.preemptCurrentAction()
+            self.control.deltaVelocity((0,0,0))
             self.searchThread.join()
             print("Linear search interrupted by user.")
             return 'failure'

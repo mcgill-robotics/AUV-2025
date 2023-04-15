@@ -33,3 +33,10 @@ class StateTracker:
         return (self.state_x, self.state_y, self.state_z)
     def getRotation(self):
         return (self.state_theta_x, self.state_theta_y, self.state_theta_z)
+    def stop(self):
+        self.x_pos_sub.unregister()
+        self.y_pos_sub.unregister()
+        self.z_pos_sub.unregister()
+        self.theta_x_sub.unregister()
+        self.theta_y_sub.unregister()
+        self.theta_z_sub.unregister()

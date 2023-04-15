@@ -5,8 +5,10 @@ import smach
 from utility import *
 
 class TestSubmergedRotations(smach.State):
-    def __init__(self, hold_time):
+    def __init__(self, hold_time, control=None):
         super().__init__(outcomes=['success', 'failure'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         self.hold_time = hold_time
 
     def execute(self, ud):
@@ -14,7 +16,7 @@ class TestSubmergedRotations(smach.State):
             for rot in [(90,0,0), (0,90,0), (0,0,90), (-90,0,0), (0,-90,0), (0,0,-90)]:
                 for i in range(4):
                     print("Rotating by {}.".format(rot))
-                    controller.rotateDelta(rot)
+                    self.control.rotateDelta(rot)
                     print("Holding for {} seconds.".format(self.hold_time))
                     rospy.sleep(self.hold_time)
             return 'success'

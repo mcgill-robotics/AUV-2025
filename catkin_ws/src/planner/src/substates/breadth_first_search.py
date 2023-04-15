@@ -8,8 +8,10 @@ import threading
 
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class BreadthFirstSearch(smach.State):
-    def __init__(self, timeout, expansionAmt, target_classes=[]):
+    def __init__(self, timeout, expansionAmt, target_classes=[], control=None):
         super().__init__(outcomes=['success', 'failure'])
+        if control == None: raise ValueError("target_class argument must be a list of integers")
+        self.control = control
         self.detector = vision.ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
         self.expansionAmt = expansionAmt
@@ -31,7 +33,7 @@ class BreadthFirstSearch(smach.State):
             #move forward
             print("Moving by {}.".format(movement))
             moving = True
-            controller.moveDeltaLocal(movement, movementComplete)
+            self.control.moveDeltaLocal(movement, movementComplete)
             #check for object detected while moving
             while moving: if self.detectedObject: return # stop grid search when object found
             #increase distance to move forward
@@ -39,7 +41,7 @@ class BreadthFirstSearch(smach.State):
             #rotate right 90 degrees
             print("Rotating by {}.".format(right_turn))
             rotating = True
-            controller.rotateDelta(right_turn, rotationComplete)
+            self.control.rotateDelta(right_turn, rotationComplete)
             #check for object detected while rotating
             while rotating: if self.detectedObject: return # stop grid search when object found
     
@@ -58,8 +60,8 @@ class BreadthFirstSearch(smach.State):
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:         
-                    controller.preemptCurrentAction()
-                    controller.deltaVelocity((0,0,0))
+                    self.control.preemptCurrentAction()
+                    self.control.deltaVelocity((0,0,0))
                     self.searchThread.join()
                     print("Found object!")
                     return 'success'
@@ -67,8 +69,8 @@ class BreadthFirstSearch(smach.State):
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
-            controller.preemptCurrentAction()
-            controller.deltaVelocity((0,0,0))
+            self.control.preemptCurrentAction()
+            self.control.deltaVelocity((0,0,0))
             self.searchThread.join()
             print("Breadth-first search interrupted by user.")
             return 'failure'
