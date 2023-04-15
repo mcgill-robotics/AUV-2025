@@ -8,7 +8,7 @@ import time
 
 
 
-class StateServer():
+class SuperimposerServer():
 
     def __init__(self) -> None:
         self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
