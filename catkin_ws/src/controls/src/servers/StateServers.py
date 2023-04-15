@@ -48,10 +48,18 @@ class StateServer():
     def set_theta_z(self,data):
         self.theta_z = data.data
 
+    
+    def cancel(self):
+        self.pub_z.publish(self.position.z)
+        self.pub_theta_x.publish(self.theta_x)
+        self.pub_theta_y.publish(self.theta_y)
+        self.pub_theta_z.publish(self.theta_z)
+
     def callback(self, goal):
         #print("got a message")
         # set the PIDs
         #print(goal.pose)
+        self.goal = goal
         goal_position, goal_rotation = self.get_goal(goal)
 
 
@@ -67,14 +75,14 @@ class StateServer():
     def get_goal(self,goal):
         return goal.position, goal.rotation
 
-    def wait_for_settled(self,goal_position,goal_rotation):
+    def wait_for_settled(self,position,rotation):
         interval = 1
 
         settled = False
 
         while not settled:
             start = time.time()
-            while self.check_status(goal_position,goal_rotation):
+            while self.check_status(position,rotation):
                 if(time.time() - start > interval):
                     settled = True
                     break
@@ -87,12 +95,12 @@ class StateServer():
         tolerance_position = 0.5
         tolerance_orientation = 1
 
-        #x_diff = abs(self.position.x - position.x) <= tolerance_position
-        #y_diff = abs(self.position.y - position.y) <= tolerance_position
-        z_diff = abs(self.position.z - position.z) <= tolerance_position
-        theta_x_diff = abs(self.theta_x - rotation.x) <= tolerance_orientation
-        theta_y_diff = abs(self.theta_y - rotation.y) <= tolerance_orientation
-        theta_z_diff = abs(self.theta_z - rotation.z) <= tolerance_orientation
+        #x_diff = (not self.do_x) or abs(self.position.x - position.x) <= tolerance_position
+        #y_diff = (not self.do_y) or abs(self.position.y - position.y) <= tolerance_position
+        z_diff = (not self.do_z) and abs(self.position.z - position.z) <= tolerance_position
+        theta_x_diff = (not self.do_theta_x) and abs(self.theta_x - rotation.x) <= tolerance_orientation
+        theta_y_diff = (not self.do_theta_y) and abs(self.theta_y - rotation.y) <= tolerance_orientation
+        theta_z_diff = (not self.do_theta_z) and abs(self.theta_z - rotation.z) <= tolerance_orientation
 
         return z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
 
@@ -100,10 +108,14 @@ class StateServer():
     def publish_setpoints(self,position,rotation):
         #self.pub_x.Publish(Float64(position.x))
         #self.pub_y.Publish(Float64(position.y))
-        self.pub_z.publish(Float64(position.y))
-        self.pub_theta_x.publish(Float64(rotation.x))
-        self.pub_theta_y.publish(Float64(rotation.y))
-        self.pub_theta_z.publish(Float64(rotation.z))
+        if(self.goal.do_z):
+            self.goal.pub_z.publish(Float64(position.y))
+        if(self.do_theta_x):
+            self.pub_theta_x.publish(Float64(rotation.x))
+        if(self.goal.do_theta_y):
+            self.pub_theta_y.publish(Float64(rotation.y))
+        if(self.goal.do_theta_z):
+            self.pub_theta_z.publish(Float64(rotation.z))
         #print("published setpoints")
 
 class StateControlActionServer(StateServer):

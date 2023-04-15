@@ -11,7 +11,7 @@ import time
 class StateServer():
 
     def __init__(self) -> None:
-        self.server = actionlib.SimpleActionServer('state_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
+        self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
@@ -30,23 +30,23 @@ class StateServer():
 
         self.goal = goal
         #unset pids
-        if(goal.effort.force.x != 0):
+        if(goal.include_zeros or goal.effort.force.x != 0):
             #unset pids
             self.pub_x.publish(goal.effort.force.x)
-        if(goal.effort.force.y != 0):
+        if(goal.include_zeros or goal.effort.force.y != 0):
             #unset pids
             self.pub_y.publish(goal.effort.force.y)
-        if(goal.effort.force.z != 0):
+        if(goal.include_zeros or goal.effort.force.z != 0):
             #unset pids
             self.pub_z.publish(goal.effort.force.z)
 
-        if(goal.effort.torque.x != 0):
+        if(goal.include_zeros or goal.effort.torque.x != 0):
             #unset pids
             self.pub_theta_x.publish(goal.effort.torque.x)
-        if(goal.effort.torque.y != 0):
+        if(goal.include_zeros or goal.effort.torque.y != 0):
             #unset pids
             self.pub_theta_y.publish(goal.effort.torque.y)
-        if(goal.effort.torque.x != 0):
+        if(goal.include_zeros or goal.effort.torque.x != 0):
             #unset pids
             self.pub_theta_z.publish(goal.effort.torque.z)
 
@@ -55,27 +55,27 @@ class StateServer():
         self.server.publish_feedback(fb)
     
     def cancel(self):
-        if(self.goal.effort.force.x != 0):
+        if(self.goal.include_zeros or self.goal.effort.force.x != 0):
             #unset pids
             self.pub_x.publish(Float64(0))
-        if(self.goal.effort.force.y != 0):
+        if(self.goal.include_zeros or self.goal.effort.force.y != 0):
             #unset pids
             self.pub_y.publish(Float64(0))
-        if(self.goal.effort.force.z != 0):
+        if(self.goal.include_zeros or self.goal.effort.force.z != 0):
             #unset pids
             self.pub_z.publish(Float64(0))
 
-        if(self.goal.effort.torque.x != 0):
+        if(self.goal.include_zeros or self.goal.effort.torque.x != 0):
             #unset pids
             self.pub_theta_x.publish(Float64(0))
-        if(self.goal.effort.torque.y != 0):
+        if(self.goal.include_zeros or self.goal.effort.torque.y != 0):
             #unset pids
             self.pub_theta_y.publish(Float64(0))
-        if(self.goal.effort.torque.x != 0):
+        if(self.goal.include_zeros or self.goal.effort.torque.x != 0):
             #unset pids
             self.pub_theta_z.publish(Float64(0))
 
-        result = SuperimposerResult()
-        self.server.set_preempted
+        # result = SuperimposerResult()
+        #self.server.set_preempted
 
     

@@ -1,9 +1,16 @@
 # goal
-std_msgs/String type
-std_msgs/String dof
+#std_msgs/String type
+#std_msgs/String dof
 #float64 setpoint
 geometry_msgs/Point position
 geometry_msgs/Point rotation
+std_msgs/Bool do_x
+std_msgs/Bool do_y
+std_msgs/Bool do_z
+std_msgs/Bool do_theta_x
+std_msgs/Bool do_theta_y
+std_msgs/Bool do_theta_z
+
 
 std_msgs/Bool maintain #false - reach the state and return , true - maintain state
 ---
