@@ -3,7 +3,7 @@ import actionlib
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from auv_msgs.msg import SuperimposerAction, SuperimposeFeedback, SuperimposerResult, StateGoal, StateAction
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 import time
 
 
@@ -21,6 +21,14 @@ class StateServer():
         self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
+
+
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
         
         self.server.start()
 
@@ -53,22 +61,27 @@ class StateServer():
         self.goal = goal
         #unset pids
         if(goal.do_surge):
-            #unset pids
+            self.pub_x_enable(Bool(False))
             self.pub_x.publish(goal.effort.force.x)
         if(goal.do_sway):
             #unset pids
+            self.pub_y_enable(Bool(False))
             self.pub_y.publish(goal.effort.force.y)
         if(goal.do_heave):
             #unset pids
+            self.pub_z_enable(Bool(False))
             self.pub_z.publish(goal.effort.force.z)
         if(goal.do_roll):
             #unset pids
+            self.pub_theta_x_enable(Bool(False))
             self.pub_theta_x.publish(goal.effort.torque.x)
         if(goal.do_pitch):
             #unset pids
+            self.pub_theta_y_enable(Bool(False))
             self.pub_theta_y.publish(goal.effort.torque.y)
         if(goal.do_yaw):
             #unset pids
+            self.pub_theta_z_enable(Bool(False))
             self.pub_theta_z.publish(goal.effort.torque.z)
 
         fb = SuperimposeFeedback()
@@ -94,6 +107,7 @@ class StateServer():
         # if(self.goal.do_yaw):
         #     #unset pids
         #     self.pub_theta_z.publish(Float64(0))
+            
         server = actionlib.SimpleActionClient('state_server', StateAction)
         server.wait_for_server()
         goal = StateGoal()

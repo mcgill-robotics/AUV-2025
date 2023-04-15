@@ -5,7 +5,7 @@ import actionlib
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 import time
 
 
@@ -54,12 +54,32 @@ class StateServer():
         self.pub_theta_x.publish(self.theta_x)
         self.pub_theta_y.publish(self.theta_y)
         self.pub_theta_z.publish(self.theta_z)
+    
+    def enable_pids(self,goal):
+        if(goal.do_surge):
+            self.pub_x_enable(Bool(True))
+        if(goal.do_sway):
+            #unset pids
+            self.pub_y_enable(Bool(True))
+        if(goal.do_heave):
+            #unset pids
+            self.pub_z_enable(Bool(True))
+        if(goal.do_roll):
+            #unset pids
+            self.pub_theta_x_enable(Bool(True))
+        if(goal.do_pitch):
+            #unset pids
+            self.pub_theta_y_enable(Bool(True))
+        if(goal.do_yaw):
+            #unset pids
+            self.pub_theta_z_enable(Bool(True))
 
     def callback(self, goal):
         #print("got a message")
         # set the PIDs
         #print(goal.pose)
         self.goal = goal
+        self.enable_pids(goal)
         goal_position, goal_rotation = self.get_goal(goal)
 
 
@@ -133,6 +153,7 @@ class DisplaceServer(StateServer):
         #print("got a message")
         # set the PIDs
         #print(goal.pose)
+        self.enable_pids(goal)
         goal_position, goal_rotation = self.get_goal(goal)
 
 
