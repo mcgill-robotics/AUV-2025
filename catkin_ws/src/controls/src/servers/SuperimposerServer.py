@@ -96,6 +96,7 @@ class SuperimposerServer():
         goal.rotation.x = self.theta_x
         goal.rotation.y = self.theta_y
         goal.rotation.z = self.theta_z
+        goal.displace = False
         goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
         server.send_goal_and_wait(goal)
         

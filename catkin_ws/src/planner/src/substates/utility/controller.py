@@ -29,9 +29,6 @@ class Controller:
         self.GobalSuperimposerServer.wait_for_server()
 
 
-        self.DisplaceServer = actionlib.SimpleActionClient('displace_server',StateAction)
-        self.servers.append(self.DisplaceServer)
-        self.DisplaceServer.wait_for_server()
         self.x = None
         self.y = None
         self.z = None
@@ -57,7 +54,7 @@ class Controller:
         self.theta_z = data.data
 
     #method to easily get goal object
-    def get_superimposer_goal(self,dofs,keepers):
+    def get_superimposer_goal(self,dofs,keepers,displace):
         surge,sway,heave,roll,pitch,yaw = dofs
         goal = SuperimposerGoal()
         goal.force.x = surge
@@ -66,12 +63,12 @@ class Controller:
         goal.torque.x = roll
         goal.torque.y = pitch
         goal.torque.z = yaw
-
+        goal.displace = displace
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal
     
     #method to easily get goal object
-    def get_state_goal(self,state,keepers):
+    def get_state_goal(self,state,keepers,displace):
         x,y,z,theta_x,theta_y,theta_z = state
         goal = StateGoal()
         goal.position.x = x
@@ -80,7 +77,7 @@ class Controller:
         goal.rotation.x = theta_x
         goal.rotation.y = theta_y
         goal.rotation.z = theta_z
-
+        goal.displace = displace
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal
 
@@ -93,9 +90,9 @@ class Controller:
     #rotate to this rotation
     def rotate(self,ang,callback=None):
         #if callback = None make this a blocking call
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         x,y,z = ang
-        goal = self.get_state_goal([0,0,0,x,y,z],[False,False,False,True,True,True])
+        goal = self.get_state_goal([0,0,0,x,y,z],[False,False,False,True,True,True],False)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
@@ -104,10 +101,10 @@ class Controller:
     #REQUIRES DVL
     #move to setpoint
     def move(self,pos,callback=None):
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
         x,y,z = pos
-        goal = self.get_state_goal([x,y,z,0,0,0],[True,True,True,False,False,False])
+        goal = self.get_state_goal([x,y,z,0,0,0],[True,True,True,False,False,False],False)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
@@ -126,12 +123,12 @@ class Controller:
 
         time = self.seconds_per_meter * dist
 
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False])
-        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False])
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False],False)
+        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False],True)
 
-        self.DisplaceServer.send_goal_and_wait(goal_state)
+        self.StateServer.send_goal_and_wait(goal_state)
         self.GobalSuperimposerServer.send_goal(goal_super)
         rospy.sleep(time)
         self.preemptCurrentAction()
@@ -141,14 +138,14 @@ class Controller:
 
     #rotate by this amount
     def rotateDelta(self,delta,callback=None):
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
         x,y,z = delta
-        goal = self.get_state_goal([0,0,0,x,y,z],[False,False,False,True,True,True])
+        goal = self.get_state_goal([0,0,0,x,y,z],[False,False,False,True,True,True],True)
         if callback == None:
-            self.DisplaceServer.send_goal_and_wait(goal)
+            self.StateServer.send_goal_and_wait(goal)
         else:
-            self.DisplaceServer.send_goal(goal,done_cb=callback)
+            self.StateServer.send_goal(goal,done_cb=callback)
 
     #REQUIRES DVL
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
@@ -163,48 +160,61 @@ class Controller:
 
         time = self.seconds_per_meter * dist
 
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False])
-        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False])
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False],False)
+        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False],True)
 
-        self.DisplaceServer.send_goal_and_wait(goal_state)
+        self.StateServer.send_goal_and_wait(goal_state)
         self.LocalSuperimposerServer.send_goal(goal_super)
         rospy.sleep(time)
         self.preemptCurrentAction()
         if(callback != None):
             callback()
 
+    #set angular velocity
+    def angularVelocity(self,vel):
+        #self.preemptCurrentAction()
+        x,y,z = vel
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],[False,False,False,True,True,True],False)
+        self.GobalSuperimposerServer.send_goal(goal)
 
-#change delta angular velocity (velocity to add on top of velocity required to maintain state)
-def deltaAngularVelocity(vel):
-    x,y,z = vel
-    pass
+    #set velocity in world space
+    def velocity(self,vel):
+        x,y,z = vel
+        #self.preemptCurrentAction()
+        goal = self.get_superimposer_goal([x,y,z,0,0,0][True,True,True,False,False,False],False)
+        self.GobalSuperimposerServer.send_goal(goal)
 
-#change delta velocity (velocity to add on top of velocity required to maintain state) in world space
-def deltaVelocity(vel):
-    x,y,z = vel
-    pass
 
-#change delta velocity (velocity to add on top of velocity required to maintain state) in local space (i.e. z is always heave)
-def deltaVelocityLocal(vel):
-    x,y,z = vel
-    pass
+    #change delta angular velocity (velocity to add on top of velocity required to maintain state)
+    def deltaAngularVelocity(self,vel):
+        self.preemptCurrentAction()
+        x,y,z = vel
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],[False,False,False,True,True,True],True)
+        self.GobalSuperimposerServer.send_goal(goal)
 
-#set angular velocity
-def angularVelocity(vel):
-    x,y,z = vel
-    pass
+    #change delta velocity (velocity to add on top of velocity required to maintain state) in world space
+    def deltaVelocity(self,vel):
+        x,y,z = vel
+        #self.preemptCurrentAction()
+        goal = self.get_superimposer_goal([x,y,z,0,0,0][True,True,True,False,False,False],True)
+        self.GobalSuperimposerServer.send_goal(goal)
 
-#set velocity in world space
-def velocity(vel):
-    x,y,z = vel
-    pass
+    #change delta velocity (velocity to add on top of velocity required to maintain state) in local space (i.e. z is always heave)
+    def deltaVelocityLocal(self,vel):
+        x,y,z = vel
+        #self.preemptCurrentAction()
+        goal = self.get_superimposer_goal([x,y,z,0,0,0][True,True,True,False,False,False],True)
+        self.LocalSuperimposerServer.send_goal(goal)
 
-#set velocity in local space (i.e. z is always heave)
-def velocityLocal(vel):
-    x,y,z = vel
-    pass
+
+    #set velocity in local space (i.e. z is always heave)
+    def velocityLocal(self,vel):
+        x,y,z = vel
+        #self.preemptCurrentAction()
+        goal = self.get_superimposer_goal([x,y,z,0,0,0][True,True,True,False,False,False],False)
+        self.LocalSuperimposerServer.send_goal(goal)
 
 
 

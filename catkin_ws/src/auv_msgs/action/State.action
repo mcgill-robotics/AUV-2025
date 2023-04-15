@@ -10,7 +10,7 @@ std_msgs/Bool do_z
 std_msgs/Bool do_theta_x
 std_msgs/Bool do_theta_y
 std_msgs/Bool do_theta_z
-
+st_msgs/Bool displace
 
 std_msgs/Bool maintain #false - reach the state and return , true - maintain state
 ---
