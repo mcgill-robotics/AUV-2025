@@ -13,6 +13,7 @@ import time
 class StateServer():
 
     def __init__(self) -> None:
+        self.server = None
         #self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
@@ -54,24 +55,23 @@ class StateServer():
         self.pub_theta_x.publish(self.theta_x)
         self.pub_theta_y.publish(self.theta_y)
         self.pub_theta_z.publish(self.theta_z)
+
+        result = StateResult()
+        result.status = False
+        self.server.setPreempted(result)
     
     def enable_pids(self,goal):
         if(goal.do_surge):
             self.pub_x_enable(Bool(True))
         if(goal.do_sway):
-            #unset pids
             self.pub_y_enable(Bool(True))
         if(goal.do_heave):
-            #unset pids
             self.pub_z_enable(Bool(True))
         if(goal.do_roll):
-            #unset pids
             self.pub_theta_x_enable(Bool(True))
         if(goal.do_pitch):
-            #unset pids
             self.pub_theta_y_enable(Bool(True))
         if(goal.do_yaw):
-            #unset pids
             self.pub_theta_z_enable(Bool(True))
 
     def callback(self, goal):
@@ -142,12 +142,14 @@ class StateControlActionServer(StateServer):
     def __init__(self):
         super.__init__()
         self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
+        self.server.register_preempt_callback(self.cancel)
 
 
 class DisplaceServer(StateServer):
     def __init__(self):
         super.__init__()
         self.server = actionlib.SimpleActionServer('displace_server', StateAction, execute_cb= self.callback, auto_start = False)
+        self.server.register_preempt_callback(self.cancel)
 
     def callback(self, goal):
         #print("got a message")

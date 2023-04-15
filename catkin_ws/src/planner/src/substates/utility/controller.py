@@ -2,7 +2,8 @@
 
 import rospy
 import actionlib
-from geometry_msgs.msg import Pose, Float64
+from geometry_msgs.msg import Pose
+from std_msgs.msg import Float64
 from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
 
 ##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
@@ -10,8 +11,6 @@ from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, Superimpose
 class Controller:
 
     def __init__(self):
-        self.goal = None
-
         self.servers = []
         self.StateServer = actionlib.SimpleActionClient('state_server', StateAction)
         self.servers.append(self.StateServer)
@@ -46,6 +45,7 @@ class Controller:
     def set_theta_z(self,data):
         self.theta_z = data.data
 
+    #method to easily get goal object
     def get_superimposer_goal(self,dofs,keepers):
         surge,sway,heave,roll,pitch,yaw = dofs
         goal = SuperimposerGoal()
@@ -59,6 +59,7 @@ class Controller:
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal
     
+    #method to easily get goal object
     def get_state_goal(self,state,keepers):
         x,y,z,theta_x,theta_y,theta_z = state
         goal = StateGoal()
