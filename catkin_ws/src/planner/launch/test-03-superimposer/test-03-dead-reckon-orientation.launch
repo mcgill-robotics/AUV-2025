@@ -1,3 +1,0 @@
-<launch>
-	<node name="test_03_dead_reckon_orientation" pkg="planner" type="dead_reckon_orientation_super.py" respawn="false" output="screen"/>
-</launch>

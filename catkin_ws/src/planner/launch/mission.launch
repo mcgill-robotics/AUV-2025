@@ -1,3 +1,10 @@
 <launch>
+
+	<include file="$(find controls)/launch/controls.launch" />
+	<include file="$(find propulsion)/launch/propulsion.launch" />
+	<include file="$(find imu)/launch/imu.launch" />
+	<include file="$(find depth_sensor)/launch/depth_sensor.launch" />
+	<include file="$(find state_estimation)/launch/state_estimation.launch" />
+	<include file="$(find vision)/launch/object_detection.launch" />
 	<node name="mission" pkg="planner" type="mission.py" respawn="false" output="screen"/>
 </launch>
