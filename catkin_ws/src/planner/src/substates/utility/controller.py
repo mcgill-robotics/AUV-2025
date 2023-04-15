@@ -15,12 +15,20 @@ class Controller:
         self.servers = []
         self.effort = 15
         self.seconds_per_meter = 1
+
         self.StateServer = actionlib.SimpleActionClient('state_server', StateAction)
         self.servers.append(self.StateServer)
         self.StateServer.wait_for_server()
-        self.SuperimposerServer = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
-        self.servers.append(self.SuperimposerServer)
-        self.SuperimposerServer.wait_for_server()
+
+        self.LocalSuperimposerServer = actionlib.SimpleActionClient('superimposer_local_server', SuperimposerAction)
+        self.servers.append(self.LocalSuperimposerServer)
+        self.LocalSuperimposerServer.wait_for_server()
+
+        self.GobalSuperimposerServer = actionlib.SimpleActionClient('superimposer_global_server', SuperimposerAction)
+        self.servers.append(self.GobalSuperimposerServer)
+        self.GobalSuperimposerServer.wait_for_server()
+
+
         self.DisplaceServer = actionlib.SimpleActionClient('displace_server',StateAction)
         self.servers.append(self.DisplaceServer)
         self.DisplaceServer.wait_for_server()
@@ -123,8 +131,8 @@ class Controller:
         goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False])
         goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False])
 
-        self.StateServer.send_goal_and_wait(goal_state)
-        self.SuperimposerServer.send_goal(goal_super)
+        self.DisplaceServer.send_goal_and_wait(goal_state)
+        self.GobalSuperimposerServer.send_goal(goal_super)
         rospy.sleep(time)
         self.preemptCurrentAction()
         if(callback != None):
@@ -145,13 +153,27 @@ class Controller:
     #REQUIRES DVL
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in local space (i.e. z is always heave)
-    def moveDeltaLocal(delta,callback=None):
-        
-        #do some math to figure out how much time effort should be done
-
+    def moveDeltaLocal(self,delta,callback=None):
         #if callback = None make this a blocking call
         x,y,z = delta
-        pass
+
+        dist = hypot([x,y])
+        x_effort = x * self.effort / dist
+        y_effort = y * self.effort / dist
+
+        time = self.seconds_per_meter * dist
+
+        self.preemptCurrentAction()
+        #if callback = None make this a blocking call
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[True,True,False,False,False,False])
+        goal_state = self.get_state_goal([0,0,z,0,0,0],[False,False,True,False,False,False])
+
+        self.DisplaceServer.send_goal_and_wait(goal_state)
+        self.LocalSuperimposerServer.send_goal(goal_super)
+        rospy.sleep(time)
+        self.preemptCurrentAction()
+        if(callback != None):
+            callback()
 
 
 #change delta angular velocity (velocity to add on top of velocity required to maintain state)

@@ -77,7 +77,8 @@ class SuperimposerServer():
         goal.position = self.position
         goal.rotation.x = self.theta_x
         goal.rotation.y = self.theta_y
-        self.rotation.z = self.theta_z
+        goal.rotation.z = self.theta_z
+        goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
         server.send_goal_and_wait(goal)
         
 
