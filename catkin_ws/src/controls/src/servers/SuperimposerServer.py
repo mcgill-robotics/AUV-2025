@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
+
 import rospy
 import actionlib
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
-from auv_msgs.msg import SuperimposerAction, SuperimposeFeedback, SuperimposerGoal, SuperimposerResult, StateGoal, StateAction
+from auv_msgs.msg import SuperimposerAction, SuperimposerFeedback, SuperimposerGoal, SuperimposerResult, StateGoal, StateAction
 from std_msgs.msg import Float64, Bool
 import time
 
@@ -25,6 +27,12 @@ class SuperimposerServer():
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
         
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
     
     def set_position(self,data):
         #print("updated pose")
@@ -47,30 +55,30 @@ class SuperimposerServer():
             self.goal = goal
         #unset pids
         if(goal.do_surge):
-            self.pub_x_enable(Bool(False))
+            self.pub_x_enable.publish(Bool(False))
             self.pub_x.publish(self.goal.effort.force.x)
         if(goal.do_sway):
             #unset pids
-            self.pub_y_enable(Bool(False))
+            self.pub_y_enable.publish(Bool(False))
             self.pub_y.publish(self.goal.effort.force.y)
         if(goal.do_heave):
             #unset pids
-            self.pub_z_enable(Bool(False))
+            self.pub_z_enable.publish(Bool(False))
             self.pub_z.publish(self.goal.effort.force.z)
         if(goal.do_roll):
             #unset pids
-            self.pub_theta_x_enable(Bool(False))
+            self.pub_theta_x_enable.publish(Bool(False))
             self.pub_theta_x.publish(self.goal.effort.torque.x)
         if(goal.do_pitch):
             #unset pids
-            self.pub_theta_y_enable(Bool(False))
+            self.pub_theta_y_enable.publish(Bool(False))
             self.pub_theta_y.publish(self.goal.effort.torque.y)
         if(goal.do_yaw):
             #unset pids
-            self.pub_theta_z_enable(Bool(False))
+            self.pub_theta_z_enable.publish(Bool(False))
             self.pub_theta_z.publish(self.goal.effort.torque.z)
 
-        fb = SuperimposeFeedback()
+        fb = SuperimposerFeedback()
         fb.moving = True
         self.server.publish_feedback(fb)
 
@@ -78,13 +86,13 @@ class SuperimposerServer():
         if(self.goal == None):
             return displace
 
-        new_goal = self.goal
-        new_goal.force.x += displace.force.x
-        new_goal.force.y += displace.force.y
-        new_goal.force.z += displace.force.z
-        new_goal.torque.x += displace.torque.x
-        new_goal.torque.y += displace.torque.y
-        new_goal.torque.z += displace.torque.z
+        new_goal = displace
+        new_goal.force.x += self.goal.force.x
+        new_goal.force.y += self.goal.force.y
+        new_goal.force.z += self.goal.force.z
+        new_goal.torque.x += self.goal.torque.x
+        new_goal.torque.y += self.goal.torque.y
+        new_goal.torque.z += self.goal.torque.z
         return new_goal
     
     def cancel(self):
@@ -104,8 +112,9 @@ class SuperimposerServer():
         
 class LocalSuperimposerServer(SuperimposerServer):
     def __init__(self):
-        super.__init__()
-        self.server = actionlib.SimpleActionServer('superimposer_local_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
+        super().__init__()
+        self.server = actionlib.SimpleActionServer('superimposer_local_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
+        self.server.register_preempt_callback(self.cancel)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
@@ -117,19 +126,15 @@ class LocalSuperimposerServer(SuperimposerServer):
         self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
 
 
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
-        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
-        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
-        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+        
         
         self.server.start()
 
 class GlobalSuperimposerServer(SuperimposerServer):
     def __init__(self):
-        super.__init__()
-        self.server = actionlib.SimpleActionServer('superimposer_global_server', SuperimposerAction, execute_cb= self.callback, cancel_cb=self.cancel, auto_start = False)
+        super().__init__()
+        self.server = actionlib.SimpleActionServer('superimposer_global_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
+        self.server.register_preempt_callback(self.cancel)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
@@ -140,13 +145,5 @@ class GlobalSuperimposerServer(SuperimposerServer):
         self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
 
-
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
-        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
-        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
-        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
-        
         self.server.start()
     

@@ -13,6 +13,7 @@ import time
 class StateServer():
 
     def __init__(self) -> None:
+        print("starting server")
         self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
         self.server.register_preempt_callback(self.cancel)
         self.server.start()
@@ -28,15 +29,22 @@ class StateServer():
         
         self.server.start()
 
-        self.position = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
+        self.position = Point(0,0,0)
+        self.theta_x = 0
+        self.theta_y = 0
+        self.theta_z = 0
 
         self.sub = rospy.Subscriber("pose",Pose,self.set_position)
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
+
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
         
     
     def set_position(self,data):
@@ -62,21 +70,21 @@ class StateServer():
         self.server.setPreempted(result)
     
     def enable_pids(self,goal):
-        if(goal.do_surge):
-            self.pub_x_enable(Bool(True))
-        if(goal.do_sway):
-            self.pub_y_enable(Bool(True))
-        if(goal.do_heave):
-            self.pub_z_enable(Bool(True))
-        if(goal.do_roll):
-            self.pub_theta_x_enable(Bool(True))
-        if(goal.do_pitch):
-            self.pub_theta_y_enable(Bool(True))
-        if(goal.do_yaw):
-            self.pub_theta_z_enable(Bool(True))
+        if(goal.do_x):
+            self.pub_x_enable.publish(Bool(True))
+        if(goal.do_y):
+            self.pub_y_enable.publish(Bool(True))
+        if(goal.do_z):
+            self.pub_z_enable.publish(Bool(True))
+        if(goal.do_theta_x):
+            self.pub_theta_x_enable.publish(Bool(True))
+        if(goal.do_theta_y):
+            self.pub_theta_y_enable.publish(Bool(True))
+        if(goal.do_theta_z):
+            self.pub_theta_z_enable.publish(Bool(True))
 
     def callback(self, goal):
-        #print("got a message")
+        print("got a message")
         # set the PIDs
         #print(goal.pose)
         self.goal = goal
@@ -124,6 +132,7 @@ class StateServer():
         settled = False
 
         while not settled:
+            print("hi")
             start = time.time()
             while self.check_status(position,rotation):
                 if(time.time() - start > interval):
@@ -140,10 +149,10 @@ class StateServer():
 
         #x_diff = (not self.do_x) or abs(self.position.x - position.x) <= tolerance_position
         #y_diff = (not self.do_y) or abs(self.position.y - position.y) <= tolerance_position
-        z_diff = (not self.do_z) and abs(self.position.z - position.z) <= tolerance_position
-        theta_x_diff = (not self.do_theta_x) and abs(self.theta_x - rotation.x) <= tolerance_orientation
-        theta_y_diff = (not self.do_theta_y) and abs(self.theta_y - rotation.y) <= tolerance_orientation
-        theta_z_diff = (not self.do_theta_z) and abs(self.theta_z - rotation.z) <= tolerance_orientation
+        z_diff = (not self.goal.do_z) and abs(self.position.z - position.z) <= tolerance_position
+        theta_x_diff = (not self.goal.do_theta_x) and abs(self.theta_x - rotation.x) <= tolerance_orientation
+        theta_y_diff = (not self.goal.do_theta_y) and abs(self.theta_y - rotation.y) <= tolerance_orientation
+        theta_z_diff = (not self.goal.do_theta_z) and abs(self.theta_z - rotation.z) <= tolerance_orientation
 
         return z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
 
@@ -152,8 +161,8 @@ class StateServer():
         #self.pub_x.Publish(Float64(position.x))
         #self.pub_y.Publish(Float64(position.y))
         if(self.goal.do_z):
-            self.goal.pub_z.publish(Float64(position.y))
-        if(self.do_theta_x):
+            self.pub_z.publish(Float64(position.y))
+        if(self.goal.do_theta_x):
             self.pub_theta_x.publish(Float64(rotation.x))
         if(self.goal.do_theta_y):
             self.pub_theta_y.publish(Float64(rotation.y))
