@@ -219,6 +219,3 @@ class Controller:
         #self.preemptCurrentAction()
         goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(False))
         self.LocalSuperimposerServer.send_goal(goal)
-
-
-
