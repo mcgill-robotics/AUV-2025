@@ -78,7 +78,7 @@ class Controller:
         goal.rotation.y = theta_y
         goal.rotation.z = theta_z
         goal.displace = displace
-        goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
+        goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = keepers
         return goal
 
     #preempt the current action

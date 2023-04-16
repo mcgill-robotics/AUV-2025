@@ -65,9 +65,9 @@ class StateServer():
         self.pub_theta_y.publish(self.theta_y)
         self.pub_theta_z.publish(self.theta_z)
 
-        result = StateResult()
-        result.status = False
-        self.server.setPreempted(result)
+        # result = StateResult()
+        # result.status = False
+        # self.server.set_preempted(result)
     
     def enable_pids(self,goal):
         if(goal.do_x):
@@ -94,6 +94,8 @@ class StateServer():
         else:
             goal_position, goal_rotation = goal.position, goal.rotation
 
+        while True:
+            print("hehe")
 
         self.publish_setpoints(goal_position,goal_rotation)
 
@@ -101,8 +103,8 @@ class StateServer():
         self.wait_for_settled(goal_position,goal_rotation)
         result = StateResult()
         result.status.data = True
-        rospy.loginfo("Succeeded")
-        self.server.set_succeeded(result)
+        # rospy.loginfo("Succeeded")
+        # self.server.set_succeeded(result)
     
     def dispalce_goal(self, goal):
         goal_x = goal.position.x + self.position.x
@@ -132,7 +134,7 @@ class StateServer():
         settled = False
 
         while not settled:
-            print("hi")
+            #print("hi")
             start = time.time()
             while self.check_status(position,rotation):
                 if(time.time() - start > interval):
