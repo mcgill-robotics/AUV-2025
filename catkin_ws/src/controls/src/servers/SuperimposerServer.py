@@ -33,6 +33,13 @@ class SuperimposerServer():
         self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
         self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
         self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+
+        self.pub_x = None
+        self.pub_y = None
+        self.pub_z = None
+        self.pub_theta_x = None
+        self.pub_theta_y = None
+        self.pub_theta_z = None
     
     def set_position(self,data):
         #print("updated pose")
@@ -79,7 +86,7 @@ class SuperimposerServer():
             self.pub_theta_z.publish(self.goal.effort.torque.z)
 
 
-        rate = rospy.rate(10)
+        rate = rospy.Rate(10)
         while True:
             rate.sleep()
 
@@ -103,24 +110,24 @@ class SuperimposerServer():
     
     def cancel(self):
         print("canceled")
-        self.pub_x.publish(Float64(0))
-        self.pub_y.publish(Float64(0))
-        self.pub_z.publish(Float64(0))
-        self.pub_theta_x.publish(Float64(0))
-        self.pub_theta_y.publish(Float64(0))
-        self.pub_theta_z.publish(Float64(0))
-        self.server.set_succeeded()
+        # self.pub_x.publish(Float64(0))
+        # self.pub_y.publish(Float64(0))
+        # self.pub_z.publish(Float64(0))
+        # self.pub_theta_x.publish(Float64(0))
+        # self.pub_theta_y.publish(Float64(0))
+        # self.pub_theta_z.publish(Float64(0))
+        # self.server.set_succeeded()
         # print("hello")    
-        # server = actionlib.SimpleActionClient('state_server', StateAction)
-        # server.wait_for_server()
-        # goal = StateGoal()
-        # goal.position = self.position
-        # goal.rotation.x = self.theta_x
-        # goal.rotation.y = self.theta_y
-        # goal.rotation.z = self.theta_z
-        # goal.displace = False
-        # goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
-        # server.send_goal_and_wait(goal)
+        server = actionlib.SimpleActionClient('state_server', StateAction)
+        server.wait_for_server()
+        goal = StateGoal()
+        goal.position = self.position
+        goal.rotation.x = self.theta_x
+        goal.rotation.y = self.theta_y
+        goal.rotation.z = self.theta_z
+        goal.displace = False
+        goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
+        server.send_goal_and_wait(goal)
         
 
         
