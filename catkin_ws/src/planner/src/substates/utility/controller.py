@@ -117,9 +117,13 @@ class Controller:
         #if callback = None make this a blocking call
         x,y,z = delta
 
-        dist = hypot([x,y])
-        x_effort = x * self.effort / dist
-        y_effort = y * self.effort / dist
+        dist = hypot(x,y)
+        if dist == 0:
+            x_effort = 0
+            y_effort = 0
+        else:
+            x_effort = x * self.effort / dist
+            y_effort = y * self.effort / dist
 
         time = self.seconds_per_meter * dist
 
