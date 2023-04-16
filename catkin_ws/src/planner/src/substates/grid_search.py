@@ -2,7 +2,7 @@
 
 import rospy
 import smach
-from utility import *
+from .utility.vision import *
 import time
 import threading
 
@@ -12,7 +12,7 @@ class GridSearch(smach.State):
         super().__init__(outcomes=['success', 'failure'])
         if control == None: raise ValueError("target_class argument must be a list of integers")
         self.control = control
-        self.detector = vision.ObjectDetector(target_classes, callback=self.foundObject)
+        self.detector = ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
 
     def doGridSearch(self):
@@ -37,25 +37,29 @@ class GridSearch(smach.State):
         moving = True
         self.control.moveDeltaLocal(forward_movement, movementComplete)
         #check for object detected while moving
-        while moving: if self.detectedObject: return # stop grid search when object found
+        while moving:
+            if self.detectedObject: return # stop grid search when object found
         #rotate right 90 degrees
         print("Rotating by {}.".format(right_turn))
         rotating = True
         self.control.rotateDelta(right_turn, rotationComplete)
         #check for object detected while rotating
-        while rotating: if self.detectedObject: return # stop grid search when object found
+        while rotating:
+            if self.detectedObject: return # stop grid search when object found
         #move forward
         print("Moving by {}.".format(side_movement/2))
         moving = True
         self.control.moveDeltaLocal(side_movement, movementComplete)
         #check for object detected while moving
-        while moving: if self.detectedObject: return # stop grid search when object found
+        while moving:
+            if self.detectedObject: return # stop grid search when object found
         #turn left 90 degrees
         print("Rotating by {}.".format(left_turn))
         rotating = True
         self.control.rotateDelta(left_turn, rotationComplete)
         #check for object detected while rotating
-        while rotating: if self.detectedObject: return # stop grid search when object found
+        while rotating:
+            if self.detectedObject: return # stop grid search when object found
 
         #REPEAT GRID SEARCH PATTERN
         while True:
@@ -64,49 +68,57 @@ class GridSearch(smach.State):
             moving = True
             self.control.moveDeltaLocal(forward_movement, movementComplete)
             #check for object detected while moving
-            while moving: if self.detectedObject: return # stop grid search when object found
+            while moving:
+                if self.detectedObject: return # stop grid search when object found
             #turn left 90 degrees
             print("Rotating by {}.".format(left_turn))
             rotating = True
             self.control.rotateDelta(left_turn, rotationComplete)
             #check for object detected while rotating
-            while rotating: if self.detectedObject: return # stop grid search when object found
+            while rotating:
+                if self.detectedObject: return # stop grid search when object found
             #move forward
             print("Moving by {}.".format(side_movement))
             moving = True
             self.control.moveDeltaLocal(side_movement, movementComplete)
             #check for object detected while moving
-            while moving: if self.detectedObject: return # stop grid search when object found
+            while moving:
+                if self.detectedObject: return # stop grid search when object found
             #rotate right 90 degrees
             print("Rotating by {}.".format(right_turn))
             rotating = True
             self.control.rotateDelta(right_turn, rotationComplete)
             #check for object detected while rotating
-            while rotating: if self.detectedObject: return # stop grid search when object found
+            while rotating:
+                if self.detectedObject: return # stop grid search when object found
             #move forward
             print("Moving by {}.".format(forward_movement))
             moving = True
             self.control.moveDeltaLocal(forward_movement, movementComplete)
             #check for object detected while moving
-            while moving: if self.detectedObject: return # stop grid search when object found
+            while moving:
+                if self.detectedObject: return # stop grid search when object found
             #rotate right 90 degrees
             print("Rotating by {}.".format(right_turn))
             rotating = True
             self.control.rotateDelta(right_turn, rotationComplete)
             #check for object detected while rotating
-            while rotating: if self.detectedObject: return # stop grid search when object found
+            while rotating:
+                if self.detectedObject: return # stop grid search when object found
             #move forward
             print("Moving by {}.".format(side_movement))
             moving = True
             self.control.moveDeltaLocal(side_movement, movementComplete)
             #check for object detected while moving
-            while moving: if self.detectedObject: return # stop grid search when object found
+            while moving:
+                if self.detectedObject: return # stop grid search when object found
             #turn left 90 degrees
             print("Rotating by {}.".format(left_turn))
             rotating = True
             self.control.rotateDelta(left_turn, rotationComplete)
             #check for object detected while rotating
-            while rotating: if self.detectedObject: return # stop grid search when object found
+            while rotating:
+                if self.detectedObject: return # stop grid search when object found
     
     def foundObject(self, msg):
         self.detector.stop()

@@ -2,7 +2,7 @@
 
 import rospy
 import smach
-from utility import *
+from .utility.vision import *
 import time, math
 import numpy as np
 
@@ -180,7 +180,7 @@ class NavigateLaneMarker(smach.State):
         self.control = control
         
     def execute(self, ud):
-        self.detector = vision.ObjectDetector(msgHandler=objectDetectCb)
+        self.detector = ObjectDetector(msgHandler=objectDetectCb)
         self.detector.start()
 
         sm = smach.StateMachine(outcomes=['success', 'failure']) 

@@ -2,7 +2,7 @@
 
 import rospy
 import smach
-from utility import *
+from .utility.vision import *
 import time
 import threading
 
@@ -12,7 +12,7 @@ class BreadthFirstSearch(smach.State):
         super().__init__(outcomes=['success', 'failure'])
         if control == None: raise ValueError("target_class argument must be a list of integers")
         self.control = control
-        self.detector = vision.ObjectDetector(target_classes, callback=self.foundObject)
+        self.detector = ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
         self.expansionAmt = expansionAmt
 
@@ -35,7 +35,8 @@ class BreadthFirstSearch(smach.State):
             moving = True
             self.control.moveDeltaLocal(movement, movementComplete)
             #check for object detected while moving
-            while moving: if self.detectedObject: return # stop grid search when object found
+            while moving:
+                if self.detectedObject: return # stop grid search when object found
             #increase distance to move forward
             movement[0] += self.expansionAmt
             #rotate right 90 degrees
@@ -43,7 +44,8 @@ class BreadthFirstSearch(smach.State):
             rotating = True
             self.control.rotateDelta(right_turn, rotationComplete)
             #check for object detected while rotating
-            while rotating: if self.detectedObject: return # stop grid search when object found
+            while rotating:
+                if self.detectedObject: return # stop grid search when object found
     
     def foundObject(self, msg):
         self.detector.stop()

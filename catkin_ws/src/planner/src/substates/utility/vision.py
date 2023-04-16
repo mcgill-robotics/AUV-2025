@@ -5,7 +5,9 @@ from auv_msgs.msg import ObjectDetectionFrame
 
 #replace with radius + mapping once mapping is implemented
 class ObjectDetector:
-    def __init__(self, target_classes=[], callback=None, detectionHandler=self.defaultDetectionCb):
+    def __init__(self, target_classes=[], callback=None, detectionHandler=None):
+        if detectionhandler is None:
+            detectionHandler = self.defaultDetectionCb
         try:
             len(cl)
             for cl in target_classes:

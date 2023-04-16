@@ -2,7 +2,7 @@
 
 import rospy
 import smach
-from utility import *
+from .utility.vision import *
 import time
 import threading
 
@@ -12,7 +12,7 @@ class LinearSearch(smach.State):
         super().__init__(outcomes=['success', 'failure'])
         if control == None: raise ValueError("target_class argument must be a list of integers")
         self.control = control
-        self.detector = vision.ObjectDetector(target_classes, callback=self.foundObject)
+        self.detector = ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
         self.forward_speed = forward_speed
 

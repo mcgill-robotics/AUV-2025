@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-from utility import *
 
 class TestSubmergedRotations(smach.State):
     def __init__(self, hold_time, control=None):
