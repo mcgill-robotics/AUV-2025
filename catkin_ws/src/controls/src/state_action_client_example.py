@@ -4,11 +4,27 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Point, Pose
 from std_msgs.msg import Float64, Bool
-from auv_msgs.msg import StateAction, StateGoal
+from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
 
 if __name__ == '__main__':
     print("starting test")
     rospy.init_node('example')
+
+    # goal = SuperimposerGoal()
+    # goal.effort.force.x = 1
+    # goal.effort.force.y = 1
+    # goal.effort.force.z = 1
+    # goal.effort.torque.x = 1
+    # goal.effort.torque.y = 1
+    # goal.effort.torque.z = 1
+    # goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = [Bool(True)]*6
+    # goal.displace = Bool(False)
+    # server = actionlib.SimpleActionClient('superimposer_local_server', SuperimposerAction)
+    # server.wait_for_server()
+    # server.send_goal(goal)
+    # rospy.sleep(5)
+    # server.cancel_all_goals()
+
     position = Point()
     rotation = Point()
     position.x = 1
@@ -54,5 +70,5 @@ if __name__ == '__main__':
     rospy.sleep(5)
     print("cancel goal")
     server.cancel_goal()
-    #server.send_goal_and_wait(goal)
-    #server.cancel_goal()
+    # server.send_goal_and_wait(goal)
+    # server.cancel_goal()

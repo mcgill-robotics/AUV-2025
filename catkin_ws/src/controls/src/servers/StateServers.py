@@ -9,13 +9,11 @@ from std_msgs.msg import Float64, Bool
 import time
 
 
-
 class StateServer():
 
     def __init__(self) -> None:
         print("starting server")
         self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
-        self.server.register_preempt_callback(self.cancel)
         self.server.start()
         #self.feedback = StateFeedback()
         #self.result = StateResult()
@@ -64,7 +62,7 @@ class StateServer():
         self.pub_theta_x.publish(self.theta_x)
         self.pub_theta_y.publish(self.theta_y)
         self.pub_theta_z.publish(self.theta_z)
-
+    
         # result = StateResult()
         # result.status = False
         # self.server.set_preempted(result)
@@ -94,17 +92,13 @@ class StateServer():
         else:
             goal_position, goal_rotation = goal.position, goal.rotation
 
-        while True:
-            print("hehe")
-
         self.publish_setpoints(goal_position,goal_rotation)
 
         # monitor when reached pose
         self.wait_for_settled(goal_position,goal_rotation)
-        result = StateResult()
-        result.status.data = True
+
         # rospy.loginfo("Succeeded")
-        # self.server.set_succeeded(result)
+        self.server.set_succeeded()
     
     def dispalce_goal(self, goal):
         goal_x = goal.position.x + self.position.x

@@ -78,35 +78,44 @@ class SuperimposerServer():
             self.pub_theta_z_enable.publish(Bool(False))
             self.pub_theta_z.publish(self.goal.effort.torque.z)
 
-        fb = SuperimposerFeedback()
-        fb.moving = True
-        self.server.publish_feedback(fb)
+
+        self.server.set_succeeded()
+        # fb = SuperimposerFeedback()
+        # fb.moving = True
+        # self.server.publish_feedback(fb)
 
     def displace_goal(self,displace):
         if(self.goal == None):
             return displace
 
         new_goal = displace
-        new_goal.force.x += self.goal.force.x
-        new_goal.force.y += self.goal.force.y
-        new_goal.force.z += self.goal.force.z
-        new_goal.torque.x += self.goal.torque.x
-        new_goal.torque.y += self.goal.torque.y
-        new_goal.torque.z += self.goal.torque.z
+        new_goal.force.x += self.goal.effort.force.x
+        new_goal.force.y += self.goal.effort.force.y
+        new_goal.force.z += self.goal.effort.force.z
+        new_goal.torque.x += self.goal.effort.torque.x
+        new_goal.torque.y += self.goal.effort.torque.y
+        new_goal.torque.z += self.goal.effort.torque.z
         return new_goal
     
     def cancel(self):
-            
-        server = actionlib.SimpleActionClient('state_server', StateAction)
-        server.wait_for_server()
-        goal = StateGoal()
-        goal.position = self.position
-        goal.rotation.x = self.theta_x
-        goal.rotation.y = self.theta_y
-        goal.rotation.z = self.theta_z
-        goal.displace = False
-        goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
-        server.send_goal_and_wait(goal)
+        print("canceled")
+        self.pub_x.publish(Float64(0))
+        self.pub_y.publish(Float64(0))
+        self.pub_z.publish(Float64(0))
+        self.pub_theta_x.publish(Float64(0))
+        self.pub_theta_y.publish(Float64(0))
+        self.pub_theta_z.publish(Float64(0))
+        # print("hello")    
+        # server = actionlib.SimpleActionClient('state_server', StateAction)
+        # server.wait_for_server()
+        # goal = StateGoal()
+        # goal.position = self.position
+        # goal.rotation.x = self.theta_x
+        # goal.rotation.y = self.theta_y
+        # goal.rotation.z = self.theta_z
+        # goal.displace = False
+        # goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [True]*6
+        # server.send_goal_and_wait(goal)
         
 
         
@@ -114,7 +123,6 @@ class LocalSuperimposerServer(SuperimposerServer):
     def __init__(self):
         super().__init__()
         self.server = actionlib.SimpleActionServer('superimposer_local_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
-        self.server.register_preempt_callback(self.cancel)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
@@ -134,7 +142,6 @@ class GlobalSuperimposerServer(SuperimposerServer):
     def __init__(self):
         super().__init__()
         self.server = actionlib.SimpleActionServer('superimposer_global_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
-        self.server.register_preempt_callback(self.cancel)
         #self.feedback = StateFeedback()
         #self.result = StateResult()
 
