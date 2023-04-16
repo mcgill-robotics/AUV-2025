@@ -6,12 +6,15 @@ from servers.StateServers import *
 from servers.SuperimposerServer import *
 
 def statePreempt():
+    print("preempting state")
     s.cancel()
 
 def locPreempt():
+    print("preempting loc")
     loc.cancel()
 
 def globPreempt():
+    print("preempting glob")
     glob.cancel()
 
 if __name__ == "__main__":

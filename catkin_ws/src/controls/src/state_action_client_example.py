@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # server.wait_for_server()
     # server.send_goal(goal)
     # rospy.sleep(5)
-    # server.cancel_all_goals()
+    # server.cancel_goal()
 
     position = Point()
     rotation = Point()

@@ -79,6 +79,10 @@ class SuperimposerServer():
             self.pub_theta_z.publish(self.goal.effort.torque.z)
 
 
+        rate = rospy.rate(10)
+        while True:
+            rate.sleep()
+
         self.server.set_succeeded()
         # fb = SuperimposerFeedback()
         # fb.moving = True
@@ -105,6 +109,7 @@ class SuperimposerServer():
         self.pub_theta_x.publish(Float64(0))
         self.pub_theta_y.publish(Float64(0))
         self.pub_theta_z.publish(Float64(0))
+        self.server.set_succeeded()
         # print("hello")    
         # server = actionlib.SimpleActionClient('state_server', StateAction)
         # server.wait_for_server()

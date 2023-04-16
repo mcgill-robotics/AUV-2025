@@ -65,7 +65,7 @@ class StateServer():
     
         # result = StateResult()
         # result.status = False
-        # self.server.set_preempted(result)
+        self.server.set_succeeded()
     
     def enable_pids(self,goal):
         if(goal.do_x):
