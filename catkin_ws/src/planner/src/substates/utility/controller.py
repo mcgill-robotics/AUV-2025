@@ -183,7 +183,7 @@ class Controller:
         goal = self.get_superimposer_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(False))
         self.GobalSuperimposerServer.send_goal(goal)
 
-    #set velocity in world space
+    #set thruster velocity output
     def velocity(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
@@ -198,14 +198,14 @@ class Controller:
         goal = self.get_superimposer_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(True))
         self.GobalSuperimposerServer.send_goal(goal)
 
-    #change delta velocity (velocity to add on top of velocity required to maintain state) in world space
+    #change delta thruster velocity (velocity to add on top of velocity required to maintain state) in world space
     def deltaVelocity(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
         goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(True))
         self.GobalSuperimposerServer.send_goal(goal)
 
-    #change delta velocity (velocity to add on top of velocity required to maintain state) in local space (i.e. z is always heave)
+    #change delta thruster velocity (velocity to add on top of velocity required to maintain state) in local space (i.e. z is always heave)
     def deltaVelocityLocal(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
@@ -213,7 +213,7 @@ class Controller:
         self.LocalSuperimposerServer.send_goal(goal)
 
 
-    #set velocity in local space (i.e. z is always heave)
+    #set thruster velocity in local space (i.e. z is always heave)
     def velocityLocal(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
