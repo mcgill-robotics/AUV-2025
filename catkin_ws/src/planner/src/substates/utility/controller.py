@@ -118,6 +118,7 @@ class Controller:
         x,y,z = delta
 
         dist = hypot(x,y)
+
         if dist == 0:
             x_effort = 0
             y_effort = 0
@@ -158,7 +159,7 @@ class Controller:
         #if callback = None make this a blocking call
         x,y,z = delta
 
-        dist = hypot([x,y])
+        dist = hypot(x,y)
         x_effort = x * self.effort / dist
         y_effort = y * self.effort / dist
 

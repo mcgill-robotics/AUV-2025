@@ -25,7 +25,7 @@ def endMission(msg="Shutting down mission planner."):
     control.angularVelocity((0,0,0))
 
 def testRotationsMission():
-    #descend(depth=-2.0)
+    descend(depth=-2.0)
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('test_submerged_rotations', TestSubmergedRotations(hold_time = 5.0, control=control), 
