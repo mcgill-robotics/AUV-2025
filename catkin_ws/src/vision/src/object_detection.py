@@ -12,6 +12,7 @@ from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
 import math
 import torch
+
 class State:
     def __init__(self):
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
@@ -27,8 +28,7 @@ class State:
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
-        self.depth_map= None
-        #add depth map here
+        self.depth_map = None
 def updateX(self, msg):
     self.x = float(msg.data)
 def updateY(self, msg):
@@ -119,16 +119,28 @@ def measureLaneMarker(img, bbox):
     cv2.circle(img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, img
 
+def transformLocalToGlobal(lx,ly,lz):
+    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
+    offset_local = Vector3(lx, ly, lz)
+    tf_header.stamp = rospy.Time(0)
+    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
+    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
+    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
+
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
-    current_state = (state.x, state.y, state.z, state.theta_x, state.theta_y, state.theta_z)
-    if None in current_state: return
     #only predict if i has not reached detect_every yet
     global i
     i[camera_id] += 1
     if i[camera_id] <= detect_every: return
     i[camera_id] = 0
+    
+    current_states = {"x:", state.x, "y:", state.y, "z", state.z, "theta_x", state.theta_x, "theta_y", state.theta_y, "theta_z", state.theta_z}
+    if None in current_states.values():
+    	print("State information missing. Skipping detection.")
+    	print(current_states)
+    	return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     
@@ -191,8 +203,9 @@ def detect_on_image(raw_img, camera_id):
                     y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
                     x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                     y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-                    local_offset_x = abs(-pool_depth - state.z)*x_slope_offset
-                    local_offset_y = abs(-pool_depth - state.z)*y_slope_offset
+                    global_offset_z = abs(-pool_depth - state.z)
+                    local_offset_x = global_offset_z*x_slope_offset
+                    local_offset_y = global_offset_z*y_slope_offset
                     #don't use position calculations for objects which are very far away
                     # (in case down cam picks up on an object which is not on the floor of the pool)
                     localization_max_distance = pool_depth*2
@@ -203,8 +216,8 @@ def detect_on_image(raw_img, camera_id):
                         pose_confidence.append(None)
                     else:
                         #convert local offset to location in world space using AUV position + yaw
-                        global_center_x = state.x + local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
-                        global_center_y = state.y + local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
+                        global_offset_x = local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
+                        global_offset_y = local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
                                             
                         #confidence model:
                             # 0.25 at corners
@@ -213,30 +226,32 @@ def detect_on_image(raw_img, camera_id):
                         x_conf = 1.0 - abs(x_center_offset)
                         y_conf = 1.0 - abs(y_center_offset)
                         pose_confidence.append(x_conf*y_conf) 
-                        obj_x.append(global_center_x)
-                        obj_y.append(global_center_y)
+                        obj_x.append(state.x + global_offset_x)
+                        obj_y.append(state.y + global_offset_y)
                         obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
                 #TODO: estimate depth from camera using depth map and bbox
-                dist_from_camera = 0 ####
+                dist_from_camera = 0
 
-                #TODO MATH TO FIGURE OUT RELATIVE POSITION OF OBJECT USING AUV ORIENTATION AND DISTANCE FROM CAMERA
                 #assuming FOV increases linearly with distance from center pixel
                 x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
                 y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
-                x_angle_offset = state.theta_z + front_cam_hfov*x_center_offset
-                y_angle_offset = state.theta_y + front_cam_vfov*y_center_offset
+                x_angle_offset = front_cam_hfov*x_center_offset
+                y_angle_offset = front_cam_vfov*y_center_offset
                 x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                 y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-                local_offset_y = dist_from_camera*x_slope_offset
-                local_offset_z = dist_from_camera*y_slope_offset
+                local_offset_x = dist_from_camera
+                local_offset_y = local_offset_x*x_slope_offset
+                local_offset_z = local_offset_x*y_slope_offset
+                
+                global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(local_offset_x, local_offset_y, local_offset_z)
                 
                 x_conf = 1.0 - abs(x_center_offset)
                 y_conf = 1.0 - abs(y_center_offset)
                 pose_confidence.append(x_conf*y_conf*(min(1.0, 1.0/dist_from_camera))) 
-                obj_x.append(global_center_x)
-                obj_y.append(global_center_y)
-                obj_z.append(global_center_z) 
+                obj_x.append(state.x + global_offset_x)
+                obj_y.append(state.y + global_offset_y)
+                obj_z.append(state.z + global_offset_z) 
 
                 #GET EXTRA FIELD / THETA Z FROM CUSTOM OBJECT MEASUREMENTS
                 obj_theta_z.append(None)
@@ -268,8 +283,14 @@ min_prediction_confidence = 0.6 #only report predictions with confidence at leas
 pool_depth = 4
 down_cam_hfov = 109
 down_cam_vfov = 59
+front_cam_hfov = 75
+front_cam_vfov = 59
 
 if __name__ == '__main__':
+    tf_buffer = Buffer()
+    TransformListener(tf_buffer)
+    tf_header = Header(frame_id="world")
+    
     state = State()
 
     #bridge is used to convert sensor_msg images to cv2
