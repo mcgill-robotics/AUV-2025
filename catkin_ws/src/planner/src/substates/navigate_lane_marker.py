@@ -7,9 +7,8 @@ import time, math
 import numpy as np
 
 class centerAndScale(smach.State):
-    def __init__(self, control=None):
+    def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("target_class argument must be a list of integers")
         self.control = control
         
     def execute(self, ud):
@@ -84,10 +83,8 @@ class measureLaneMarker(smach.State):
         
     def execute(self, ud):
         '''
-        Rotates the AUV until lane marker target heading is within rotational tolerance.
-        Once the lane marker heading is facing forward, it returns success.
-        If it loses sight of the lane marker for more than timeout, returns "failure".
-        Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
+        Measures the lane marker in view and takes median of recorded measurements as target heading.
+        Takes smallest heading measurement as target.
         '''
         print("Starting measurement of lane marker headings.")
         global last_object_detection
@@ -118,9 +115,8 @@ class measureLaneMarker(smach.State):
         return 'success'
 
 class rotateToHeading(smach.State):
-    def __init__(self, control=None):
+    def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("target_class argument must be a list of integers")
         self.control = control
         
     def execute(self, ud):
@@ -141,8 +137,6 @@ class rotateToHeading(smach.State):
 def parseMessage(msg):
     detection = []
     for i in range(len(msg.label)):
-        if len(detection) > 0 and detection[8] > msg.confidence[i]: #keep highest confidence prediction
-            continue
         if msg.camera != 0: #ignore detection on stereo cameras
             continue
         if msg.label[i] != 0: #ignore detection of objects other than lane marker
@@ -150,6 +144,8 @@ def parseMessage(msg):
         if msg.headings1[i] == None or msg.headings2[i] == None: #ignore detection that did not glean heading information
             continue
         if msg.center_x[i] == None or msg.center_y[i] == None: #ignore detection that did not glean center point information
+            continue
+        if len(detection) > 0 and detection[8] > msg.confidence[i]: #keep highest confidence prediction
             continue
         detection = [ msg.bounding_box_x[i],
             msg.bounding_box_y[i],
@@ -176,7 +172,7 @@ def objectDetectCb(msg):
 class NavigateLaneMarker(smach.State):
     def __init__(self, control=None):
         super().__init__(outcomes=['success'])
-        if control == None: raise ValueError("target_class argument must be a list of integers")
+        if control == None: raise ValueError("Must pass in controller as control argument.")
         self.control = control
         
     def execute(self, ud):
