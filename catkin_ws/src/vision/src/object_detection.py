@@ -188,22 +188,27 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
                     center = bbox
                 #POSITION FOR OBJECTS ON DOWN CAM
-                #ASSUME THEY ARE ON THE BOTTOM OF THE POOL, USE FOV TO FIND APPROXIMATE LOCATION
-                #check that all of the down camera viewframe faces the pool bottom
-                if abs(state.theta_x) + down_cam_hfov/2 >= 90 or abs(state.theta_y) + down_cam_vfov/2 >= 90: 
+                #ASSUME THEY ARE ON THE BOTTOM OF THE POOL, USE FOV TO FIND APPROXIMATE LOCATION IN 3D SPACE
+                #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+                x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
+                y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+                #assuming FOV increases linearly with distance from center pixel
+                x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
+                y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
+                #check that the angle offsets face the pool bottom
+                if abs(x_angle_offset) >= 90 or abs(y_angle_offset) >= 90: 
                     obj_x.append(None)
                     obj_y.append(None)
                     obj_z.append(None)
                     pose_confidence.append(None)
                 else:
-                    #assuming FOV increases linearly with distance from center pixel
-                    x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
-                    y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
-                    x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
-                    y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
+                    #calculate slopes from angle offsets
                     x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                     y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
+                    #assume the object is at the bottom of the pool to get a depth
                     global_offset_z = abs(-pool_depth - state.z)
+                    #use the angle and z offset from the object to get x and y offsets in local space
                     local_offset_x = global_offset_z*x_slope_offset
                     local_offset_y = global_offset_z*y_slope_offset
                     #don't use position calculations for objects which are very far away
@@ -215,7 +220,7 @@ def detect_on_image(raw_img, camera_id):
                         obj_z.append(None)
                         pose_confidence.append(None)
                     else:
-                        #convert local offset to location in world space using AUV position + yaw
+                        #convert local offset to offset in world space using AUV yaw
                         global_offset_x = local_offset_y*math.cos(math.radians(state.theta_z+90)) + local_offset_x*math.cos(math.radians(state.theta_z))
                         global_offset_y = local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
                                             
@@ -233,17 +238,21 @@ def detect_on_image(raw_img, camera_id):
                 #TODO: estimate depth from camera using depth map and bbox
                 dist_from_camera = 0
 
-                #assuming FOV increases linearly with distance from center pixel
+                #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
                 x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
                 y_center_offset = ((h/2)-center[1]) / h #negated since y goes from top to bottom
+                #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+                #assuming FOV increases linearly with distance from center pixel
                 x_angle_offset = front_cam_hfov*x_center_offset
                 y_angle_offset = front_cam_vfov*y_center_offset
+                #calculate slopes from angle offsets
                 x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
                 y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
                 local_offset_x = dist_from_camera
+                #use the angle and distance from the camera of the object to get x and y offsets in local space
                 local_offset_y = local_offset_x*x_slope_offset
                 local_offset_z = local_offset_x*y_slope_offset
-                
+                #convert local offsets to global offsets using tf transform library
                 global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(local_offset_x, local_offset_y, local_offset_z)
                 
                 x_conf = 1.0 - abs(x_center_offset)
