@@ -21,6 +21,7 @@ catkin_ws/.catkin_tools/
 # submodules
 catkin_ws/src/auv-sim
 catkin_ws/src/ros_gz
+catkin_ws/src/simulator
 =========
 #recorded videos
 *.mp4
