@@ -91,7 +91,7 @@ class StateServer():
             goal_position, goal_rotation = self.dispalce_goal(goal)
         else:
             goal_position, goal_rotation = goal.position, goal.rotation
-
+        print(goal_position,goal_rotation)
         self.publish_setpoints(goal_position,goal_rotation)
 
         # monitor when reached pose

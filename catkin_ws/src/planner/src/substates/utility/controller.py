@@ -12,6 +12,7 @@ from math import hypot
 class Controller:
 
     def __init__(self):
+        print("starting controller")
         self.servers = []
         self.effort = 15
         self.seconds_per_meter = 1
@@ -57,12 +58,12 @@ class Controller:
     def get_superimposer_goal(self,dofs,keepers,displace):
         surge,sway,heave,roll,pitch,yaw = dofs
         goal = SuperimposerGoal()
-        goal.force.x = surge
-        goal.force.y = sway
-        goal.force.z = heave
-        goal.torque.x = roll
-        goal.torque.y = pitch
-        goal.torque.z = yaw
+        goal.effort.force.x = surge
+        goal.effort.force.y = sway
+        goal.effort.force.z = heave
+        goal.effort.torque.x = roll
+        goal.effort.torque.y = pitch
+        goal.effort.torque.z = yaw
         goal.displace = displace
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal

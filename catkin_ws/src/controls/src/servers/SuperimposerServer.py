@@ -112,13 +112,14 @@ class SuperimposerServer():
         print("canceled")
         if self.goal.do_surge: self.pub_x.publish(Float64(0))
         if self.goal.do_sway: self.pub_y.publish(Float64(0))
-        # if self.goal.do_heave: self.pub_z.publish(Float64(0))
-        # if self.goal.do_roll: self.pub_theta_x.publish(Float64(0))
-        # if self.goal.do_pitch: self.pub_theta_y.publish(Float64(0))
-        # if self.goal.do_yaw: self.pub_theta_z.publish(Float64(0))
+        if self.goal.do_heave: self.pub_z.publish(Float64(10))
+        if self.goal.do_roll: self.pub_theta_x.publish(Float64(10))
+        if self.goal.do_pitch: self.pub_theta_y.publish(Float64(10))
+        if self.goal.do_yaw: self.pub_theta_z.publish(Float64(10))
         # 
         # print("hello")    
         server = actionlib.SimpleActionClient('state_server', StateAction)
+        rospy.logdebug("waiting for server")
         server.wait_for_server()
         goal = StateGoal()
         goal.position = self.position

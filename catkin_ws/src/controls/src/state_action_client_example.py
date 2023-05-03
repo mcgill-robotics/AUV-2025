@@ -8,7 +8,32 @@ from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, Superimpose
 
 if __name__ == '__main__':
     print("starting test")
-    rospy.init_node('example')
+    rospy.init_node('example', log_level=rospy.DEBUG)
+
+    pub_pos = rospy.Publisher("pose",Pose,queue_size=50)
+    pub_tx = rospy.Publisher("state_theta_x",Float64,queue_size=50)
+    pub_ty = rospy.Publisher("state_theta_y",Float64,queue_size=50)
+    pub_tz = rospy.Publisher("state_theta_z",Float64,queue_size=50)
+    pub_z = rospy.Publisher("state_z",Float64,queue_size=50)
+
+    p = Pose()
+    p.position.x = 0
+    p.position.y = 0
+    p.position.z = 0
+    p.orientation.w = 1
+    p.orientation.x = 1
+    p.orientation.y = 0
+    p.orientation.z = 0
+
+    rospy.sleep(4)
+
+    pub_pos.publish(p)
+    pub_z.publish(Float64(0))
+    
+    pub_tx.publish(Float64(0))
+    pub_ty.publish(Float64(0))
+    pub_tz.publish(Float64(0))
+
 
     goal = SuperimposerGoal()
     goal.effort.force.x = 1
@@ -21,9 +46,24 @@ if __name__ == '__main__':
     goal.displace = Bool(False)
     server = actionlib.SimpleActionClient('superimposer_local_server', SuperimposerAction)
     server.wait_for_server()
+    print("sending goal")
     server.send_goal(goal)
     rospy.sleep(5)
+    print("cancelling goal")
+    pub_pos.publish(p)
+    pub_z.publish(Float64(0))
+    
+    pub_tx.publish(Float64(0))
+    pub_ty.publish(Float64(0))
+    pub_tz.publish(Float64(0))
     server.cancel_goal()
+    pub_pos.publish(p)
+    pub_z.publish(Float64(0))
+    
+    pub_tx.publish(Float64(0))
+    pub_ty.publish(Float64(0))
+    pub_tz.publish(Float64(0))
+
 
     # position = Point()
     # rotation = Point()
