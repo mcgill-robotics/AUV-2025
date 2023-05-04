@@ -21,9 +21,9 @@ class StateServer():
         #self.pub_x = rospy.Publisher('', Float64, queue_size=50)
         #self.pub_y = rospy.Publisher('', Float64, queue_size=50)
         self.pub_z = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
         
         self.server.start()
 

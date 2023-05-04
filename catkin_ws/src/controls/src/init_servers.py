@@ -18,7 +18,7 @@ def globPreempt():
     glob.cancel()
 
 if __name__ == "__main__":
-    rospy.init_node("state_server", log_level=rospy.DEBUG)
+    rospy.init_node("server manager", log_level=rospy.DEBUG)
     s = StateServer()
     s.server.register_preempt_callback(statePreempt)
     loc = LocalSuperimposerServer()
