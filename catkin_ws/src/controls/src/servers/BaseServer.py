@@ -73,17 +73,17 @@ class BaseServer():
         self.server.set_succeeded()
     
     def enable_pids(self,goal):
-        if(goal.do_x):
+        if(goal.do_x.data):
             self.pub_x_enable.publish(Bool(True))
-        if(goal.do_y):
+        if(goal.do_y.data):
             self.pub_y_enable.publish(Bool(True))
-        if(goal.do_z):
+        if(goal.do_z.data):
             self.pub_z_enable.publish(Bool(True))
-        if(goal.do_theta_x):
+        if(goal.do_theta_x).data:
             self.pub_theta_x_enable.publish(Bool(True))
-        if(goal.do_theta_y):
+        if(goal.do_theta_y.data):
             self.pub_theta_y_enable.publish(Bool(True))
-        if(goal.do_theta_z):
+        if(goal.do_theta_z.data):
             self.pub_theta_z_enable.publish(Bool(True))
 
         
@@ -198,6 +198,7 @@ class SuperimposerServer(BaseServer):
 
     
     def displace_goal(self,displace):
+        print("displacing goal")
         if(self.goal == None):
             return displace
 
@@ -211,31 +212,31 @@ class SuperimposerServer(BaseServer):
         return new_goal
     
     def callback(self, goal):
-        print(goal)
-        self.goal = goal
-        if(goal.displace):
+        if(goal.displace.data):
             self.goal = self.displace_goal(goal)
+        else:
+            self.goal = goal
         #unset pids
-        if(goal.do_surge):
+        if(goal.do_surge.data):
             self.pub_x_enable.publish(Bool(False))
             self.pub_x_effort.publish(self.goal.effort.force.x)
-        if(goal.do_sway):
+        if(goal.do_sway.data):
             #unset pids
             self.pub_y_enable.publish(Bool(False))
             self.pub_y_effort.publish(self.goal.effort.force.y)
-        if(goal.do_heave):
+        if(goal.do_heave.data):
             #unset pids
             self.pub_z_enable.publish(Bool(False))
             self.pub_z_effort.publish(self.goal.effort.force.z)
-        if(goal.do_roll):
+        if(goal.do_roll.data):
             #unset pids
             self.pub_theta_x_enable.publish(Bool(False))
             self.pub_theta_x_effort.publish(self.goal.effort.torque.x)
-        if(goal.do_pitch):
+        if(goal.do_pitch.data):
             #unset pids
             self.pub_theta_y_enable.publish(Bool(False))
             self.pub_theta_y_effort.publish(self.goal.effort.torque.y)
-        if(goal.do_yaw):
+        if(goal.do_yaw.data):
             #unset pids
             self.pub_theta_z_enable.publish(Bool(False))
             self.pub_theta_z_effort.publish(self.goal.effort.torque.z)

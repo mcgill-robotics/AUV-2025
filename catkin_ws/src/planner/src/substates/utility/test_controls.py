@@ -12,4 +12,5 @@ if __name__ == "__main__":
     rospy.sleep(3)
     # controls.preemptCurrentAction()
     rospy.sleep(3)
+    print("stopping controller")
     controls.velocity([0,0,0])
