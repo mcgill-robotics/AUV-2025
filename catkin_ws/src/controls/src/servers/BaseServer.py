@@ -14,15 +14,15 @@ class BaseServer():
     def __init__(self) -> None:
         print("starting server")
         self.cancelled = False
-
+        self.goal = None
         
 
 
     def establish_pid_publishers(self):
-        self.pub_z = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
+        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
         
 
     def establish_pid_enable_publishers(self):
@@ -63,10 +63,10 @@ class BaseServer():
     #generic cancel that publishes current position to pids to stay in place
     def cancel(self):
         self.cancelled = True
-        self.pub_z.publish(self.position.z)
-        self.pub_theta_x.publish(self.theta_x)
-        self.pub_theta_y.publish(self.theta_y)
-        self.pub_theta_z.publish(self.theta_z)
+        self.pub_z_pid.publish(self.position.z)
+        self.pub_theta_x_pid.publish(self.theta_x)
+        self.pub_theta_y_pid.publish(self.theta_y)
+        self.pub_theta_z_pid.publish(self.theta_z)
     
         # result = StateResult()
         # result.status = False
@@ -124,18 +124,18 @@ class BaseServer():
         #self.pub_x.Publish(Float64(position.x))
         #self.pub_y.Publish(Float64(position.y))
         if(self.goal.do_z):
-            self.pub_z.publish(Float64(position.y))
+            self.pub_z_pid.publish(Float64(position.y))
         if(self.goal.do_theta_x):
-            self.pub_theta_x.publish(Float64(rotation.x))
+            self.pub_theta_x_pid.publish(Float64(rotation.x))
         if(self.goal.do_theta_y):
-            self.pub_theta_y.publish(Float64(rotation.y))
+            self.pub_theta_y_pid.publish(Float64(rotation.y))
         if(self.goal.do_theta_z):
-            self.pub_theta_z.publish(Float64(rotation.z))
+            self.pub_theta_z_pid.publish(Float64(rotation.z))
 
 
 class StateServer(BaseServer):
     def __init__(self):
-        super.__init__()
+        super().__init__()
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
         self.establish_state_subscribers()
@@ -185,54 +185,60 @@ class StateServer(BaseServer):
 
 class SuperimposerServer(BaseServer):
     def __init__(self):
-        super.__init__()
+        super().__init__()
         self.establish_pid_enable_publishers()
         self.establish_pid_publishers()
+
+        self.pub_x_effort = None
+        self.pub_y_effort = None
+        self.pub_z_effort = None
+        self.pub_theta_x_effort = None
+        self.pub_theta_y_effort = None
+        self.pub_theta_z_effort = None
+
     
     def displace_goal(self,displace):
         if(self.goal == None):
             return displace
 
         new_goal = displace
-        new_goal.force.x += self.goal.effort.force.x
-        new_goal.force.y += self.goal.effort.force.y
-        new_goal.force.z += self.goal.effort.force.z
-        new_goal.torque.x += self.goal.effort.torque.x
-        new_goal.torque.y += self.goal.effort.torque.y
-        new_goal.torque.z += self.goal.effort.torque.z
+        new_goal.effort.force.x += self.goal.effort.force.x
+        new_goal.effort.force.y += self.goal.effort.force.y
+        new_goal.effort.force.z += self.goal.effort.force.z
+        new_goal.effort.torque.x += self.goal.effort.torque.x
+        new_goal.effort.torque.y += self.goal.effort.torque.y
+        new_goal.effort.torque.z += self.goal.effort.torque.z
         return new_goal
     
     def callback(self, goal):
         print(goal)
-
+        self.goal = goal
         if(goal.displace):
             self.goal = self.displace_goal(goal)
-        else:
-            self.goal = goal
         #unset pids
         if(goal.do_surge):
             self.pub_x_enable.publish(Bool(False))
-            self.pub_x.publish(self.goal.effort.force.x)
+            self.pub_x_effort.publish(self.goal.effort.force.x)
         if(goal.do_sway):
             #unset pids
             self.pub_y_enable.publish(Bool(False))
-            self.pub_y.publish(self.goal.effort.force.y)
+            self.pub_y_effort.publish(self.goal.effort.force.y)
         if(goal.do_heave):
             #unset pids
             self.pub_z_enable.publish(Bool(False))
-            self.pub_z.publish(self.goal.effort.force.z)
+            self.pub_z_effort.publish(self.goal.effort.force.z)
         if(goal.do_roll):
             #unset pids
             self.pub_theta_x_enable.publish(Bool(False))
-            self.pub_theta_x.publish(self.goal.effort.torque.x)
+            self.pub_theta_x_effort.publish(self.goal.effort.torque.x)
         if(goal.do_pitch):
             #unset pids
             self.pub_theta_y_enable.publish(Bool(False))
-            self.pub_theta_y.publish(self.goal.effort.torque.y)
+            self.pub_theta_y_effort.publish(self.goal.effort.torque.y)
         if(goal.do_yaw):
             #unset pids
             self.pub_theta_z_enable.publish(Bool(False))
-            self.pub_theta_z.publish(self.goal.effort.torque.z)
+            self.pub_theta_z_effort.publish(self.goal.effort.torque.z)
 
         self.server.set_succeeded()
 
@@ -244,12 +250,12 @@ class LocalSuperimposerServer(SuperimposerServer):
         self.server = actionlib.SimpleActionServer('superimposer_local_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
 
 
-        self.pub_x = rospy.Publisher('surge', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('sway', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('heave', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_x_effort = rospy.Publisher('surge', Float64, queue_size=50)
+        self.pub_y_effort = rospy.Publisher('sway', Float64, queue_size=50)
+        self.pub_z_effort = rospy.Publisher('heave', Float64, queue_size=50)
+        self.pub_theta_x_effort = rospy.Publisher('roll', Float64, queue_size=50)
+        self.pub_theta_y_effort = rospy.Publisher('pitch', Float64, queue_size=50)
+        self.pub_theta_z_effort = rospy.Publisher('yaw', Float64, queue_size=50)
   
         self.server.start()
 
@@ -258,12 +264,12 @@ class GlobalSuperimposerServer(SuperimposerServer):
         super().__init__()
         self.server = actionlib.SimpleActionServer('superimposer_global_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
 
-        self.pub_x = rospy.Publisher('global_x', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('global_y', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('global_z', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_x_effort = rospy.Publisher('global_x', Float64, queue_size=50)
+        self.pub_y_effort = rospy.Publisher('global_y', Float64, queue_size=50)
+        self.pub_z_effort = rospy.Publisher('global_z', Float64, queue_size=50)
+        self.pub_theta_x_effort = rospy.Publisher('roll', Float64, queue_size=50)
+        self.pub_theta_y_effort = rospy.Publisher('pitch', Float64, queue_size=50)
+        self.pub_theta_z_effort = rospy.Publisher('yaw', Float64, queue_size=50)
 
         self.server.start()
     

@@ -62,7 +62,7 @@ class SuperimposerServer():
 
     def callback(self, goal):
         print(goal)
-
+        self.goal = goal
         if(goal.displace):
             self.goal = self.displace_goal(goal)
         else:
