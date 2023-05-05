@@ -62,7 +62,6 @@ class SuperimposerServer():
 
     def callback(self, goal):
         print(goal)
-        self.goal = goal
         if(goal.displace):
             self.goal = self.displace_goal(goal)
         else:
@@ -98,6 +97,7 @@ class SuperimposerServer():
         # self.server.publish_feedback(fb)
 
     def displace_goal(self,displace):
+        print("displacing goal")
         if(self.goal == None):
             return displace
 
