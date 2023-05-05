@@ -4,7 +4,7 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
-from auv_msgs.msg import StateAction, StateFeedback, StateResult
+from auv_msgs.msg import SuperimposerAction, SuperimposerFeedback, SuperimposerGoal, SuperimposerResult, StateAction, StateFeedback, StateResult
 from std_msgs.msg import Float64, Bool
 import time
 

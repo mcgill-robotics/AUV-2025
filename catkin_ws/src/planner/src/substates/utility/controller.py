@@ -9,6 +9,14 @@ from math import hypot
 
 ##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
 
+do_xyz = [Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)]
+do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
+do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
+do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
+
+do_displace = Bool(True)
+do_not_displace = Bool(False)
+
 class Controller:
 
     def __init__(self):
@@ -93,7 +101,7 @@ class Controller:
         #if callback = None make this a blocking call
         #self.preemptCurrentAction()
         x,y,z = ang
-        goal = self.get_state_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(False))
+        goal = self.get_state_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
@@ -105,7 +113,7 @@ class Controller:
         #self.preemptCurrentAction()
         #if callback = None make this a blocking call
         x,y,z = pos
-        goal = self.get_state_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(False))
+        goal = self.get_state_goal([x,y,z,0,0,0],do_xyz,do_not_displace)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
@@ -131,8 +139,8 @@ class Controller:
 
         #self.preemptCurrentAction()
         #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)],Bool(False))
-        goal_state = self.get_state_goal([0,0,z,0,0,0],[Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(True))
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],do_xy,do_not_displace)
+        goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
 
         self.StateServer.send_goal_and_wait(goal_state)
         self.GobalSuperimposerServer.send_goal(goal_super)
@@ -147,7 +155,7 @@ class Controller:
         #self.preemptCurrentAction()
         #if callback = None make this a blocking call
         x,y,z = delta
-        goal = self.get_state_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(True))
+        goal = self.get_state_goal([0,0,0,x,y,z],do_txtytz,do_displace)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
@@ -168,8 +176,8 @@ class Controller:
 
         #self.preemptCurrentAction()
         #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],[Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)],Bool(False))
-        goal_state = self.get_state_goal([0,0,z,0,0,0],[Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(True))
+        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],do_xy,do_not_displace)
+        goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
 
         self.StateServer.send_goal_and_wait(goal_state)
         self.LocalSuperimposerServer.send_goal(goal_super)
@@ -182,14 +190,14 @@ class Controller:
     def angularVelocity(self,vel):
         #self.preemptCurrentAction()
         x,y,z = vel
-        goal = self.get_superimposer_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(False))
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
         self.GobalSuperimposerServer.send_goal(goal)
 
     #set thruster velocity output
     def velocity(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(False))
+        goal = self.get_superimposer_goal([x,y,z,0,0,0],do_xyz,do_not_displace)
         self.GobalSuperimposerServer.send_goal(goal)
 
 
@@ -197,21 +205,21 @@ class Controller:
     def deltaAngularVelocity(self,vel):
         self.preemptCurrentAction()
         x,y,z = vel
-        goal = self.get_superimposer_goal([0,0,0,x,y,z],[Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)],Bool(True))
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_displace)
         self.GobalSuperimposerServer.send_goal(goal)
 
     #change delta thruster velocity (velocity to add on top of velocity required to maintain state) in world space
     def deltaVelocity(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(True))
+        goal = self.get_superimposer_goal([x,y,z,0,0,0],do_xyz,do_displace)
         self.GobalSuperimposerServer.send_goal(goal)
 
     #change delta thruster velocity (velocity to add on top of velocity required to maintain state) in local space (i.e. z is always heave)
     def deltaVelocityLocal(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(True))
+        goal = self.get_superimposer_goal([x,y,z,0,0,0],do_xyz,do_displace)
         self.LocalSuperimposerServer.send_goal(goal)
 
 
@@ -219,5 +227,5 @@ class Controller:
     def velocityLocal(self,vel):
         x,y,z = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,z,0,0,0],[Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)],Bool(False))
+        goal = self.get_superimposer_goal([x,y,z,0,0,0],do_xyz,do_not_displace)
         self.LocalSuperimposerServer.send_goal(goal)
