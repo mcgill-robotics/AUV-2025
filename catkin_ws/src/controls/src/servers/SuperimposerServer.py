@@ -17,10 +17,10 @@ class SuperimposerServer():
 
         self.goal = None
 
-        self.position = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
+        self.position = Point(0,0,0)
+        self.theta_x = 0.0
+        self.theta_y = 0.0
+        self.theta_z = 0.0
 
         self.sub = rospy.Subscriber("pose",Pose,self.set_position)
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
@@ -33,6 +33,12 @@ class SuperimposerServer():
         self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
         self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
         self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+
+
+        self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
+        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
 
         self.pub_x = None
         self.pub_y = None
@@ -55,6 +61,7 @@ class SuperimposerServer():
 
 
     def callback(self, goal):
+        print(goal)
 
         if(goal.displace):
             self.goal = self.displace_goal(goal)
@@ -85,11 +92,6 @@ class SuperimposerServer():
             self.pub_theta_z_enable.publish(Bool(False))
             self.pub_theta_z.publish(self.goal.effort.torque.z)
 
-
-        rate = rospy.Rate(10)
-        while True:
-            rate.sleep()
-
         self.server.set_succeeded()
         # fb = SuperimposerFeedback()
         # fb.moving = True
@@ -112,24 +114,30 @@ class SuperimposerServer():
         print("canceled")
         if self.goal.do_surge: self.pub_x.publish(Float64(0))
         if self.goal.do_sway: self.pub_y.publish(Float64(0))
+
+        self.pub_z_pid.publish(self.position.z)
+        self.pub_theta_x_pid.publish(self.theta_x)
+        self.pub_theta_y_pid.publish(self.theta_y)
+        self.pub_theta_z_pid.publish(self.theta_z)
         # if self.goal.do_heave: self.pub_z.publish(Float64(10))
         # if self.goal.do_roll: self.pub_theta_x.publish(Float64(10))
         # if self.goal.do_pitch: self.pub_theta_y.publish(Float64(10))
         # if self.goal.do_yaw: self.pub_theta_z.publish(Float64(10))
         # 
         # print("hello")    
-        server = actionlib.SimpleActionClient('state_server', StateAction)
-        rospy.logdebug("waiting for server")
-        server.wait_for_server()
-        goal = StateGoal()
-        goal.position = self.position
-        goal.rotation.x = self.theta_x
-        goal.rotation.y = self.theta_y
-        goal.rotation.z = self.theta_z
-        goal.displace = Bool(False)
-        goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [Bool(True)]*6
-        server.send_goal_and_wait(goal)
-        self.server.set_succeeded()
+        # server = actionlib.SimpleActionClient('state_server', StateAction)
+        # rospy.logdebug("waiting for server")
+        # server.wait_for_server()
+        # goal = StateGoal()
+        # goal.position = self.position
+        # goal.rotation.x = self.theta_x
+        # goal.rotation.y = self.theta_y
+        # goal.rotation.z = self.theta_z
+        # goal.displace = Bool(False)
+        # goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = [Bool(True)]*6
+        # print(goal)
+        # server.send_goal_and_wait(goal)
+        # self.server.set_succeeded()
         
 
         

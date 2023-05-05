@@ -9,3 +9,7 @@ if __name__ == "__main__":
     print(controls)
     print(controls.get_superimposer_goal([1,1,0,0,0,0],[Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)],Bool(False)))
     controls.velocity([1,1,1])
+    rospy.sleep(3)
+    # controls.preemptCurrentAction()
+    rospy.sleep(3)
+    controls.velocity([0,0,0])
