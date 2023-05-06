@@ -21,9 +21,9 @@ class StateServer():
         #self.pub_x = rospy.Publisher('', Float64, queue_size=50)
         #self.pub_y = rospy.Publisher('', Float64, queue_size=50)
         self.pub_z = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_x = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
+        self.pub_theta_y = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
+        self.pub_theta_z = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
         
         self.server.start()
 
@@ -134,12 +134,9 @@ class StateServer():
                 if(time.time() - start > interval):
                     settled = True
                     break
-                rospy.sleep(0.01)
-
-    def check_status(self,position,rotation):
-        if(self.position == None or self.theta_x == None or self.theta_y == None or self.theta_z == None):
-            return False
-
+	<node name="theta_setpoint_republish" pkg="controls" type="theta_setpoint_republish.py" respawn="true" output="screen">
+    </node>
+</launch>
         tolerance_position = 0.5
         tolerance_orientation = 1
 

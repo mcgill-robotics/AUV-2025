@@ -22,11 +22,16 @@ class StateTheta:
     def getThetaZ(self): return self.z
 
 def republishSetpoint(msg, args):
-    state, pub = args
+    pub, state = args
     #get the target angle of the setpoint
     target_angle = float(msg.data)
     #get current angle of AUV from the corresponding state function
     current_angle = state()
+    if current_angle == None:
+        print("Cannot re-publish theta setpoint since state is still None.")
+        pub.publish(Float64(target_angle))
+        return
+
     #increase/decrease the setpoint angle by 360 until it is within 180 degrees of the AUV's current angle
     while abs(target_angle-current_angle) > 180:
         if target_angle > current_angle: target_angle -= 360
@@ -41,9 +46,9 @@ def republishSetpoint(msg, args):
 if __name__ == '__main__':
     rospy.init_node('theta_setpoint_republish')
     state_theta = StateTheta()
-    x_pub = rospy.Publisher('theta_x_setpoint_adjusted', Float64)
-    y_pub = rospy.Publisher('theta_y_setpoint_adjusted', Float64)
-    z_pub = rospy.Publisher('theta_z_setpoint_adjusted', Float64)
+    x_pub = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=1)
+    y_pub = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=1)
+    z_pub = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=1)
     #pass the publisher and correct StateTheta callable get() function to the callback
     rospy.Subscriber('theta_x_setpoint', Float64, republishSetpoint, (x_pub, state_theta.getThetaX))
     rospy.Subscriber('theta_y_setpoint', Float64, republishSetpoint, (y_pub, state_theta.getThetaY))
