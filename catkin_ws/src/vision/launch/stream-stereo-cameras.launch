@@ -1,0 +1,17 @@
+<launch>
+	<node name="stereo_cams" pkg="vision" type="stream_cameras.py" respawn="true"  output="screen">
+		<param name="sensor_id" value="0" />
+		<param name="inputImgWidth" value="2028" />
+		<param name="inputImgHeight" value="1080" />
+		<param name="outputImgWidth" value="832" />
+		<param name="outputImgHeight" value="216" />
+		<param name="framerate" value="50" />
+		<param name="stereo" value="true" />
+		<param name="outputTopic1" value="/right" />
+		<param name="outputTopic2" value="/left" />
+	</node>
+	
+	<node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" ns="vision/stereo"/>
+	<node name="depth_map" pkg="vision" type="depth_map.py" respawn="true"  output="screen"/>
+	
+</launch>

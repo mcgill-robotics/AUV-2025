@@ -205,14 +205,14 @@ if __name__ == '__main__':
         ]
     #one publisher per camera
     visualisation_pubs = [
-        rospy.Publisher('vision/down_visual', Image, queue_size=1)
+        rospy.Publisher('vision/down_cam/detection', Image, queue_size=1)
         ]
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0, queue_size=1)
+        rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0)
         ]
  	
-    cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
+    cropped_img_pub = rospy.Publisher('vision/down_cam/cropped', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
