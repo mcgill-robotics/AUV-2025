@@ -1,4 +1,0 @@
-<launch>
-	<node name="state_controller_action_server" pkg="controls" type="state_controller_action_server.py" respawn="false" output="screen">
-    </node>
-</launch>

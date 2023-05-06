@@ -1,3 +1,0 @@
-<launch>
-	<node name="test_02_surge" pkg="planner" type="test_02_surge.py" respawn="false" output="screen"/>
-</launch>

@@ -1,7 +1,7 @@
 import rospy
 import bitstring
 import numpy as np
-from teledyne_navigator.msg import Ensemble
+from auv_msgs.msg import Ensemble
 
 
 def validate_checksum(bytestring, expected_checksum):

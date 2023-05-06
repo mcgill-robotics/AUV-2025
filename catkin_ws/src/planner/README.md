@@ -5,7 +5,7 @@
 The planner package is responsible for making the high-level decision regarding what the AUV 
 will do depending on its current 'operational state'
 
-The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
+The planner package has been tested under ROS Noetic for Ubuntu 20.04.
 
 ### License
 
@@ -15,14 +15,9 @@ The source code is released under a GPLv3 license.
 
 ### Actions
 
-This package has a Waypoint action client (as specified in auv_msgs).
-
 | Action part | Message | description |
 | ------ | ------- | ---------- |
-| target | `geometry_msgs/Pose` | Pose (global ref. frame) you want the AUV to assume |
-| feedback | `geometry_msgs/Pose` | Current pose of AUV (global ref. frame)|
-| result | `geometry_msgs/Pose` | The final resulting pose of the AUV following the action - should be within permissible range of target |
-
+| todo | `todo` | todo |
 
 ## Installation
 
@@ -47,81 +42,22 @@ After build is complete, make the packages visible to ROS
 
 ### Running
 
-The planner package has several 'plans' depending on the context in which the AUV is run.
+The planner package has several 'missions' depending on the context in which the AUV is run.
 
 #### To execute the RoboSub2022 mission (under development):
 
 	roslaunch planner mission.launch
   
-This will block waiting on a Waypoint action server to publish the first target to.
-The most convenient way to get around this is to also launch the controls package which
-provides the Waypoint server.
+This will execute any missions which are called in src/mission.py
 
-As of now, the mission comprises of submerging the AUV to a depth of 4.0 m.
+To add/remove missions to be executed, uncomment/comment out lines calling the mission state machines.
+Several missions can be executed in order by calling them in the desired order.
+A mission will only start when the previous one is done.
+
+As of now, the missions comprise of testing the rotation of the AUV at 2m depth, and grid search then rotating according to any lane marker found.
 	
 ### Usage
 
-Stubbing/publishing a feedback message (geometry_msgs/Pose) from the action server
-specifying the current state of the AUV:
+Add more missions by imitating the other missions already implemented (testRotation, navigateLaneMarker).
 
-	rostopic pub -1 /waypoint_server/feedback auv_msgs/WaypointActionFeedback \
-	"header:
-	  seq: 0
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  frame_id: ''
-	status:
-	  goal_id:
-	    stamp:
-	      secs: 0
-	      nsecs: 0
-	    id: ''
-	  status: 1
-	  text: 'still goin'
-	feedback:
-	  curr_state: 
-	    position:
-	      x: 0.0
-	      y: 0.0
-	      z: -1.0
-	    orientation:
-	      x: 0.0
-	      y: 0.0
-	      z: 0.0
-	      w: 1.0
-	" 
- 
-Stubbing/publishing a result message (geometry_msgs/Pose) from the action server
-specifying the final state of the AUV (completion of action):
-
-	rostopic pub -1 /waypoint_server/result auv_msgs/WaypointActionResult \
-	"header:
-	  seq: 0
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  frame_id: ''
-	status:
-	  goal_id:
-	    stamp:
-	      secs: 0
-	      nsecs: 0
-	    id: ''
-	  status: 1
-	  text: 'success'
-	result:
-	  result_state: 
-	    position:
-	      x: 0.0
-	      y: 0.0
-	      z: -3.97
-	    orientation:
-	      x: 0.0
-	      y: 0.0
-	      z: 0.0
-	      w: 1.0
-	" 
-  
- Look for debug messages indicating current state of operation. After mission completion, the 
- mission node should exit.
+Ensure that the endMission() function is called after the mission completes.

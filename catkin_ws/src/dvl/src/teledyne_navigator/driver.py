@@ -3,7 +3,7 @@ import rospy
 import select
 import serial
 import bitstring
-from serializer import deserialize
+from teledyne_navigator.serializer import deserialize
 
 
 class TeledyneNavigator(object):
@@ -57,7 +57,7 @@ class TeledyneNavigator(object):
             message (str): Message.
         """
         rospy.logdebug("Writing: %s", message)
-        self._conn.write(message)
+        self._conn.write(message.encode())
 
     def read(self, size=1):
         """Reads serial data.
@@ -98,12 +98,12 @@ class TeledyneNavigator(object):
                 packet.append("0x{:02X}".format(ord(char)))
 
             return deserialize(packet, self._frame_id)
-        except select.error as (code, msg):
+        except OSError as err:
             # Set SIGINT as KeyboardInterrupt correctly, because pyserial has
             # problems.
-            if code == errno.EINTR:
-                raise KeyboardInterrupt()
-
+            # if code == errno.EINTR:
+            #     raise KeyboardInterrupt()
+            print(error)
             # Otherwise, reraise.
             raise
 

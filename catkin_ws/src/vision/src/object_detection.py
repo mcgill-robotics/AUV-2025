@@ -181,9 +181,9 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(img)
 
 if __name__ == '__main__':
-    detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
+    detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
-    min_prediction_confidence = 0.6
+    min_prediction_confidence = 0.4
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     #get and start models
