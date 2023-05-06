@@ -6,6 +6,7 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import Float64, Bool
 from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
 from math import hypot
+from actionlib_msgs.msg import GoalStatus
 
 ##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
 
@@ -93,7 +94,8 @@ class Controller:
     #preempt the current action
     def preemptCurrentAction(self):
         for server in self.servers:
-            server.cancel_goal()
+            if server.get_state() in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
+                server.cancel_goal()
         pass
 
     #rotate to this rotation
@@ -143,9 +145,10 @@ class Controller:
         goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
 
         self.StateServer.send_goal_and_wait(goal_state)
+        
         self.GobalSuperimposerServer.send_goal(goal_super)
         rospy.sleep(time)
-        self.preemptCurrentAction()
+        self.GobalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
 

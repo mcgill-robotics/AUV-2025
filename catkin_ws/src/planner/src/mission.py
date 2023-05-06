@@ -163,14 +163,15 @@ def testControllerMission(testsToPerform=[0,1,2,3,4,5,6,7,8]):
 
 
 if __name__ == '__main__':
-    rospy.init_node('mission_planner')
+    rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endMission)
 
     control = Controller()
 
     # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
     
-    testControllerMission(testsToPerform=[0,1,2,3,4,5,6,7,8])
+    testControllerMission(testsToPerform=[3,4,5,6,7,8])
+    print("done with mission")
         # CONTROLLER TEST DESCRIPTIONS:
         # 0: submerge and cancel ascension: AUV should stay underwater when the action was preempted
         # 1: move by one meter and back
