@@ -29,4 +29,3 @@ pip3 install numpy-quaternion
 pip3 install ultralytics
 #DVL dependencies
 rosdep update
-rosdep install teledyne_navigator
