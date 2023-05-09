@@ -16,7 +16,14 @@ sudo apt-get install -y ros-noetic-pid
 sudo apt-get install -y ros-noetic-joy
 sudo apt-get install -y ros-noetic-joy-teleop
 sudo apt-get install -y ros-noetic-sbg-driver
-sudo apt-get install -y ros-noetic-usb-cam
+sudo apt-get install -y ros-noetic-cv-bridge
+sudo apt-get install -y ros-noetic-image-view
+sudo apt-get install -y ros-noetic-rqt-gui
+sudo apt-get install -y ros-noetic-rqt-gui-image-view
+#python dependencies
 sudo apt install -y python3-pip
 pip3 install numpy-quaternion
 pip3 install ultralytics
+#DVL dependencies
+rosdep update
+rosdep install teledyne_navigator
