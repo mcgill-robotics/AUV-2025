@@ -1,4 +1,4 @@
 <launch>
-    <node name="render" pkg="vision" type="visualization/render.py" respawn="false" output="screen"/>
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(vision)/visualization/config.rviz" />
+    <node name="render_visualization" pkg="vision" type="render_visualization.py" respawn="false" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vision)/config/visualization_config.rviz" />
 </launch>
