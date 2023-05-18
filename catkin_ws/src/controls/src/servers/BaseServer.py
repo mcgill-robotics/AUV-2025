@@ -20,9 +20,9 @@ class BaseServer():
 
     def establish_pid_publishers(self):
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
+        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
+        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
         
 
     def establish_pid_enable_publishers(self):
@@ -96,7 +96,7 @@ class BaseServer():
         while not settled and not self.cancelled:
             #print("hi")
             start = time.time()
-            while not self.canlled and self.check_status(position,rotation):
+            while not self.cancelled and self.check_status(position,rotation):
                 if(time.time() - start > interval):
                     settled = True
                     break
@@ -124,7 +124,7 @@ class BaseServer():
         #self.pub_x.Publish(Float64(position.x))
         #self.pub_y.Publish(Float64(position.y))
         if(self.goal.do_z):
-            self.pub_z_pid.publish(Float64(position.y))
+            self.pub_z_pid.publish(Float64(position.z))
         if(self.goal.do_theta_x):
             self.pub_theta_x_pid.publish(Float64(rotation.x))
         if(self.goal.do_theta_y):
@@ -148,7 +148,7 @@ class StateServer(BaseServer):
         #print(goal.pose)
         self.goal = goal
         self.enable_pids(goal)
-        if(goal.displace):
+        if(goal.displace.data):
             goal_position, goal_rotation = self.dispalce_goal(goal)
         else:
             goal_position, goal_rotation = goal.position, goal.rotation
@@ -159,7 +159,8 @@ class StateServer(BaseServer):
         self.wait_for_settled(goal_position,goal_rotation)
 
         # rospy.loginfo("Succeeded")
-        self.server.set_succeeded()
+        if(not self.cancelled):
+            self.server.set_succeeded()
     
     def dispalce_goal(self, goal):
         goal_x = goal.position.x + self.position.x
@@ -188,6 +189,7 @@ class SuperimposerServer(BaseServer):
         super().__init__()
         self.establish_pid_enable_publishers()
         self.establish_pid_publishers()
+        self.establish_state_subscribers()
 
         self.pub_x_effort = None
         self.pub_y_effort = None

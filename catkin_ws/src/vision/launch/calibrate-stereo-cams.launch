@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find vision)/launch/stream-stereo-cameras.launch" />
+    <node name="camera_calibration" pkg="camera_calibration" type="cameracalibrator.py" respawn="true"  output="screen" args = "--size 9x6 --square 0.0245 right:=/vision/stereo/right/image_raw left:=/vision/stereo/left/image_raw right_camera:=/vision/stereo/right left_camera:=/vision/stereo/left" />
+</launch>

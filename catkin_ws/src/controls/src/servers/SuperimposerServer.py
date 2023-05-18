@@ -36,9 +36,9 @@ class SuperimposerServer():
 
 
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint_adjusted', Float64, queue_size=50)
-        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint_adjusted', Float64, queue_size=50)
+        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
+        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
+        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
 
         self.pub_x = None
         self.pub_y = None

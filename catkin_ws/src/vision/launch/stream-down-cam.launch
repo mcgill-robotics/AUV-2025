@@ -1,0 +1,14 @@
+<launch>
+	<node name="down_cam" pkg="vision" type="stream_cameras.py" respawn="true"  output="screen">
+		<param name="sensor_id" value="0" />
+		<param name="inputImgWidth" value="1920" />
+		<param name="inputImgHeight" value="1080" />
+		<param name="outputImgWidth" value="480" />
+		<param name="outputImgHeight" value="270" />
+		<param name="framerate" value="60" />
+		<param name="stereo" value="false" />
+		<param name="outputTopic" value="/down_cam" />
+		<param name="distortion_model" value="equidistant" /> <!-- equidistant is the distortion model for fisheye lenses -->
+	</node>
+	<node name="image_proc" pkg="image_proc" type="image_proc" ns="vision/down_cam"/>
+</launch>

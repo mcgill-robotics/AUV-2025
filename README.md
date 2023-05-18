@@ -53,12 +53,16 @@ time (**recommended**):
 
 ## Building ROS Packages
 
-Before building packages, make sure that the following additional ROS packages are installed:
+Before building packages, make sure that the following additional ROS/python packages are installed:
 
 	sudo apt-get install ros-noetic-rosserial-arduino
 	sudo apt-get install ros-noetic-pid
 	sudo apt-get install ros-noetic-joy
 	sudo apt-get install ros-noetic-joy-teleop
+	sudo apt-get install ros-noetic-sbg-driver
+	sudo apt-get install ros-noetic-usb-cam
+	pip install numpy-quaternion
+	pip install ultralytics
 
 *To build/launch/test an individual package, see the README.md in the respective package.*
 
