@@ -2,7 +2,7 @@
 
 *This project is currently under development*
 
-Ahoy Mate! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics.
+Ahoy! This project contains software intended to run on a custom built AUV to compete at RoboSub2023 on behalf of McGill Robotics.
 
 This project is maintained by the McGill Robotics Club and was developed by its members - students of McGill University. 
 
