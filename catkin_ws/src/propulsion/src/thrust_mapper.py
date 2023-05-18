@@ -19,8 +19,9 @@ D_1 = 0.895 #m
 D_2 = 0.778 #m
 
 # forces produced by T200 thruster at 14V (N)
-MAX_FWD_FORCE = 4.52*9.81*0.5 # Limit to 15% while testing
-MAX_BKWD_FORCE = -3.52*9.81*0.5 # Limit to 15% while testing
+THRUST_LIMIT = 1.0  # Limit thruster speed while dry-testing
+MAX_FWD_FORCE = 4.52*9.81*THRUST_LIMIT
+MAX_BKWD_FORCE = -3.52*9.81*THRUST_LIMIT
 
 #Matrix representation of the system of equations representing the thrust to wrench conversion
 #Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
