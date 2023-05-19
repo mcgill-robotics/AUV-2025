@@ -1,11 +1,6 @@
-import rospy
-import smach
+#!/usr/bin/env python3
 
-from substates.breadth_first_search import *
-from substates.grid_search import *
-from substates.linear_search import *
-from substates.navigate_lane_marker import *
-from substates.test_submerged_rotations import *
+import rospy
 from substates.utility.controller import Controller
 
 
@@ -57,10 +52,12 @@ def qualiMission():
 
 
 if __name__ == '__main__':
-    rospy.init_node('mission_planner',log_level=rospy.DEBUG)
+    rospy.init_node('mission_planner', log_level=rospy.DEBUG)
     rospy.on_shutdown(endMission)
 
     control = Controller()
+
+    qualiMission()
 
     print("Mission is over.")
     # DESCRIPTION OF QUALI TASK (DETERMINED IN THE 2023 HANDBOOK):
