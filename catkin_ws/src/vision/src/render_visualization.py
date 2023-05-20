@@ -20,14 +20,14 @@ def setup():
     auv_marker.header.frame_id = "map"  # Set the frame ID according to your setup
     auv_marker.ns = "visualization"
     auv_marker.id = marker_id
-    auv_marker.type = Marker.CUBE
+    auv_marker.type = Marker.SPHERE
     auv_marker.action = Marker.ADD
     # Set the mesh file path
     # marker.mesh_resource = "package://vision/src/visualization/auv.stl"
     # Set the position, orientation, and scale
     auv_marker.pose.position = Point(0, 0, 0)
     auv_marker.pose.orientation = Quaternion(0, 0, 0, 1)
-    auv_marker.scale.x = 1.0
+    auv_marker.scale.x = 0.9
     auv_marker.scale.y = 0.3
     auv_marker.scale.z = 0.3
     # Set the color (optional)
@@ -48,14 +48,14 @@ def objectDetectCb(msg):
     #spawn blue spheres object detections
     for i in range(len(msg.label)):
         #NOTE: if performance becomes an issue, publish a marker array with all markers at once
-        addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.75, detection_pub.publish, (0,0,1))
+        addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.075, detection_pub.publish, (0,1,0))
 
 def objectMapCb(msg):
     global object_map_ids
     #spawn red spheres and text (for label, object-specific info) on objects in map
     for map_marker in object_map_ids:
         map_marker.action = Marker.DELETE
-        map_pub.publish(map_marker)    
+        map_pub.publish(map_marker)
     object_map_ids = []
     for i in range(len(msg.label)):
         addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
@@ -80,9 +80,33 @@ def addDetectionMarker(x,y,z,scale,pub,color):
     detection_marker.color.r = color[0]
     detection_marker.color.g = color[1]
     detection_marker.color.b = color[2]
-    detection_marker.color.a = 1.0
+    detection_marker.color.a = 0.9
     # Publish the marker
     pub(detection_marker)
+
+def addCustomObject(marker_type,pos,rot,scale,pub,color):
+    global marker_id
+    # Create a marker message
+    custom_marker = Marker()
+    custom_marker.header.frame_id = "map"  # Set the frame ID according to your setup
+    custom_marker.ns = "visualization"
+    marker_id += 1
+    custom_marker.id = marker_id
+    custom_marker.type = marker_type
+    custom_marker.action = Marker.ADD
+    # Set the position, orientation, and scale
+    custom_marker.pose.position = Point(pos[0],pos[1],pos[2])
+    custom_marker.pose.orientation = Quaternion(*tf.transformations.quaternion_from_euler(rot[0],rot[1],rot[2]))
+    custom_marker.scale.x = scale[0]
+    custom_marker.scale.y = scale[1]
+    custom_marker.scale.z = scale[2]
+    # Set the color (optional)
+    custom_marker.color.r = color[0]
+    custom_marker.color.g = color[1]
+    custom_marker.color.b = color[2]
+    custom_marker.color.a = color[3]
+    # Publish the marker
+    pub(custom_marker)
 
 def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     global marker_id
@@ -98,11 +122,11 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     heading_marker.type = Marker.ARROW
     heading_marker.action = Marker.ADD
     x_offset, y_offset, z_offset = [vec_x,vec_y,vec_z] / np.linalg.norm([vec_x,vec_y,vec_z])
-    heading_marker.points = [Point(x,y,z), Point(x+0.75*x_offset,y+0.75*y_offset,z+0.75*z_offset)]
+    heading_marker.points = [Point(x,y,z), Point(x+0.55*x_offset,y+0.55*y_offset,z+0.55*z_offset)]
     heading_marker.pose.orientation = Quaternion(0, 0, 0, 1)
-    heading_marker.scale.x = 0.05
-    heading_marker.scale.y = 0.05
-    heading_marker.scale.z = 0.05
+    heading_marker.scale.x = 0.035
+    heading_marker.scale.y = 0.06
+    heading_marker.scale.z = 0.035
     # Set the color (optional)
     heading_marker.color.r = color[0]
     heading_marker.color.g = color[1]
@@ -113,18 +137,15 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
 
 def addMapMarkers(label,x,y,z,theta_z,extra_field):
     global marker_id
-    global object_map_ids
     addDetectionMarker(x, y, z, 0.1, publishToMap, (1,0,0))
-    object_map_ids.append(marker_id)
     if label == 0: #LANE MARKER
         heading1 = eulerAngleToUnitVector(0,90,theta_z)
         heading2 = eulerAngleToUnitVector(0,90,extra_field)
-        addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,[0,1,0])
-        addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,[0,1,0])
+        addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,[1,0,0])
+        addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,[1,0,0])
         addLabel(x,y,z,"Lane Marker",publishToMap)
     elif label == 1: #QUALI GATE
-        heading = eulerAngleToUnitVector(0,90,theta_z)
-        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Quali Gate",publishToMap)
         marker_id += 1
     elif label == 2: #QUALI POLE
@@ -132,13 +153,11 @@ def addMapMarkers(label,x,y,z,theta_z,extra_field):
         marker_id += 1
         marker_id += 1
     elif label == 3: #GATE TASK
-        heading = eulerAngleToUnitVector(0,90,theta_z)
-        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
         marker_id += 1
     elif label == 4: #BUOY TASK
-        heading = eulerAngleToUnitVector(0,90,theta_z)
-        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
         marker_id += 1
 
@@ -154,15 +173,15 @@ def addLabel(x,y,z,text,pub):
     text_marker.id = marker_id
 
     # Set the position of the text marker
-    text_marker.pose.position = Point(x,y,z)
+    text_marker.pose.position = Point(x,y,z+0.5)
 
     # Set the orientation of the text marker (identity quaternion)
     text_marker.pose.orientation.w = 1.0
 
     # Set the scale of the text marker (size in x, y, z)
-    text_marker.scale.x = 0.5  # Modify with the desired scale of the text
-    text_marker.scale.y = 0.5
-    text_marker.scale.z = 0.5
+    text_marker.scale.x = 0.25  # Modify with the desired scale of the text
+    text_marker.scale.y = 0.25
+    text_marker.scale.z = 0.25
 
     # Set the color of the text marker (RGBA)
     text_marker.color.r = 1.0
@@ -179,6 +198,7 @@ def addLabel(x,y,z,text,pub):
 def transformAuvToWorldVector(vector):
     # Convert Euler angles to a rotation matrix
     euler_angles = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    euler_angles = [e * 180/math.pi for e in euler_angles]
     rotation = Rotation.from_euler('xyz', euler_angles, degrees=True)
     rotation_matrix = rotation.as_matrix()
     # Transform the direction vector to global coordinates
@@ -209,21 +229,22 @@ def eulerAngleToUnitVector(x,y,z):
 def updateAUVThetaX(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.data)*180/math.pi, pitch, yaw))
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.data)*math.pi/180, pitch, yaw))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
 def updateAUVThetaY(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, float(msg.data)*180/math.pi, yaw))
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, float(msg.data)*math.pi/180, yaw))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
 def updateAUVThetaZ(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*180/math.pi))
+    print(roll,pitch,yaw)
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*math.pi/180))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
@@ -255,11 +276,15 @@ def updateReferenceFrames():
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,1,0,auv_pub.publish,(0,0,0),override_id=5)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,0,1,auv_pub.publish,(0.5,0.5,0.5),override_id=6)
 
+def dvlDataCb(msg):
+    pass #####TODO
+
+
 rospy.init_node('render_visualization')
 
-auv_pub = rospy.Publisher('visualization/auv', Marker, queue_size=10)
-detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=10)
-map_pub = rospy.Publisher('visualization/map', Marker, queue_size=10)
+auv_pub = rospy.Publisher('visualization/auv', Marker, queue_size=999)
+detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=999)
+map_pub = rospy.Publisher('visualization/map', Marker, queue_size=999)
 
 print("Waiting 10 seconds so RViz can launch...")
 rospy.sleep(10)

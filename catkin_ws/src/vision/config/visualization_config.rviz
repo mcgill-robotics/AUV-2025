@@ -3,8 +3,7 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Map1
+      Expanded: ~
       Splitter Ratio: 0.5029411911964417
     Tree Height: 549
   - Class: rviz/Selection
@@ -63,7 +62,7 @@ Visualization Manager:
       Marker Topic: /visualization/detection
       Name: Detections
       Namespaces:
-        {}
+        visualization: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -76,7 +75,7 @@ Visualization Manager:
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 114; 159; 207
+    Background Color: 45; 118; 203
     Default Light: true
     Fixed Frame: map
     Frame Rate: 30
@@ -102,7 +101,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10.086033821105957
+      Distance: 6.873349189758301
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -110,17 +109,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 2.0345382690429688
-        Y: 0.016055699437856674
-        Z: -2.271582841873169
+        X: 0.0005891297478228807
+        Y: 0.10738182067871094
+        Z: 0.04050339013338089
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7353981137275696
+      Pitch: 0.4747987389564514
       Target Frame: <Fixed Frame>
-      Yaw: 3.129927635192871
+      Yaw: 3.153081178665161
     Saved: ~
 Window Geometry:
   Displays:
