@@ -5,6 +5,12 @@ import rospy
 from tf2_ros import TransformBroadcaster 
 from geometry_msgs.msg import TransformStamped, Pose
 
+'''
+Broadcasts the current coordinate transformation of the auv with respect to the world frame.
+Listens to the pose topic to get the transformation, then broadcast it as a tf2 transformation.
+The world frame is north east up.
+'''
+
 def state_cb(pose):
     br = TransformBroadcaster()
 

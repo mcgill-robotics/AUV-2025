@@ -61,6 +61,33 @@ class State_Aggregator:
         self.x = data.north_displacement
         self.y = data.east_displacement
 
+    def imu_cb(self, imu_msg):
+        # quaternion in global (imu) frame
+        q_imu = imu_msg.quaternion
+        q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
+
+        # quaternion in world frame
+        self.q_auv= self.q_world.inverse()*q_imu
+        self.update_euler()
+
+
+    def depth_sensor_cb(self, depth_msg):
+        # TODO - have depth microcontroller publish ready value
+        self.z = depth_msg.data
+
+    def imu_reset_cb(self, _):
+        # copy of q_auv in (old) world frame
+        q_auv = self.q_auv
+        q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
+
+        # new world quaternion is q_auv in global (imu) frame
+        self.q_world = self.q_world.inverse()*q_auv
+
+        # q_auv is still relative to old q_world, so is recalculated
+        # by definition, it is aligned with the frame of q_world 
+        self.q_auv = np.quaternion(1, 0, 0, 0) 
+        self.euler = np.array([0.0, 0.0, 0.0])
+
     def update_euler(self):
         # calculate euler angles
         # *note* the tf.transformations module is used instead of
@@ -94,21 +121,6 @@ class State_Aggregator:
                 self.euler[i] = angles[i]
 
 
-    def imu_cb(self, imu_msg):
-        # quaternion in global (imu) frame
-        q_imu = imu_msg.quaternion
-        q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
-
-        # quaternion in world frame
-        self.q_auv= self.q_world.inverse()*q_imu
-        self.update_euler()
-
-
-    def depth_sensor_cb(self, depth_msg):
-        # TODO - have depth microcontroller publish ready value
-        self.z = depth_msg.data
-
-
     def update_state(self, _):
         # publish pose
         position = Point(self.x, self.y, self.z)
@@ -124,19 +136,6 @@ class State_Aggregator:
         self.pub_theta_y.publish(self.euler[1])
         self.pub_theta_z.publish(self.euler[2])
 
-
-    def imu_reset_cb(self, _):
-        # copy of q_auv in (old) world frame
-        q_auv = self.q_auv
-        q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
-
-        # new world quaternion is q_auv in global (imu) frame
-        self.q_world = self.q_world.inverse()*q_auv
-
-        # q_auv is still relative to old q_world, so is recalculated
-        # by definition, it is aligned with the frame of q_world 
-        self.q_auv = np.quaternion(1, 0, 0, 0) 
-        self.euler = np.array([0.0, 0.0, 0.0])
 
 
 if __name__ == '__main__':
