@@ -6,7 +6,7 @@ import smach
 class TestSubmergedRotations(smach.State):
     def __init__(self, hold_time, control=None):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("target_class argument must be a list of integers")
+        if control == None: raise ValueError("control argument is None")
         self.control = control
         self.hold_time = hold_time
 
