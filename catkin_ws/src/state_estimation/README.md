@@ -33,3 +33,11 @@ In the state estimation package, we define the global frame as North East down, 
 | `sbg/ekf_quat` | `SbgEkfQuat` | IMU measurement from the sbg imu|
 | `dvl_data` | `auv_msgs/DvlData` | Measurements from the TeleDyne Workhorse DVL|
 | `imu_reset` | `std_msgs/Empty` | Command to zero the imu readings|
+
+### Launch files
+
+| File | Description|
+| ------ | ------ |
+|  `state_estimation.launch` | Meta launch file that launches sensor packages, state_aggregator, and transform_broadcast|
+| `state_aggregator.launch` | Launches ros node for state_aggregator.py|
+| `transform_broadcaster.launch` | Launches ros node for transform_broadcaster.py|
