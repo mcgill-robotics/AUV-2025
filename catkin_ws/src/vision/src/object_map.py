@@ -14,15 +14,15 @@ def objectDetectCb(msg):
 #add an object detection frame to the object map
 def addObservation(msg):
     for i in range(len(msg.label)):
-        if msg.obj_x[i] == None or msg.obj_y[i] == None or msg.obj_z[i] == None: continue
+        if msg.x[i] == None or msg.y[i] == None or msg.z[i] == None: continue
         #find which object this detection pertains to
-        obj_i = findObject([msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i]])
+        obj_i = findObject([msg.label[i], msg.x[i], msg.y[i], msg.z[i]])
         #if it does not pertain to any preexisting object add it to the map
         if obj_i == -1:
-            object_map.append([msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i], msg.obj_theta_z[i], msg.extra_field[i], msg.detection_confidence[i], msg.pose_confidence[i], 1])
+            object_map.append([msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i], msg.detection_confidence[i], msg.pose_confidence[i], 1])
         else:
             #otherwise update the object map with the new observation
-            updateMap(obj_i, [msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i], msg.obj_theta_z[i], msg.extra_field[i], msg.detection_confidence[i], msg.pose_confidence[i]])
+            updateMap(obj_i, [msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i], msg.detection_confidence[i], msg.pose_confidence[i]])
 
 #given an observation, find the object to which it pertains to (object within a certain radius, priority to objects of same class)
 def findObject(observation):

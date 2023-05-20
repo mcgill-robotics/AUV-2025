@@ -7,7 +7,11 @@ import tf
 from std_msgs.msg import Float64
 from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
+from std_msgs.msg import Empty
+import time
 import numpy as np
+import math
+from scipy.spatial.transform import Rotation
 
 def setup():
     global auv_marker
@@ -23,9 +27,9 @@ def setup():
     # Set the position, orientation, and scale
     auv_marker.pose.position = Point(0, 0, 0)
     auv_marker.pose.orientation = Quaternion(0, 0, 0, 1)
-    auv_marker.scale.x = 2.0
-    auv_marker.scale.y = 1.0
-    auv_marker.scale.z = 1.0
+    auv_marker.scale.x = 1.0
+    auv_marker.scale.y = 0.3
+    auv_marker.scale.z = 0.3
     # Set the color (optional)
     auv_marker.color.r = 1.0
     auv_marker.color.g = 1.0
@@ -33,35 +37,28 @@ def setup():
     auv_marker.color.a = 0.8
     # Publish the marker
     auv_pub.publish(auv_marker)
-    addHeading(0,0,0,1,0,0,auv_pub,(1,0,0))# 1 - AUV x direction
-    addHeading(0,0,0,0,1,0,auv_pub,(0,1,0))# 2 - AUV y direction
-    addHeading(0,0,0,0,0,1,auv_pub,(0,0,1))# 3 - AUV z direction
-    addHeading(0,0,0,1,0,0,auv_pub,(1,1,1))# 4 - World x direction
-    addHeading(0,0,0,0,1,0,auv_pub,(0,0,0))# 5 - World y direction
-    addHeading(0,0,0,0,0,1,auv_pub,(0.5,0.5,0.5))# 6 - World z direction
+    addHeading(0,0,0,1,0,0,auv_pub.publish,(1,0,0))# 1 - AUV x direction
+    addHeading(0,0,0,0,1,0,auv_pub.publish,(0,1,0))# 2 - AUV y direction
+    addHeading(0,0,0,0,0,1,auv_pub.publish,(0,0,1))# 3 - AUV z direction
+    addHeading(0,0,0,1,0,0,auv_pub.publish,(1,1,1))# 4 - World x direction
+    addHeading(0,0,0,0,1,0,auv_pub.publish,(0,0,0))# 5 - World y direction
+    addHeading(0,0,0,0,0,1,auv_pub.publish,(0.5,0.5,0.5))# 6 - World z direction
 
 def objectDetectCb(msg):
     #spawn blue spheres object detections
     for i in range(len(msg.label)):
         #NOTE: if performance becomes an issue, publish a marker array with all markers at once
-        addDetectionMarker(msg.obj_x[i], msg.obj_y[i], msg.obj_z[i], 0.2, detection_pub, (0,0,1))
+        addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.75, detection_pub.publish, (0,0,1))
 
 def objectMapCb(msg):
     global object_map_ids
     #spawn red spheres and text (for label, object-specific info) on objects in map
-    for i in object_map_ids:
-        removeMapMarkers(i)
+    for map_marker in object_map_ids:
+        map_marker.action = Marker.DELETE
+        map_pub.publish(map_marker)    
     object_map_ids = []
     for i in range(len(msg.label)):
-        addMapMarkers(msg.label[i], msg.obj_x[i], msg.obj_y[i], msg.obj_z[i], msg.theta_z[i], msg.extra_field[i])
-
-def removeMapMarkers(marker_id):
-    for i in range(4):
-        marker_to_remove = Marker()
-        marker_to_remove.header.frame_id = "map"
-        marker_to_remove.id = marker_id + i
-        marker_to_remove.action = Marker.DELETE
-        map_sub.publish(marker_to_remove)    
+        addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
     
 def addDetectionMarker(x,y,z,scale,pub,color):
     global marker_id
@@ -85,9 +82,9 @@ def addDetectionMarker(x,y,z,scale,pub,color):
     detection_marker.color.b = color[2]
     detection_marker.color.a = 1.0
     # Publish the marker
-    pub.publish(detection_marker)
+    pub(detection_marker)
 
-def addHeading(x,y,z,theta_x,theta_y,theta_z,pub,color,override_id=None):
+def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     global marker_id
     # Create a marker message for first heading
     heading_marker = Marker()
@@ -100,51 +97,56 @@ def addHeading(x,y,z,theta_x,theta_y,theta_z,pub,color,override_id=None):
         heading_marker.id = override_id
     heading_marker.type = Marker.ARROW
     heading_marker.action = Marker.ADD
-    x_offset, y_offset, z_offset = [theta_x,theta_y,theta_z] / np.linalg.norm([theta_x,theta_y,theta_z])
-    heading_marker.points = [Point(x,y,z), Point(x+1.5*x_offset,y+1.5*y_offset,z+1.5*z_offset)]
-    heading_marker.pose.orientation = Quaternion(*tf.transformations.quaternion_from_euler(theta_x, theta_y, theta_z))
-    heading_marker.scale.x = 0.1
-    heading_marker.scale.y = 0.1
-    heading_marker.scale.z = 0.1
+    x_offset, y_offset, z_offset = [vec_x,vec_y,vec_z] / np.linalg.norm([vec_x,vec_y,vec_z])
+    heading_marker.points = [Point(x,y,z), Point(x+0.75*x_offset,y+0.75*y_offset,z+0.75*z_offset)]
+    heading_marker.pose.orientation = Quaternion(0, 0, 0, 1)
+    heading_marker.scale.x = 0.05
+    heading_marker.scale.y = 0.05
+    heading_marker.scale.z = 0.05
     # Set the color (optional)
     heading_marker.color.r = color[0]
     heading_marker.color.g = color[1]
     heading_marker.color.b = color[2]
     heading_marker.color.a = 1.0
     # Publish the marker
-    pub.publish(heading_marker)
+    pub(heading_marker)
 
 def addMapMarkers(label,x,y,z,theta_z,extra_field):
     global marker_id
     global object_map_ids
-    addDetectionMarker(x, y, z, 0.15, map_pub, (1,0,0))
+    addDetectionMarker(x, y, z, 0.1, publishToMap, (1,0,0))
     object_map_ids.append(marker_id)
     if label == 0: #LANE MARKER
-        addHeading(x,y,z,cos(theta_z),sin(theta_z),0,map_pub,[0,1,0])
-        addHeading(x,y,z,0,0,extra_field,map_pub,[0,1,0])
-        addLabel(x,y,z,"Lane Marker",map_pub)
+        heading1 = eulerAngleToUnitVector(0,90,theta_z)
+        heading2 = eulerAngleToUnitVector(0,90,extra_field)
+        addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,[0,1,0])
+        addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,[0,1,0])
+        addLabel(x,y,z,"Lane Marker",publishToMap)
     elif label == 1: #QUALI GATE
-        addHeading(x,y,z,cos(theta_z),sin(theta_z),0,map_pub,[0,1,0])
-        addLabel(x,y,z,"Quali Gate",map_pub)
+        heading = eulerAngleToUnitVector(0,90,theta_z)
+        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addLabel(x,y,z,"Quali Gate",publishToMap)
         marker_id += 1
     elif label == 2: #QUALI POLE
-        addLabel(x,y,z,"Quali Pole",map_pub)
+        addLabel(x,y,z,"Quali Pole",publishToMap)
         marker_id += 1
         marker_id += 1
     elif label == 3: #GATE TASK
-        addHeading(x,y,z,cos(theta_z),sin(theta_z),0,map_pub,[0,1,0])
-        addLabel(x,y,z,"Gate: " + str(extra_field),map_pub)
+        heading = eulerAngleToUnitVector(0,90,theta_z)
+        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
         marker_id += 1
     elif label == 4: #BUOY TASK
-        addHeading(x,y,z,cos(theta_z),sin(theta_z),0,map_pub,[0,1,0])
-        addLabel(x,y,z,"Buoy: " + str(extra_field),map_pub)
+        heading = eulerAngleToUnitVector(0,90,theta_z)
+        addHeading(x,y,z,heading[0],heading[1],heading[2],publishToMap,[0,1,0])
+        addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
         marker_id += 1
 
 def addLabel(x,y,z,text,pub):
     global marker_id
     # Create a Marker message
     text_marker = Marker()
-    text_marker.header.frame_id = "map"  # Modify with the appropriate frame ID
+    text_marker.header.frame_id = "map"
     text_marker.ns = "visualization"
     text_marker.type = Marker.TEXT_VIEW_FACING
     text_marker.action = Marker.ADD
@@ -158,9 +160,9 @@ def addLabel(x,y,z,text,pub):
     text_marker.pose.orientation.w = 1.0
 
     # Set the scale of the text marker (size in x, y, z)
-    text_marker.scale.x = 0.2  # Modify with the desired scale of the text
-    text_marker.scale.y = 0.2
-    text_marker.scale.z = 0.2
+    text_marker.scale.x = 0.5  # Modify with the desired scale of the text
+    text_marker.scale.y = 0.5
+    text_marker.scale.z = 0.5
 
     # Set the color of the text marker (RGBA)
     text_marker.color.r = 1.0
@@ -172,30 +174,57 @@ def addLabel(x,y,z,text,pub):
     text_marker.text = text
 
     # Publish the Marker message
-    pub.publish(marker)
+    pub(text_marker)
 
-def transformAuvToWorldRotation(x,y,z):
-    pass
+def transformAuvToWorldVector(vector):
+    # Convert Euler angles to a rotation matrix
+    euler_angles = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    rotation = Rotation.from_euler('xyz', euler_angles, degrees=True)
+    rotation_matrix = rotation.as_matrix()
+    # Transform the direction vector to global coordinates
+    transformed_direction = np.matmul(rotation_matrix, vector)
+    return transformed_direction.tolist()
+
+def eulerAngleToUnitVector(x,y,z):
+    # Convert Euler angles to radians
+    roll_rad = math.radians(x)
+    pitch_rad = math.radians(y)
+    yaw_rad = math.radians(z)
+
+    # Calculate the direction cosine matrix (DCM)
+    cos_roll = math.cos(roll_rad)
+    sin_roll = math.sin(roll_rad)
+    cos_pitch = math.cos(pitch_rad)
+    sin_pitch = math.sin(pitch_rad)
+    cos_yaw = math.cos(yaw_rad)
+    sin_yaw = math.sin(yaw_rad)
+
+    # Define the DCM elements
+    vec = [sin_roll * sin_yaw + cos_roll * cos_yaw * sin_pitch,
+        cos_roll * sin_pitch * sin_yaw - cos_yaw * sin_roll,
+        cos_pitch * cos_roll]
+    
+    return vec
 
 def updateAUVThetaX(msg):
     global auv_marker
-    roll, pitch, yaw = tf.transformations.euler_from_quaternion(auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w)
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.data), pitch, yaw))
-    auv_marker.pose.orientation = quaternion
+    roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.data)*180/math.pi, pitch, yaw))
+    auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
 def updateAUVThetaY(msg):
     global auv_marker
-    roll, pitch, yaw = tf.transformations.euler_from_quaternion(auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w)
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, float(msg.data), yaw))
-    auv_marker.pose.orientation = quaternion
+    roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, float(msg.data)*180/math.pi, yaw))
+    auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
 def updateAUVThetaZ(msg):
     global auv_marker
-    roll, pitch, yaw = tf.transformations.euler_from_quaternion(auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w)
-    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)))
-    auv_marker.pose.orientation = quaternion
+    roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*180/math.pi))
+    auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
 def updateAUVX(msg):
@@ -215,15 +244,16 @@ def updateAUVZ(msg):
     updateReferenceFrames()
 
 def updateReferenceFrames():
-    angle_x = transformAuvToWorldRotation(1,0,0)
-    angle_y = transformAuvToWorldRotation(0,1,0)
-    angle_z = transformAuvToWorldRotation(0,0,1)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,angle_x[0],angle_x[1],angle_x[2],auv_pub,(1,0,0),override_id=1)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,angle_y[0],angle_y[1],angle_y[2],auv_pub,(0,1,0),override_id=2)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,angle_z[0],angle_z[1],angle_z[2],auv_pub,(0,0,1),override_id=3)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,1,0,0,auv_pub,(1,1,1),override_id=4)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,1,0,auv_pub,(0,0,0),override_id=5)
-    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,0,1,auv_pub,(0.5,0.5,0.5),override_id=6)
+    global auv_marker
+    dir_x = transformAuvToWorldVector([1,0,0])
+    dir_y = transformAuvToWorldVector([0,1,0])
+    dir_z = transformAuvToWorldVector([0,0,1])
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_x[0],dir_x[1],dir_x[2],auv_pub.publish,(1,0,0),override_id=1)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_y[0],dir_y[1],dir_y[2],auv_pub.publish,(0,1,0),override_id=2)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_z[0],dir_z[1],dir_z[2],auv_pub.publish,(0,0,1),override_id=3)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,1,0,0,auv_pub.publish,(1,1,1),override_id=4)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,1,0,auv_pub.publish,(0,0,0),override_id=5)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,0,1,auv_pub.publish,(0.5,0.5,0.5),override_id=6)
 
 rospy.init_node('render_visualization')
 
@@ -247,5 +277,11 @@ theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
 theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
+# dvl_sub = rospy.Subscriber('dvl_data', DVLMSG, dvlDataCb)
+
+def publishToMap(marker):
+    global object_map_ids
+    object_map_ids.append(marker)
+    map_pub.publish(marker)
 
 rospy.spin()

@@ -271,10 +271,10 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
     detectionFrame.detection_confidence = detection_confidence
-    detectionFrame.obj_x = obj_x
-    detectionFrame.obj_y = obj_y
-    detectionFrame.obj_z = obj_z
-    detectionFrame.obj_theta_z = obj_theta_z
+    detectionFrame.x = x
+    detectionFrame.y = y
+    detectionFrame.z = z
+    detectionFrame.theta_z = theta_z
     detectionFrame.pose_confidence = pose_confidence
     detectionFrame.extra_field = extra_field
     pub.publish(detectionFrame)
