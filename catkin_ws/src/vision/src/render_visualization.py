@@ -149,19 +149,15 @@ def addMapMarkers(label,x,y,z,theta_z,extra_field):
     elif label == 1: #QUALI GATE
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Quali Gate",publishToMap)
-        marker_id += 1
     elif label == 2: #QUALI POLE
         addLabel(x,y,z,"Quali Pole",publishToMap)
-        marker_id += 1
-        marker_id += 1
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.05,0.05,3],publishToMap,[1,0,0,0.4])
     elif label == 3: #GATE TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
-        marker_id += 1
     elif label == 4: #BUOY TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[1,0,0,0.4])
         addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
-        marker_id += 1
 
 def addLabel(x,y,z,text,pub):
     global marker_id
@@ -197,9 +193,8 @@ def addLabel(x,y,z,text,pub):
     # Publish the Marker message
     pub(text_marker)
 
-def transformAuvToWorldVector(vector):
+def transformToWorldVector(vector, basis_rotation):
     # Convert Euler angles to a rotation matrix
-    euler_angles = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
     euler_angles = [e * 180/math.pi for e in euler_angles]
     rotation = Rotation.from_euler('xyz', euler_angles, degrees=True)
     rotation_matrix = rotation.as_matrix()
@@ -268,9 +263,10 @@ def updateAUVZ(msg):
 
 def updateReferenceFrames():
     global auv_marker
-    dir_x = transformAuvToWorldVector([1,0,0])
-    dir_y = transformAuvToWorldVector([0,1,0])
-    dir_z = transformAuvToWorldVector([0,0,1])
+    auv_euler_angles = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
+    dir_x = transformToWorldVector([1,0,0],auv_euler_angles)
+    dir_y = transformToWorldVector([0,1,0],auv_euler_angles)
+    dir_z = transformToWorldVector([0,0,1],auv_euler_angles)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_x[0],dir_x[1],dir_x[2],auv_pub.publish,(1,0,0),override_id=1)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_y[0],dir_y[1],dir_y[2],auv_pub.publish,(0,1,0),override_id=2)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_z[0],dir_z[1],dir_z[2],auv_pub.publish,(0,0,1),override_id=3)
