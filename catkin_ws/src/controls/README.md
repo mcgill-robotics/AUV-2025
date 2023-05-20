@@ -5,13 +5,22 @@
 
 The controls package is responsible for determining the effort the AUV should exert at a given moment in time based on a target and the current state.
 
-The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
+## Servers
+
+The controls takes into from two different servers representing two different modes of operation. 
+
+### State Server
+
+The state server accepts a pose (position + orientation), and publishes to the PIDs to enter the desired state. It monitors the pose and waits for the auv to settle in the correct pose before completing. Preempting this server causes to publish the current pose to the PIDs, effectively braking the auv. When sending a goal to the state server, you are allowed to specify which axes to consider and which to ignore. For example you can tell it to descend by some amount without affecting the motion in the other 5 axes. You are also allowed to tell the state server to interpret the goal as a displacement.
+
+### Superimposer Server
+
+The superimposer server accepts a combination of surge, sway, heave, roll, pitch, and yaw values. These values should be interpreted as forces which will be sent to superimposer to be combined into an effort. When sending a goal to the state server, you are allowed to specify which axes to consider and which to ignore. For example, you can tell it to surge by some amount which modifying the values being published to sway,heave ... etc. You are allowed to tell the superimposer server to interpret the goal as a displacement. 
 
 ### License
 
 The source code is released under a GPLv3 license.
 
-## Package Interface
 
 ### Published Topics
 
@@ -24,19 +33,24 @@ The source code is released under a GPLv3 license.
 | Topic | Message | description |
 | ------ | ------- | ---------- |
 | `state` | `geometry_msgs/Pose` | The current estimate of the position/orientation (pose) of the AUV |
+| `state_x` | `std_msgs/Float64` | X position|
+| `state_y` | `std_msgs/Float64` | Y position|
+| `state_z` | `std_msgs/Float64` | Z position|
+| `state_theta_x` | `std_msgs/Float64` | Rotation about the x axis in euler angles|
+| `state_theta_y` | `std_msgs/Float64` | Rotation about the y axis in euler angles|
+| `state_theta_z` | `std_msgs/Float64` | Rotation about the z axis in euler angles|
+
+
 
 ### Actions
 
 This package implements a Waypoint action server as specified in auv_msgs.
 
-| Action part | Message | description |
-| ------ | ------- | ---------- |
-| target | `geometry_msgs/Pose` | Pose (global ref. frame) you want the AUV to assume |
-| feedback | `geometry_msgs/Pose` | Current pose of AUV (global ref. frame)|
-| result | `geometry_msgs/Pose` | The final resulting pose of the AUV following the action - should be within permissible range of target |
+| Action | description |
+| ------ | ------|
+| `StateAction` | A desired pose for the auv to enter. |
+| `SuperimposerAction` | A desired surge/sway/heave/roll/pitch/yaw combination. |
 
-
-## Installation
 
 ### Dependencies
 
@@ -48,64 +62,8 @@ This package implements a Waypoint action server as specified in auv_msgs.
 - `std_msgs`
 - `tf`
 
-### Building
-
-	source /opt/ros/noetic/setup.bash
-	cd <AUV-2020>/catkin_ws/src
-	catkin build controls
-
-After build is complete, make the packages visible to ROS
-
-	source ../devel/setup.bash
-
 ### Running
 
 Launch all package nodes
 
 	roslaunch controls controls.launch
-	
-### Usage
-
- Publishing a `geometry_msgs/Pose` message onto `/state` topic:
-
-	rostopic pub -1 /state geometry_msgs/Pose \
-	"
-	position:
-	  x: 0.0
-	  y: 0.0
-	  z: -1.0
-	orientation:
-	  x: 0.0
-	  y: 0.0
-	  z: 0.0
-	  w: 1.0
-	" 
-
-Publishing a `geometry_msgs/Pose` message onto `/waypoint_server/goal` topic:
-
-	rostopic pub -1 /waypoint_server/goal auv_msgs/WaypointActionGoal \
-	"header:
-	  seq: 0
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  frame_id: ''
-	goal_id:
-	  stamp:
-	    secs: 0
-	    nsecs: 0
-	  id: ''
-	goal:
-	  target_state: 
-	    position:
-	      x: 0.0
-	      y: 0.0
-	      z: -4.0
-	    orientation:
-	      x: 0.0
-	      y: 0.0
-	      z: 0.0
-	      w: 1.0
-	" 
- 
- Look for messages published on `/effort`, `/waypoint_server/feedback` and `/waypoint_server/result`.
