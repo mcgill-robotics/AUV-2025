@@ -138,9 +138,9 @@ def detect_on_image(raw_img, camera_id):
     
     current_states = {"x:", state.x, "y:", state.y, "z", state.z, "theta_x", state.theta_x, "theta_y", state.theta_y, "theta_z", state.theta_z}
     if None in current_states.values():
-    	print("State information missing. Skipping detection.")
-    	print(current_states)
-    	return
+        print("State information missing. Skipping detection.")
+        print(current_states)
+        return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     
@@ -271,10 +271,10 @@ def detect_on_image(raw_img, camera_id):
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
     detectionFrame.detection_confidence = detection_confidence
-    detectionFrame.x = x
-    detectionFrame.y = y
-    detectionFrame.z = z
-    detectionFrame.theta_z = theta_z
+    detectionFrame.x = obj_x
+    detectionFrame.y = obj_y
+    detectionFrame.z = obj_z
+    detectionFrame.theta_z = obj_theta_z
     detectionFrame.pose_confidence = pose_confidence
     detectionFrame.extra_field = extra_field
     pub.publish(detectionFrame)
@@ -313,26 +313,35 @@ if __name__ == '__main__':
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
     quali_model_filename = pwd + "/models/quali_model.pt"
     model = [
-        YOLO(down_cam_model_filename)
+        YOLO(down_cam_model_filename),
+        YOLO(quali_model_filename)
         ]
     for m in model: m.to(torch.device('cuda'))
     #count for number of images received per camera
     i = [
+        0,
         0
         ]
     class_names = [ #one array per camera, name index should be class id
-        ["Lane Marker"]
+        ["Lane Marker"],
+        ["Lane Marker", "Gate", "Pole"]
         ]
     #one publisher per camera
     visualisation_pubs = [
-        rospy.Publisher('vision/down_cam/detection', Image, queue_size=1)
+        rospy.Publisher('vision/down_cam/detection', Image, queue_size=1),
+        rospy.Publisher('vision/front_cam/detection', Image, queue_size=1)
         ]
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0)
+        rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0),
+        rospy.Subscriber('/vision/front_cam/image_rect_color', Image, detect_on_image, 1)
         ]
  	
-    cropped_img_pub = rospy.Publisher('vision/down_cam/cropped', Image, queue_size=1)
+    cropped_img_pub = [
+        rospy.Publisher('vision/down_cam/cropped', Image, queue_size=1),
+        rospy.Publisher('vision/front_cam/cropped', Image, queue_size=1)
+    ]
+
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
