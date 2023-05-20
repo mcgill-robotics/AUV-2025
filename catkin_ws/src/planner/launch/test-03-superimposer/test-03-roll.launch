@@ -1,3 +1,0 @@
-<launch>
-	<node name="test_03_roll" pkg="planner" type="test_03_roll.py" respawn="false" output="screen"/>
-</launch>

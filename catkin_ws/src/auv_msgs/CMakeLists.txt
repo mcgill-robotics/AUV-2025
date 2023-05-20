@@ -20,12 +20,14 @@ add_message_files(FILES
 	ObjectDetectionFrame.msg
 	ObjectMap.msg
 	ImuData.msg
-	Ensemble.msg
+	DvlData.msg
 )
 
 add_action_files(FILES
     Direct.action
     State.action
+	QuaternionRotation.action
+	Superimposer.action
 )
 
 generate_messages(DEPENDENCIES

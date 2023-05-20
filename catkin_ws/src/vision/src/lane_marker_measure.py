@@ -35,7 +35,6 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
     ratio_img = np.uint32(img_r+max_brightness_increase)/(np.uint32(img_g+max_brightness_increase) + np.uint32(img_b+max_brightness_increase) + np.uint32(img_r+max_brightness_increase))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
     max_pixel = blurred[math.floor(max_i/blurred.shape[1])][max_i%blurred.shape[1]]
-
     if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
     if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
     
@@ -107,7 +106,7 @@ def getParameters():
     global blur2_amt
     # Read the values for downscaling, bluring and color tolerance from a text file
     values = []
-    with open(pwd + '/thresholding_values.txt', 'r') as file:
+    with open(pwd + '/camera_calibrations/thresholding_values.txt', 'r') as file:
         # Read the file line by line
         for line in file:
             # Ignore lines that start with "#"
@@ -291,15 +290,21 @@ def measure_headings(img, debug=False):
         return finalLines, centerPoint
 
 def getStepsWithLM(img, slope, direction, center_point, lm_color=0):
-    x,y = center_point[0], center_point[1]
-    step = img.shape[1]/(2*50) #step value
-    if slope > 1: #big slopes 
-        step=step*(1/slope)
+    x,y = center_point
+    num_steps = 50
+    if abs(slope) > 1: #slopes that change faster in y than x 
+        step_y = img.shape[0]/(2*num_steps)
+        if slope < 0: step_y *= -1.0 #step_y must always have same sign as the slope
+        step_x = abs(step_y/slope) # step_x must always be positive
+    else:
+        step_x = img.shape[1]/(2*num_steps)
+        step_y = slope*step_x
+        
     stepsWithLM = 0
     while (x < img.shape[1] and y < img.shape[0] and x>0 and y>0):
-        if img[y][x] == lm_color: stepsWithLM += 1
-        x += int(step*direction)
-        y += int(slope*step*direction)
+        if img[int(y)][int(x)] == lm_color: stepsWithLM += 1
+        x += step_x*direction
+        y += step_y*direction
     return stepsWithLM
 
 def visualizeLaneMarker(img, debug=True):

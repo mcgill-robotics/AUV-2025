@@ -286,9 +286,6 @@ BOX_COLOR = (255, 255, 255) # White
 HEADING_COLOR = (255, 0, 0) # Blue
 TEXT_COLOR = (0, 0, 0) # Black
 
-detect_every = 10  #run the model every _ frames received (to not eat up too much RAM)
-min_prediction_confidence = 0.6 #only report predictions with confidence at least 60%
-
 pool_depth = 4
 down_cam_hfov = 109
 down_cam_vfov = 59
@@ -302,6 +299,9 @@ if __name__ == '__main__':
     
     state = State()
 
+    detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
+    #only report predictions with confidence at least 40%
+    min_prediction_confidence = 0.4
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     #get and start models
@@ -324,14 +324,14 @@ if __name__ == '__main__':
         ]
     #one publisher per camera
     visualisation_pubs = [
-        rospy.Publisher('vision/down_visual', Image, queue_size=1)
+        rospy.Publisher('vision/down_cam/detection', Image, queue_size=1)
         ]
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0)
+        rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0)
         ]
  	
-    cropped_img_pub = rospy.Publisher('vision/debug/cropped', Image, queue_size=1)
+    cropped_img_pub = rospy.Publisher('vision/down_cam/cropped', Image, queue_size=1)
     pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
     rospy.spin()
