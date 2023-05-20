@@ -35,7 +35,6 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
     ratio_img = np.uint32(img_r+max_brightness_increase)/(np.uint32(img_g+max_brightness_increase) + np.uint32(img_b+max_brightness_increase) + np.uint32(img_r+max_brightness_increase))
     max_i = np.argmax(ratio_img) #get largest value in red color channel
     max_pixel = blurred[math.floor(max_i/blurred.shape[1])][max_i%blurred.shape[1]]
-
     if downscale_publisher != None: downscale_publisher.publish(bridge.cv2_to_imgmsg(downscaled, "bgr8")) #FOR ADJUSTING VALUES
     if blur1_publisher != None: blur1_publisher.publish(bridge.cv2_to_imgmsg(blurred, "bgr8")) #FOR ADJUSTING VALUES
     

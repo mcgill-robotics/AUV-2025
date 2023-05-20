@@ -18,6 +18,7 @@ add_message_files(FILES
 	ThrusterMicroseconds.msg
 	ThrusterForces.msg
 	ObjectDetectionFrame.msg
+	ObjectMap.msg
 	ImuData.msg
 	DvlData.msg
 )

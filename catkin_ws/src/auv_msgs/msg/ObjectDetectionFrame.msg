@@ -1,16 +1,13 @@
 #array containing classes detected
 int16[] label
-#arrays containing bounding box dimensions
-float64[] bounding_box_x
-float64[] bounding_box_y
-float64[] bounding_box_width
-float64[] bounding_box_height
-#array containing confidence in detections (probabilities)
-float64[] confidence
-#which camera this was detected on
-uint8 camera
-#message info for lane markers (None for other objects)
-float64[] heading1
-float64[] heading2
-float64[] center_x
-float64[] center_y
+#array containing confidence in detections
+float64[] detection_confidence
+#object pose
+float64[] x
+float64[] y
+float64[] z
+float64[] theta_z
+#array containing confidence in object pose
+float64[] pose_confidence
+#additional info specific to classes of objects (i.e. second heading for lane marker)
+float64[] extra_field
