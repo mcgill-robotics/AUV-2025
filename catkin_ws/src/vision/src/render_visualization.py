@@ -193,10 +193,9 @@ def addLabel(x,y,z,text,pub):
     # Publish the Marker message
     pub(text_marker)
 
-def transformToWorldVector(vector, basis_rotation):
+def transformToWorldVector(vector, euler_angles):
     # Convert Euler angles to a rotation matrix
-    euler_angles = [e * 180/math.pi for e in euler_angles]
-    rotation = Rotation.from_euler('xyz', euler_angles, degrees=True)
+    rotation = Rotation.from_euler('xyz', euler_angles, degrees=False)
     rotation_matrix = rotation.as_matrix()
     # Transform the direction vector to global coordinates
     transformed_direction = np.matmul(rotation_matrix, vector)
@@ -267,26 +266,22 @@ def updateReferenceFrames():
     dir_x = transformToWorldVector([1,0,0],auv_euler_angles)
     dir_y = transformToWorldVector([0,1,0],auv_euler_angles)
     dir_z = transformToWorldVector([0,0,1],auv_euler_angles)
+    dvl_dir_x = transformToWorldVector([1,0,0],dvl_euler_angles)
+    dvl_dir_y = transformToWorldVector([0,1,0],dvl_euler_angles)
+    dvl_dir_z = transformToWorldVector([0,0,1],dvl_euler_angles)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_x[0],dir_x[1],dir_x[2],auv_pub.publish,(1,0,0),override_id=1)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_y[0],dir_y[1],dir_y[2],auv_pub.publish,(0,1,0),override_id=2)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dir_z[0],dir_z[1],dir_z[2],auv_pub.publish,(0,0,1),override_id=3)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,1,0,0,auv_pub.publish,(1,1,1),override_id=4)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,1,0,auv_pub.publish,(0,0,0),override_id=5)
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,0,1,auv_pub.publish,(0.5,0.5,0.5),override_id=6)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dvl_dir_x[0],dvl_dir_x[1],dvl_dir_x[2],auv_pub.publish,(1,0,1),override_id=7)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dvl_dir_y[0],dvl_dir_y[1],dvl_dir_y[2],auv_pub.publish,(1,1,0),override_id=8)
+    addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,dvl_dir_z[0],dvl_dir_z[1],dvl_dir_z[2],auv_pub.publish,(0,1,1),override_id=9)
 
 def dvlDataCb(msg):
-    t = TransformStamped()
-    
-    t.header.stamp = rospy.Time.now()
-    t.header.frame_id = "map"
-
-    t.child_frame_id = "auv_base"
-
-    t.transform.rotation = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180))
-
-    transform_broadcast.sendTransform(t)
-
-    #####TODO
+    global dvl_euler_angles
+    dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180]
 
 
 rospy.init_node('render_visualization')
@@ -300,6 +295,7 @@ print("Waiting 10 seconds so RViz can launch...")
 rospy.sleep(10)
 print("Starting visualization!")
 
+dvl_euler_angles = [0,0,0]
 object_map_ids = []
 marker_id = 0
 setup()
