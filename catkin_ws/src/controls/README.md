@@ -5,7 +5,6 @@
 
 The controls package is responsible for determining the effort the AUV should exert at a given moment in time based on a target and the current state.
 
-The propulsion package has been tested under ROS Noetic for Ubuntu 20.04.
 
 ### License
 

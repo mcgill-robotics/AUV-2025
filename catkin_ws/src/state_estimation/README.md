@@ -11,3 +11,25 @@ The state estimation algorithm used is the Kalman filter. Our implementation of 
 Currently the Kalman filter is not implemented in the state estimation package.
 
 In the state estimation package, we define the global frame as North East down, and the world frame as North East Up. We are aware that this naming is confusing and will likely be changed in the future. The imu returns orientation estimates in the global frame while the rest of the code base works in the world frame.
+
+
+### Published Topics
+
+| Topic | Message | description |
+| ------ | ------- | ---------- |
+| `pose` | `geometry_msgs/Pose` | XYZ translation and quaternion represents the auv's state|
+| `state_x` | `std_msgs/Float64` | X position|
+| `state_y` | `std_msgs/Float64` | Y position|
+| `state_z` | `std_msgs/Float64` | Z position|
+| `state_theta_x` | `std_msgs/Float64` | Rotation about the x axis in euler angles|
+| `state_theta_y` | `std_msgs/Float64` | Rotation about the y axis in euler angles|
+| `state_theta_z` | `std_msgs/Float64` | Rotation about the z axis in euler angles|
+
+### Subscribed Topics
+
+| Topic | Message | description |
+| ------ | ------- | ---------- |
+| `depth` | `std_msgs/Float64` | Depth measurement in meters|
+| `sbg/ekf_quat` | `SbgEkfQuat` | IMU measurement from the sbg imu|
+| `dvl_data` | `auv_msgs/DvlData` | Measurements from the TeleDyne Workhorse DVL|
+| `imu_reset` | `std_msgs/Empty` | Command to zero the imu readings|
