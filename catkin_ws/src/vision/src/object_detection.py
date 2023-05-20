@@ -311,6 +311,7 @@ if __name__ == '__main__':
     
     #CHANGE FOR NEW CAMERAS/MODELS:
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    quali_model_filename = pwd + "/models/quali_model.pt"
     model = [
         YOLO(down_cam_model_filename)
         ]
