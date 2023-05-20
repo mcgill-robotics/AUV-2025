@@ -9,6 +9,7 @@ from substates.linear_search import *
 from substates.navigate_lane_marker import *
 from substates.test_submerged_rotations import *
 from substates.utility.controller import Controller
+from substates.quali import *
 
 def descend(depth):
     descended = False
@@ -43,6 +44,14 @@ def laneMarkerGridSearchMission():
                 transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished lane marker grid search mission. Result: {}".format(res))
+
+def QualiMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quali', Quali(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished quali mission. Result {}".format(res))
 
 def testControllerMission(testsToPerform=[0,1,2,3,4,5,6,7,8]):
     def done():

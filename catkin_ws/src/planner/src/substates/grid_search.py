@@ -10,7 +10,7 @@ import threading
 class GridSearch(smach.State):
     def __init__(self, timeout, target_classes=[], control=None):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("target_class argument must be a list of integers")
+        if control == None: raise ValueError("control argument is None")
         self.control = control
         self.detector = ObjectDetector(target_classes, callback=self.foundObject)
         self.timeout = timeout
