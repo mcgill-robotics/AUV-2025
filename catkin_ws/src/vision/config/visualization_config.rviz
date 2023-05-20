@@ -3,7 +3,9 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Grid1/Offset1
+        - /Map1/Status1
       Splitter Ratio: 0.5029411911964417
     Tree Height: 549
   - Class: rviz/Selection
@@ -34,7 +36,7 @@ Visualization Manager:
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
-      Color: 0; 0; 0
+      Color: 255; 255; 255
       Enabled: true
       Line Style:
         Line Width: 0.029999999329447746
@@ -62,7 +64,7 @@ Visualization Manager:
       Marker Topic: /visualization/detection
       Name: Detections
       Namespaces:
-        visualization: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -101,7 +103,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.873349189758301
+      Distance: 6.802938461303711
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -117,9 +119,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4747987389564514
+      Pitch: 0.4647989869117737
       Target Frame: <Fixed Frame>
-      Yaw: 3.153081178665161
+      Yaw: 3.1430881023406982
     Saved: ~
 Window Geometry:
   Displays:

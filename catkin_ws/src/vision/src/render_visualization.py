@@ -12,6 +12,8 @@ import time
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation
+from tf2_ros import TransformBroadcaster 
+from geometry_msgs.msg import TransformStamped, Pose
 
 def setup():
     global auv_marker
@@ -277,7 +279,18 @@ def updateReferenceFrames():
     addHeading(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0,0,1,auv_pub.publish,(0.5,0.5,0.5),override_id=6)
 
 def dvlDataCb(msg):
-    pass #####TODO
+    t = TransformStamped()
+    
+    t.header.stamp = rospy.Time.now()
+    t.header.frame_id = "map"
+
+    t.child_frame_id = "auv_base"
+
+    t.transform.rotation = Quaternion(*tf.transformations.quaternion_from_euler(float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180))
+
+    transform_broadcast.sendTransform(t)
+
+    #####TODO
 
 
 rospy.init_node('render_visualization')
@@ -285,6 +298,7 @@ rospy.init_node('render_visualization')
 auv_pub = rospy.Publisher('visualization/auv', Marker, queue_size=999)
 detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=999)
 map_pub = rospy.Publisher('visualization/map', Marker, queue_size=999)
+transform_broadcast = TransformBroadcaster()
 
 print("Waiting 10 seconds so RViz can launch...")
 rospy.sleep(10)
