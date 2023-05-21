@@ -213,6 +213,21 @@ class SuperimposerServer(BaseServer):
         new_goal.effort.torque.z += self.goal.effort.torque.z
         return new_goal
     
+    def cancel(self):
+        if(self.goal.do_surge.data):
+            self.pub_x_effort.publish(0)
+        if(self.goal.do_sway.data):
+            self.pub_y_effort.publish(0)
+        if(self.goal.do_heave.data):
+            self.pub_z_effort.publish(0)
+        if(self.goal.do_roll.data):
+            self.pub_theta_x_effort.publish(0)
+        if(self.goal.do_pitch.data):
+            self.pub_theta_y_effort.publish(0)
+        if(self.goal.do_yaw.data):
+            self.pub_theta_z_effort.publish(0)
+
+    
     def callback(self, goal):
         if(goal.displace.data):
             self.goal = self.displace_goal(goal)

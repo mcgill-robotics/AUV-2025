@@ -6,6 +6,8 @@ import rospy
 # from servers.SuperimposerServer import *
 from servers.BaseServer import *
 
+#define preempt callbacks using the cancel methods. This is necessary because action lib does not
+#allow methods to be callback function for preempting.
 def statePreempt():
     print("preempting state")
     s.cancel()

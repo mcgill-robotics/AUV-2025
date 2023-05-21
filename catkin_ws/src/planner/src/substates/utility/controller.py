@@ -185,7 +185,8 @@ class Controller:
         self.StateServer.send_goal_and_wait(goal_state)
         self.LocalSuperimposerServer.send_goal(goal_super)
         rospy.sleep(time)
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
+        self.LocalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
 
@@ -206,7 +207,7 @@ class Controller:
 
     #change delta angular velocity (velocity to add on top of velocity required to maintain state)
     def deltaAngularVelocity(self,vel):
-        self.preemptCurrentAction()
+        #self.preemptCurrentAction()
         x,y,z = vel
         goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_displace)
         self.GobalSuperimposerServer.send_goal(goal)
