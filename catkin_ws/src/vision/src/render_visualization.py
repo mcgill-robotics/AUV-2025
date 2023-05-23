@@ -46,6 +46,9 @@ def setup():
     addHeading(0,0,0,0,1,0,auv_pub.publish,(0,0,0))# 5 - World y direction
     addHeading(0,0,0,0,0,1,auv_pub.publish,(0.5,0.5,0.5))# 6 - World z direction
 
+    for gt in groundTruths:
+        addMapMarkers(gt[0],gt[1],gt[2],gt[3],gt[4],gt[5],(1,1,1))
+
 def objectDetectCb(msg):
     #spawn blue spheres object detections
     for i in range(len(msg.label)):
@@ -137,26 +140,26 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     # Publish the marker
     pub(heading_marker)
 
-def addMapMarkers(label,x,y,z,theta_z,extra_field):
+def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
     global marker_id
     addDetectionMarker(x, y, z, 0.1, publishToMap, (1,0,0))
     if label == 0: #LANE MARKER
         heading1 = eulerAngleToUnitVector(0,90,theta_z)
         heading2 = eulerAngleToUnitVector(0,90,extra_field)
-        addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,[1,0,0])
-        addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,[1,0,0])
+        addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,color)
+        addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,color)
         addLabel(x,y,z,"Lane Marker",publishToMap)
     elif label == 1: #QUALI GATE
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[1,0,0,0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Quali Gate",publishToMap)
     elif label == 2: #QUALI POLE
         addLabel(x,y,z,"Quali Pole",publishToMap)
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.05,0.05,3],publishToMap,[1,0,0,0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.05,0.05,3],publishToMap,[color[0],color[1],color[2],0.4])
     elif label == 3: #GATE TASK
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[1,0,0,0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
     elif label == 4: #BUOY TASK
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[1,0,0,0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
 
 def addLabel(x,y,z,text,pub):
@@ -298,6 +301,11 @@ print("Starting visualization!")
 dvl_euler_angles = [0,0,0]
 object_map_ids = []
 marker_id = 0
+
+groundTruths = [
+    #add objects here, format is [label,x,y,z,theta_z,extra_field]
+]
+
 setup()
 
 x_pos_sub = rospy.Subscriber('state_x', Float64, updateAUVX)

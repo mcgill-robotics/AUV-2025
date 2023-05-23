@@ -169,8 +169,9 @@ def detect_on_image(raw_img, camera_id):
             #add bbox and class id to viewframe arrays
             #scale bbox so it is a fraction of image size and not in pixels
             h, w, channels = img.shape
-            detection_confidence.append(conf) 
-            label.append(cls_id)
+            detection_confidence.append(conf)
+            global_class_id = global_class_ids[class_names[camera_id][cls_id]]
+            label.append(global_class_id)
             #if a lane marker is detected on down cam then add heading visualization to image
             if camera_id == 0:
                 if cls_id == 0:
@@ -324,8 +325,9 @@ if __name__ == '__main__':
         ]
     class_names = [ #one array per camera, name index should be class id
         ["Lane Marker"],
-        ["Lane Marker", "Gate", "Pole"]
+        ["Lane Marker", "Quali Gate", "Quali Pole"]
         ]
+    global_class_ids {"Lane Marker":0, "Quali Gate":1, "Quali Pole":2, "Gate":3, "Buoy":4}
     #one publisher per camera
     visualisation_pubs = [
         rospy.Publisher('vision/down_cam/detection', Image, queue_size=1),
