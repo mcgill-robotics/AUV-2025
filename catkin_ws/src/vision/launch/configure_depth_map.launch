@@ -1,5 +1,0 @@
-<launch>
-    <include file="$(find vision)/launch/stream-stereo-cameras.launch" />
-    <node name="stereo_view" pkg="image_view" type="stereo_view" respawn="false" output="log" args = "stereo:=vision/stereo image:=image_rect_color"/>
-    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" respawn="false" output="log" args = "--perspective-file $(find vision)/gui-config/stereo_config.perspective"/>
-</launch>

@@ -8,19 +8,12 @@ from sensor_msgs.msg import Image
 
 #callback when an image is received
 def threshold_image(raw_img):
-    #only predict if i has not reached detect_every yet
-    global i
-    i += 1
-    if i <= threshold_every: return
-    i = 0
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     lane_marker_measure.thresholdRed(img, downscale_pub, blur1_pub, tol_pub, blur2_pub, thresh_pub)
     
 
 if __name__ == '__main__':
-    i = 0
-    threshold_every = 1  #run the model every _ frames received (to not eat up too much RAM)
     #bridge is used to convert sensor_msg images to cv2
     bridge = CvBridge()
     rospy.init_node('debug_thresholding')

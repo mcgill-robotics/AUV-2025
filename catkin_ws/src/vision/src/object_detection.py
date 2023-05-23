@@ -21,7 +21,7 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.depth_sub = rospy.Subscriber('vision/depth_map', Image, self.updateDepthMap)
+        self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updateDepthMap)
         self.x = None
         self.y = None
         self.z = None
@@ -42,7 +42,7 @@ def updateThetaY(self, msg):
 def updateThetaZ(self, msg):
     self.theta_z = float(msg.data)
 def updateDepthMap(self, msg):
-    self.depth_map = bridge.imgmsg_to_cv2(msg, "passthrough")
+    self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
@@ -235,8 +235,8 @@ def detect_on_image(raw_img, camera_id):
                         obj_y.append(state.y + global_offset_y)
                         obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
-                #TODO: estimate depth from camera using depth map and bbox
-                dist_from_camera = 0
+                depth_cropped = cropToBbox(state.depth, bbox)
+                dist_from_camera = np.median(depth_cropped)
 
                 #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
                 x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
@@ -335,7 +335,7 @@ if __name__ == '__main__':
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
         rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0),
-        rospy.Subscriber('/vision/front_cam/image_rect_color', Image, detect_on_image, 1)
+        rospy.Subscriber('/vision/front_cam/image_rgb', Image, detect_on_image, 1)
         ]
  	
     cropped_img_pub = [
