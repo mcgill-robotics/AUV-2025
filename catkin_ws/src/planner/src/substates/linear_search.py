@@ -24,20 +24,19 @@ class LinearSearch(smach.State):
         print("Starting linear search.")
         self.detectedObject = False
         try:
-            self.control.deltaVelocityLocal((self.forward_speed, 0, 0))
+            self.control.velocityLocal((self.forward_speed, 0, 0))
             startTime = time.time()
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:
-                    self.control.deltaVelocity((0,0,0))
+                    self.control.stop()
                     print("Found object!")
                     return 'success'
             print("Linear search timed out.")
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
-            self.control.preemptCurrentAction()
-            self.control.deltaVelocity((0,0,0))
+            self.control.stop()
             self.searchThread.join()
             print("Linear search interrupted by user.")
             return 'failure'

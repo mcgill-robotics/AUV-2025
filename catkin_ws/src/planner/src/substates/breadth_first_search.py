@@ -62,8 +62,7 @@ class BreadthFirstSearch(smach.State):
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:         
-                    self.control.preemptCurrentAction()
-                    self.control.deltaVelocity((0,0,0))
+                    self.control.stop()
                     self.searchThread.join()
                     print("Found object!")
                     return 'success'
@@ -71,8 +70,7 @@ class BreadthFirstSearch(smach.State):
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
-            self.control.preemptCurrentAction()
-            self.control.deltaVelocity((0,0,0))
+            self.control.stop()
             self.searchThread.join()
             print("Breadth-first search interrupted by user.")
             return 'failure'
