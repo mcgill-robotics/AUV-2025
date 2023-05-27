@@ -12,11 +12,35 @@ import rospy
 from thrust_mapper_utils import *
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
+import math
 
 
-d = 0.224 #m
-D_1 = 0.895 #m
-D_2 = 0.778 #m
+# d = 0.224 #m
+# D_1 = 0.895 #m
+# D_2 = 0.778 #m
+
+# T = np.matrix(
+#         [[1., 1., 0., 0., 0., 0., 0., 0.],
+#         [0., 0., 1., -1., 0., 0., 0., 0.],
+#         [0., 0., 0., 0., -1., -1., -1., -1.],
+#         [0., 0., 0., 0., -d/2, d/2, d/2, -d/2],
+#         [0., 0., 0., 0., -D_2/2, -D_2/2, D_2/2, D_2/2],
+#         [-d/2, d/2, D_1/2, D_1/2, 0., 0., 0., 0.]]
+#         )
+
+
+d = 0.284 #m
+hypot = math.sqrt(math.pow(0.672/2,2) + math.pow(0.258/2,2)) #m
+D_2 = 0.517 #m
+
+T = np.matrix(
+        [[-1., -1., 0., 0., 0., 0., 0., 0.],
+        [0., 0., 1., -1., 0., 0., 0., 0.],
+        [0., 0., 0., 0., -1., -1., -1., -1.],
+        [0., 0., 0., 0., -d/2, d/2, d/2, -d/2],
+        [0., 0., 0., 0., -D_2/2, -D_2/2, D_2/2, D_2/2],
+        [d/2, -d/2, hypot, hypot, 0., 0., 0., 0.]]
+        )
 
 # forces produced by T200 thruster at 14V (N)
 THRUST_LIMIT = 1.0  # Limit thruster speed while dry-testing
@@ -25,14 +49,6 @@ MAX_BKWD_FORCE = -3.52*9.81*THRUST_LIMIT
 
 #Matrix representation of the system of equations representing the thrust to wrench conversion
 #Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
-T = np.matrix(
-        [[1., 1., 0., 0., 0., 0., 0., 0.],
-        [0., 0., 1., -1., 0., 0., 0., 0.],
-        [0., 0., 0., 0., -1., -1., -1., -1.],
-        [0., 0., 0., 0., -d/2, d/2, d/2, -d/2],
-        [0., 0., 0., 0., -D_2/2, -D_2/2, D_2/2, D_2/2],
-        [-d/2, d/2, D_1/2, D_1/2, 0., 0., 0., 0.]]
-        )
 
 #matrix transformation wrench -> thrust 
 T_inv = np.linalg.pinv(T) 
