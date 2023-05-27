@@ -134,11 +134,7 @@ class GridSearch(smach.State):
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:
-<<<<<<< Updated upstream
-                    self.control.stop()
-=======
                     self.control.stop_in_place()
->>>>>>> Stashed changes
                     self.searchThread.join()
                     print("Found object!")
                     return 'success'
@@ -146,11 +142,7 @@ class GridSearch(smach.State):
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
-<<<<<<< Updated upstream
-            self.control.stop()
-=======
             self.control.stop_in_place()
->>>>>>> Stashed changes
             self.searchThread.join()
             print("Grid search interrupted by user.")
             return 'failure'

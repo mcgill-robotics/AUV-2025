@@ -81,20 +81,12 @@ class goThroughGate(smach.State):
         surgeSpeed = 1
 
         print("Starting movement through gate.")
-<<<<<<< Updated upstream
-        control.velocityLocal(surgeSpeed,0,0)
-=======
         control.forceLocal(surgeSpeed,0)
->>>>>>> Stashed changes
         while time.time() < lastGateDetectionTime + noDetectionTime:
             if len(last_object_detection) > 0:
                 lastGateDetectionTime = time.time()
                 last_object_detection = []
-<<<<<<< Updated upstream
-        control.velocityLocal(0,0,0)
-=======
         control.forceLocal(0,0)
->>>>>>> Stashed changes
         print("Finished going through gate.")
 
         print("Rotating by {}.".format(self.extraRotation))
