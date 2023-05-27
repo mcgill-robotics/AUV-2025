@@ -40,6 +40,7 @@ def forwards_test(t):
 
         cmd = reset.copy()
         cmd[t-1] = force_to_microseconds(force_amt*MAX_FWD_FORCE)
+        print(cmd)
         pub.publish(cmd)
         rospy.sleep(5.0)
         pub.publish(reset_cmd)
