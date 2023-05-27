@@ -7,7 +7,9 @@ import tf
 from std_msgs.msg import Float64
 from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
+from auv_msgs.msg import DvlData
 from std_msgs.msg import Empty
+from geometry_msgs.msg import Wrench
 import time
 import numpy as np
 import math
@@ -45,6 +47,10 @@ def setup():
     addHeading(0,0,0,1,0,0,auv_pub.publish,(1,1,1))# 4 - World x direction
     addHeading(0,0,0,0,1,0,auv_pub.publish,(0,0,0))# 5 - World y direction
     addHeading(0,0,0,0,0,1,auv_pub.publish,(0.5,0.5,0.5))# 6 - World z direction
+    addHeading(0,0,0,1,0,0,auv_pub.publish,(1,0,1))# 7 - DVL x direction
+    addHeading(0,0,0,0,1,0,auv_pub.publish,(1,1,0))# 8 - DVL y direction
+    addHeading(0,0,0,0,0,1,auv_pub.publish,(0,1,1))# 9 - DVL z direction
+    addLabel(0,0,1,"Surge:0\nSway:0\nHeave:0\nRoll:0\nPitch:0\nYaw:0",publishToMap,0.15)
 
     for gt in groundTruths:
         addMapMarkers(gt[0],gt[1],gt[2],gt[3],gt[4],gt[5],(1,1,1))
@@ -162,7 +168,7 @@ def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
 
-def addLabel(x,y,z,text,pub):
+def addLabel(x,y,z,text,pub,scale=0.25,override_id=None):
     global marker_id
     # Create a Marker message
     text_marker = Marker()
@@ -170,8 +176,22 @@ def addLabel(x,y,z,text,pub):
     text_marker.ns = "visualization"
     text_marker.type = Marker.TEXT_VIEW_FACING
     text_marker.action = Marker.ADD
-    marker_id += 1
-    text_marker.id = marker_id
+    if override_id is None:
+        marker_id += 1
+        text_marker.id = marker_id
+    else:
+        text_marker.id = override_id
+
+    if scale == 0.25:
+        text_marker.color.r = 1.0
+        text_marker.color.g = 1.0
+        text_marker.color.b = 1.0
+        text_marker.color.a = 1.0
+    else:
+        text_marker.color.r = 0.0
+        text_marker.color.g = 0.0
+        text_marker.color.b = 0.0
+        text_marker.color.a = 1.0
 
     # Set the position of the text marker
     text_marker.pose.position = Point(x,y,z+0.5)
@@ -180,15 +200,9 @@ def addLabel(x,y,z,text,pub):
     text_marker.pose.orientation.w = 1.0
 
     # Set the scale of the text marker (size in x, y, z)
-    text_marker.scale.x = 0.25  # Modify with the desired scale of the text
-    text_marker.scale.y = 0.25
-    text_marker.scale.z = 0.25
-
-    # Set the color of the text marker (RGBA)
-    text_marker.color.r = 1.0
-    text_marker.color.g = 1.0
-    text_marker.color.b = 1.0
-    text_marker.color.a = 1.0
+    text_marker.scale.x = scale  # Modify with the desired scale of the text
+    text_marker.scale.y = scale
+    text_marker.scale.z = scale
 
     # Set the text value
     text_marker.text = text
@@ -252,16 +266,19 @@ def updateAUVX(msg):
     auv_marker.pose.position = Point(float(msg.data), auv_marker.pose.position.y, auv_marker.pose.position.z)  # Set the desired position
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1, "Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 def updateAUVY(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, float(msg.data), auv_marker.pose.position.z)  # Set the desired position
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 def updateAUVZ(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, auv_marker.pose.position.y, float(msg.data))  # Set the desired position
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 
 def updateReferenceFrames():
     global auv_marker
@@ -285,7 +302,17 @@ def updateReferenceFrames():
 def dvlDataCb(msg):
     global dvl_euler_angles
     dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180]
+    updateReferenceFrames()
 
+def effortCb(msg):
+    global currentEffort
+    currentEffort["surge"] = msg.force.x
+    currentEffort["sway"] = msg.force.y
+    currentEffort["heave"] = msg.force.z
+    currentEffort["roll"] = msg.torque.x
+    currentEffort["pitch"] = msg.torque.y
+    currentEffort["yaw"] = msg.torque.z
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 
 rospy.init_node('render_visualization')
 
@@ -309,6 +336,8 @@ groundTruths = [
     #add objects here, format is [label,x,y,z,theta_z,extra_field]
 ]
 
+currentEffort = {"surge":0, "sway":0, "yaw":0, "roll":0, "pitch":0, "yaw":0}
+
 def publishToMap(marker):
     global object_map_ids
     object_map_ids.append(marker)
@@ -324,7 +353,8 @@ theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
 theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
-# dvl_sub = rospy.Subscriber('dvl_data', DVLMSG, dvlDataCb)
+sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
+dvl_sub = rospy.Subscriber('dvl_data', DvlData, dvlDataCb)
 
 
 rospy.spin()
