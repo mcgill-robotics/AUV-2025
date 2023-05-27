@@ -24,19 +24,31 @@ class LinearSearch(smach.State):
         print("Starting linear search.")
         self.detectedObject = False
         try:
+<<<<<<< Updated upstream
             self.control.velocityLocal((self.forward_speed, 0, 0))
+=======
+            self.control.forceLocal((self.forward_speed, 0))
+>>>>>>> Stashed changes
             startTime = time.time()
             self.detector.start()
             while startTime + self.timeout > time.time(): 
                 if self.detectedObject:
+<<<<<<< Updated upstream
                     self.control.stop()
+=======
+                    self.control.stop_in_place()
+>>>>>>> Stashed changes
                     print("Found object!")
                     return 'success'
             print("Linear search timed out.")
             return 'failure'
         except KeyboardInterrupt:
             self.detectedObject = True
+<<<<<<< Updated upstream
             self.control.stop()
+=======
+            self.control.stop_in_place()
+>>>>>>> Stashed changes
             self.searchThread.join()
             print("Linear search interrupted by user.")
             return 'failure'
