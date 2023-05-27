@@ -9,5 +9,4 @@
 		<param name="outputTopic" value="/down_cam" />
 		<param name="distortion_model" value="equidistant" /> <!-- equidistant is the distortion model for fisheye lenses -->
 	</node>
-	<node name="image_proc" pkg="image_proc" type="image_proc" ns="vision/down_cam"/>
 </launch>

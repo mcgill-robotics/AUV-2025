@@ -142,7 +142,7 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
 
 def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
     global marker_id
-    addDetectionMarker(x, y, z, 0.1, publishToMap, (1,0,0))
+    addDetectionMarker(x, y, z, 0.1, publishToMap, color)
     if label == 0: #LANE MARKER
         heading1 = eulerAngleToUnitVector(0,90,theta_z)
         heading2 = eulerAngleToUnitVector(0,90,extra_field)
@@ -303,8 +303,16 @@ object_map_ids = []
 marker_id = 0
 
 groundTruths = [
+    [0,0,1,2,-90,45],
+    [3,1,1,-1,45,""],
+    [4,1,1,1,90,""]
     #add objects here, format is [label,x,y,z,theta_z,extra_field]
 ]
+
+def publishToMap(marker):
+    global object_map_ids
+    object_map_ids.append(marker)
+    map_pub.publish(marker)
 
 setup()
 
@@ -318,9 +326,5 @@ obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, o
 map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
 # dvl_sub = rospy.Subscriber('dvl_data', DVLMSG, dvlDataCb)
 
-def publishToMap(marker):
-    global object_map_ids
-    object_map_ids.append(marker)
-    map_pub.publish(marker)
 
 rospy.spin()

@@ -1,4 +1,0 @@
-<launch>
-    <include file="$(find vision)/launch/stream-down-cam.launch" />
-    <node name="camera_calibration" pkg="camera_calibration" type="cameracalibrator.py" respawn="true"  output="screen" args = "--size 9x6 --square 0.0245 image:=/vision/down_cam/image_raw camera:=/vision/down_cam" />
-</launch>

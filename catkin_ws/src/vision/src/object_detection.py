@@ -336,7 +336,7 @@ if __name__ == '__main__':
     #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
     #the int argument will be used to index debug publisher, model, class names, and i
     subs = [
-        rospy.Subscriber('/vision/down_cam/image_rect_color', Image, detect_on_image, 0),
+        rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0),
         rospy.Subscriber('/vision/front_cam/image_rgb', Image, detect_on_image, 1)
         ]
  	
