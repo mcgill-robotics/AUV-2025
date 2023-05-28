@@ -48,12 +48,12 @@
 	</node>
 	
 	<node name="theta_z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="0.25" />
+		<param name="Kp" value="4.0" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="0.0" />
-		<param name="upper_limit" value="18" />
-		<param name="lower_limit" value="-18" />
-		<param name="windup_limit" value="18" />
+		<param name="Kd" value="20.0" />
+		<param name="upper_limit" value="1000" />
+		<param name="lower_limit" value="-1000" />
+		<param name="windup_limit" value="1000" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
