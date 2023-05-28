@@ -31,7 +31,7 @@ import math
 
 d = 0.284 #m
 hypot = math.sqrt(math.pow(0.672/2,2) + math.pow(0.258/2,2)) #m
-D_2 = 0.517 #m
+D_2 = 0.571 #m
 
 T = np.matrix(
         [[-1., -1., 0., 0., 0., 0., 0., 0.],
