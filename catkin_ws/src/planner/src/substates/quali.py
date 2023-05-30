@@ -3,6 +3,7 @@
 import rospy
 from substates.utility.controller import Controller
 import smach
+from std_msgs.msg import Float64
 
 
 # DESCRIPTION OF QUALI TASK (DETERMINED IN THE 2023 HANDBOOK):
@@ -12,6 +13,7 @@ import smach
 #     3. Distance between surface and top gate bar = 1 meter 
 #     4. Distance between the gate's two side bars = 2 meters
 # Maneuver: 
+#     0. Set DVL to zero
 #     1. Submerge and start 3 meters behind the gate 
 #     2. Pass through the gate 
 #     3. Circle around the marker 
@@ -27,6 +29,10 @@ class Quali(smach.State):
     def execute(self):
         print("Starting Quali Mission")
         try:
+            # Step 0: Set DVL to zero
+            pub_DVL = rospy.Publisher('/[DVL_something]', Float64, queue_size=1)
+            pub_DVL.publish((0, 0, 0))
+
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
             self.control.moveDelta((0, 0, -2.0))
@@ -59,12 +65,11 @@ class Quali(smach.State):
 
             # Step 7: Float to surfice (thrusters stop spinning - effort = 0)
             print("Stopping thrusters and floating to surface")
-            self.control.kill()
+            self.control.force((0, 0))
             rospy.sleep(2)
 
             # DONE
             print("Completed")
-            
             return 'success'
 
         except KeyboardInterrupt:
