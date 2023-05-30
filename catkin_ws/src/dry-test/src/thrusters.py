@@ -3,7 +3,7 @@
 import rospy
 from auv_msgs.msg import ThrusterMicroseconds
 
-force_amt = 0.005
+force_amt = 0.005 #0.5%
 
 #copied from thrust_mapper
 
@@ -35,12 +35,13 @@ pub = rospy.Publisher('propulsion/thruster_microseconds', ThrusterMicroseconds, 
 rospy.sleep(7)
 
 def forwards_test(t):
+    print("----------T{}----------".format(t))
+    print("expected output is on pin {}".format(pins[t]))
     while True:
         print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
 
         cmd = reset.copy()
         cmd[t-1] = force_to_microseconds(force_amt*MAX_FWD_FORCE)
-        print(cmd)
         pub.publish(cmd)
         rospy.sleep(5.0)
         pub.publish(reset_cmd)
@@ -51,10 +52,24 @@ def forwards_test(t):
         if choice != "1":
             break
 
-def thruster_test(t):
-    print("----------T{}----------".format(t))
-    print("expected output is on pin {}".format(pins[t]))
-    forwards_test(t)
+def simultaneous_forwards_test():
+    print_str = "|"
+    for t in range(8):
+        print_str += " T{}=Pin{} |".format(t+1, pins[t+1])
+    print(print_str)
+    while True:
+        print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
+
+        cmd = [force_to_microseconds(force_amt*MAX_FWD_FORCE)] * 8
+        pub.publish(cmd)
+        rospy.sleep(5.0)
+        pub.publish(reset_cmd)
+
+        print("1. repeat test")
+        print("2. proceed")
+        choice = input() 
+        if choice != "1":
+            break
 
 def reset_thrusters():
     pub.publish(reset_cmd)
@@ -66,23 +81,26 @@ rospy.on_shutdown(reset_thrusters)
 while True:
     print("========== Thrusters Test ==========")
     print("refer to images in dry-test/images for labelled diagrams of thrusters on the AUV")
-    print("1. test all thrusters")
+    print("1. test thrusters one by one")
     print("2. select thruster to test")
-    print("3. exit")
+    print("3. test thrusters simultaneously")
+    print("4. exit")
     choice = input()
 
     if choice == "1":
-        thruster_test(1)
-        thruster_test(2)
-        thruster_test(3)
-        thruster_test(4)
-        thruster_test(5)
-        thruster_test(6)
-        thruster_test(7)
-        thruster_test(8)
+        forwards_test(1)
+        forwards_test(2)
+        forwards_test(3)
+        forwards_test(4)
+        forwards_test(5)
+        forwards_test(6)
+        forwards_test(7)
+        forwards_test(8)
     elif choice == "2":
         choice = int(input("select thruster to test (1-8): "))
         if 1 <= choice and choice <=8:
-            thruster_test(choice)
+            forwards_test(choice)
+    elif choice == "3":
+        simultaneous_forwards_test()
     else:
         break
