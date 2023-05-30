@@ -59,7 +59,7 @@ class Quali(smach.State):
 
             # Step 7: Float to surfice (thrusters stop spinning - effort = 0)
             print("Stopping thrusters and floating to surface")
-            self.control.force((0, 0))
+            self.control.kill()
             rospy.sleep(2)
 
             # DONE
