@@ -4,8 +4,8 @@
 
 import rospy
 from sensor_msgs.msg import CompressedImage
-from cv_bridge import CvBridge
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 
 def image_callback(data):
@@ -13,12 +13,13 @@ def image_callback(data):
     bridge = CvBridge()
     np_img = bridge.compressed_imgmsg_to_cv2(data)
     np_img.astype(np.float32)
-    cv2.imwrite('/home/felps/AUV-2023/catkin_ws/images/image{}.png'.format(i), np_img)
+    cv2.imwrite(pwd + '/images/bag_{}.png'.format(i), np_img)
     i += 1
     
     
 if __name__ == '__main__':
     i = 1
-    rospy.init_node('bag_to_png_converter')
+    pwd = os.path.realpath(os.path.dirname(__file__))
+    rospy.init_node('bag_2_png')
     rospy.Subscriber('/provider_vision/Front_GigE/compressed', CompressedImage, image_callback)
     rospy.spin()
