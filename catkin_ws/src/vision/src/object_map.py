@@ -74,6 +74,7 @@ def updateMap(obj_i, observation):
     #keep a weighted average of the pose confidence
     new_pose_conf = (num_observations*current_pose_conf + observation_pose_conf) / (num_observations + 1)
     #WEIGHTED AVERAGE USING CONFIDENCE AND NUM. OBSERVATIONS AS WEIGHT
+    # TODO: find way to avoid huge x, y, z observations from changing the predicted pose by a lot (i.e. if x=99999)
     new_x = (observation_pose_conf*observed_x + num_observations*current_pose_conf*current_x) / (current_pose_conf*num_observations + observation_pose_conf)
     new_y = (observation_pose_conf*observed_y + num_observations*current_pose_conf*current_y) / (current_pose_conf*num_observations + observation_pose_conf)
     new_z = (observation_pose_conf*observed_z + num_observations*current_pose_conf*current_z) / (current_pose_conf*num_observations + observation_pose_conf)
@@ -85,6 +86,11 @@ def updateMap(obj_i, observation):
         new_theta_z = observed_theta_z
     #otherwise make it a weighted average of both theta z's using num observations and confidence as weight
     else:
+        # TODO: since theta_z is an angle: averaging directly will not work, need to use vector sum
+        # get (unit vector from current_theta_z) * current_pose_conf * num_observations
+        # get (unit vector from observed_theta_z) * observation_pose_conf
+        # new theta_z = sum of these -> angle
+        # new_pose_conf = sum of these -> 1-e^-(length of sum vector)
         new_theta_z = (observation_pose_conf*observed_theta_z + num_observations*current_pose_conf*current_theta_z) / (current_pose_conf*num_observations + observation_pose_conf)
 
     #CALCULATE EXTRA FIELD WHEN APPLICABLE
@@ -97,6 +103,11 @@ def updateMap(obj_i, observation):
         else:
             if new_label == 0: # LANE MARKER
                 #WEIGHTED AVERAGE USING CONFIDENCE AND NUM. OBSERVATIONS AS WEIGHT
+                # TODO: since extra_field is an angle for lane marker: averaging directly will not work, need to use vector sum
+                # get (unit vector from current_theta_z) * current_pose_conf * num_observations
+                # get (unit vector from observed_theta_z) * observation_pose_conf
+                # new theta_z = sum of these -> angle
+                # new_pose_conf = sum of these -> 1-e^-(length of sum vector)
                 new_extra_field = (observation_pose_conf*observed_extra_field + current_pose_conf*num_observations*current_extra_field) / (observation_pose_conf + current_pose_conf*num_observations)
             # ADD ADDITIONAL ELIF STATEMENTS FOR OTHER LABELS
     else: # if label of observation and object were different set extra field to whichever label was kept

@@ -256,7 +256,7 @@ def updateAUVThetaY(msg):
 def updateAUVThetaZ(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    print(roll,pitch,yaw)
+    # print(roll,pitch,yaw)
     new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*math.pi/180))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
@@ -336,7 +336,7 @@ groundTruths = [
     #add objects here, format is [label,x,y,z,theta_z,extra_field]
 ]
 
-currentEffort = {"surge":0, "sway":0, "yaw":0, "roll":0, "pitch":0, "yaw":0}
+currentEffort = {"surge":0, "sway":0, "heave":0, "roll":0, "pitch":0, "yaw":0}
 
 def publishToMap(marker):
     global object_map_ids
