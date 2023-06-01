@@ -1,6 +1,13 @@
 <launch>
+    <arg name="sim" default="false" />
     <include file="$(find controls)/launch/theta_setpoint_republish.launch" />
-    <include file="$(find controls)/launch/pid.launch" />
+    <group unless="$(arg sim)">
+        <include file="$(find controls)/launch/pid.launch"/>
+    </group>
+    <group if="$(arg sim)">
+        <include file="$(find controls)/launch/pid-sim.launch" />
+    </group>
+    
     <include file="$(find controls)/launch/superimposer.launch" />
     <include file="$(find controls)/launch/servers.launch" />
 </launch>
