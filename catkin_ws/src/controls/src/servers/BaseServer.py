@@ -19,8 +19,6 @@ class BaseServer():
 
 
     def establish_pid_publishers(self):
-        self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=50)
-        self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=50)
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
         self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
         self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
@@ -65,8 +63,6 @@ class BaseServer():
     #generic cancel that publishes current position to pids to stay in place
     def cancel(self):
         self.cancelled = True
-        self.pub_x_pid.publish(self.position.x)
-        self.pub_y_pid.publish(self.position.y)
         self.pub_z_pid.publish(self.position.z)
         self.pub_theta_x_pid.publish(self.theta_x)
         self.pub_theta_y_pid.publish(self.theta_y)
@@ -111,24 +107,22 @@ class BaseServer():
         if(self.position == None or self.theta_x == None or self.theta_y == None or self.theta_z == None):
             return False
 
-        tolerance_position = 0.3
+        tolerance_position = 0.5
         tolerance_orientation = 1
 
-        x_diff = (not self.do_x) or abs(self.position.x - position.x) <= tolerance_position
-        y_diff = (not self.do_y) or abs(self.position.y - position.y) <= tolerance_position
+        #x_diff = (not self.do_x) or abs(self.position.x - position.x) <= tolerance_position
+        #y_diff = (not self.do_y) or abs(self.position.y - position.y) <= tolerance_position
         z_diff = (not self.goal.do_z) or abs(self.position.z - position.z) <= tolerance_position
         theta_x_diff = (not self.goal.do_theta_x) or abs(self.theta_x - rotation.x) <= tolerance_orientation
         theta_y_diff = (not self.goal.do_theta_y) or abs(self.theta_y - rotation.y) <= tolerance_orientation
         theta_z_diff = (not self.goal.do_theta_z) or abs(self.theta_z - rotation.z) <= tolerance_orientation
 
-        return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
+        return z_diff and theta_x_diff and theta_y_diff and theta_z_diff # and x_diff and y_diff
 
 
     def publish_setpoints(self,position,rotation):
-        if(self.goal.do_x):
-            self.pub_x_pid.publish(Float64(position.x))
-        if(self.goal.do_y):
-            self.pub_y_pid.publish(Float64(position.y))
+        #self.pub_x.Publish(Float64(position.x))
+        #self.pub_y.Publish(Float64(position.y))
         if(self.goal.do_z):
             self.pub_z_pid.publish(Float64(position.z))
         if(self.goal.do_theta_x):
