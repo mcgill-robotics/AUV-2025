@@ -45,3 +45,13 @@ class ObjectDetector:
         for k in self.consecutive_detections.keys():
             if k not in detected:
                 self.consecutive_detections[k] = 0
+
+
+class ObjectMap:
+    def __init__(self):
+
+    def mapUpdateCb(msg):
+
+    def getClass(cls):
+
+    def getClosestObject(cls):
