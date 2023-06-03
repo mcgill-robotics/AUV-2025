@@ -300,11 +300,11 @@
                   "type": "repr"
                 },
                 "x_limits": {
-                  "repr": "[232.47567343711853, 233.47567343711853]",
+                  "repr": "[-2.0, 2.0]",
                   "type": "repr"
                 },
                 "y_limits": {
-                  "repr": "[0.0, 1.0]",
+                  "repr": "[-4.0, 1.0]",
                   "type": "repr"
                 }
               },
@@ -335,7 +335,7 @@
             "plugin": {
               "keys": {
                 "publishers": {
-                  "repr": "'[]'",
+                  "repr": "\"[{'topic_name': '/x_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 0, 'counter': 0, 'expressions': {}}, {'topic_name': '/y_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 1, 'counter': 0, 'expressions': {}}, {'topic_name': '/z_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 2, 'counter': 0, 'expressions': {}}, {'topic_name': '/theta_x_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 3, 'counter': 0, 'expressions': {}}, {'topic_name': '/theta_y_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 4, 'counter': 0, 'expressions': {}}, {'topic_name': '/theta_z_setpoint', 'type_name': 'std_msgs/Float64', 'rate': 1.0, 'enabled': False, 'publisher_id': 5, 'counter': 0, 'expressions': {}}]\"",
                   "type": "repr"
                 }
               },
