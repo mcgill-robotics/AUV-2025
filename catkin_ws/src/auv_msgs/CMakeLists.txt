@@ -20,7 +20,8 @@ add_message_files(FILES
 	ObjectDetectionFrame.msg
 	ObjectMap.msg
 	ImuData.msg
-	DvlData.msg
+	DeadReckonReport.msg
+	VelocityReport.msg
 )
 
 add_action_files(FILES
