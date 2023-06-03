@@ -1,57 +1,43 @@
 #!/usr/bin/env python3
 
 import rospy
-from auv_msgs.msg import ObjectDetectionFrame
+import math
+from auv_msgs.msg import ObjectMap
 
-#replace with radius + mapping once mapping is implemented
-class ObjectDetector:
-    def __init__(self, target_classes=[], callback=None, detectionHandler=None):
-        if detectionhandler is None:
-            detectionHandler = self.defaultDetectionCb
-        try:
-            len(cl)
-            for cl in target_classes:
-                int(cl)
-        except:
-            raise ValueError("target_class argument must be a list of integers")
-        if callback == None and detectionHandler == self.defaultDetectionCb:
-            raise ValueError("must pass at least one of callback or detectionHandler arguments")
-
-        self.cb = callback
-        self.target_classes = target_classes            
-        #TEMPORARY UNTIL MAPPING IMPLEMENTED        
-        self.consecutive_detections = 0
-        self.min_consecutive_detections = 5
-        self.detectionHandler = detectionHandler
-    
-    def start(self):
-        #replace with map subscriber in future
-        self.obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, self.detectionHandler)
-    
-    def stop(self):
-        self.obj_sub.unregister()
-
-    #replace with map handler in future
-    def defaultDetectionCb(self, msg):
-        #check for consecutive detections of a set of target classes (all classes if set is empty)
-        detected = []
-        for i in range(len(msg.label)):
-            detected.append(msg.label[i])
-            if len(self.target_classes) == 0 or msg.label[i] in self.target_classes:
-                self.consecutive_detections[msg.label[i]] = self.consecutive_detections.get(msg.label[i], 0) + 1
-                if self.consecutive_detections[msg.label[i]] >= self.min_consecutive_detections:
-                    self.callback(msg)
-                    break
-        for k in self.consecutive_detections.keys():
-            if k not in detected:
-                self.consecutive_detections[k] = 0
-
-
-class ObjectMap:
+class ObjectMapper:
     def __init__(self):
+        #replace with map subscriber in future
+        self.obj_sub = rospy.Subscriber('vision/object_map', ObjectMap, self.mapUpdateCb)
+        self.map = []
 
-    def mapUpdateCb(msg):
+    def mapUpdateCb(self,msg):
+        self.map = []
+        for i in range(len(msg.label)):
+            new_map_obj = []
+            new_map_obj.append(msg.label[i])
+            new_map_obj.append(msg.x[i])
+            new_map_obj.append(msg.y[i])
+            new_map_obj.append(msg.z[i])
+            new_map_obj.append(msg.theta_z[i])
+            new_map_obj.append(msg.extra_field[i])
+            self.map.append(new_map_obj)
 
-    def getClass(cls):
+    def getClass(self,cls):
+        objs_with_class = []
+        for obj in self.map:
+            if obj[0] == cls:
+                objs_with_class.append(obj)
+        return objs_with_class
 
-    def getClosestObject(cls):
+    def getClosestObject(self,cls,pos):
+        objs_with_class = self.getClass(cls)
+        closest_object_dist = 99999
+        closest_object = None
+        for obj in objs_with_class:
+            dist = math.sqrt((obj[1]-pos[0])**2 + (obj[2]-pos[1])**2)
+            if dist < closest_object_dist:
+                closest_object = obj
+                closest_object_dist = dist
+        return closest_object
+
+

@@ -7,7 +7,7 @@ import math
 
 class NavigateLaneMarker(smach.State):
     def __init__(self, control, state, mapping):
-        super().__init__(outcomes=['success'])
+        super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
@@ -31,10 +31,14 @@ class NavigateLaneMarker(smach.State):
 
     def execute(self, ud):
         print("Starting lane marker navigation.") 
-        lane_marker_obj = self.mapping.getClosestObject(0)
+        auv_current_position = self.state.getPosition()
+        lane_marker_obj = self.mapping.getClosestObject(0, (auv_current_position[0], auv_current_position[1]))
+        if lane_marker_obj is None:
+
+            print("No lane marker in object map! Failed.")
+            return 'failure'
         heading1 = lane_marker_obj[4]
         heading2 = lane_marker_obj[5]
-        auv_current_position = self.state.getPosition()
 
         # find heading which is pointing the least towards the AUV
         lane_marker_heading1_vec = self.normalizeVector(self.degreesToVector(heading1))
