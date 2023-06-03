@@ -288,10 +288,10 @@ HEADING_COLOR = (255, 0, 0) # Blue
 TEXT_COLOR = (0, 0, 0) # Black
 
 pool_depth = 4
-down_cam_hfov = 109
-down_cam_vfov = 59
-front_cam_hfov = 75
-front_cam_vfov = 59
+down_cam_hfov = 220
+down_cam_vfov = 165.26
+front_cam_hfov = 90
+front_cam_vfov = 65
 
 if __name__ == '__main__':
     tf_buffer = Buffer()

@@ -19,6 +19,20 @@ do_all = [Bool(True)] * 6
 do_displace = Bool(True)
 do_not_displace = Bool(False)
 
+
+#MISSING IMPORTS
+
+tf_buffer = Buffer()
+TransformListener(tf_buffer)
+tf_header = Header(frame_id="world")
+def transformLocalToGlobal(lx,ly,lz):
+    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
+    offset_local = Vector3(lx, ly, lz)
+    tf_header.stamp = rospy.Time(0)
+    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
+    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
+    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
+
 class Controller:
 
     def __init__(self):
