@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from sensor_msgs.msg import Float64
+from std_msgs.msg import Float64
 
 class StateTracker:
     def __init__(self):

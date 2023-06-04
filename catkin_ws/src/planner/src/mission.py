@@ -71,9 +71,7 @@ if __name__ == '__main__':
     rospy.on_shutdown(endMission)
 
     control = Controller()
-    state = StateTracker()
-    mapping = ObjectMapper()
-    Tricks(t="roll")
+    QualiMission()
 
 
     # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
