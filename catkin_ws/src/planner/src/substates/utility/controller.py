@@ -7,6 +7,9 @@ from std_msgs.msg import Float64, Bool
 from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
 from math import hypot
 from actionlib_msgs.msg import GoalStatus
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
 
 ##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
 
