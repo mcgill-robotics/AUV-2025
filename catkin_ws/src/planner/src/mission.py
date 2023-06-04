@@ -30,7 +30,7 @@ def laneMarkerGridSearchMission():
     control.moveDelta((0, 0, -0.5))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('gridsearch', GridSearch(timeout=60, target_classes=[0, 1], control=control, mapping=mapping), 
+        smach.StateMachine.add('gridsearch', GridSearch(timeout=60, target_classes=[(0, 1)], control=control, mapping=mapping), 
                 transitions={'success': 'navigateLaneMarker', 'failure':'failure'})
         smach.StateMachine.add('navigateLaneMarker', NavigateLaneMarker(control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure':'failure'})
