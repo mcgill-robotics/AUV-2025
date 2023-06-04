@@ -6,38 +6,35 @@ from .utility.vision import *
 import time
 import threading
 
-#ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
-class LinearSearch(smach.State):
-    ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
-    def __init__(self, timeout, forward_speed, target_classes=[], control=None, mapping=None):
+#search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
+class InPlaceSearch(smach.State):
+        ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
+    def __init__(self, timeout, target_classes=[], min_objs=1, control=None, mapping=None):
         super().__init__(outcomes=['success', 'failure'])
         if control == None: raise ValueError("control argument is None")
         self.control = control
         if mapping == None: raise ValueError("mapping argument is None")
         self.mapping = mapping
-        self.detectedObject = False
-        self.target_classes = target_classes
         self.timeout = timeout
-        self.forward_speed = forward_speed
+        self.target_classes = target_classes
 
     def execute(self, ud):
-        print("Starting linear search.")
-        try:
-            self.control.forceLocal((self.forward_speed, 0))
+        print("Starting in-place search.")
+        try:          
+            turning_speed = (0,0,-3)
+            print("Setting torque to {}.".format(turning_speed))
+            self.control.torque(turning_speed)
             startTime = time.time()
             while startTime + self.timeout > time.time(): 
                 for cls, min_objs in self.target_classes:
                     if len(self.mapping.getClass(cls)) >= min_objs:
-                        self.detectedObject = True
                         self.control.stop_in_place()
                         print("Found object!")
                         return 'success'
-            print("Linear search timed out.")
+            print("In-place search timed out.")
             return 'failure'
         except KeyboardInterrupt:
-            self.detectedObject = True
             self.control.stop_in_place()
-            self.searchThread.join()
-            print("Linear search interrupted by user.")
+            print("In-place search interrupted by user.")
             return 'failure'
 

@@ -3,194 +3,62 @@
 import rospy
 import smach
 from .utility.vision import *
-import time, math
-import numpy as np
-
-class centerAndScale(smach.State):
-    def __init__(self, control):
-        super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("control argument is None")
-        self.control = control
-        
-    def execute(self, ud):
-        '''
-        Centers and scales the lane marker until error is within tolerance.
-        Once the lane marker is centered and scale, it returns success.
-        If it loses sight of the lane marker for more than timeout, returns "failure".
-        '''
-        print("Starting centering and scaling of lane marker.")
-        global last_object_detection
-
-        timeout = 5
-        targetCenterX = 0.5
-        targetCenterY = 0.5
-        targetScale = 0.5
-        centering_tolerance = 0.1
-        scaling_tolerance = 0.1
-        centered = False
-        scaled = False
-        z_increment = 1
-        x_increment = 1
-        y_increment = 1
-
-        startTime = time.time()
-
-        while not (centered and scaled):
-            if len(last_object_detection) > 0:
-                startTime = time.time()
-                center_x = last_object_detection[6]
-                center_y = last_object_detection[7]
-                width = last_object_detection[2]
-                height = last_object_detection[3]
-                last_object_detection = []
-
-                print("Lane marker in view at: x:{}, y:{}, w:{}, h:{}!".format(center_x, center_y, width, height))
-
-                scaling_error = max(width, height) - targetScale
-                
-                if abs(scaling_error) > scaling_tolerance:
-                    delta_z = scaling_error*z_increment
-                    print("Moving z by {}".format(delta_z))
-                    self.control.moveDeltaLocal((0,0,delta_z))
-                    scaled = False
-                    continue
-                else:
-                    scaled = True
-                
-                centering_error = math.sqrt((center_x - targetCenterX)**2 + (center_y - targetCenterY)**2)
-
-                if centering_error > centering_tolerance: #isn't centered
-                    delta_y = (targetCenterX - center_x)*y_increment
-                    delta_x = (targetCenterY - center_y)*x_increment
-                    print("Surging {}".format(delta_x))
-                    print("Swaying {}".format(delta_y))
-                    self.control.moveDeltaLocal((delta_x,delta_y,0))
-                    centered = False
-                    continue
-                else:
-                    centered = True
-            else:
-                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
-                if time.time() > startTime + timeout:
-                    print("Lane marker no longer visible.")
-                    return 'failure'
-                    
-        print("Successfully positioned above lane marker!")
-        return 'success'
-
-class measureLaneMarker(smach.State):
-    def __init__(self):
-        super().__init__(outcomes=['success', 'failure'])
-        
-    def execute(self, ud):
-        '''
-        Measures the lane marker in view and takes median of recorded measurements as target heading.
-        Takes smallest heading measurement as target.
-        '''
-        print("Starting measurement of lane marker headings.")
-        global last_object_detection
-        global target_heading
-        measurements = []
-        min_measurements = 25
-        startTime = time.time()
-        timeout = 5
-
-        #get measurements
-        while len(measurements) < min_measurements:
-            if len(last_object_detection) > 0:
-                if abs(last_object_detection[4]) < abs(last_object_detection[5]):
-                    measurements.append(last_object_detection[4])
-                else:
-                    measurements.append(last_object_detection[5])
-                startTime = time.time()
-                last_object_detection = []
-            else:
-                print("No detection.... Timeout in " + str((startTime + timeout) - time.time()), end='\r')
-                if time.time() > startTime + timeout:
-                    print("Lane marker no longer visible.")
-                    return 'failure'
-
-        #remove outliers with median
-        target_heading = np.median(measurements)
-        
-        return 'success'
-
-class rotateToHeading(smach.State):
-    def __init__(self, control):
-        super().__init__(outcomes=['success', 'failure'])
-        self.control = control
-        
-    def execute(self, ud):
-        '''
-        Rotates the AUV until lane marker target heading is within rotational tolerance.
-        Once the lane marker heading is facing forward, it returns success.
-        If it loses sight of the lane marker for more than timeout, returns "failure".
-        Assumes that the most "downward" heading is the one where it comes from. (once mapping is implemented this should be improved)
-        '''
-        if target_heading is None: return 'failure'
-        print("Starting rotation of AUV to target heading.")
-        self.control.rotateDelta((0,0,target_heading))
-        print("Successfully rotated to lane marker!")
-        return 'success'
-
-#ignore unnecessary object detection information and make object detection event one array
-#returns first object detection that is valid (assumes no duplicate lane markers in viewframe)
-def parseMessage(msg):
-    detection = []
-    for i in range(len(msg.label)):
-        if msg.camera != 0: #ignore detection on stereo cameras
-            continue
-        if msg.label[i] != 0: #ignore detection of objects other than lane marker
-            continue
-        if msg.headings1[i] == None or msg.headings2[i] == None: #ignore detection that did not glean heading information
-            continue
-        if msg.center_x[i] == None or msg.center_y[i] == None: #ignore detection that did not glean center point information
-            continue
-        if len(detection) > 0 and detection[8] > msg.confidence[i]: #keep highest confidence prediction
-            continue
-        detection = [ msg.bounding_box_x[i],
-            msg.bounding_box_y[i],
-            msg.bounding_box_width[i],
-            msg.bounding_box_height[i],
-            msg.heading1[i]-90, #-90 because 90 degrees orientation on unit circle is 0 degrees for AUV
-            msg.heading2[i]-90,
-            msg.center_x[i],
-            msg.center_y[i],
-            msg.confidence[i]]
-    return detection
-
-target_heading = None
-last_object_detection = []
-firstMessage = False
-
-def objectDetectCb(msg):
-    global last_object_detection
-    global firstMessage
-    firstMessage = True
-    #in the future replace with finding lane marker nearby if any
-    last_object_detection = parseMessage(msg)
+import math
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, control=None):
-        super().__init__(outcomes=['success'])
-        if control == None: raise ValueError("Must pass in controller as control argument.")
+    def __init__(self, origin_class, control, state, mapping):
+        super().__init__(outcomes=['success', 'failure'])
         self.control = control
+        self.mapping = mapping
+        self.state = state
+        self.origin_class = origin_class
         
-    def execute(self, ud):
-        self.detector = ObjectDetector(msgHandler=objectDetectCb)
-        self.detector.start()
+    def degreesToVector(self, angleDegrees):
+        angleRadians = (angleDegrees - 90) * math.pi / 18
+        x = math.cos(angleRadians)
+        y = math.sin(angleRadians)
+        return [x, y]
 
-        sm = smach.StateMachine(outcomes=['success', 'failure']) 
-        with sm:
-            smach.StateMachine.add('scale_and_center', centerAndScale(control=self.control), 
-                    transitions={'success': 'measure', 'failure':'failure'})
-            smach.StateMachine.add('measure', measureLaneMarker(), 
-                    transitions={'success': 'rotate', 'failure':'failure'})
-            smach.StateMachine.add('rotate', rotateToHeading(control=self.control), 
-                    transitions={'success': 'success', 'failure':'failure'})
-        while not firstMessage: pass
-        print("Received first detection message. Starting state machine.")
-        res = sm.execute()
-        self.detector.stop()
-        del self.detector
-        print("Ending state machine.")
+    def normalize_vector(self, vector2D):
+        magnitude = math.sqrt(vector2D[0] ** 2 + vector2D[1] ** 2)
+        if magnitude == 0:
+            return vector2D
+        normalized_x = vector2D[0] / magnitude
+        normalized_y = vector2D[1] / magnitude
+        return [normalized_x, normalized_y]
+
+    def dotProduct(self, v1, v2):
+        return v1[0]*v2[0] + v1[1]*v2[1]
+
+    def execute(self, ud):
+        print("Starting lane marker navigation.") 
+        auv_current_position = self.state.getPosition()
+        if self.origin_class == -1: # use auv current position as origin
+            origin_position = auv_current_position
+        else:
+            origin_obj = self.mapping.getClosestObject(self.origin_class, (auv_current_position[0], auv_current_position[1]))
+            origin_position = (origin_obj[1], origin_obj[2])
+
+
+        lane_marker_obj = self.mapping.getClosestObject(0, (origin_position[0], origin_position[1]))
+        if lane_marker_obj is None:
+
+            print("No lane marker in object map! Failed.")
+            return 'failure'
+        heading1 = lane_marker_obj[4]
+        heading2 = lane_marker_obj[5]
+
+        # find heading which is pointing the least towards the AUV
+        lane_marker_heading1_vec = self.normalizeVector(self.degreesToVector(heading1))
+        lane_marker_heading2_vec = self.normalizeVector(self.degreesToVector(heading2))
+        lane_marker_to_auv_vec = self.normalizeVector((lane_marker_obj[0] - origin_position[0], lane_marker_obj[1] - origin_position[1]))
+
+        heading1_dot = self.dotProduct(lane_marker_to_auv_vec, lane_marker_heading1_vec)
+        heading2_dot = self.dotProduct(lane_marker_to_auv_vec, lane_marker_heading2_vec)
+
+        #   rotate to that heading
+        if heading1_dot < heading2_dot: self.control.rotate((0,0,heading1))
+        else: self.control.rotate((0,0,heading2))
+
+        print("Successfully rotated to lane marker!")
+        return 'success'

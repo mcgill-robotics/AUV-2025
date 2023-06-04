@@ -12,6 +12,10 @@ from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
 import math
 import torch
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
+from std_msgs.msgs import Float64, Header
 
 class State:
     def __init__(self):
@@ -45,14 +49,14 @@ def updateDepthMap(self, msg):
     self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
-def visualizeBbox(img, bbox, class_name, color=BOX_COLOR, thickness=2, fontSize=0.5):
+def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     #get xmin, xmax, ymin, ymax from bbox 
     x_center, y_center, w, h = bbox
     x_min = x_center - w/2
     y_min = y_center - h/2
     x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
     #draw bounding box on image
-    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=color, thickness=thickness)
+    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=BOX_COLOR, thickness=thickness)
     #get size of class name text
     ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, fontSize, 1)  
     #draw box around class name label on image
@@ -288,10 +292,10 @@ HEADING_COLOR = (255, 0, 0) # Blue
 TEXT_COLOR = (0, 0, 0) # Black
 
 pool_depth = 4
-down_cam_hfov = 109
-down_cam_vfov = 59
-front_cam_hfov = 75
-front_cam_vfov = 59
+down_cam_hfov = 220
+down_cam_vfov = 165.26
+front_cam_hfov = 90
+front_cam_vfov = 65
 
 if __name__ == '__main__':
     tf_buffer = Buffer()
@@ -327,7 +331,7 @@ if __name__ == '__main__':
         ["Lane Marker"],
         ["Lane Marker", "Quali Gate", "Quali Pole"]
         ]
-    global_class_ids {"Lane Marker":0, "Quali Gate":1, "Quali Pole":2, "Gate":3, "Buoy":4}
+    global_class_ids = {"Lane Marker":0, "Quali Gate":1, "Quali Pole":2, "Gate":3, "Buoy":4}
     #one publisher per camera
     visualisation_pubs = [
         rospy.Publisher('vision/down_cam/detection', Image, queue_size=1),

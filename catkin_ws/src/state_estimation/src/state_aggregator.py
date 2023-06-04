@@ -8,7 +8,7 @@ from tf import transformations
 from geometry_msgs.msg import Point, Pose, Quaternion 
 from sbg_driver.msg import SbgEkfQuat
 from std_msgs.msg import Empty, Float64
-from auv_msgs.msg import DvlData
+from auv_msgs.msg import DeadReckonReport
 
 
 # angles that change by more than 90 degrees between readings 
@@ -43,7 +43,7 @@ class State_Aggregator:
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
-        rospy.Subscriber("dvl_data",DvlData, self.dvl_cb)
+        rospy.Subscriber("dead_reckon_report",DeadReckonReport, self.dr_cb)
 
         '''
         TODO - use tf2 instead of publishing pose?
@@ -56,10 +56,10 @@ class State_Aggregator:
         self.tf_auv_base = TransformStamped()
         '''
 
-    def dvl_cb(self,data):
+    def dr_cb(self,data):
         #THIS IS TEMPORARY
-        self.x = data.north_displacement
-        self.y = data.east_displacement
+        self.x = data.x
+        self.y = data.y
 
     def imu_cb(self, imu_msg):
         # quaternion in global (imu) frame
