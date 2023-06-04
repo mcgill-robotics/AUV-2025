@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import rospy
-from substates.utility.controller import Controller
 import smach
 from std_msgs.msg import Float64
 
@@ -26,12 +25,12 @@ class Quali(smach.State):
         if control == None: raise ValueError("control argument is None")
         self.control = control
     
-    def execute(self):
+    def execute(self, ud):
         print("Starting Quali Mission")
         try:
             # Step 0: Set DVL to zero
-            pub_DVL = rospy.Publisher('/[DVL_something]', Float64, queue_size=1)
-            pub_DVL.publish((0, 0, 0))
+            # pub_DVL = rospy.Publisher('/[DVL_something]', Float64, queue_size=1)
+            # pub_DVL.publish((0, 0, 0))
 
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
@@ -55,7 +54,7 @@ class Quali(smach.State):
 
             # Step 5: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateDelta((0, 0, 90))
+            self.control.rotateYaw(90)
             rospy.sleep(2)
 
             # Step 6: Move 14 meters forward
@@ -76,5 +75,4 @@ class Quali(smach.State):
             print("Quali mission interrupted by used.")
             return 'failure'    
 
-   
     

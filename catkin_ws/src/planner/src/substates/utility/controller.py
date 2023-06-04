@@ -14,6 +14,7 @@ do_xyz = [Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
 do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
+do_tz = [Bool(False),Bool(False),Bool(False),Bool(False),Bool(False),Bool(True)]
 do_all = [Bool(True)] * 6
 
 do_displace = Bool(True)
@@ -178,6 +179,14 @@ class Controller:
             self.StateServer.send_goal_and_wait(goal)
         else:
             self.StateServer.send_goal(goal,done_cb=callback)
+
+    def rotateYaw(self, delta, callback=None):
+        goal = self.get_state_goal([0, 0, 0, 0, 0, delta], do_tz, do_displace)
+        if callback == None:
+            self.StateServer.send_goal_and_wait(goal)
+        else:
+            self.StateServer.send_goal(goal, done_cb=callback)
+
 
     #REQUIRES DVL
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
