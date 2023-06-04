@@ -6,11 +6,12 @@ from .utility.vision import *
 import math
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, control, state, mapping):
+    def __init__(self, origin_class, control, state, mapping):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
+        self.origin_class = origin_class
         
     def degreesToVector(self, angleDegrees):
         angleRadians = (angleDegrees - 90) * math.pi / 18
@@ -32,7 +33,14 @@ class NavigateLaneMarker(smach.State):
     def execute(self, ud):
         print("Starting lane marker navigation.") 
         auv_current_position = self.state.getPosition()
-        lane_marker_obj = self.mapping.getClosestObject(0, (auv_current_position[0], auv_current_position[1]))
+        if self.origin_class == -1: # use auv current position as origin
+            origin_position = auv_current_position
+        else:
+            origin_obj = self.mapping.getClosestObject(self.origin_class, (auv_current_position[0], auv_current_position[1]))
+            origin_position = (origin_obj[1], origin_obj[2])
+
+
+        lane_marker_obj = self.mapping.getClosestObject(0, (origin_position[0], origin_position[1]))
         if lane_marker_obj is None:
 
             print("No lane marker in object map! Failed.")
@@ -43,7 +51,7 @@ class NavigateLaneMarker(smach.State):
         # find heading which is pointing the least towards the AUV
         lane_marker_heading1_vec = self.normalizeVector(self.degreesToVector(heading1))
         lane_marker_heading2_vec = self.normalizeVector(self.degreesToVector(heading2))
-        lane_marker_to_auv_vec = self.normalizeVector((lane_marker_obj[0] - auv_current_position[0], lane_marker_obj[1] - auv_current_position[1]))
+        lane_marker_to_auv_vec = self.normalizeVector((lane_marker_obj[0] - origin_position[0], lane_marker_obj[1] - origin_position[1]))
 
         heading1_dot = self.dotProduct(lane_marker_to_auv_vec, lane_marker_heading1_vec)
         heading2_dot = self.dotProduct(lane_marker_to_auv_vec, lane_marker_heading2_vec)
