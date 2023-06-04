@@ -330,9 +330,6 @@ object_map_ids = []
 marker_id = 0
 
 groundTruths = [
-    [0,0,1,2,-90,45],
-    [3,1,1,-1,45,""],
-    [4,1,1,1,90,""]
     #add objects here, format is [label,x,y,z,theta_z,extra_field]
 ]
 

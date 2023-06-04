@@ -63,7 +63,7 @@ class Quali(smach.State):
             self.control.moveDeltaLocal((14.0, 0, 0))
             rospy.sleep(2)
 
-            # Step 7: Float to surfice (thrusters stop spinning - effort = 0)
+            # Step 7: Float to surface (thrusters stop spinning - effort = 0)
             print("Stopping thrusters and floating to surface")
             self.control.kill()
             rospy.sleep(2)
