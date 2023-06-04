@@ -56,7 +56,7 @@ class State_Aggregator:
         self.tf_auv_base = TransformStamped()
         '''
 
-    def dr_db(self,data):
+    def dr_cb(self,data):
         #THIS IS TEMPORARY
         self.x = data.x
         self.y = data.y

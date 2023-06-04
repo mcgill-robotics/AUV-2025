@@ -4,6 +4,7 @@ import rospy
 import smach
 
 from substates.breadth_first_search import *
+from substates.in_place_search import *
 from substates.grid_search import *
 from substates.linear_search import *
 from substates.navigate_lane_marker import *
@@ -31,7 +32,7 @@ def laneMarkerGridSearchMission():
     control.moveDelta((0, 0, -0.5))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('gridsearch', GridSearch(timeout=60, target_classes=[0, 1], control=control, mapping=mapping), 
+        smach.StateMachine.add('gridsearch', GridSearch(timeout=60, target_classes=[(0, 1)], control=control, mapping=mapping), 
                 transitions={'success': 'navigateLaneMarker', 'failure':'failure'})
         smach.StateMachine.add('navigateLaneMarker', NavigateLaneMarker(control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure':'failure'})
@@ -64,6 +65,25 @@ def Tricks(t):
         else:
             res = "trick not identified"
     endMission("Finished trick. Result {}".format(res))
+
+def master_planner():
+    control.moveDelta((0, 0, -0.5))
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
+                transitions={'success': 'navigate_gate'})
+        smach.StateMachine.add('navigate_gate', NavigateGate(control=control, mapping=mapping, state=state), 
+                transitions={'success': 'find_lane_marker'})
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(target_classes=[(0, 1)], control=control, mapping=mapping), 
+                transitions={'success': 'navigate_lane_marker'})
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state), 
+                transitions={'success': 'find_buoy'})
+        smach.StateMachine.add('find_buoy', LinearSearch(timeout=9999, forward_speed=5, target_classes=[(2,1)], control=control, mapping=mapping), 
+                transitions={'success': 'navigate_buoy'})
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state), 
+                transitions={'success': '??'})
+    res = sm.execute()
+    endMission("Finished Robosub!")
 
 
 if __name__ == '__main__':
