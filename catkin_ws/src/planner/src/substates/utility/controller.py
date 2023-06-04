@@ -193,13 +193,12 @@ class Controller:
     def moveDeltaLocal(self,delta,callback=None):
         x,y,z = delta
 
-        delta_gx, delta_gy, delta_gz  = transformLocalToGlobal(x, y, z)
+        delta_gx, delta_gy, delta_gz  = self.transformLocalToGlobal(x, y, z)
 
         gx = delta_gx + self.x
         gy = delta_gy + self.y
         gz = delta_gz + self.z
 
-        goal_state = self.get_superimposer_goal()
         goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_displace)
         self.StateServer.send_goal_and_wait(goal_state)
 
