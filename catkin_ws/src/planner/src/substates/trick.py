@@ -19,37 +19,28 @@ class CoinFlip(smach.State):
             return 'success'
 
         except KeyboardInterrupt:
-            print("Coin mission interrupted by used.")
+            print("Roll trick interrupted by user.")
             return 'failure'    
     
     def execute_pitch(self, ud):
         print("Starting pitch trick")
         try:
-            self.control.rotateYaw(45)
-            rospy.sleep(2)
-
-
-            # DONE
+            self.control.rotateDelta((0, 360.0, 0))
             print("Completed")
             return 'success'
 
         except KeyboardInterrupt:
-            print("Coin mission interrupted by used.")
+            print("Pitch trick interrupted by user.")
             return 'failure'   
     
     def execute_yaw(self, ud):
         print("Starting yaw trick")
         try:
-            # Step 1: Rotate to 45 degrees 
-            print("Rotating 45 degrees")
-            self.control.rotateYaw(45)
-            rospy.sleep(2)
+            self.control.rotateYaw(360.0)
 
-
-            # DONE
             print("Completed")
             return 'success'
 
         except KeyboardInterrupt:
-            print("Coin mission interrupted by used.")
+            print("Yaw trick interrupted by user.")
             return 'failure'   

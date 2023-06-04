@@ -26,6 +26,7 @@ do_not_displace = Bool(False)
 tf_buffer = Buffer()
 TransformListener(tf_buffer)
 tf_header = Header(frame_id="world")
+
 def transformLocalToGlobal(lx,ly,lz):
     trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
     offset_local = Vector3(lx, ly, lz)
@@ -192,24 +193,18 @@ class Controller:
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None):
-        #if callback = None make this a blocking call
         x,y,z = delta
 
-        dist = hypot(x,y)
-        x_effort = x * self.effort / dist
-        y_effort = y * self.effort / dist
+        delta_gx, delta_gy, delta_gz  = transformLocalToGlobal(x, y, z)
 
-        time = self.seconds_per_meter * dist
+        gx = delta_gx + self.x
+        gy = delta_gy + self.y
+        gz = delta_gz + self.z
 
-        #self.preemptCurrentAction()
-        #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],do_xy,do_not_displace)
-        goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
-
+        goal_state = self.get_superimposer_goal()
+        goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_displace)
         self.StateServer.send_goal_and_wait(goal_state)
-        self.LocalSuperimposerServer.send_goal(goal_super)
-        rospy.sleep(time)
-        #self.preemptCurrentAction()
+
         self.LocalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
