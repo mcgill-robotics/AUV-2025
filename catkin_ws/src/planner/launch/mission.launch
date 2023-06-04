@@ -1,3 +1,3 @@
 <launch>
-	<node pkg="planner" name="mission" type="mission.py" respawn="True" output="screen"/>
+	<node pkg="planner" name="quali" type="quali.py" respawn="True" output="screen"/>
 </launch>
