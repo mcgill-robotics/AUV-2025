@@ -12,6 +12,9 @@ from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
 import math
 import torch
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
 
 class State:
     def __init__(self):
