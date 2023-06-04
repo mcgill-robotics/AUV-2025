@@ -12,6 +12,7 @@ from substates.utility.controller import Controller
 from substates.utility.state import StateTracker
 from substates.utility.vision import *
 from substates.quali import *
+from substates.trick import *
 
 def endMission(msg="Shutting down mission planner."):
     print(msg)
@@ -45,6 +46,25 @@ def QualiMission():
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
 
+def Tricks(t):
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        if t == "roll":
+            smach.StateMachine.add('roll', Tricks(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+            res = sm.execute_roll()
+        elif t == "pitch":
+            smach.StateMachine.add('pitch', Tricks(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+            res = sm.execute_pitch()
+        elif t == "yaw":
+            smach.StateMachine.add('yaw', Tricks(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+            res = sm.execute_yaw()
+        else:
+            res = "trick not identified"
+    endMission("Finished trick. Result {}".format(res))
+
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
@@ -53,6 +73,8 @@ if __name__ == '__main__':
     control = Controller()
     state = StateTracker()
     mapping = ObjectMapper()
+    Tricks(t="roll")
+
 
     # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
     #testRotationsMission()
