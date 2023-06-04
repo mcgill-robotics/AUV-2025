@@ -4,37 +4,39 @@ import rospy
 
 class KalmanXY:
 
-    def __init__(self,vx,vy, cov=np.eye(2),Q=np.eye(2)*0.1,R=np.eye(2)*0.05,initial_state = np.array([0,0])):
+    def __init__(self,vx,vy, cov=np.eye(2),Q=np.eye(2)*0.1,initial_state = np.array([0,0])):
         self.prev_v = np.array([vx,vy])
-        self.prev_t = rospy.get_time()
         self.covariance = cov
         self.Q = Q
-        self.R = R
         self.prev_state = initial_state
 
+        self.times = [rospy.get_time()]
+        self.velocities = [(0,0)]
 
-    def estimate_x_y(self,dvl,accel):
+
+    def accel_reading(self,accel):
         t = rospy.get_time()
-        detla_t = t - self.prev_t
-        self.prev_t = t
+        delta_t = t - self.times[-1]
+        self.times.append(t)
         A = np.eye(2)
-        B = np.eye(2) * detla_t
+        B = np.eye(2) * delta_t
 
         v_pred = np.matmul(A,self.prev_v) + np.matmul(B,accel)
-        residual = dvl - v_pred
-        cov = np.matmul(A,np.matmul(self.covariance,np.transpose(A))) + self.Q
-        S = cov + self.R
+        self.covariance = np.matmul(A,np.matmul(self.covariance,np.transpose(A))) + self.Q
+        self.prev_v = v_pred
+        self.velocities.append(v_pred)
+
+    def dvl_reading(self,dvl):
+        t = rospy.get_time()
+        delta_t = t - self.times[-1]
+        self.times.append(t)
+        residual = dvl - self.prev_predicted_velocity
+        S = self.covariance + self.R
         S_inv = np.linalg.inv(S)
-        K = np.matmul(cov,S_inv)
-        final = v_pred + np.matmul(K,residual)
-        self.covariance = cov - np.matmul(K,cov)
-
+        K = np.matmul(self.covariance,S_inv)
+        final = self.prev_predicted_velocity + np.matmul(K,residual)
+        self.covariance -=  np.matmul(K,self.covariance)
         self.prev_v = final
-
-        position = self.prev_state + detla_t*final
-        self.prev_state = position
-        return position
-
 
     
 
