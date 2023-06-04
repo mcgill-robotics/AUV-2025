@@ -2,13 +2,13 @@
 
 import rospy
 import actionlib
-from geometry_msgs.msg import Pose
-from std_msgs.msg import Float64, Bool
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
 from math import hypot
 from actionlib_msgs.msg import GoalStatus
-
-##ANTHONY TODO WITH ACTIONS/SERVER, BLOCKING IF THERES A CALLBACK OTHERWISE NON BLOCKING
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
 
 do_xyz = [Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
@@ -20,24 +20,16 @@ do_all = [Bool(True)] * 6
 do_displace = Bool(True)
 do_not_displace = Bool(False)
 
-
-#MISSING IMPORTS
-
-tf_buffer = Buffer()
-TransformListener(tf_buffer)
-tf_header = Header(frame_id="world")
-def transformLocalToGlobal(lx,ly,lz):
-    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
-    offset_local = Vector3(lx, ly, lz)
-    tf_header.stamp = rospy.Time(0)
-    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
-    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
-    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
-
 class Controller:
 
-    def __init__(self):
+    def __init__(self, header_time):
         print("starting controller")
+        self.header_time = header_time
+
+        self.tf_buffer = Buffer()
+        TransformListener(self.tf_buffer)
+        self.tf_header = Header(frame_id="world")
+
         self.servers = []
         self.effort = 15
         self.seconds_per_meter = 1
@@ -53,7 +45,6 @@ class Controller:
         self.GobalSuperimposerServer = actionlib.SimpleActionClient('superimposer_global_server', SuperimposerAction)
         self.servers.append(self.GobalSuperimposerServer)
         self.GobalSuperimposerServer.wait_for_server()
-
 
         self.x = None
         self.y = None
@@ -78,6 +69,14 @@ class Controller:
         self.theta_y = data.data
     def set_theta_z(self,data):
         self.theta_z = data.data
+    
+    def transformLocalToGlobal(self,lx,ly,lz):
+        trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
+        offset_local = Vector3(lx, ly, lz)
+        self.tf_header.stamp = self.header_time
+        offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
+        offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
+        return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
 
     #method to easily get goal object
     def get_superimposer_goal(self,dofs,keepers,displace):
@@ -192,24 +191,17 @@ class Controller:
     #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None):
-        #if callback = None make this a blocking call
         x,y,z = delta
 
-        dist = hypot(x,y)
-        x_effort = x * self.effort / dist
-        y_effort = y * self.effort / dist
+        delta_gx, delta_gy, delta_gz  = self.transformLocalToGlobal(x, y, z)
 
-        time = self.seconds_per_meter * dist
+        gx = delta_gx + self.x
+        gy = delta_gy + self.y
+        gz = delta_gz + self.z
 
-        #self.preemptCurrentAction()
-        #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],do_xy,do_not_displace)
-        goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
-
+        goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_displace)
         self.StateServer.send_goal_and_wait(goal_state)
-        self.LocalSuperimposerServer.send_goal(goal_super)
-        rospy.sleep(time)
-        #self.preemptCurrentAction()
+
         self.LocalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
