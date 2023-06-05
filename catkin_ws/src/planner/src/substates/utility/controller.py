@@ -143,27 +143,9 @@ class Controller:
         #if callback = None make this a blocking call
         x,y,z = delta
 
-        dist = hypot(x,y)
+        goal_state = self.get_state_goal([x,y,z,0,0,0],do_xyz,do_displace)
 
-        if dist == 0:
-            x_effort = 0
-            y_effort = 0
-        else:
-            x_effort = x * self.effort / dist
-            y_effort = y * self.effort / dist
-
-        time = self.seconds_per_meter * dist
-
-        #self.preemptCurrentAction()
-        #if callback = None make this a blocking call
-        goal_super = self.get_superimposer_goal([x_effort,y_effort,0,0,0,0],do_xy,do_not_displace)
-        goal_state = self.get_state_goal([0,0,z,0,0,0],do_z,do_displace)
-
-        self.StateServer.send_goal_and_wait(goal_state)
-        
-        self.GobalSuperimposerServer.send_goal(goal_super)
-        rospy.sleep(time)
-        self.GobalSuperimposerServer.cancel_goal()
+        self.StateServer.send_goal_and_wait(goal_state)     
         if(callback != None):
             callback()
 
@@ -199,7 +181,7 @@ class Controller:
         gy = delta_gy + self.y
         gz = delta_gz + self.z
 
-        goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_displace)
+        goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_not_displace)
         self.StateServer.send_goal_and_wait(goal_state)
 
         self.LocalSuperimposerServer.cancel_goal()
