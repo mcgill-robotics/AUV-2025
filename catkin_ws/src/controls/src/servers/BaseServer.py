@@ -126,9 +126,9 @@ class BaseServer():
 
     def publish_setpoints(self, position, rotation):
         if (self.goal.do_x):
-            self.pub_x_pid.Publish(Float64(position.x))
+            self.pub_x_pid.publish(Float64(position.x))
         if (self.goal.do_y):
-            self.pub_y_pid.Publish(Float64(position.y))
+            self.pub_y_pid.publish(Float64(position.y))
         if(self.goal.do_z):
             self.pub_z_pid.publish(Float64(position.z))
         if(self.goal.do_theta_x):
