@@ -114,8 +114,8 @@ class BaseServer():
         tolerance_position = 0.5
         tolerance_orientation = 1
 
-        x_diff = (not self.do_x) or abs(self.position.x - position.x) <= tolerance_position
-        y_diff = (not self.do_y) or abs(self.position.y - position.y) <= tolerance_position
+        x_diff = (not self.goal.do_x) or abs(self.position.x - position.x) <= tolerance_position
+        y_diff = (not self.goal.do_y) or abs(self.position.y - position.y) <= tolerance_position
         z_diff = (not self.goal.do_z) or abs(self.position.z - position.z) <= tolerance_position
         theta_x_diff = (not self.goal.do_theta_x) or abs(self.theta_x - rotation.x) <= tolerance_orientation
         theta_y_diff = (not self.goal.do_theta_y) or abs(self.theta_y - rotation.y) <= tolerance_orientation
