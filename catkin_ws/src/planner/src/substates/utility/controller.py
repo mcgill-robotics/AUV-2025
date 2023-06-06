@@ -162,7 +162,7 @@ class Controller:
             self.StateServer.send_goal(goal,done_cb=callback)
 
     def rotateYaw(self, delta, callback=None):
-        goal = self.get_state_goal([0, 0, 0, 0, 0, delta], do_tz, do_displace)
+        goal = self.get_state_goal([0, 0, 0, 0, 0, delta], do_tz, do_not_displace)
         if callback == None:
             self.StateServer.send_goal_and_wait(goal)
         else:
