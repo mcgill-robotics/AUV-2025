@@ -6,6 +6,7 @@ from .utility.vision import *
 import time, math
 import numpy as np
 
+
 class centerGate(smach.State):
     def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
@@ -81,19 +82,19 @@ class goThroughGate(smach.State):
         surgeSpeed = 1
 
         print("Starting movement through gate.")
-        control.forceLocal(surgeSpeed,0)
+        self.control.forceLocal(surgeSpeed,0)
         while time.time() < lastGateDetectionTime + noDetectionTime:
             if len(last_object_detection) > 0:
                 lastGateDetectionTime = time.time()
                 last_object_detection = []
-        control.forceLocal(0,0)
+        self.control.forceLocal(0,0)
         print("Finished going through gate.")
 
         print("Rotating by {}.".format(self.extraRotation))
-        control.rotateDelta(self.extraRotation)
+        self.control.rotateDelta(self.extraRotation)
 
         print("Surging by {}.".format(self.extraSurge))
-        control.moveDeltaLocal((self.extraSurge, 0, 0))
+        self.control.moveDeltaLocal((self.extraSurge, 0, 0))
         return 'success'
 
 class goAroundPole(smach.State):
@@ -109,8 +110,8 @@ class goAroundPole(smach.State):
         surgeAmt = 1
         for i in range(3):
             print("Surging by {} then rotating by 90 degrees.".format(surgeAmt))
-            control.moveDeltaLocal((surgeAmt, 0, 0))
-            control.rotateDelta(rotation)
+            self.control.moveDeltaLocal((surgeAmt, 0, 0))
+            self.control.rotateDelta(rotation)
 
         return 'success'
 

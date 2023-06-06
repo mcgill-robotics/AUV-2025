@@ -18,7 +18,7 @@ class RepositionGateBuoy(smach.State):
             return 'success'
 
         except KeyboardInterrupt:
-            print("Reposition gate interrupted by user.")
+            print("Reposition gate/buoy interrupted by user.")
             return 'failure' 
 
 class RepositionLaneMarker(smach.State):

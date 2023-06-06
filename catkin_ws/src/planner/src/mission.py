@@ -15,6 +15,7 @@ from substates.utility.vision import *
 from substates.quali import *
 from substates.trick import *
 from substates.reposition import *
+from substates.navigate_gate import *
 
 def endMission(msg="Shutting down mission planner."):
     print(msg)
@@ -69,6 +70,7 @@ def Tricks(t):
 
 def master_planner():
     control.moveDelta((0, 0, -0.5))
+    control.rotateYaw(45) # Coin flip repositioning
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
