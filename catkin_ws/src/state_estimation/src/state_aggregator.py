@@ -24,6 +24,8 @@ class State_Aggregator:
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
+        self.x_offset = 0.0
+        self.y_offset = 0.0
 
         # orientation
         self.q_auv = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
@@ -44,6 +46,7 @@ class State_Aggregator:
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
         rospy.Subscriber("dead_reckon_report",DeadReckonReport, self.dr_cb)
+        rospy.Subscriber("[DVL_reset]", Empty, self.dvl_offset)
 
         '''
         TODO - use tf2 instead of publishing pose?
@@ -57,9 +60,12 @@ class State_Aggregator:
         '''
 
     def dr_cb(self,data):
-        #THIS IS TEMPORARY
-        self.x = data.x
-        self.y = data.y
+        self.x = data.x - self.x_offset
+        self.y = data.y - self.y_offset
+
+    def dvl_offset(self, data):
+        self.x_offset = self.x 
+        self.y_offset = self.y
 
     def imu_cb(self, imu_msg):
         # quaternion in global (imu) frame
