@@ -44,7 +44,7 @@ class Quali(smach.State):
 
             # Step 3: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateYaw(90)
+            self.control.rotateYawDelta(90)
             rospy.sleep(2)
 
             # Step 4: Move 1 meter forward
@@ -54,7 +54,7 @@ class Quali(smach.State):
 
             # Step 5: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateYaw(90)
+            self.control.rotateYawDelta(90)
             rospy.sleep(2)
 
             # Step 6: Move 14 meters forward
