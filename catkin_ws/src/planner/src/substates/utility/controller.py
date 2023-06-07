@@ -15,7 +15,7 @@ do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
 do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
 do_tz = [Bool(False),Bool(False),Bool(False),Bool(False),Bool(False),Bool(True)]
-do_all = [Bool(True)] * 6
+do_all = [Bool(True),Bool(True),Bool(True),Bool(True),Bool(True),Bool(True)]
 
 do_displace = Bool(True)
 do_not_displace = Bool(False)
@@ -211,7 +211,7 @@ class Controller:
     
     #stop all thrusters
     def kill(self):
-        self.preemptCurrentAction()
+        # self.preemptCurrentAction()
         goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all,do_not_displace)
         self.LocalSuperimposerServer.send_goal(goal)
 
