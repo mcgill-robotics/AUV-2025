@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(vision)
 
-set(MSG_DEP_SET sensor_msgs auv_msgs) 
+set(MSG_DEP_SET sensor_msgs auv_msgs realsense2_camera) 
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}

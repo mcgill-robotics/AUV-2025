@@ -31,3 +31,6 @@ pip3 install ultralytics
 pip install scipy
 #DVL dependencies
 rosdep update
+#IntelRealSense driver
+sudo apt-get install -y ros-noetic-realsense2-camera
+sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
