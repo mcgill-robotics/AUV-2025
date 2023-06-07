@@ -265,21 +265,21 @@ def updateAUVThetaZ(msg):
 def updateAUVX(msg):
     global auv_marker
     auv_marker.pose.position = Point(float(msg.data), auv_marker.pose.position.y, auv_marker.pose.position.z)  # Set the desired position
-    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub,(1,0,0))
+    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1, "Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 def updateAUVY(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, float(msg.data), auv_marker.pose.position.z)  # Set the desired position 
-    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub,(1,0,0))
+    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
 def updateAUVZ(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, auv_marker.pose.position.y, float(msg.data))  # Set the desired position
-    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub,(1,0,0))
+    addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
