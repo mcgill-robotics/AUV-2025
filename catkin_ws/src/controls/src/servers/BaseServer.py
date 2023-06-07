@@ -235,6 +235,8 @@ class SuperimposerServer(BaseServer):
 
     
     def callback(self, goal):
+        print("received new goal")
+        print(goal)
         if(goal.displace.data):
             self.goal = self.displace_goal(goal)
         else:
