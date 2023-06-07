@@ -96,7 +96,7 @@ class BaseServer():
         interval = 1
 
         settled = False
-
+        print("waiting for settled")
         while not settled and not self.cancelled:
             #print("hi")
             start = time.time()
@@ -105,6 +105,7 @@ class BaseServer():
                     settled = True
                     break
                 rospy.sleep(0.01)
+        print("settled")
 
     #true if auv is in goal position
     def check_status(self,position,rotation):
@@ -114,12 +115,14 @@ class BaseServer():
         tolerance_position = 0.5
         tolerance_orientation = 1
 
-        x_diff = (not self.goal.do_x) or abs(self.position.x - position.x) <= tolerance_position
-        y_diff = (not self.goal.do_y) or abs(self.position.y - position.y) <= tolerance_position
-        z_diff = (not self.goal.do_z) or abs(self.position.z - position.z) <= tolerance_position
-        theta_x_diff = (not self.goal.do_theta_x) or abs(self.theta_x - rotation.x) <= tolerance_orientation
-        theta_y_diff = (not self.goal.do_theta_y) or abs(self.theta_y - rotation.y) <= tolerance_orientation
-        theta_z_diff = (not self.goal.do_theta_z) or abs(self.theta_z - rotation.z) <= tolerance_orientation
+
+        x_diff = (not self.goal.do_x.data) or abs(self.position.x - position.x) <= tolerance_position
+        y_diff = (not self.goal.do_y.data) or abs(self.position.y - position.y) <= tolerance_position
+        z_diff = (not self.goal.do_z.data) or abs(self.position.z - position.z) <= tolerance_position
+        theta_x_diff = (not self.goal.do_theta_x.data) or abs(self.theta_x - rotation.x) <= tolerance_orientation
+        theta_y_diff = (not self.goal.do_theta_y.data) or abs(self.theta_y - rotation.y) <= tolerance_orientation
+        theta_z_diff = (not self.goal.do_theta_z.data) or abs(self.theta_z - rotation.z) <= tolerance_orientation
+
 
         return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
 
