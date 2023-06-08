@@ -61,6 +61,7 @@ Before building packages, make sure that the following additional ROS/python pac
 	sudo apt-get install ros-noetic-joy-teleop
 	sudo apt-get install ros-noetic-sbg-driver
 	sudo apt-get install ros-noetic-usb-cam
+	sudo apt-get install ros-noetic-realsense2-camera
 	pip install numpy-quaternion
 	pip install ultralytics
 
