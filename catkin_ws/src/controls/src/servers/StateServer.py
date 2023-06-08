@@ -5,6 +5,8 @@ from BaseServer import BaseServer
 import actionlib
 from geometry_msgs.msg import Point
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
+from std_msgs.msg import Float64, Bool
+import time
 
 
 """
@@ -71,4 +73,69 @@ class StateServer(BaseServer):
         goal_rotation.z = goal_theta_z
 
         return goal_position, goal_rotation
+    
+    def enable_pids(self,goal):
+        if(goal.do_x.data):
+            self.pub_x_enable.publish(Bool(True))
+        if(goal.do_y.data):
+            self.pub_y_enable.publish(Bool(True))
+        if(goal.do_z.data):
+            self.pub_z_enable.publish(Bool(True))
+        if(goal.do_theta_x.data):
+            self.pub_theta_x_enable.publish(Bool(True))
+        if(goal.do_theta_y.data):
+            self.pub_theta_y_enable.publish(Bool(True))
+        if(goal.do_theta_z.data):
+            self.pub_theta_z_enable.publish(Bool(True))
+
+        
+
+    def wait_for_settled(self,position,rotation):
+        interval = 1
+
+        settled = False
+        print("waiting for settled")
+        while not settled and not self.cancelled:
+            #print("hi")
+            start = time.time()
+            while not self.cancelled and self.check_status(position,rotation):
+                if(time.time() - start > interval):
+                    settled = True
+                    break
+                rospy.sleep(0.01)
+        print("settled")
+
+    #true if auv is in goal position
+    def check_status(self,position,rotation):
+        if(self.position == None or self.theta_x == None or self.theta_y == None or self.theta_z == None):
+            return False
+
+        tolerance_position = 0.5
+        tolerance_orientation = 1
+
+
+        x_diff = (not self.goal.do_x.data) or abs(self.position.x - position.x) <= tolerance_position
+        y_diff = (not self.goal.do_y.data) or abs(self.position.y - position.y) <= tolerance_position
+        z_diff = (not self.goal.do_z.data) or abs(self.position.z - position.z) <= tolerance_position
+        theta_x_diff = (not self.goal.do_theta_x.data) or abs(self.theta_x - rotation.x) <= tolerance_orientation
+        theta_y_diff = (not self.goal.do_theta_y.data) or abs(self.theta_y - rotation.y) <= tolerance_orientation
+        theta_z_diff = (not self.goal.do_theta_z.data) or abs(self.theta_z - rotation.z) <= tolerance_orientation
+
+
+        return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
+
+
+    def publish_setpoints(self, position, rotation):
+        if (self.goal.do_x.data):
+            self.pub_x_pid.publish(Float64(position.x))
+        if (self.goal.do_y.data):
+            self.pub_y_pid.publish(Float64(position.y))
+        if(self.goal.do_z.data):
+            self.pub_z_pid.publish(Float64(position.z))
+        if(self.goal.do_theta_x.data):
+            self.pub_theta_x_pid.publish(Float64(rotation.x))
+        if(self.goal.do_theta_y.data):
+            self.pub_theta_y_pid.publish(Float64(rotation.y))
+        if(self.goal.do_theta_z.data):
+            self.pub_theta_z_pid.publish(Float64(rotation.z))
 
