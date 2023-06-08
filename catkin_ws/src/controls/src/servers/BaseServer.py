@@ -6,7 +6,17 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import Float64, Bool
 import time
 
+"""
+This class servers as an abstract class for the action lib servers the controls use to
+execute goals. In the process of developing the controls servers, I found that the I was
+duplicating a lot of code so I made this base class to avoid issues of fixing a bug in one
+server but not fixing it in another.
 
+The methods this class have are mainly boiler plate. There are helper methods to establish
+publishers and subscribers, a default preempt callback that sets the pids to the current position,
+methods to check if a goal pose has been entered, a method to automatically turn off pids,
+and a method to publish setpoints to the pids.
+"""
 class BaseServer():
 
     def __init__(self) -> None:
