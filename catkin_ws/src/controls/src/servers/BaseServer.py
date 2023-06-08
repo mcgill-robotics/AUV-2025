@@ -83,7 +83,7 @@ class BaseServer():
             self.pub_y_enable.publish(Bool(True))
         if(goal.do_z.data):
             self.pub_z_enable.publish(Bool(True))
-        if(goal.do_theta_x).data:
+        if(goal.do_theta_x.data):
             self.pub_theta_x_enable.publish(Bool(True))
         if(goal.do_theta_y.data):
             self.pub_theta_y_enable.publish(Bool(True))
@@ -128,17 +128,17 @@ class BaseServer():
 
 
     def publish_setpoints(self, position, rotation):
-        if (self.goal.do_x):
+        if (self.goal.do_x.data):
             self.pub_x_pid.publish(Float64(position.x))
-        if (self.goal.do_y):
+        if (self.goal.do_y.data):
             self.pub_y_pid.publish(Float64(position.y))
-        if(self.goal.do_z):
+        if(self.goal.do_z.data):
             self.pub_z_pid.publish(Float64(position.z))
-        if(self.goal.do_theta_x):
+        if(self.goal.do_theta_x.data):
             self.pub_theta_x_pid.publish(Float64(rotation.x))
-        if(self.goal.do_theta_y):
+        if(self.goal.do_theta_y.data):
             self.pub_theta_y_pid.publish(Float64(rotation.y))
-        if(self.goal.do_theta_z):
+        if(self.goal.do_theta_z.data):
             self.pub_theta_z_pid.publish(Float64(rotation.z))
 
 
