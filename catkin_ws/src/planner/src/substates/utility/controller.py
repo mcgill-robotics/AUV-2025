@@ -194,14 +194,7 @@ class Controller:
         x,y,z = vel
         goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
         self.GobalSuperimposerServer.send_goal(goal)
-
-    #set thruster velocity output
-    def force(self,vel):
-        x,y = vel
-        #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy,do_not_displace)
-        self.GobalSuperimposerServer.send_goal(goal)
-
+        
     #set thruster velocity in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel

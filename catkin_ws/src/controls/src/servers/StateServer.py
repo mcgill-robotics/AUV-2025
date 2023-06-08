@@ -1,3 +1,6 @@
+#! /usr/bin/python3
+
+import rospy
 from BaseServer import BaseServer
 import actionlib
 from geometry_msgs.msg import Point
