@@ -4,7 +4,8 @@ import rospy
 
 # from servers.StateServers import *
 # from servers.SuperimposerServer import *
-from servers.BaseServer import *
+from servers.StateServer import StateServer
+from servers.SuperimposerServer import LocalSuperimposerServer, GlobalSuperimposerServer
 
 #define preempt callbacks using the cancel methods. This is necessary because action lib does not
 #allow methods to be callback function for preempting.
