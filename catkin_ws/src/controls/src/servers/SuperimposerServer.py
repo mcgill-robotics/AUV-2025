@@ -28,24 +28,10 @@ class SuperimposerServer(BaseServer):
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
 
-    
-    def displace_goal(self,displace):
-        """
-        Accepts a displacement goal effort, and adds
-        it to the current goal effort. If the goal effort
-        does not exist it is treated as 0.
-        """
-        if(self.goal == None):
-            return displace
+        self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
+        self.server.start()
 
-        new_goal = displace
-        new_goal.effort.force.x += self.goal.effort.force.x
-        new_goal.effort.force.y += self.goal.effort.force.y
-        new_goal.effort.force.z += self.goal.effort.force.z
-        new_goal.effort.torque.x += self.goal.effort.torque.x
-        new_goal.effort.torque.y += self.goal.effort.torque.y
-        new_goal.effort.torque.z += self.goal.effort.torque.z
-        return new_goal
+
 
     
     def callback(self, goal):
@@ -54,10 +40,7 @@ class SuperimposerServer(BaseServer):
         """
         print("received new goal")
         print(goal)
-        if(goal.displace.data):
-            self.goal = self.displace_goal(goal)
-        else:
-            self.goal = goal
+        self.goal = goal
         
 
         if(self.goal.do_x.data):
@@ -88,12 +71,12 @@ class SuperimposerServer(BaseServer):
         if(goal.do_yaw.data):
             self.pub_theta_z_enable.publish(0)
 
-        # ANTOINE TODO: determine which pids to unset when recieving a superimposer goal
+        # ANTOINE TODO: determine which pids to unset when receiving a superimposer goal
 
-        # if(goal.do_surge.data or goal.do_sway.data):
-        #     self.pub_x_enable.publish(0)
-        #     self.pub_y_enable.publish(0)
-        # if(goal.do_heave.data):
-        #     self.pub_z_enable.publish(0)
+        if(goal.do_surge.data or goal.do_sway.data):
+            self.pub_x_enable.publish(0)
+            self.pub_y_enable.publish(0)
+        if(goal.do_heave.data):
+            self.pub_z_enable.publish(0)
 
     

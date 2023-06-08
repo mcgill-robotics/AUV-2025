@@ -38,13 +38,9 @@ class Controller:
         self.servers.append(self.StateServer)
         self.StateServer.wait_for_server()
 
-        self.LocalSuperimposerServer = actionlib.SimpleActionClient('superimposer_local_server', SuperimposerAction)
-        self.servers.append(self.LocalSuperimposerServer)
-        self.LocalSuperimposerServer.wait_for_server()
-
-        self.GobalSuperimposerServer = actionlib.SimpleActionClient('superimposer_global_server', SuperimposerAction)
-        self.servers.append(self.GobalSuperimposerServer)
-        self.GobalSuperimposerServer.wait_for_server()
+        self.SuperimposerServer = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
+        self.servers.append(self.SuperimposerServer)
+        self.SuperimposerServer.wait_for_server()
 
         self.x = None
         self.y = None
@@ -71,6 +67,10 @@ class Controller:
         self.theta_z = data.data
     
     def transformLocalToGlobal(self,lx,ly,lz):
+        """
+        Performs a coordinate transformation from the auv body frame
+        to the world frame.
+        """
         trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
@@ -184,7 +184,6 @@ class Controller:
         goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_not_displace)
         self.StateServer.send_goal_and_wait(goal_state)
 
-        self.LocalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
 
@@ -193,20 +192,20 @@ class Controller:
         #self.preemptCurrentAction()
         x,y,z = vel
         goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
-        self.GobalSuperimposerServer.send_goal(goal)
-        
+        self.SuperimposerServer.send_goal(goal)
+
     #set thruster velocity in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
         #self.preemptCurrentAction()
         goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy,do_not_displace)
-        self.LocalSuperimposerServer.send_goal(goal)
+        self.SuperimposerServer.send_goal(goal)
     
     #stop all thrusters
     def kill(self):
         # self.preemptCurrentAction()
         goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all,do_not_displace)
-        self.LocalSuperimposerServer.send_goal(goal)
+        self.SuperimposerServer.send_goal(goal)
 
     #stay still in place
     def stop_in_place(self):
