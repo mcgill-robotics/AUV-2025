@@ -10,18 +10,23 @@ from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 
+
+# predefined bools so we don't have to write these out everytime we want to get a new goal
 do_xyz = [Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
 do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
 do_tz = [Bool(False),Bool(False),Bool(False),Bool(False),Bool(False),Bool(True)]
 do_all = [Bool(True),Bool(True),Bool(True),Bool(True),Bool(True),Bool(True)]
-
 do_displace = Bool(True)
 do_not_displace = Bool(False)
 
-class Controller:
 
+"""
+Helper class for the planner. Takes in simple commands, converts them to 
+goals and sends them to the control servers.
+"""
+class Controller:
     def __init__(self, header_time):
         print("starting controller")
         self.header_time = header_time
