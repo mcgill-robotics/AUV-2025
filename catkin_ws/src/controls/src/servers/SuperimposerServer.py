@@ -3,6 +3,13 @@ import actionlib
 from auv_msgs.msg import SuperimposerAction, SuperimposerFeedback, SuperimposerGoal, SuperimposerResult
 from std_msgs.msg import Float64, Bool
 
+
+"""
+Abstract class for the superimposer servers. The superimposer servers
+accept a SuperimposerGoal which has an effort to exert on the auv
+via the thrusters. The preempt callback is the default cancel method
+which sets the pids to the current position.
+"""
 class SuperimposerServer(BaseServer):
     def __init__(self):
         super().__init__()
@@ -19,6 +26,11 @@ class SuperimposerServer(BaseServer):
 
     
     def displace_goal(self,displace):
+        """
+        Accepts a displacement goal effort, and adds
+        it to the current goal effort. If the goal effort
+        does not exist it is treated as 0.
+        """
         print("displacing goal")
         if(self.goal == None):
             return displace
@@ -31,23 +43,12 @@ class SuperimposerServer(BaseServer):
         new_goal.effort.torque.y += self.goal.effort.torque.y
         new_goal.effort.torque.z += self.goal.effort.torque.z
         return new_goal
-    
-    def cancel(self):
-        if(self.goal.do_surge.data):
-            self.pub_x_effort.publish(0)
-        if(self.goal.do_sway.data):
-            self.pub_y_effort.publish(0)
-        if(self.goal.do_heave.data):
-            self.pub_z_effort.publish(0)
-        if(self.goal.do_roll.data):
-            self.pub_theta_x_effort.publish(0)
-        if(self.goal.do_pitch.data):
-            self.pub_theta_y_effort.publish(0)
-        if(self.goal.do_yaw.data):
-            self.pub_theta_z_effort.publish(0)
 
     
     def callback(self, goal):
+        """
+        Executes a Superimposer Goal. Sets the efforts to the goal efforts.
+        """
         print("received new goal")
         print(goal)
         if(goal.displace.data):
@@ -59,30 +60,28 @@ class SuperimposerServer(BaseServer):
             self.pub_x_enable.publish(Bool(False))
             self.pub_x_effort.publish(self.goal.effort.force.x)
         if(goal.do_sway.data):
-            #unset pids
             self.pub_y_enable.publish(Bool(False))
             self.pub_y_effort.publish(self.goal.effort.force.y)
         if(goal.do_heave.data):
-            #unset pids
             self.pub_z_enable.publish(Bool(False))
             self.pub_z_effort.publish(self.goal.effort.force.z)
         if(goal.do_roll.data):
-            #unset pids
             self.pub_theta_x_enable.publish(Bool(False))
             self.pub_theta_x_effort.publish(self.goal.effort.torque.x)
         if(goal.do_pitch.data):
-            #unset pids
             self.pub_theta_y_enable.publish(Bool(False))
             self.pub_theta_y_effort.publish(self.goal.effort.torque.y)
         if(goal.do_yaw.data):
-            #unset pids
             self.pub_theta_z_enable.publish(Bool(False))
             self.pub_theta_z_effort.publish(self.goal.effort.torque.z)
 
         self.server.set_succeeded()
 
 
-
+"""
+Server class for executing SuperimposerGoals by publishing the efforts
+in the body rotation frame.
+"""
 class LocalSuperimposerServer(SuperimposerServer):
     def __init__(self):
         super().__init__()
@@ -98,6 +97,11 @@ class LocalSuperimposerServer(SuperimposerServer):
   
         self.server.start()
 
+
+"""
+Server class for executing SuperimposerGoals by publishing the efforts
+in the world rotation frame.
+"""
 class GlobalSuperimposerServer(SuperimposerServer):
     def __init__(self):
         super().__init__()

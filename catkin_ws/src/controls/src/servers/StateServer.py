@@ -3,6 +3,12 @@ import actionlib
 from geometry_msgs.msg import Point
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
 
+
+"""
+This server class executes a state goal, which has a goal pose to enter.
+The goal pose can be considered a global position, or a displacement within
+the world reference frame.
+"""
 class StateServer(BaseServer):
     def __init__(self):
         super().__init__()
@@ -13,6 +19,12 @@ class StateServer(BaseServer):
         self.server.start()
 
     def callback(self, goal):
+        """
+        Execute callback for this server. Executes the goal.
+        If the goal is a displace, calculates a global pose to move to.
+        Sets the pids then waits for the auv to enter the pose before
+        setting the state to succeeded.
+        """
         print("got a message")
         # set the PIDs
         #print(goal.pose)
@@ -33,6 +45,10 @@ class StateServer(BaseServer):
             self.server.set_succeeded()
     
     def dispalce_goal(self, goal):
+        """
+        Takes in a displacement goal pose and returns the corresponding
+        world frame pose.
+        """
         goal_x = goal.position.x + self.position.x
         goal_y = goal.position.y + self.position.y
         goal_z = goal.position.z + self.position.z
