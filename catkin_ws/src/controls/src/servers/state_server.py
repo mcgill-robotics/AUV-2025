@@ -82,7 +82,7 @@ class StateServer(BaseServer):
         
 
     def wait_for_settled(self):
-        interval = 1
+        interval = 4
 
         settled = False
         print("waiting for settled")
