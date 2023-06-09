@@ -20,6 +20,11 @@ class SuperimposerServer(BaseServer):
         self.establish_pid_publishers()
         self.establish_state_subscribers()
 
+
+        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=50)
+        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=50)
+        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=50)
+
         self.pub_surge = rospy.Publisher('surge', Float64, queue_size=50)
         self.pub_sway = rospy.Publisher('sway', Float64, queue_size=50)
         self.pub_heave = rospy.Publisher('heave', Float64, queue_size=50)
@@ -41,7 +46,7 @@ class SuperimposerServer(BaseServer):
         print("received new goal")
         print(goal)
         self.goal = goal
-        
+        self.unset_pids(goal)
 
         if(self.goal.do_surge.data):
             self.pub_surge.publish(self.goal.effort.force.x)
@@ -65,18 +70,21 @@ class SuperimposerServer(BaseServer):
         Unsets the pids for the given goal.   
         """
         if(goal.do_roll.data):
-            self.pub_theta_x_enable.publish(0)
+            self.pub_theta_x_enable.publish(Bool(False))
         if(goal.do_pitch.data):
-            self.pub_theta_y_enable.publish(0)
+            self.pub_theta_y_enable.publish(Bool(False))
         if(goal.do_yaw.data):
-            self.pub_theta_z_enable.publish(0)
+            self.pub_theta_z_enable.publish(Bool(False))
 
         # ANTOINE TODO: determine which pids to unset when receiving a superimposer goal
 
         if(goal.do_surge.data or goal.do_sway.data):
-            self.pub_x_enable.publish(0)
-            self.pub_y_enable.publish(0)
+            self.pub_global_x.publish(0)
+            self.pub_global_y.publish(0)
+            self.pub_x_enable.publish(Bool(False))
+            self.pub_y_enable.publish(Bool(False))
         if(goal.do_heave.data):
-            self.pub_z_enable.publish(0)
+            self.pub_global_z.publish(0)
+            self.pub_z_enable.publish(Bool(False))
 
     

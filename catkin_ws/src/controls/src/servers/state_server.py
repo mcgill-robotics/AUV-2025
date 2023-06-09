@@ -112,7 +112,6 @@ class StateServer(BaseServer):
         theta_y_diff = (not self.goal.do_theta_y.data) or abs(self.theta_y - self.goal.rotation.y) <= tolerance_orientation
         theta_z_diff = (not self.goal.do_theta_z.data) or abs(self.theta_z - self.goal.rotation.z) <= tolerance_orientation
 
-
         return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
 
 
