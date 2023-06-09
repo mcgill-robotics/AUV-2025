@@ -1,11 +1,11 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 import rospy
-from BaseServer import BaseServer
+
 import actionlib
 from auv_msgs.msg import SuperimposerAction, SuperimposerFeedback, SuperimposerGoal, SuperimposerResult
 from std_msgs.msg import Float64, Bool
-
+from servers.base_server import BaseServer
 
 """
 Abstract class for the superimposer servers. The superimposer servers
@@ -43,20 +43,20 @@ class SuperimposerServer(BaseServer):
         self.goal = goal
         
 
-        if(self.goal.do_x.data):
+        if(self.goal.do_surge.data):
             self.pub_surge.publish(self.goal.effort.force.x)
-        if(self.goal.do_y.data):
+        if(self.goal.do_sway.data):
             self.pub_sway.publish(self.goal.effort.force.y)
-        if(self.goal.do_z.data):
+        if(self.goal.do_heave.data):
             self.pub_heave.publish(self.goal.effort.force.z)
 
         
         if(self.goal.do_roll.data):
-            self.pub_theta_x_effort.publish(self.goal.effort.torque.x)
+            self.pub_roll.publish(self.goal.effort.torque.x)
         if(self.goal.do_pitch.data):
-            self.pub_theta_y_effort.publish(self.goal.effort.torque.y)
+            self.pub_pitch.publish(self.goal.effort.torque.y)
         if(self.goal.do_yaw.data):
-            self.pub_theta_z_effort.publish(self.goal.effort.torque.z)
+            self.pub_yaw.publish(self.goal.effort.torque.z)
 
         self.server.set_succeeded()
 

@@ -1,13 +1,14 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
+
 
 import rospy
-from BaseServer import BaseServer
+
 import actionlib
 from geometry_msgs.msg import Point
 from auv_msgs.msg import StateAction, StateFeedback, StateResult
 from std_msgs.msg import Float64, Bool
 import time
-
+from servers.base_server import BaseServer
 
 """
 This server class executes a state goal, which has a goal pose to enter.

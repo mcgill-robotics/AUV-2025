@@ -84,7 +84,7 @@ class Controller:
         return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
 
     #method to easily get goal object
-    def get_superimposer_goal(self,dofs,keepers,displace):
+    def get_superimposer_goal(self,dofs,keepers):
         surge,sway,heave,roll,pitch,yaw = dofs
         goal = SuperimposerGoal()
         goal.effort.force.x = surge
@@ -93,7 +93,6 @@ class Controller:
         goal.effort.torque.x = roll
         goal.effort.torque.y = pitch
         goal.effort.torque.z = yaw
-        goal.displace = displace
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal
     
@@ -196,20 +195,20 @@ class Controller:
     def torque(self,vel):
         #self.preemptCurrentAction()
         x,y,z = vel
-        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz)
         self.SuperimposerServer.send_goal(goal)
 
     #set thruster velocity in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy,do_not_displace)
+        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy)
         self.SuperimposerServer.send_goal(goal)
     
     #stop all thrusters
     def kill(self):
         # self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all,do_not_displace)
+        goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all)
         self.SuperimposerServer.send_goal(goal)
 
     #stay still in place
