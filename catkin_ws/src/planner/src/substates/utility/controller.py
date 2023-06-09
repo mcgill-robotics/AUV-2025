@@ -10,18 +10,23 @@ from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 
+
+# predefined bools so we don't have to write these out everytime we want to get a new goal
 do_xyz = [Bool(True),Bool(True),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_xy = [Bool(True),Bool(True),Bool(False),Bool(False),Bool(False),Bool(False)]
 do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
 do_tz = [Bool(False),Bool(False),Bool(False),Bool(False),Bool(False),Bool(True)]
 do_all = [Bool(True),Bool(True),Bool(True),Bool(True),Bool(True),Bool(True)]
-
 do_displace = Bool(True)
 do_not_displace = Bool(False)
 
-class Controller:
 
+"""
+Helper class for the planner. Takes in simple commands, converts them to 
+goals and sends them to the control servers.
+"""
+class Controller:
     def __init__(self, header_time):
         print("starting controller")
         self.header_time = header_time
@@ -38,13 +43,9 @@ class Controller:
         self.servers.append(self.StateServer)
         self.StateServer.wait_for_server()
 
-        self.LocalSuperimposerServer = actionlib.SimpleActionClient('superimposer_local_server', SuperimposerAction)
-        self.servers.append(self.LocalSuperimposerServer)
-        self.LocalSuperimposerServer.wait_for_server()
-
-        self.GobalSuperimposerServer = actionlib.SimpleActionClient('superimposer_global_server', SuperimposerAction)
-        self.servers.append(self.GobalSuperimposerServer)
-        self.GobalSuperimposerServer.wait_for_server()
+        self.SuperimposerServer = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
+        self.servers.append(self.SuperimposerServer)
+        self.SuperimposerServer.wait_for_server()
 
         self.x = None
         self.y = None
@@ -71,6 +72,10 @@ class Controller:
         self.theta_z = data.data
     
     def transformLocalToGlobal(self,lx,ly,lz):
+        """
+        Performs a coordinate transformation from the auv body frame
+        to the world frame.
+        """
         trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
@@ -79,7 +84,7 @@ class Controller:
         return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
 
     #method to easily get goal object
-    def get_superimposer_goal(self,dofs,keepers,displace):
+    def get_superimposer_goal(self,dofs,keepers):
         surge,sway,heave,roll,pitch,yaw = dofs
         goal = SuperimposerGoal()
         goal.effort.force.x = surge
@@ -88,7 +93,6 @@ class Controller:
         goal.effort.torque.x = roll
         goal.effort.torque.y = pitch
         goal.effort.torque.z = yaw
-        goal.displace = displace
         goal.do_surge, goal.do_sway, goal.do_heave, goal.do_roll, goal.do_pitch, goal.do_yaw = keepers
         return goal
     
@@ -184,7 +188,6 @@ class Controller:
         goal_state = self.get_state_goal([gx, gy, gz, 0, 0, 0], do_xyz, do_not_displace)
         self.StateServer.send_goal_and_wait(goal_state)
 
-        self.LocalSuperimposerServer.cancel_goal()
         if(callback != None):
             callback()
 
@@ -192,28 +195,21 @@ class Controller:
     def torque(self,vel):
         #self.preemptCurrentAction()
         x,y,z = vel
-        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz,do_not_displace)
-        self.GobalSuperimposerServer.send_goal(goal)
-
-    #set thruster velocity output
-    def force(self,vel):
-        x,y = vel
-        #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy,do_not_displace)
-        self.GobalSuperimposerServer.send_goal(goal)
+        goal = self.get_superimposer_goal([0,0,0,x,y,z],do_txtytz)
+        self.SuperimposerServer.send_goal(goal)
 
     #set thruster velocity in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
         #self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy,do_not_displace)
-        self.LocalSuperimposerServer.send_goal(goal)
+        goal = self.get_superimposer_goal([x,y,0,0,0,0],do_xy)
+        self.SuperimposerServer.send_goal(goal)
     
     #stop all thrusters
     def kill(self):
         # self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all,do_not_displace)
-        self.LocalSuperimposerServer.send_goal(goal)
+        goal = self.get_superimposer_goal([0,0,0,0,0,0],do_all)
+        self.SuperimposerServer.send_goal(goal)
 
     #stay still in place
     def stop_in_place(self):
