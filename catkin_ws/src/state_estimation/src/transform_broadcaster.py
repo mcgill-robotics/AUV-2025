@@ -26,7 +26,19 @@ def state_cb(pose):
     t.transform.translation.z = pose.position.z 
     t.transform.rotation = pose.orientation
 
-    br.sendTransform(t)
+    t2 = TransformStamped()
+    
+    t2.header.stamp = rospy.Time.now()
+    t2.header.frame_id = "world"
+
+    t2.child_frame_id = "auv_rotation"
+
+    t2.transform.translation.x = 0
+    t2.transform.translation.y = 0
+    t2.transform.translation.z = 0
+    t2.transform.rotation = pose.orientation
+
+    br.sendTransform(t2)
 
 
 if __name__ == '__main__':
