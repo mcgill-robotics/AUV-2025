@@ -128,6 +128,15 @@ class Controller:
         else:
             self.StateServer.send_goal(goal,done_cb=callback)
 
+    def rotateYaw(self,z,callback=None):
+        #if callback = None make this a blocking call
+        #self.preemptCurrentAction()
+        goal = self.get_state_goal([0,0,0,0,0,z],do_tz,do_not_displace)
+        if callback == None:
+            self.StateServer.send_goal_and_wait(goal)
+        else:
+            self.StateServer.send_goal(goal,done_cb=callback)
+
     #REQUIRES DVL
     #move to setpoint
     def move(self,pos,callback=None):
