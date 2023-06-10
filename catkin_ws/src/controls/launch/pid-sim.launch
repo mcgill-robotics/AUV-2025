@@ -19,8 +19,8 @@
 		<param name="Kp" value="60" /> 
 		<param name="Ki" value="0" />
 		<param name="Kd" value="0" />
-		<param name="upper_limit" value="40" />
-		<param name="lower_limit" value="-40" />
+		<param name="upper_limit" value="100" />
+		<param name="lower_limit" value="-100" />
 		<param name="windup_limit" value="2000" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
@@ -34,10 +34,10 @@
 	<node name="x_pid" pkg="pid" type="controller" >
 		<param name="Kp" value="60" /> 
 		<param name="Ki" value="0" />
-		<param name="Kd" value="0" />
-		<param name="upper_limit" value="40" />
-		<param name="lower_limit" value="-40" />
-		<param name="windup_limit" value="2000" />
+		<param name="Kd" value="10" />
+		<param name="upper_limit" value="20" />
+		<param name="lower_limit" value="-20" />
+		<param name="windup_limit" value="20" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -48,9 +48,9 @@
 	</node>
 	
 	<node name="theta_x_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="0.05" />
+		<param name="Kp" value="-0.07" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="0.0" />
+		<param name="Kd" value="-0.03" />
 		<param name="upper_limit" value="18" />
 		<param name="lower_limit" value="-18" />
 		<param name="windup_limit" value="18" />
@@ -80,12 +80,12 @@
 	</node>
 	
 	<node name="theta_z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="0.002" />
+		<param name="Kp" value="-0.07" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="0.002" />
-		<param name="upper_limit" value="10" />
-		<param name="lower_limit" value="-10" />
-		<param name="windup_limit" value="100" />
+		<param name="Kd" value="-0.03" />
+		<param name="upper_limit" value="20" />
+		<param name="lower_limit" value="-20" />
+		<param name="windup_limit" value="20" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
