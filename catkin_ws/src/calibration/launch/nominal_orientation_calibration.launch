@@ -1,4 +1,0 @@
-<launch>
-	<include file="$(find calibration)/launch/calibration.launch" />
-	<node name="nominal_orientation_calibration" pkg="calibration" type="nominal_orientation_calibration.py" respawn="false" output="screen"/>
-</launch>

@@ -1,4 +1,0 @@
-<launch>
-	<node name="logger" pkg="calibration" type="logger.py" respawn="true" output="screen" cwd="node"/>
-</launch>
-
