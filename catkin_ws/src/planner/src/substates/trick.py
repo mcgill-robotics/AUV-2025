@@ -4,7 +4,7 @@ import rospy
 import smach
 from std_msgs.msg import Float64
 
-class CoinFlip(smach.State):
+class Trick(smach.State):
     def __init__(self, control=None):
         super().__init__(outcomes=['success', 'failure'])
         if control == None: raise ValueError("control argument is None")
