@@ -29,7 +29,7 @@ def state_cb(pose):
     t2 = TransformStamped()
     
     t2.header.stamp = rospy.Time.now()
-    t2.header.frame_id = "world"
+    t2.header.frame_id = "world_rotation"
 
     t2.child_frame_id = "auv_rotation"
 
