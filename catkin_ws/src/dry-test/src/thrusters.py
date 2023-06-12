@@ -27,7 +27,7 @@ def force_to_microseconds(force):
             return int(negativeForceCurve(force/9.81))
         else: return 1500 #middle value is 1500
 
-pins = {1:2, 2:3, 3:4, 4:5, 5:6, 6:7, 7:8, 8:9}
+pins = {1:4, 2:5, 3:2, 4:6, 5:8, 6:3, 7:7, 8:1}
 reset = [1500,1500,1500,1500,1500,1500,1500,1500]
 
 reset_cmd = ThrusterMicroseconds(reset)
@@ -36,7 +36,7 @@ rospy.sleep(7)
 
 def forwards_test(t):
     print("----------T{}----------".format(t))
-    print("expected output is on pin {}".format(pins[t]))
+    print("expected output is on PWM {}".format(pins[t]))
     while True:
         print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
 
@@ -55,7 +55,7 @@ def forwards_test(t):
 def simultaneous_forwards_test():
     print_str = "|"
     for t in range(8):
-        print_str += " T{}=Pin{} |".format(t+1, pins[t+1])
+        print_str += " T{} - PWM {} |".format(t+1, pins[t+1])
     print(print_str)
     while True:
         print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
