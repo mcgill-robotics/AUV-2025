@@ -241,7 +241,9 @@ def detect_on_image(raw_img, camera_id):
                         obj_z.append(-pool_depth) # assume the object is on the bottom of the pool
             else:
                 depth_cropped = cropToBbox(state.depth, bbox)
-                dist_from_camera = np.median(depth_cropped)
+                # ################################
+                if global_class_id == 3 or global_class_id == 4:
+                    dist_from_camera = object_depth(depth_cropped, 0.5, global_class_id)
 
                 #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
                 x_center_offset = (center[0]-(w/2)) / w #-0.5 to 0.5
@@ -286,6 +288,27 @@ def detect_on_image(raw_img, camera_id):
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     img = bridge.cv2_to_imgmsg(img, "bgr8")
     visualisation_pubs[camera_id].publish(img)
+
+def gate_depth(arr):
+    rows, _ = arr.shape
+    left_half, right_half = arr[:rows/2, :], arr[rows/2:, :]
+    left_closest = np.unravel_index(np.argmin(left_half), left_half.shape)
+    right_closest = np.unravel_index(np.argmin(right_half), right_half.shape)
+    return (left_closest + right_closest) / 2
+
+def buoy_depth(arr):
+    rows, cols = arr.shape
+    middle_point = arr[rows/2, cols/2]
+    return middle_point
+
+def object_depth(arr, error_threshold, label):
+    arr[arr <= error_threshold] = 100
+    dist = 0
+    if label == 4:
+        dist = buoy_depth(arr)
+    elif label == 3:
+        dist = gate_depth(arr)
+    return dist
 
 BOX_COLOR = (255, 255, 255) # White
 HEADING_COLOR = (255, 0, 0) # Blue
