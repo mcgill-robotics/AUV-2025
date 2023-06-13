@@ -109,6 +109,10 @@ class State_Aggregator:
         # we're just getting the first angle - this assumes
         # that the other angles are fixed 
         # TODO - these angles don't combine, only to be treated individually
+        # theta = transformations.euler_from_quaternion(q, 'rxyz')
+        # theta_x = theta[0]
+        # theta_y = theta[1]
+        # theta_z = theta[2]
         theta_x = transformations.euler_from_quaternion(q, 'rxyz')[0]
         theta_y = transformations.euler_from_quaternion(q, 'ryxz')[0]
         theta_z = transformations.euler_from_quaternion(q, 'rzyx')[0]
