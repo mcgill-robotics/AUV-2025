@@ -80,7 +80,7 @@ class QuaternionServer():
         self.q2 = tf.transformations.quaternion_from_euler(theta_x, theta_y, theta_z)         
     
     def calculateError(self, q1, q2):
-        q1_inv = [q1[0], q1[1], q1[2], q1[3]]
+        q1_inv = [q1[0], -q1[1], -q1[2], -q1[3]]
         error = tf.transformations.quaternion_multiply(q1_inv, q2)
         return error
     
