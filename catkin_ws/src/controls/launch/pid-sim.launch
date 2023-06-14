@@ -19,9 +19,9 @@
 		<param name="Kp" value="60" /> 
 		<param name="Ki" value="0" />
 		<param name="Kd" value="10" />
-		<param name="upper_limit" value="20" />
-		<param name="lower_limit" value="-20" />
-		<param name="windup_limit" value="20" />
+		<param name="upper_limit" value="50" />
+		<param name="lower_limit" value="-50" />
+		<param name="windup_limit" value="50" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -48,12 +48,12 @@
 	</node>
 	
 	<node name="theta_x_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="-0.07" />
+		<param name="Kp" value="0.008" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="-0.03" />
-		<param name="upper_limit" value="18" />
-		<param name="lower_limit" value="-18" />
-		<param name="windup_limit" value="18" />
+		<param name="Kd" value="0.005" />
+		<param name="upper_limit" value="10" />
+		<param name="lower_limit" value="-10" />
+		<param name="windup_limit" value="10" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -64,12 +64,12 @@
 	</node>
 	
 	<node name="theta_y_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="-0.25" />
+		<param name="Kp" value="0.03" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="0.0" />
-		<param name="upper_limit" value="18" />
-		<param name="lower_limit" value="-18" />
-		<param name="windup_limit" value="18" />
+		<param name="Kd" value="0.009" />
+		<param name="upper_limit" value="10" />
+		<param name="lower_limit" value="-10" />
+		<param name="windup_limit" value="10" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -80,12 +80,12 @@
 	</node>
 	
 	<node name="theta_z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="-0.07" />
+		<param name="Kp" value="-0.03" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="-0.03" />
-		<param name="upper_limit" value="20" />
-		<param name="lower_limit" value="-20" />
-		<param name="windup_limit" value="20" />
+		<param name="Kd" value="-0.009" />
+		<param name="upper_limit" value="15" />
+		<param name="lower_limit" value="-15" />
+		<param name="windup_limit" value="15" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
