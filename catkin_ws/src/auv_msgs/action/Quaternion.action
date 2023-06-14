@@ -1,5 +1,5 @@
 # goal
-geometry_msgs/Quaternion rotation
+geometry_msgs/Pose pose
 ---
 # result
 std_msgs/Bool status
