@@ -4,6 +4,8 @@ import rospy
 import tf
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
+from sensor_msgs.msg import Imu
+from sbg_driver.msg import SbgEkfQuat
 from servers.base_server import BaseServer
 import actionlib
 from auv_msgs.msg import QuaternionAction
@@ -33,9 +35,9 @@ class QuaternionServer():
         self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
         self.angular_velocity = [0, 0, 0]
         # If sim:
-        ang_velocity_sub = rospy.Subscriber('/imu', Something, self.ang_velocity_callback_sim)
+        imu_sub = rospy.Subscriber('/imu', Imu, self.imu_callback_sim)
         # If clarke:
-        # ang_velocity_sub = rospy.Subscriber('something', Something, self.ang_velocity_callback_clarke)
+        # imu_sub = rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_callback_clarke)
         
         # Need someway to find DELTA Time (for derivative term)
         
@@ -43,11 +45,11 @@ class QuaternionServer():
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
     
-    def ang_velocity_callback_clarke(self, data):
-        ###### Change depending on the topic ######
+    def imu_callback_clarke(self, data):
+        ###### Change depending on the topic msg structure ######
         self.ang_velocity = data
     
-    def ang_velocity_callback_sim(self, data):
+    def imu_callback_sim(self, data):
         ang_vel_x = data.angular_velocity.x
         ang_vel_y = data.angular_velocity.y
         ang_vel_z = data.angular_velocity.z
@@ -106,6 +108,15 @@ class QuaternionServer():
         derivative = self.Kd * derivative_error 
         
         control_effort = proportional + integration + derivative 
-        vector = quaternion.as_rotation_vector(control_effort)
-        self.control_effort_pub.publish(vector)
+        vector_3d = quaternion.as_rotation_vector(control_effort)
+        
+        inertial_matrix = np.array([[0.709487776484284,  0.000000000000000,  0.003794052280665],
+                                    [0.000000000000000,  0.042999259180866, -0.016440893216213], 
+                                    [0.003794052280665, -0.016440893216213,  0.727193353794052]])
+        
+        effort = np.matmul(vector_3d, inertial_matrix)
+        
+        self.control_effort_pub.publish(effort)
+        
+    
         
