@@ -13,8 +13,6 @@ import numpy as np
 import quaternion
 import time
 
-# as_rotation_vector
-
 
 class QuaternionServer():
 
@@ -22,6 +20,10 @@ class QuaternionServer():
         self.establish_pid_publishers()
         self.establish_state_subscribers()
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb= self.callback, auto_start = False)
+        
+        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
+        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
+        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
         
         self.goal = None
         self.body_quat = None
@@ -38,8 +40,6 @@ class QuaternionServer():
         imu_sub = rospy.Subscriber('/imu', Imu, self.imu_callback_sim)
         # If clarke:
         # imu_sub = rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_callback_clarke)
-        
-        # Need someway to find DELTA Time (for derivative term)
         
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
@@ -77,11 +77,7 @@ class QuaternionServer():
         goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
         displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
         new_goal_quat = self.body_quat * displacement_quat
-        return goal_position, new_goal_quat
-
-    def convertDestination(self,eulers):
-        theta_x , theta_y, theta_z = eulers
-        self.q2 = tf.transformations.quaternion_from_euler(theta_x, theta_y, theta_z)         
+        return goal_position, new_goal_quat     
     
     def calculateError(self, q1, q2):
         q1_inv = [q1[0], -q1[1], -q1[2], -q1[3]]
@@ -122,7 +118,9 @@ class QuaternionServer():
         
         effort = np.matmul(inertial_matrix, vector_3d)
         
-        self.control_effort_pub.publish(effort)
+        self.pub_roll.publish(effort[0])
+        self.pub_pitch.publish(effort[1])
+        self.pub_yaw.publish(effort[2])
         
     
         
