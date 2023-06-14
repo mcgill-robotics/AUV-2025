@@ -9,6 +9,7 @@ import actionlib
 from auv_msgs.msg import QuaternionAction
 import numpy as np
 import quaternion
+import time
 
 # as_rotation_vector
 
@@ -21,7 +22,7 @@ class QuaternionServer():
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb= self.callback, auto_start = False)
         
         self.goal = None
-        self.body_quaternion = None
+        self.body_quat = None
         self.position = None
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
         self.Kp = [0, 0, 0, 1]
@@ -31,39 +32,48 @@ class QuaternionServer():
         self.dt = 0
         self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
         self.angular_velocity = [0, 0, 0]
-        ang_velocity_sub = rospy.Subscriber('/imu', Something, self.ang_velocity_callback)
-
+        # If sim:
+        ang_velocity_sub = rospy.Subscriber('/imu', Something, self.ang_velocity_callback_sim)
+        # If clarke:
+        # ang_velocity_sub = rospy.Subscriber('something', Something, self.ang_velocity_callback_clarke)
+        
+        # Need someway to find DELTA Time (for derivative term)
+        
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quaternion = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
+        self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
     
-    def ang_velocity_callback(self, data):
+    def ang_velocity_callback_clarke(self, data):
+        ###### Change depending on the topic ######
+        self.ang_velocity = data
+    
+    def ang_velocity_callback_sim(self, data):
         ang_vel_x = data.angular_velocity.x
         ang_vel_y = data.angular_velocity.y
         ang_vel_z = data.angular_velocity.z
-        self.ang_velocity_callback = [ang_vel_x, ang_vel_y, ang_vel_z]
+        self.ang_velocity = [ang_vel_x, ang_vel_y, ang_vel_z]
     
     def cancel(self):
         self.set_pids(self.pose)
     
     def callback(self, goal):
         if(goal.displace):
-            displaced_position,displace_quaternion = self.get_goal_after_displace(goal.pose)
-            self.set_pids(displaced_position,displace_quaternion)
+            displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
+            self.set_pids(displaced_position, displace_quat)
         else:
             goal_position = []
             goal_position.append(goal.pose.position.x)
             goal_position.append(goal.pose.position.y)
             goal_position.append(goal.pose.position.z)
-            goal_quaternion = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
-            self.set_pids(goal_position,goal_quaternion)
+            goal_quat = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+            self.set_pids(goal_position, goal_quat)
         
     def get_goal_after_displace(self, goal_pose):
         new_goal = Pose()
         goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
         displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
-        new_goal_quat = self.body_quaternion * displacement_quat
-        return goal_position,new_goal_quat
+        new_goal_quat = self.body_quat * displacement_quat
+        return goal_position, new_goal_quat
 
     def convertDestination(self,eulers):
         theta_x , theta_y, theta_z = eulers
@@ -74,16 +84,17 @@ class QuaternionServer():
         error = tf.transformations.quaternion_multiply(q1_inv, q2)
         return error
     
-    def calculateDerivativeError(self, error, ang_vel):
-        vel_quaternion = [0, ang_vel[0], ang_vel[1], ang_vel[2]]
-        return (error * vel_quaternion) / (-2)
+    def calculateDerivativeError(self, error, ang_velocity):
+        velocity_quat = [0, ang_velocity[0], ang_velocity[1], ang_velocity[2]]
+        # Might be using the wrong operation for multiplication
+        return (error * velocity_quat) / (-2)
     
     def calculateIntegralError(self, error):
         return self.integral_error + (error * self.dt)
         
     def controlEffort(self):
         # Calculate error values
-        error = self.calculateError(self.body_quaternion, self.goal)
+        error = self.calculateError(self.body_quat, self.goal)
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
         self.integral_error = self.calculateIntegralError(error, self.dt)
         
