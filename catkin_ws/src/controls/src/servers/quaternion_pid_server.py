@@ -30,6 +30,8 @@ class QuaternionServer():
         self.dt = 0
         self.derivative_error = [0, 0, 0, 1]
         
+        self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
+        
 
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
@@ -63,19 +65,31 @@ class QuaternionServer():
         theta_x , theta_y, theta_z = eulers
         self.q2 = tf.transformations.quaternion_from_euler(theta_x, theta_y, theta_z)         
     
-    def updateError(self):
-        q1_inv = [-self.q1[0], -self.q1[1], -self.q1[2], self.q1[3]]
-        qr = tf.transformations.quaternion_multiply(q1_inv, self.q2)
-        # some calculation
-        self.error = qr
+    def calculateError(self, q1, q2):
+        q1_inv = [q1[0], q1[1], q1[2], q1[3]]
+        error = tf.transformations.quaternion_multiply(q1_inv, q2)
+        return error
+    
+    def calculateDerivativeError(self, error):
+        pass
+    
+    def calculateIntegralError(self, error):
+        pass
         
     def controlEffort(self):
-        proportional = self.Kp * self.error
-        integration = self.Ki * (self.integral_error + self.error * self.dt)
-        derivative = self.Kd * self.derivative_error 
-        control_effort = proportional + integration + derivative 
-        pub_control_effort.publish(control_effort)
+        # Calculate error values
+        error = self.calculateError(self.body_quaternion, self.goal)
+        derivative_error = self.calculateIntegralError(error)
+        integral_error = self.calculateInternionalError(error)
         
-
-    def set_pids(self, goal_pose):
-        pass
+        # Calculate proportional term
+        proportional = self.Kp * error
+        # Calculte integral term
+        integration = self.Ki * (integral_error + error * self.dt)
+        # Calculate derivative term
+        derivative = self.Kd * derivative_error 
+        
+        control_effort = proportional + integration + derivative 
+        
+        self.control_effort_pub.publish(control_effort)
+        
