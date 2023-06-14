@@ -29,13 +29,18 @@ class QuaternionServer():
         self.integral_error = [0, 0, 0, 1]
         self.dt = 0
         self.derivative_error = [0, 0, 0, 1]
-        
         self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
+        self.angular_velocity = [0, 0, 0]
+        ang_velocity_sub = rospy.Subscriber('[something]', Something, self.ang_velocity_callback)
+        
         
 
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quaternion = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
+    
+    def ang_velocity_callback(self, data):
+        self.ang_velocity_callback = data
     
     def cancel(self):
         self.set_pids(self.pose)
@@ -70,8 +75,8 @@ class QuaternionServer():
         error = tf.transformations.quaternion_multiply(q1_inv, q2)
         return error
     
-    def calculateDerivativeError(self, error):
-        pass
+    def calculateDerivativeError(self, error, ang_vel):
+        return (error * ang_vel) / (-2)
     
     def calculateIntegralError(self, error):
         pass
@@ -79,8 +84,8 @@ class QuaternionServer():
     def controlEffort(self):
         # Calculate error values
         error = self.calculateError(self.body_quaternion, self.goal)
-        derivative_error = self.calculateIntegralError(error)
-        integral_error = self.calculateInternionalError(error)
+        derivative_error = self.calculateIntegralError(error, self.angular_velocity)
+        integral_error = self.calculateIntegralError(error)
         
         # Calculate proportional term
         proportional = self.Kp * error
