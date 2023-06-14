@@ -13,6 +13,7 @@ from substates.utility.controller import Controller
 from substates.utility.state import StateTracker
 from substates.utility.vision import *
 from substates.quali import *
+from substates.quaternion_test import *
 from substates.trick import *
 from substates.reposition import *
 from substates.navigate_gate import *
