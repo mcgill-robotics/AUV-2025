@@ -10,6 +10,8 @@ from auv_msgs.msg import QuaternionAction
 import numpy as np
 import quaternion
 
+# as_rotation_vector
+
 
 class QuaternionServer():
 
@@ -25,22 +27,21 @@ class QuaternionServer():
         self.Kp = [0, 0, 0, 1]
         self.Ki = [0, 0, 0, 1]
         self.Kd = [0, 0, 0, 1]
-        self.error = [0, 0, 0, 1]
         self.integral_error = [0, 0, 0, 1]
         self.dt = 0
-        self.derivative_error = [0, 0, 0, 1]
         self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
         self.angular_velocity = [0, 0, 0]
-        ang_velocity_sub = rospy.Subscriber('[something]', Something, self.ang_velocity_callback)
-        
-        
+        ang_velocity_sub = rospy.Subscriber('/imu', Something, self.ang_velocity_callback)
 
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quaternion = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
     
     def ang_velocity_callback(self, data):
-        self.ang_velocity_callback = data
+        ang_vel_x = data.angular_velocity.x
+        ang_vel_y = data.angular_velocity.y
+        ang_vel_z = data.angular_velocity.z
+        self.ang_velocity_callback = [ang_vel_x, ang_vel_y, ang_vel_z]
     
     def cancel(self):
         self.set_pids(self.pose)
@@ -48,7 +49,6 @@ class QuaternionServer():
     def callback(self, goal):
         if(goal.displace):
             displaced_position,displace_quaternion = self.get_goal_after_displace(goal.pose)
-
             self.set_pids(displaced_position,displace_quaternion)
         else:
             goal_position = []
@@ -65,7 +65,6 @@ class QuaternionServer():
         new_goal_quat = self.body_quaternion * displacement_quat
         return goal_position,new_goal_quat
 
-    # Felipe's code
     def convertDestination(self,eulers):
         theta_x , theta_y, theta_z = eulers
         self.q2 = tf.transformations.quaternion_from_euler(theta_x, theta_y, theta_z)         
@@ -76,25 +75,26 @@ class QuaternionServer():
         return error
     
     def calculateDerivativeError(self, error, ang_vel):
-        return (error * ang_vel) / (-2)
+        vel_quaternion = [0, ang_vel[0], ang_vel[1], ang_vel[2]]
+        return (error * vel_quaternion) / (-2)
     
     def calculateIntegralError(self, error):
-        pass
+        return self.integral_error + (error * self.dt)
         
     def controlEffort(self):
         # Calculate error values
         error = self.calculateError(self.body_quaternion, self.goal)
-        derivative_error = self.calculateIntegralError(error, self.angular_velocity)
-        integral_error = self.calculateIntegralError(error)
+        derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
+        self.integral_error = self.calculateIntegralError(error, self.dt)
         
         # Calculate proportional term
         proportional = self.Kp * error
         # Calculte integral term
-        integration = self.Ki * (integral_error + error * self.dt)
+        integration = self.Ki * (self.integral_error + error * self.dt)
         # Calculate derivative term
         derivative = self.Kd * derivative_error 
         
         control_effort = proportional + integration + derivative 
-        
-        self.control_effort_pub.publish(control_effort)
+        vector = quaternion.as_rotation_vector(control_effort)
+        self.control_effort_pub.publish(vector)
         
