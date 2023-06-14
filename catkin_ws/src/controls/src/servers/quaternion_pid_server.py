@@ -71,9 +71,3 @@ class QuaternionServer():
 
     def set_pids(self, goal_pose):
         pass
-        
-
-if __name__ == '__main__':
-    rospy.init_node('PID', log_level=rospy.DEBUG)
-    pid = PID()
-    pub_control_effort = rospy.Publisher('[CONTROL_EFFORT]', Float64, queue_size=50)
