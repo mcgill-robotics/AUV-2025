@@ -31,7 +31,7 @@ class QuaternionServer():
         self.Ki = [0, 0, 0, 1]
         self.Kd = [0, 0, 0, 1]
         self.integral_error = [0, 0, 0, 1]
-        self.dt = 0
+        self.dt = [0, 0] 
         self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
         self.angular_velocity = [0, 0, 0]
         # If sim:
@@ -44,6 +44,8 @@ class QuaternionServer():
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
+        self.dt.append(rospy.get_rostime())
+        self.dt.pop(0)
     
     def imu_callback_clarke(self, data):
         ###### Change depending on the topic msg structure ######
@@ -84,37 +86,41 @@ class QuaternionServer():
     def calculateError(self, q1, q2):
         q1_inv = [q1[0], -q1[1], -q1[2], -q1[3]]
         error = tf.transformations.quaternion_multiply(q1_inv, q2)
-        return error
+        return np.array(error)
     
     def calculateDerivativeError(self, error, ang_velocity):
-        velocity_quat = [0, ang_velocity[0], ang_velocity[1], ang_velocity[2]]
-        # Might be using the wrong operation for multiplication
-        return (error * velocity_quat) / (-2)
+        # Question - can we really just add a zero the real part and call it a quaternion
+        #            representation of the angular velocity
+        velocity_quat = [0, ang_velocity[0], ang_velocity[1], ang_velocity[2]] 
+        # Double-check the order of multiplication
+        return tf.transformations.quaternion_multiply(error, velocity_quat) / (-2)
     
-    def calculateIntegralError(self, error):
-        return self.integral_error + (error * self.dt)
+    def calculateIntegralError(self, integral_error, error, delta_time):
+        return integral_error + (error * delta_time)
         
     def controlEffort(self):
+        delta_time = self.dt[1] - self.dt[0]
+        
         # Calculate error values
-        error = self.calculateError(self.body_quat, self.goal)
+        error = self.calculateError(self.body_quat, self.goal) # np array
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
-        self.integral_error = self.calculateIntegralError(error, self.dt)
+        self.integral_error = self.calculateIntegralError(error, delta_time)
         
         # Calculate proportional term
-        proportional = self.Kp * error
+        proportional = np.multiply(self.Kp, error)
         # Calculte integral term
-        integration = self.Ki * (self.integral_error + error * self.dt)
+        integration = np.multiply(self.Ki, self.integral_error)
         # Calculate derivative term
-        derivative = self.Kd * derivative_error 
+        derivative = np.multiply(self.Kd, derivative_error)
         
         control_effort = proportional + integration + derivative 
         vector_3d = quaternion.as_rotation_vector(control_effort)
         
-        inertial_matrix = np.array([[0.709487776484284,  0.000000000000000,  0.003794052280665],
-                                    [0.000000000000000,  0.042999259180866, -0.016440893216213], 
+        inertial_matrix = np.array([[0.042999259180866,  0.000000000000000,  0.003794052280665],
+                                    [0.000000000000000,  0.709487776484284, -0.016440893216213], 
                                     [0.003794052280665, -0.016440893216213,  0.727193353794052]])
         
-        effort = np.matmul(vector_3d, inertial_matrix)
+        effort = np.matmul(inertial_matrix, vector_3d)
         
         self.control_effort_pub.publish(effort)
         
