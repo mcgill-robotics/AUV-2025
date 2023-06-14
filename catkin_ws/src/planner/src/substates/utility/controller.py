@@ -4,7 +4,7 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
 from std_msgs.msg import Float64, Bool, Header
-from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal
+from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal, QuaternionAction, QuaternionGoal
 from math import hypot
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
@@ -46,6 +46,10 @@ class Controller:
         self.SuperimposerServer = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
         self.servers.append(self.SuperimposerServer)
         self.SuperimposerServer.wait_for_server()
+
+        self.QuaternionStateServer = actionlib.SimpleActionClient('quaternion_server', QuaternionAction)
+        self.servers.append(self.QuaternionStateServer)
+        self.QuaternionStateServer.wait_for_server()
 
         self.x = None
         self.y = None
@@ -109,6 +113,24 @@ class Controller:
         goal.displace = displace
         goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = keepers
         return goal
+    
+    def pose_goal(self,position,quaternion):
+        x,y,z,w = position
+        w,qx,qy,qz = quaternion
+        goal = QuaternionGoal()
+        goal.position.x = x
+        goal.position.y = y
+        goal.position.z = z
+        goal.orientation.w = w
+        goal.orientation.x = qx
+        goal.orientation.y = qy
+        goal.orientation.z = qz
+        return goal
+    
+    def quaternion_action(self,position,quaternion):
+        goal = self.pose_goal(position,quaternion)
+        self.QuaternionStateServer.send_goal_and_wait(goal)
+
 
     #preempt the current action
     def preemptCurrentAction(self):
