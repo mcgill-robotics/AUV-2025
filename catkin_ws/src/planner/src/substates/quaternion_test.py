@@ -15,8 +15,8 @@ class QuaternionTest(smach.State):
         try:
             position = [0,0,0]
             quaternion = [1,0,0,0]
-            self.control.move((0,0,0))
-            self.control.pose_goal(position, quaternion)
+            # self.control.move((0,0,0))
+            self.control.quaternion_action(position, quaternion)
             # DONE
             print("Completed")
             return 'success'
