@@ -21,33 +21,38 @@ class QuaternionServer():
         self.establish_state_subscribers()
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb= self.callback, auto_start = False)
         
+        # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
         
+        # Subscribers
+        pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
+        imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
+        
+        # Calculation parameters/values
         self.goal = None
         self.body_quat = None
         self.position = None
-        pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
+        
         self.Kp = [0, 0, 0, 1]
         self.Ki = [0, 0, 0, 1]
         self.Kd = [0, 0, 0, 1]
         self.integral_error = [0, 0, 0, 1]
         self.dt = [0, 0] 
         self.angular_velocity = [0, 0, 0]
-        imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
+        
         
     def pose_callback(self, data):
+        # Assign pose values
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
+        # Get the current time to calculate delta 
         self.dt.append(rospy.get_rostime())
-        self.dt.pop(0)
+        self.dt.pop(0) # only need the two most recent two
     
     def imu_callback(self, data):
-        ang_vel_x = data.gyro.x
-        ang_vel_y = data.gyro.y
-        ang_vel_z = data.gyro.z
-        self.ang_velocity = [ang_vel_x, ang_vel_y, ang_vel_z]
+        self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
     def cancel(self):
         self.set_pids(self.pose)
