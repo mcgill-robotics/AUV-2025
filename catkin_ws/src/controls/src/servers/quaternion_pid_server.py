@@ -109,15 +109,15 @@ class QuaternionServer():
         control_effort = proportional + integration + derivative 
         vector_3d = quaternion.as_rotation_vector(control_effort)
         
-        inertial_matrix = np.array([[0.042999259180866,  0.000000000000000,  0.003794052280665],
-                                    [0.000000000000000,  0.709487776484284, -0.016440893216213], 
-                                    [0.003794052280665, -0.016440893216213,  0.727193353794052]])
+        inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
+                                    [0.000000000000000,  0.709487776484284, 0.003794052280665], 
+                                    [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
         
-        effort = np.matmul(inertial_matrix, vector_3d)
+        torque = np.matmul(inertial_matrix, vector_3d)
         
-        self.pub_roll.publish(effort[0])
-        self.pub_pitch.publish(effort[1])
-        self.pub_yaw.publish(effort[2])
+        self.pub_roll.publish(torque[0])
+        self.pub_pitch.publish(torque[1])
+        self.pub_yaw.publish(torque[2])
         
     
         
