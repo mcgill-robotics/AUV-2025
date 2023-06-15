@@ -5,7 +5,7 @@ import tf
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Imu
-from sbg_driver.msg import SbgEkfQuat
+from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
 import actionlib
 from auv_msgs.msg import QuaternionAction
@@ -34,12 +34,8 @@ class QuaternionServer():
         self.Kd = [0, 0, 0, 1]
         self.integral_error = [0, 0, 0, 1]
         self.dt = [0, 0] 
-        self.control_effort_pub = rospy.Publisher('[something]', Float64, queue_size=50)
         self.angular_velocity = [0, 0, 0]
-        # If sim:
-        imu_sub = rospy.Subscriber('/imu', Imu, self.imu_callback_sim)
-        # If clarke:
-        # imu_sub = rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_callback_clarke)
+        imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
         
     def pose_callback(self, data):
         self.position = [data.position.x, data.position.y, data.position.z]
@@ -47,14 +43,10 @@ class QuaternionServer():
         self.dt.append(rospy.get_rostime())
         self.dt.pop(0)
     
-    def imu_callback_clarke(self, data):
-        ###### Change depending on the topic msg structure ######
-        self.ang_velocity = data
-    
-    def imu_callback_sim(self, data):
-        ang_vel_x = data.angular_velocity.x
-        ang_vel_y = data.angular_velocity.y
-        ang_vel_z = data.angular_velocity.z
+    def imu_callback(self, data):
+        ang_vel_x = data.gyro.x
+        ang_vel_y = data.gyro.y
+        ang_vel_z = data.gyro.z
         self.ang_velocity = [ang_vel_x, ang_vel_y, ang_vel_z]
     
     def cancel(self):
