@@ -56,12 +56,12 @@ class SuperimposerServer(BaseServer):
             self.pub_heave.publish(self.goal.effort.force.z)
 
         
-        if(self.goal.do_roll.data):
-            self.pub_roll.publish(self.goal.effort.torque.x)
-        if(self.goal.do_pitch.data):
-            self.pub_pitch.publish(self.goal.effort.torque.y)
-        if(self.goal.do_yaw.data):
-            self.pub_yaw.publish(self.goal.effort.torque.z)
+        # if(self.goal.do_roll.data):
+        #     self.pub_roll.publish(self.goal.effort.torque.x)
+        # if(self.goal.do_pitch.data):
+        #     self.pub_pitch.publish(self.goal.effort.torque.y)
+        # if(self.goal.do_yaw.data):
+        #     self.pub_yaw.publish(self.goal.effort.torque.z)
 
         self.server.set_succeeded()
 

@@ -87,7 +87,6 @@ class StateServer(BaseServer):
         settled = False
         print("waiting for settled")
         while not settled and not self.cancelled:
-            #print("hi")
             start = time.time()
             while not self.cancelled and self.check_status():
                 if(time.time() - start > interval):

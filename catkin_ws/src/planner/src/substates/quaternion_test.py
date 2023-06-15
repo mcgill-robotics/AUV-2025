@@ -11,11 +11,11 @@ class QuaternionTest(smach.State):
         self.control = control
     
     def execute(self, ud):
-        print("Starting Quali Mission")
+        print("Starting Quaternion Mission")
         try:
             position = [0,0,0]
             quaternion = [1,0,0,0]
-            self.control.move(0,0,0)
+            self.control.move((0,0,0))
             self.control.pose_goal(position, quaternion)
             # DONE
             print("Completed")

@@ -11,27 +11,33 @@ import actionlib
 from auv_msgs.msg import QuaternionAction
 import numpy as np
 import quaternion
-import time
 
 
 class QuaternionServer():
 
     def __init__(self):
-        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb= self.callback, auto_start = False)
+        print("making quaternion server")
+        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
         
         # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=50)
+        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=50)
+        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=50)
+        
+        self.pub_test = rospy.Publisher('test', Pose, queue_size=50)
+        # self.pub_test.publish(self.pose)
         
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
         imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
         
         # Calculation parameters/values
-        self.goal = None
-        self.body_quat = None
-        self.position = None
+        self.pose = Pose()
+        self.body_quat = [0, 0, 0, 0]
+        self.position = [0, 0, 0]
         
         self.Kp = [0, 0, 0, 1]
         self.Ki = [0, 0, 0, 1]
@@ -39,10 +45,12 @@ class QuaternionServer():
         self.integral_error = [0, 0, 0, 1]
         self.dt = [0, 0] 
         self.angular_velocity = [0, 0, 0]
+        self.server.start()
         
         
     def pose_callback(self, data):
         # Assign pose values
+        self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
         # Get the current time to calculate delta 
@@ -53,19 +61,20 @@ class QuaternionServer():
         self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
     def cancel(self):
-        self.set_pids(self.pose)
+        self.controlEffort(self.pose)
     
     def callback(self, goal):
-        if(goal.displace):
-            displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
-            self.set_pids(displaced_position, displace_quat)
-        else:
-            goal_position = []
-            goal_position.append(goal.pose.position.x)
-            goal_position.append(goal.pose.position.y)
-            goal_position.append(goal.pose.position.z)
-            goal_quat = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
-            self.set_pids(goal_position, goal_quat)
+        if self.pose != None:
+            if(goal.displace):
+                displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
+                self.controlEffort(displaced_position, displace_quat)
+            else:
+                goal_position = []
+                goal_position.append(goal.pose.position.x)
+                goal_position.append(goal.pose.position.y)
+                goal_position.append(goal.pose.position.z)
+                goal_quat = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+                self.controlEffort(goal_position, goal_quat)
         
     def get_goal_after_displace(self, goal_pose):
         new_goal = Pose()
@@ -80,20 +89,18 @@ class QuaternionServer():
         return np.array(error)
     
     def calculateDerivativeError(self, error, ang_velocity):
-        # Question - can we really just add a zero the real part and call it a quaternion
-        #            representation of the angular velocity
         velocity_quat = [0, ang_velocity[0], ang_velocity[1], ang_velocity[2]] 
-        # Double-check the order of multiplication
         return tf.transformations.quaternion_multiply(error, velocity_quat) / (-2)
     
     def calculateIntegralError(self, integral_error, error, delta_time):
         return integral_error + (error * delta_time)
         
-    def controlEffort(self):
+    def controlEffort(self, goal_position, goal_quat):
         delta_time = self.dt[1] - self.dt[0]
         
         # Calculate error values
-        error = self.calculateError(self.body_quat, self.goal) # np array
+        error = self.calculateError(self.body_quat, goal_quat) 
+        print(error)
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
         self.integral_error = self.calculateIntegralError(error, delta_time)
         
@@ -116,6 +123,9 @@ class QuaternionServer():
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
         self.pub_yaw.publish(torque[2])
+        self.pub_surge.publish(0.0)
+        self.pub_sway.publish(0.0)
+        self.pub_heave.publish(0.0)
         
     
         

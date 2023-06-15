@@ -53,7 +53,7 @@ def QualiMission():
 def QuaternionTestMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('quaternion', QauternionTest(control=control), 
+        smach.StateMachine.add('quaternion', QuaternionTest(control=control), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished quaternion mission. Result {}".format(res))
