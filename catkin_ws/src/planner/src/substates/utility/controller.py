@@ -118,13 +118,13 @@ class Controller:
         x,y,z = position
         w,qx,qy,qz = quaternion
         goal = QuaternionGoal()
-        goal.position.x = x
-        goal.position.y = y
-        goal.position.z = z
-        goal.orientation.w = w
-        goal.orientation.x = qx
-        goal.orientation.y = qy
-        goal.orientation.z = qz
+        goal.pose.position.x = x
+        goal.pose.position.y = y
+        goal.pose.position.z = z
+        goal.pose.orientation.w = w
+        goal.pose.orientation.x = qx
+        goal.pose.orientation.y = qy
+        goal.pose.orientation.z = qz
         return goal
     
     def quaternion_action(self,position,quaternion):

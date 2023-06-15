@@ -78,7 +78,7 @@ class QuaternionServer():
         
     def get_goal_after_displace(self, goal_pose):
         new_goal = Pose()
-        goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
+        goal_position = [goal_pose.pose.position.x, goal_pose.pose.position.y, goal_pose.pose.position.z]
         displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
         new_goal_quat = self.body_quat * displacement_quat
         return goal_position, new_goal_quat     
