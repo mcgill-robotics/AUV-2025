@@ -17,8 +17,6 @@ import time
 class QuaternionServer():
 
     def __init__(self):
-        self.establish_pid_publishers()
-        self.establish_state_subscribers()
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb= self.callback, auto_start = False)
         
         # Publishers
