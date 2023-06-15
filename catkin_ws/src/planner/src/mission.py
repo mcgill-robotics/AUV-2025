@@ -50,6 +50,14 @@ def QualiMission():
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
 
+def QuaternionTestMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quaternion', QauternionTest(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished quaternion mission. Result {}".format(res))
+
 def Tricks(t):
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -110,7 +118,7 @@ if __name__ == '__main__':
     rospy.on_shutdown(endMission)
 
     control = Controller(rospy.Time(0))
-    QualiMission()
+    QuaternionTestMission()
 
 
     # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
