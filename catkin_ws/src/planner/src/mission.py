@@ -108,7 +108,10 @@ if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endMission)
 
+    # mapping = ObjectMapper()
+    # state = StateTracker()
     control = Controller(rospy.Time(0))
+
     QualiMission()
 
 
