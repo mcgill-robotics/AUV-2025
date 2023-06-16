@@ -149,17 +149,30 @@ class QuaternionServer(BaseServer):
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
+    
+    def kinematic_inversion(self,qe_des,qe):
+        Qe1 = self.Qe1(qe)
+        matrix = np.transpose(Qe1) * -1
+        return np.matmul(matrix, qe_des) * 2
+    
+    def Qe1(self,qe):
+        return np.array([
+            [-qe[1],-qe[2],-qe[3]],
+            [qe[0],qe[3],-qe[2]],
+            [-qe[3],qe[0],qe[1]],
+            [qe[2],-qe[1],qe[0]]
+        ])
         
     def controlEffort(self, goal_position, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
-        error_quat = self.calculateError(self.body_quat, goal_quat,) 
+        error_quat = self.calculateError(self.body_quat, goal_quat) 
         derivative_error_quat = self.calculateDerivativeError(error_quat, self.angular_velocity)
         self.integral_error_quat, self.integral_error_pos = self.calculateIntegralError(self.integral_error_quat, error_quat, delta_time)
         
         proportional_quat, integration_quat, derivative_quat = [], [], []
-        for i in range(3):
+        for i in range(4):
             # Calculate proportional term
             proportional_quat.append(self.Kp * error_quat[i])
             # Calculte integral term
@@ -167,16 +180,17 @@ class QuaternionServer(BaseServer):
             # Calculate derivative term
             derivative_quat.append(self.Kd * derivative_error_quat[i])
             
-        
+
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        control_effort_quat = np.quaternion(control_effort_quat[0], control_effort_quat[1], control_effort_quat[2], control_effort_quat[3])
+        omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
+        #control_effort_quat = np.quaternion(control_effort_quat[0], control_effort_quat[1], control_effort_quat[2], control_effort_quat[3])
         vector_3d = quaternion.as_rotation_vector(control_effort_quat)
         
         inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
                                     [0.000000000000000,  0.709487776484284, 0.003794052280665], 
                                     [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
         
-        torque = np.matmul(inertial_matrix, vector_3d)
+        torque = np.matmul(inertial_matrix, omega_command)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
