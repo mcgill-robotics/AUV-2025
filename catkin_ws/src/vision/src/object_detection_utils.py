@@ -136,13 +136,19 @@ def buoy_depth(depth_cropped):
     middle_point = depth_cropped[rows/2, cols/2]
     return middle_point
 
+def lane_marker_depth(depth_cropped):
+    closest_point = np.unravel_index(np.argmin(depth_cropped), depth_cropped.shape)
+    return closest_point
+
 def object_depth(depth_cropped, label, error_threshold=0.5):
     depth_cropped[depth_cropped <= error_threshold] = 100
     dist = 0
-    if label == 2:
-        dist = buoy_depth(depth_cropped)
+    if label == 0:
+        dist = lane_marker_depth(depth_cropped)
     elif label == 1:
         dist = gate_depth(depth_cropped)
+    elif label == 2:
+        dist = buoy_depth(depth_cropped)
     return dist
 
 def eulerToVector(roll_deg, pitch_deg, yaw_deg):
