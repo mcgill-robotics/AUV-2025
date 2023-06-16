@@ -19,9 +19,10 @@ class QuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
         print("making quaternion server")
-        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
-        self.establish_pid_enable_publishers()
         self.establish_pid_publishers()
+        self.establish_pid_enable_publishers()
+        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
+        
         # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
@@ -40,10 +41,8 @@ class QuaternionServer(BaseServer):
         self.Ki = 1
         self.Kd = 1
         self.integral_error_quat = [0, 0, 0, 1]
-        self.integral_error_pos = [1, 1, 1]
-        self.update_time_interval = [rospy.get_time(), rospy.get_time()] 
+        self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
-        self.linear_velocity = [0, 0, 0]
         self.server.start()        
         
     def pose_callback(self, data):
@@ -57,12 +56,11 @@ class QuaternionServer(BaseServer):
         self.time_interval[0] = self.time_interval[1]
         self.time_interval[1] = rospy.get_time()
     
-
     def imu_callback(self, data):
         self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
     def cancel(self):
-        self.controlEffort(self.position, self.body_quat)
+        self.controlEffort(self.body_quat)
     
     def callback(self, goal):
         self.goal = goal
@@ -86,9 +84,9 @@ class QuaternionServer(BaseServer):
         rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
             start = rospy.get_time()
-            self.controlEffort(goal_position, goal_quaternion)
+            self.controlEffort(goal_quaternion)
             while not self.cancelled and self.check_status():
-                self.controlEffort(goal_position, goal_quaternion)
+                self.controlEffort(goal_quaternion)
                 if(rospy.get_time() - start > interval):
                     settled = True
                     break
@@ -116,6 +114,7 @@ class QuaternionServer(BaseServer):
         x_diff = (not self.goal.do_x.data) or abs(self.position.x - goal_position[0]) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position.y - goal_position[1]) <= tolerance_position
         z_diff = (not self.goal.do_z.data) or abs(self.position.z - goal_position[2]) <= tolerance_position
+        
         if self.goal.do_orientation.data:
             x, y, z, w = goal_quaternion
             innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
@@ -156,17 +155,15 @@ class QuaternionServer(BaseServer):
         return np.matmul(matrix, qe_des) * 2
     
     def Qe(self,qe):
-        return np.array([
-            [-qe[1],-qe[2],-qe[3]],
-            [qe[0],qe[3],-qe[2]],
-            [-qe[3],qe[0],qe[1]],
-            [qe[2],-qe[1],qe[0]]
-        ])
+        return np.array([[-qe[1], -qe[2], -qe[3]],
+                         [qe[0],   qe[3], -qe[2]],
+                         [-qe[3],  qe[0],  qe[1]],
+                         [qe[2],  -qe[1],  qe[0]]])
     
     def orthogonal_matrix(self, q):
         Qe1 = self.Qe(q)
-        transpose = np.transposee(Qe1.copy())
-        return np.matmul(Qe1,transpose)
+        transpose = np.transpose(Qe1.copy())
+        return np.matmul(Qe1, transpose)
         
     def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
@@ -174,7 +171,7 @@ class QuaternionServer(BaseServer):
         # Calculate error values
         error_quat = self.calculateError(self.body_quat, goal_quat) 
         derivative_error_quat = self.calculateDerivativeError(error_quat, self.angular_velocity)
-        self.integral_error_quat, self.integral_error_pos = self.calculateIntegralError(self.integral_error_quat, error_quat, delta_time)
+        self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, error_quat, delta_time)
         
         proportional_quat, integration_quat, derivative_quat = [], [], []
         for i in range(4):
