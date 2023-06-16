@@ -108,13 +108,17 @@ if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endMission)
 
-    # mapping = ObjectMapper()
-    # state = StateTracker()
-    control = Controller(rospy.Time(0))
+    try:
+        # mapping = ObjectMapper()
+        # state = StateTracker()
+        control = Controller(rospy.Time(0))
 
-    QualiMission()
+        QualiMission()
 
 
-    # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-    #testRotationsMission()
-    #laneMarkerGridSearchMission()
+        # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
+        #testRotationsMission()
+        #laneMarkerGridSearchMission()
+    except KeyboardInterrupt:
+        endMission("Mission end prompted by user. Killing.")
+        exit()
