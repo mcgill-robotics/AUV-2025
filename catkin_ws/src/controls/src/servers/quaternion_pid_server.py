@@ -3,7 +3,7 @@
 import rospy
 import tf
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, Quaternion
 from sensor_msgs.msg import Imu
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
@@ -11,9 +11,10 @@ import actionlib
 from auv_msgs.msg import QuaternionAction
 import numpy as np
 import quaternion
+import time
 
 
-class QuaternionServer():
+class QuaternionServer(BaseServer):
 
     def __init__(self):
         print("making quaternion server")
@@ -27,17 +28,14 @@ class QuaternionServer():
         self.pub_sway = rospy.Publisher('sway', Float64, queue_size=50)
         self.pub_heave = rospy.Publisher('heave', Float64, queue_size=50)
         
-        self.pub_test = rospy.Publisher('test', Pose, queue_size=50)
-        # self.pub_test.publish(self.pose)
-        
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
         imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
         
         # Calculation parameters/values
         self.pose = Pose()
-        self.body_quat = [0, 0, 0, 0]
-        self.position = [0, 0, 0]
+        self.body_quat = []
+        self.position = []
         
         self.Kp = [0, 0, 0, 1]
         self.Ki = [0, 0, 0, 1]
@@ -45,16 +43,16 @@ class QuaternionServer():
         self.integral_error = [0, 0, 0, 1]
         self.dt = [0, 0] 
         self.angular_velocity = [0, 0, 0]
-        self.server.start()
-        
+        self.server.start()        
         
     def pose_callback(self, data):
         # Assign pose values
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quat = np.quaternion(self.pose.orientation.w, self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z)
+        self.body_quat = [self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z, self.pose.orientation.w]
+        
         # Get the current time to calculate delta 
-        self.dt.append(rospy.get_rostime())
+        self.dt.append(rospy.get_rostime().to_sec())
         self.dt.pop(0) # only need the two most recent two
     
     def imu_callback(self, data):
@@ -66,45 +64,86 @@ class QuaternionServer():
     def callback(self, goal):
         if self.pose != None:
             if(goal.displace):
-                displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
+                # displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
+                displace_quat = self.get_goal_after_displace(goal.pose)
+                displaced_position = []
                 self.controlEffort(displaced_position, displace_quat)
             else:
                 goal_position = []
                 goal_position.append(goal.pose.position.x)
                 goal_position.append(goal.pose.position.y)
                 goal_position.append(goal.pose.position.z)
-                goal_quat = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+                goal_quat = [goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w]
                 self.controlEffort(goal_position, goal_quat)
+        
+        # monitor when reached pose
+        self.wait_for_settled()
 
         self.server.set_succeeded()
+            
+    def wait_for_settled(self):
+        interval = 4
+        settled = False
+        print("waiting for settled")
+        while not settled and not self.cancelled:
+            start = time.time()
+            while not self.cancelled and self.check_status():
+                if(time.time() - start > interval):
+                    settled = True
+                    break
+                rospy.sleep(0.01)
+        print("settled") 
+        
+    def check_status(self):
+        if(self.position == None or self.body_quat == None):
+            return False
+
+        # tolerance_position = 0.5
+        tolerance_orientation = 0.009
+
+        # x_diff = (not self.goal.do_x.data) or abs(self.position.x - self.goal.position.x) <= tolerance_position
+        # y_diff = (not self.goal.do_y.data) or abs(self.position.y - self.goal.position.y) <= tolerance_position
+        # z_diff = (not self.goal.do_z.data) or abs(self.position.z - self.goal.position.z) <= tolerance_position
+    
+        quat_diff = True
+        error_quat = self.calculateError(self.body_quat, self.goal.pose.orientation)
+        for i in range(3):
+            if abs(error_quat[i+1] - self.body_quat[i+1]) > tolerance_orientation:
+                quat_diff = False
+        else:
+            quat_diff = False
+        
+        # return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
+        return quat_diff
         
     def get_goal_after_displace(self, goal_pose):
-        new_goal = Pose()
-        goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-        displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
-        new_goal_quat = self.body_quat * displacement_quat
-        return goal_position, new_goal_quat     
+        # new_goal = Pose()
+        # goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
+        displacement_quat = [goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z, goal_pose.orientation.w]
+        
+        new_goal_quat = tf.transformations.quaternion_multiply(self.body_quat, displacement_quat)
+        # return goal_position, new_goal_quat 
+        return new_goal_quat
     
     def calculateError(self, q1, q2):
-        q1_inv = [q1[0], -q1[1], -q1[2], -q1[3]]
+        q1_inv = [-q1[0], -q1[1], -q1[2], q1[3]]
         error = tf.transformations.quaternion_multiply(q1_inv, q2)
-        return np.array(error)
+        return error
     
     def calculateDerivativeError(self, error, ang_velocity):
-        velocity_quat = [0, ang_velocity[0], ang_velocity[1], ang_velocity[2]] 
+        velocity_quat = [ang_velocity[0], ang_velocity[1], ang_velocity[2], 0]
         return tf.transformations.quaternion_multiply(error, velocity_quat) / (-2)
     
     def calculateIntegralError(self, integral_error, error, delta_time):
         return integral_error + (error * delta_time)
         
     def controlEffort(self, goal_position, goal_quat):
-        delta_time = self.dt[1] - self.dt[0]
+        delta_time = (self.dt[1] - self.dt[0])
         
         # Calculate error values
         error = self.calculateError(self.body_quat, goal_quat) 
-        print(error)
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
-        self.integral_error = self.calculateIntegralError(error, delta_time)
+        self.integral_error = self.calculateIntegralError(self.integral_error, error, delta_time)
         
         # Calculate proportional term
         proportional = np.multiply(self.Kp, error)
@@ -113,8 +152,14 @@ class QuaternionServer():
         # Calculate derivative term
         derivative = np.multiply(self.Kd, derivative_error)
         
-        control_effort = proportional + integration + derivative 
-        vector_3d = quaternion.as_rotation_vector(control_effort)
+        print(proportional)
+        print(integration)
+        print(derivative)
+        
+        control_effort = proportional + integration + derivative
+        print(control_effort)
+        control_effort_quat = np.quaternion(control_effort[0], control_effort[1], control_effort[2], control_effort[3])
+        vector_3d = quaternion.as_rotation_vector(control_effort_quat)
         
         inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
                                     [0.000000000000000,  0.709487776484284, 0.003794052280665], 

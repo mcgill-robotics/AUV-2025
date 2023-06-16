@@ -116,7 +116,7 @@ class Controller:
     
     def pose_goal(self,position,quaternion):
         x,y,z = position
-        w,qx,qy,qz = quaternion
+        qx,qy,qz,w = quaternion
         goal = QuaternionGoal()
         goal.pose.position.x = x
         goal.pose.position.y = y
