@@ -151,19 +151,24 @@ class QuaternionServer(BaseServer):
         return integral_error_quat + (error_quat * delta_time)
     
     def kinematic_inversion(self,qe_des,qe):
-        Qe1 = self.Qe1(qe)
-        matrix = np.transpose(Qe1) * -1
+        Qe2 = self.Qe(qe)
+        matrix = np.transpose(Qe2) * -1
         return np.matmul(matrix, qe_des) * 2
     
-    def Qe1(self,qe):
+    def Qe(self,qe):
         return np.array([
             [-qe[1],-qe[2],-qe[3]],
             [qe[0],qe[3],-qe[2]],
             [-qe[3],qe[0],qe[1]],
             [qe[2],-qe[1],qe[0]]
         ])
+    
+    def orthogonal_matrix(self, q):
+        Qe1 = self.Qe(q)
+        transpose = np.transposee(Qe1.copy())
+        return np.matmul(Qe1,transpose)
         
-    def controlEffort(self, goal_position, goal_quat):
+    def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
@@ -182,9 +187,9 @@ class QuaternionServer(BaseServer):
             
 
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
+        # OPTIONAL control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_quat
+        # ISSUE: error_quat needs to be w,x,y,z for forumla to work
         omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
-        #control_effort_quat = np.quaternion(control_effort_quat[0], control_effort_quat[1], control_effort_quat[2], control_effort_quat[3])
-        vector_3d = quaternion.as_rotation_vector(control_effort_quat)
         
         inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
                                     [0.000000000000000,  0.709487776484284, 0.003794052280665], 
