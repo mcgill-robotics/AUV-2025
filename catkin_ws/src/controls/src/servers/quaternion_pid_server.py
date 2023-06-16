@@ -43,7 +43,7 @@ class QuaternionServer(BaseServer):
         self.Kd = 1
         self.integral_error_quat = [0, 0, 0, 1]
         self.integral_error_pos = [1, 1, 1]
-        self.dt = [0, 0] 
+        self.update_time_interval = [rospy.get_time(), rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
         self.linear_velocity = [0, 0, 0]
         self.server.start()        
@@ -53,20 +53,12 @@ class QuaternionServer(BaseServer):
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
-        
-        # Get the current time to calculate delta 
-        self.dt.append(rospy.get_rostime().to_sec())
-        self.dt.pop(0) # only need the two most recent two
+        self.update_time_interval()
 
     def update_time_interval(self):
         self.time_interval[0] = self.time_interval[1]
         self.time_interval[1] = rospy.get_time()
     
-    def increment_integral_error(self, body_quat):
-        error_quat = self.calculateError(body_quat, self.goal.pose.orientation)
-        dt = self.time_interval[1] - self.time_interval[0]
-        for i in range(4):
-            self.integral_error[i] += error_quat[i] * dt
 
     def imu_callback(self, data):
         self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
@@ -78,52 +70,53 @@ class QuaternionServer(BaseServer):
         if self.pose != None:
             if(goal.displace):
                 displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
-                self.controlEffort(displaced_position, displace_quat)
+                self.execute_goal(displaced_position, displace_quat)
             else:
                 goal_position = [goal.position.x, goal.position.y, goal.position.z]
                 goal_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
-                self.controlEffort(goal_position, goal_quat)
+                self.execute_goal(goal_position, goal_quat)
         
             # monitor when reached pose
-            self.wait_for_settled(goal)
-
             self.server.set_succeeded()
-                
-    def wait_for_settled(self, goal):
+
+    def execute_goal(self, goal_position, goal_quaternion):
         interval = 4
         settled = False
         print("waiting for settled")
         rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
-            start = time.time()
-            while not self.cancelled and self.check_status(goal):
-                if(time.time() - start > interval):
+            start = rospy.get_time()
+            self.controlEffort(goal_position, goal_quaternion)
+            while not self.cancelled: #and self.check_status(goal):
+                self.controlEffort(goal_position, goal_quaternion)
+                if(rospy.get_time() - start > interval):
                     settled = True
                     break
                 rate.sleep()
-        print("settled") 
+        print("settled")      
+    
 
         
-    def check_status(self, goal):
-        if(self.position == None or self.body_quat == None):
-            return False
+    # def check_status(self, goal_position, goal_quaternion):
+    #     if(self.position == None or self.body_quat == None):
+    #         return False
 
-        tolerance_position = 0.5
-        tolerance_orientation = 0.05
+    #     tolerance_position = 0.5
+    #     tolerance_orientation = 0.05
 
-        x_diff = (not self.goal.do_x.data) or abs(self.position.x - self.goal.position.x) <= tolerance_position
-        y_diff = (not self.goal.do_y.data) or abs(self.position.y - self.goal.position.y) <= tolerance_position
-        z_diff = (not self.goal.do_z.data) or abs(self.position.z - self.goal.position.z) <= tolerance_position
-        x, y, z, w = goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w
-        innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
+    #     x_diff = (not self.goal.do_x.data) or abs(self.position.x - self.goal.position.x) <= tolerance_position
+    #     y_diff = (not self.goal.do_y.data) or abs(self.position.y - self.goal.position.y) <= tolerance_position
+    #     z_diff = (not self.goal.do_z.data) or abs(self.position.z - self.goal.position.z) <= tolerance_position
+    #     x, y, z, w = goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w
+    #     innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
             
-        theta = np.arccos(2 * pow(innert_product, 2) - 1)
-        quat_diff = True
+    #     theta = np.arccos(2 * pow(innert_product, 2) - 1)
+    #     quat_diff = True
         
-        if abs(theta) > tolerance_orientation:
-            quat_diff = False
+    #     if abs(theta) > tolerance_orientation:
+    #         quat_diff = False
         
-        return x_diff and y_diff and z_diff and quat_diff
+    #     return x_diff and y_diff and z_diff and quat_diff
         
     def get_goal_after_displace(self, goal_pose):
         # new_goal = Pose()
