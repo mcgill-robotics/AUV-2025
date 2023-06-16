@@ -1,14 +1,13 @@
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from std_msgs.msgs import Float64
 from sensor_msgs.msg import Image
 import numpy as np
 import math
 from geometry_msgs.msg import Vector3, Vector3Stamped
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
-from std_msgs.msgs import Header
+# from std_msgs.msgs import Header, Float64
 import lane_marker_measure
 
 
@@ -147,8 +146,39 @@ def object_depth(depth_cropped, label, error_threshold=0.5):
         dist = gate_depth(depth_cropped)
     return dist
 
+def eulerToVector(roll_deg, pitch_deg, yaw_deg):
+    roll = math.radians(roll_deg)
+    yaw = math.radians(yaw_deg)
+    pitch = math.radians(pitch_deg)
+
+    cos_roll = math.cos(roll)
+    cos_yaw = math.cos(yaw)
+    cos_pitch = math.cos(pitch)
+    sin_roll = math.sin(roll)
+    sin_yaw = math.sin(yaw)
+    sin_pitch = math.sin(pitch)
+
+    x = cos_roll * cos_yaw * cos_pitch + sin_roll * sin_pitch
+    y = cos_roll * sin_yaw
+    z = sin_roll * cos_yaw * cos_pitch - cos_roll * sin_pitch
+
+    return np.array([x,y,z])
+
+def find_intersection(vector, plane_z_pos):
+    plane_normal = np.array([0,0,1])
+    plane_point = np.array([0,0,plane_z_pos])
+
+    dot_product = np.dot(vector, plane_normal)
+
+    if np.isclose(dot_product, 0):return None
+    
+    vector_length_to_plane = ((np.dot(plane_point, plane_normal) - np.dot(np.array([0,0,0]), plane_normal)) / dot_product)
+
+    if vector_length_to_plane < 0: return None
+
+    return vector_length_to_plane * vector
+
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
-    # TODO: THIS IS ALL WRONG! depth doesnt take into account the angle from center of the object
     # TODO: this is all wrong! euler angles cant be used, have to turn euler angle into vector and do math from there
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
@@ -156,23 +186,20 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         y_center_offset = ((img_height/2)-pixel_y) / img_height #negated since y goes from top to bottom
         #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
         #assuming FOV increases linearly with distance from center pixel
-        x_angle_offset = front_cam_hfov*x_center_offset
-        y_angle_offset = front_cam_vfov*y_center_offset
-        #calculate slopes from angle offsets
-        x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-        y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-        local_offset_x = dist_from_camera
-        #use the angle and distance from the camera of the object to get x and y offsets in local space
-        local_offset_y = local_offset_x*x_slope_offset
-        local_offset_z = local_offset_x*y_slope_offset
+        yaw_angle_offset = front_cam_hfov*x_center_offset
+        pitch_angle_offset = front_cam_vfov*y_center_offset
+        
+        direction_to_object = eulerToVector(0, pitch_angle_offset, yaw_angle_offset)
+        vector_to_object = direction_to_object * dist_from_camera
+        
         #convert local offsets to global offsets using tf transform library
-        global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(local_offset_x, local_offset_y, local_offset_z)
+        global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
         x = state.x + global_offset_x
         y = state.y + global_offset_y
         z = state.z + global_offset_z
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
-        pose_conf = x_conf*y_conf*(min(1.0, 1.0/dist_from_camera))
+        pose_conf = x_conf*y_conf*(min(1.0, 5.0/dist_from_camera))
         return x,y,z, pose_conf
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
@@ -180,67 +207,22 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         y_center_offset = ((img_height/2)-pixel_y) / img_height #negated since y goes from top to bottom
         #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
         #assuming FOV increases linearly with distance from center pixel
-        x_angle_offset = state.theta_x + down_cam_hfov*x_center_offset
-        y_angle_offset = state.theta_y + down_cam_vfov*y_center_offset
-        while abs(x_angle_offset) >= 180:
-            if x_angle_offset >= 180: x_angle_offset -= 180
-            else: x_angle_offset += 180
+        roll_angle_offset = down_cam_hfov*x_center_offset
+        pitch_angle_offset = 90 + down_cam_vfov*y_center_offset
 
-        while abs(y_angle_offset) >= 180:
-            if y_angle_offset >= 180: y_angle_offset -= 180
-            else: y_angle_offset += 180
-        #check that the angle offsets face the object
-        if state.z > z_pos:
-            if abs(x_angle_offset) >= 90 or abs(y_angle_offset) >= 90: return None, None, None, None
-            #calculate slopes from angle offsets
-            x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-            y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-            #assume the object is at the bottom of the pool to get a depth
-            global_offset_z = abs(state.z - z_pos)
-            #use the angle and z offset from the object to get x and y offsets in local space
-            local_offset_x = global_offset_z*x_slope_offset
-            local_offset_y = global_offset_z*y_slope_offset
-            #don't use position calculations for objects which are very far away
-            # (in case down cam picks up on an object which is not on the floor of the pool)
-            localization_max_distance = 10
-            if abs(local_offset_x) > localization_max_distance or abs(local_offset_y) > localization_max_distance: return None, None, None, None
-        else:
-        #TODO!!!! if AUV is facing up
-            if abs(x_angle_offset) <= 90 and abs(y_angle_offset) <= 90: return None, None, None, None
-            if abs(x_angle_offset) >= 90:
-                if x_angle_offset >= 180: x_angle_offset -= 180
-                else: x_angle_offset += 180
-            if abs(y_angle_offset) >= 90:
-                if y_angle_offset >= 180: y_angle_offset -= 180
-                else: y_angle_offset += 180
-            #calculate slopes from angle offsets
-            x_slope_offset = math.tan((x_angle_offset/180)*math.pi)
-            y_slope_offset = math.tan((y_angle_offset/180)*math.pi)
-            #assume the object is at the bottom of the pool to get a depth
-            global_offset_z = -1 * abs(state.z - z_pos)
-            #use the angle and z offset from the object to get x and y offsets in local space
-            local_offset_x = global_offset_z*x_slope_offset
-            local_offset_y = global_offset_z*y_slope_offset
-            #don't use position calculations for objects which are very far away
-            # (in case down cam picks up on an object which is not on the floor of the pool)
-            localization_max_distance = 10
-            if abs(local_offset_x) > localization_max_distance or abs(local_offset_y) > localization_max_distance: return None, None, None, None
-                  
-        #convert local offset to offset in world space using AUV yaw
-        global_offset_x = local_offset_x*math.cos(math.radians(state.theta_z)) + local_offset_y*math.cos(math.radians(state.theta_z+90))
-        global_offset_y = local_offset_y*math.sin(math.radians(state.theta_z+90)) + local_offset_x*math.sin(math.radians(state.theta_z))
-                            
-        #confidence model:
-            # 0.25 at corners
-            # 0.5 at edges 
-            # 1.0 at center
+        local_direction_to_object = eulerToVector(roll_angle_offset, pitch_angle_offset, 0)
+        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+        # solve for point that is defined by the intersection of the direction to the object and it's z position
+        obj_pos = find_intersection(global_direction_to_object, z_pos)
+        if obj_pos is None: return None, None, None, None
+
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
-        x = state.x + global_offset_x
-        y = state.y + global_offset_y
+        x = state.x + obj_pos[0]
+        y = state.y + obj_pos[1]
         z = z_pos
         pose_conf = x_conf * y_conf
-        return x,y,z, pose_conf
+        return x, y, z, pose_conf
     else:
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a dist_from_camera from the camera.")
         return None, None, None, None
@@ -256,8 +238,6 @@ def analyzeGate(img_cropped, debug_img):
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
-
-
 
 
 #one publisher per camera

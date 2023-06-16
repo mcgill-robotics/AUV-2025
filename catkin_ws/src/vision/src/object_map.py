@@ -1,6 +1,6 @@
 import numpy as np
 import rospy
-from auv_msgs.msg import ObjectDetectionFrame
+from auv_msgs.msg import ObjectDetectionFrame, ObjectMap
 import math
 
 #callback when a new object detection frame is published

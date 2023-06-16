@@ -85,7 +85,14 @@ def detect_on_image(raw_img, camera_id):
             else: # FORWARD CAM
                 depth_cropped = cropToBbox(state.depth, bbox)
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
-                if global_class_id == 1: # GATE
+                if global_class_id == 0: # LANE MARKER
+                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
+                    obj_x.append(pred_obj_x)
+                    obj_y.append(pred_obj_y)
+                    obj_z.append(pred_obj_z) 
+                    obj_theta_z.append(None)
+                    extra_field.append(None)
+                elif global_class_id == 1: # GATE
                     theta_z = measureGateAngle(depth_cropped)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
 
