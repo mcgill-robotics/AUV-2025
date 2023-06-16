@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose, Quaternion
 from sensor_msgs.msg import Imu
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
+from math import pow
 import actionlib
 from auv_msgs.msg import QuaternionAction
 import numpy as np
@@ -17,6 +18,7 @@ import time
 class QuaternionServer(BaseServer):
 
     def __init__(self):
+        super().__init__()
         print("making quaternion server")
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
         
@@ -59,58 +61,60 @@ class QuaternionServer(BaseServer):
         self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
     def cancel(self):
-        self.controlEffort(self.pose)
+        self.controlEffort(self.position, self.body_quat)
     
     def callback(self, goal):
         if self.pose != None:
             if(goal.displace):
                 # displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
-                displace_quat = self.get_goal_after_displace(goal.pose)
+                displace_quat = self.get_goal_after_displace(goal.pose.orientation)
                 displaced_position = []
                 self.controlEffort(displaced_position, displace_quat)
             else:
                 goal_position = []
-                goal_position.append(goal.pose.position.x)
-                goal_position.append(goal.pose.position.y)
-                goal_position.append(goal.pose.position.z)
-                goal_quat = [goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w]
+                goal_position.append(goal.position.x)
+                goal_position.append(goal.position.y)
+                goal_position.append(goal.position.z)
+                goal_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
                 self.controlEffort(goal_position, goal_quat)
         
-        # monitor when reached pose
-        self.wait_for_settled()
+            # monitor when reached pose
+            self.wait_for_settled(goal)
 
-        self.server.set_succeeded()
-            
-    def wait_for_settled(self):
+            self.server.set_succeeded()
+                
+    def wait_for_settled(self, goal):
         interval = 4
         settled = False
         print("waiting for settled")
         while not settled and not self.cancelled:
             start = time.time()
-            while not self.cancelled and self.check_status():
+            while not self.cancelled and self.check_status(goal):
                 if(time.time() - start > interval):
                     settled = True
                     break
                 rospy.sleep(0.01)
         print("settled") 
         
-    def check_status(self):
+    def check_status(self, goal):
         if(self.position == None or self.body_quat == None):
             return False
 
         # tolerance_position = 0.5
-        tolerance_orientation = 0.009
+        tolerance_orientation = 0.05
 
         # x_diff = (not self.goal.do_x.data) or abs(self.position.x - self.goal.position.x) <= tolerance_position
         # y_diff = (not self.goal.do_y.data) or abs(self.position.y - self.goal.position.y) <= tolerance_position
         # z_diff = (not self.goal.do_z.data) or abs(self.position.z - self.goal.position.z) <= tolerance_position
-    
+        print(goal)
+        x, y, z, w = goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w
+        innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
+            
+        theta = np.arccos(2 * pow(innert_product, 2) - 1)
         quat_diff = True
-        error_quat = self.calculateError(self.body_quat, self.goal.pose.orientation)
-        for i in range(3):
-            if abs(error_quat[i+1] - self.body_quat[i+1]) > tolerance_orientation:
-                quat_diff = False
-        else:
+        print(theta)
+        
+        if abs(theta) > tolerance_orientation:
             quat_diff = False
         
         # return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
@@ -119,7 +123,7 @@ class QuaternionServer(BaseServer):
     def get_goal_after_displace(self, goal_pose):
         # new_goal = Pose()
         # goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-        displacement_quat = [goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z, goal_pose.orientation.w]
+        displacement_quat = [goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.w]
         
         new_goal_quat = tf.transformations.quaternion_multiply(self.body_quat, displacement_quat)
         # return goal_position, new_goal_quat 
@@ -154,12 +158,7 @@ class QuaternionServer(BaseServer):
             # Calculate derivative term
             derivative.append(self.Kd * derivative_error[i])
         
-        print(proportional)
-        print(integration)
-        print(derivative)
-        
         control_effort = proportional + integration + derivative
-        print(control_effort)
         control_effort_quat = np.quaternion(control_effort[0], control_effort[1], control_effort[2], control_effort[3])
         vector_3d = quaternion.as_rotation_vector(control_effort_quat)
         
