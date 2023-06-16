@@ -11,7 +11,6 @@ import actionlib
 from auv_msgs.msg import QuaternionAction
 import numpy as np
 import quaternion
-import time
 
 
 class QuaternionServer(BaseServer):
@@ -37,11 +36,11 @@ class QuaternionServer(BaseServer):
         self.body_quat = []
         self.position = []
         
-        self.Kp = [0, 0, 0, 1]
-        self.Ki = [0, 0, 0, 1]
-        self.Kd = [0, 0, 0, 1]
-        self.integral_error = [0, 0, 0, 1]
-        self.dt = [0, 0] 
+        self.Kp = 1
+        self.Ki = 0
+        self.Kd = 0
+        self.integral_error = [0, 0, 0, 0]
+        self.time_interval = [rospy.get_time(), rospy.get_time()]
         self.angular_velocity = [0, 0, 0]
         self.server.start()        
         
@@ -49,12 +48,23 @@ class QuaternionServer(BaseServer):
         # Assign pose values
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quat = [self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z, self.pose.orientation.w]
-        
+        self.body_quat = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
+        self.update_time_interval()
+        self.increment_integral_error(self.body_quat)
         # Get the current time to calculate delta 
         self.dt.append(rospy.get_rostime().to_sec())
         self.dt.pop(0) # only need the two most recent two
+
+    def update_time_interval(self):
+        self.time_interval[0] = self.time_interval[1]
+        self.time_interval[1] = rospy.get_time()
     
+    def increment_integral_error(self, body_quat):
+        error_quat = self.calculateError(body_quat, self.goal.pose.orientation)
+        dt = self.time_interval[1] - self.time_interval[0]
+        for i in range(4):
+            self.integral_error[i] += error_quat[i] * dt
+
     def imu_callback(self, data):
         self.ang_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
@@ -67,32 +77,33 @@ class QuaternionServer(BaseServer):
                 # displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
                 displace_quat = self.get_goal_after_displace(goal.pose)
                 displaced_position = []
-                self.controlEffort(displaced_position, displace_quat)
+                self.execute_goal(displaced_position, displace_quat)
             else:
                 goal_position = []
                 goal_position.append(goal.pose.position.x)
                 goal_position.append(goal.pose.position.y)
                 goal_position.append(goal.pose.position.z)
                 goal_quat = [goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w]
-                self.controlEffort(goal_position, goal_quat)
-        
-        # monitor when reached pose
-        self.wait_for_settled()
-
+                self.execute_goal(goal_position, goal_quat)
+    
         self.server.set_succeeded()
             
-    def wait_for_settled(self):
+    def execute_goal(self,goal_position,goal_quaternion):
         interval = 4
         settled = False
         print("waiting for settled")
+        rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
-            start = time.time()
+            start = rospy.get_time()
+            self.controlEffort(goal_position, goal_quaternion)
             while not self.cancelled and self.check_status():
-                if(time.time() - start > interval):
+                self.controlEffort(goal_position, goal_quaternion)
+                if(rospy.get_time() - start > interval):
                     settled = True
                     break
-                rospy.sleep(0.01)
+                rate.sleep()
         print("settled") 
+
         
     def check_status(self):
         if(self.position == None or self.body_quat == None):
@@ -138,12 +149,12 @@ class QuaternionServer(BaseServer):
         return integral_error + (error * delta_time)
         
     def controlEffort(self, goal_position, goal_quat):
-        delta_time = (self.dt[1] - self.dt[0])
+        delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
         error = self.calculateError(self.body_quat, goal_quat) 
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
-        self.integral_error = self.calculateIntegralError(self.integral_error, error, delta_time)
+        #self.integral_error = self.calculateIntegralError(self.integral_error, error, delta_time)
         
         # Calculate proportional term
         proportional = np.multiply(self.Kp, error)
