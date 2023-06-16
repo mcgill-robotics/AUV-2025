@@ -145,18 +145,13 @@ lane_marker_z = -3.7
 octagon_z = 0
 
 if __name__ == '__main__':
+    rospy.init_node('object_detection')
 
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
     min_prediction_confidence = 0.4
-    #bridge is used to convert sensor_msg images to cv2
-    bridge = CvBridge()
-    #get and start models
-    pwd = os.path.realpath(os.path.dirname(__file__))
-    #init nodes and publishers/subscribers for each camera
-    rospy.init_node('object_detection')
     
-    #CHANGE FOR NEW CAMERAS/MODELS:
+    pwd = os.path.realpath(os.path.dirname(__file__))
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
     quali_model_filename = pwd + "/models/quali_model.pt"
     model = [
@@ -173,9 +168,8 @@ if __name__ == '__main__':
         ["Lane Marker", "Octagon"],
         ["Lane Marker", "Gate", "Buoy"],
         ]
-    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3}
-    #copy paste subscriber for additional cameras (change last argument so there is a unique int for each camera)
-    #the int argument will be used to index debug publisher, model, class names, and i
+    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Buoy Symbol":4}
+    #the int argument is used to index debug publisher, model, class names, and i
     subs = [
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0),
         rospy.Subscriber('/vision/front_cam/image_rgb', Image, detect_on_image, 1)

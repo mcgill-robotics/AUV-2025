@@ -177,8 +177,7 @@ def find_intersection(vector, plane_z_pos):
 
     return vector_length_to_plane * vector
 
-def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
-    # TODO: this is all wrong! euler angles cant be used, have to turn euler angle into vector and do math from there
+def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None)
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
         x_center_offset = (pixel_x-(img_width/2)) / img_width #-0.5 to 0.5
@@ -226,6 +225,8 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
 
+# TODO!!!!!!!!!!
+
 def measureBuoyAngle(depth_cropped):
     return None
 
@@ -238,6 +239,8 @@ def analyzeGate(img_cropped, debug_img):
 def analyzeBuoy(img_cropped, debug_img):
     return []
 
+
+rospy.init_node('object_detection_utils')
 
 #one publisher per camera
 cropped_img_pub = [
@@ -262,3 +265,4 @@ tf_buffer = Buffer()
 TransformListener(tf_buffer)
 tf_header = Header(frame_id="world")
 state = State()
+rospy.spin()
