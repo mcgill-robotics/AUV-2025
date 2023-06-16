@@ -37,9 +37,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = []
         self.position = []
         
-        self.Kp = [0, 0, 0, 1]
-        self.Ki = [0, 0, 0, 1]
-        self.Kd = [0, 0, 0, 1]
+        self.Kp = 1
+        self.Ki = 1
+        self.Kd = 1
         self.integral_error = [0, 0, 0, 1]
         self.dt = [0, 0] 
         self.angular_velocity = [0, 0, 0]
@@ -145,12 +145,14 @@ class QuaternionServer(BaseServer):
         derivative_error = self.calculateDerivativeError(error, self.angular_velocity)
         self.integral_error = self.calculateIntegralError(self.integral_error, error, delta_time)
         
-        # Calculate proportional term
-        proportional = np.multiply(self.Kp, error)
-        # Calculte integral term
-        integration = np.multiply(self.Ki, self.integral_error)
-        # Calculate derivative term
-        derivative = np.multiply(self.Kd, derivative_error)
+        proportional, integration, derivative = [], [], []
+        for i in range(3):
+            # Calculate proportional term
+            proportional.append(self.Kp * error[i])
+            # Calculte integral term
+            integration.append(self.Ki * self.integral_error[i])
+            # Calculate derivative term
+            derivative.append(self.Kd * derivative_error[i])
         
         print(proportional)
         print(integration)
