@@ -20,14 +20,12 @@ class QuaternionServer(BaseServer):
         super().__init__()
         print("making quaternion server")
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
-        
+        self.establish_pid_enable_publishers()
+        self.establish_pid_publishers()
         # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
-        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=50)
-        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=50)
-        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=50)
         
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
@@ -81,6 +79,7 @@ class QuaternionServer(BaseServer):
             self.server.set_succeeded()
 
     def execute_goal(self, goal_position, goal_quaternion):
+        self.publish_position_pids(goal_position)
         interval = 4
         settled = False
         print("waiting for settled")
@@ -96,7 +95,16 @@ class QuaternionServer(BaseServer):
                 rate.sleep()
         print("settled")      
     
-
+    def publish_position_pids(self, goal_position):
+        if(self.goal.do_x.data):
+            self.pid_x_enable.publish(True)
+            self.pub_x_pid.publish(goal_position[0])
+        if(self.goal.do_y.data):
+            self.pid_y_enable.publish(True)
+            self.pub_y_pid.publish(goal_position[1])
+        if(self.goal.do_z.data):
+            self.pid_z_enable.publish(True)
+            self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
         if(self.position == None or self.body_quat == None):
@@ -108,14 +116,17 @@ class QuaternionServer(BaseServer):
         x_diff = (not self.goal.do_x.data) or abs(self.position.x - goal_position[0]) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position.y - goal_position[1]) <= tolerance_position
         z_diff = (not self.goal.do_z.data) or abs(self.position.z - goal_position[2]) <= tolerance_position
-        x, y, z, w = goal_quaternion
-        innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
+        if self.goal.do_orientation.data:
+            x, y, z, w = goal_quaternion
+            innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
+                
+            theta = np.arccos(2 * pow(innert_product, 2) - 1)
+            quat_diff = True
             
-        theta = np.arccos(2 * pow(innert_product, 2) - 1)
-        quat_diff = True
-        
-        if abs(theta) > tolerance_orientation:
-            quat_diff = False
+            if abs(theta) > tolerance_orientation:
+                quat_diff = False
+            else:
+                quat_diff = True
         
         return x_diff and y_diff and z_diff and quat_diff
         
@@ -127,43 +138,35 @@ class QuaternionServer(BaseServer):
         new_goal_quat = tf.transformations.quaternion_multiply(self.body_quat, displacement_quat)
         return goal_position, new_goal_quat 
     
-    def calculateError(self, q1, q2, p1, p2):
+    def calculateError(self, q1, q2):
         q1_inv = [-q1[0], -q1[1], -q1[2], q1[3]]
         error_quat = tf.transformations.quaternion_multiply(q1_inv, q2)
-        error_pos = []
-        for i in range(3):
-            error_pos.append(p2[i] - p1[i])
-        return error_quat, error_pos
+        return error_quat
     
     def calculateDerivativeError(self, error, ang_velocity):
         velocity_quat = [ang_velocity[0], ang_velocity[1], ang_velocity[2], 0]
         return tf.transformations.quaternion_multiply(error, velocity_quat) / (-2)
     
-    def calculateIntegralError(self, integral_error_quat, integral_error_pos, error_quat, error_pos, delta_time):
-        return integral_error_quat + (error_quat * delta_time), integral_error_pos + (error_pos * delta_time)
+    def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
+        return integral_error_quat + (error_quat * delta_time)
         
     def controlEffort(self, goal_position, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
-        error_quat, error_pos = self.calculateError(self.body_quat, goal_quat, self.position, goal_position) 
-        derivative_error_quat, derivative_error_pos = self.calculateDerivativeError(error_quat, self.angular_velocity, error_pos, self.linear_velocity)
-        self.integral_error_quat, self.integral_error_pos = self.calculateIntegralError(self.integral_error_quat, self.integral_error_pos, error_quat, error_pos, delta_time)
+        error_quat = self.calculateError(self.body_quat, goal_quat,) 
+        derivative_error_quat = self.calculateDerivativeError(error_quat, self.angular_velocity)
+        self.integral_error_quat, self.integral_error_pos = self.calculateIntegralError(self.integral_error_quat, error_quat, delta_time)
         
         proportional_quat, integration_quat, derivative_quat = [], [], []
-        proportional_pos, integration_pos, derivative_pos = [], [], []
         for i in range(3):
             # Calculate proportional term
             proportional_quat.append(self.Kp * error_quat[i])
-            proportional_pos.append(self.Kp * error_pos[i])
             # Calculte integral term
             integration_quat.append(self.Ki * self.integral_error_quat[i])
-            integration_pos.append(self.Ki * self.integral_error_pos[i])
             # Calculate derivative term
             derivative_quat.append(self.Kd * derivative_error_quat[i])
-            derivative_pos.append(self.Kd * derivative_error_pos[i])
             
-        control_effort_pos = proportional_pos + integration_pos + derivative_pos
         
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
         control_effort_quat = np.quaternion(control_effort_quat[0], control_effort_quat[1], control_effort_quat[2], control_effort_quat[3])
@@ -177,10 +180,6 @@ class QuaternionServer(BaseServer):
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
-        self.pub_yaw.publish(torque[2])
-        self.pub_surge.publish(control_effort_pos[0])
-        self.pub_sway.publish(control_effort_pos[1])
-        self.pub_heave.publish(control_effort_pos[2])
-        
+        self.pub_yaw.publish(torque[2])      
     
         

@@ -18,6 +18,7 @@ do_z = [Bool(False),Bool(False),Bool(True),Bool(False),Bool(False),Bool(False)]
 do_txtytz = [Bool(False),Bool(False),Bool(False),Bool(True),Bool(True),Bool(True)]
 do_tz = [Bool(False),Bool(False),Bool(False),Bool(False),Bool(False),Bool(True)]
 do_all = [Bool(True),Bool(True),Bool(True),Bool(True),Bool(True),Bool(True)]
+quaternion_dos = [Bool(True),Bool(True),Bool(True),Bool(True)]
 do_displace = Bool(True)
 do_not_displace = Bool(False)
 
@@ -114,7 +115,7 @@ class Controller:
         goal.do_x, goal.do_y, goal.do_z, goal.do_theta_x, goal.do_theta_y, goal.do_theta_z = keepers
         return goal
     
-    def pose_goal(self,position,quaternion):
+    def pose_goal(self,position,quaternion,keepers,displace):
         x,y,z = position
         qx,qy,qz,w = quaternion
         goal = QuaternionGoal()
@@ -125,10 +126,12 @@ class Controller:
         goal.pose.orientation.x = qx
         goal.pose.orientation.y = qy
         goal.pose.orientation.z = qz
+        goal.displace = displace
+        goal.do_x, goal.do_y, goal.do_z, goal.do_quaternion = keepers
         return goal
     
     def quaternion_action(self,position,quaternion):
-        goal = self.pose_goal(position,quaternion)
+        goal = self.pose_goal(position,quaternion,quaternion_dos,do_not_displace)
         self.QuaternionStateServer.send_goal_and_wait(goal)
 
 
