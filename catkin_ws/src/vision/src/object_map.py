@@ -1,4 +1,3 @@
-import numpy as np
 import rospy
 from auv_msgs.msg import ObjectDetectionFrame, ObjectMap
 import math

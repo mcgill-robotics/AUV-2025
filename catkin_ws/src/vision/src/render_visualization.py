@@ -155,18 +155,18 @@ def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
         addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,color)
         addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,color)
         addLabel(x,y,z,"Lane Marker",publishToMap)
-    elif label == 1: #QUALI GATE
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Quali Gate",publishToMap)
-    elif label == 2: #QUALI POLE
-        addLabel(x,y,z,"Quali Pole",publishToMap)
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.05,0.05,3],publishToMap,[color[0],color[1],color[2],0.4])
-    elif label == 3: #GATE TASK
+    elif label == 1: #GATE TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
-    elif label == 4: #BUOY TASK
+        addLabel(x,y,z,"Gate (symbol on left: " + str(extra_field) + ")",publishToMap)
+    elif label == 2: #BUOY TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
+        addLabel(x,y,z,"Buoy",publishToMap)
+    elif label == 3: # OCTAGON
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[1,1,0.1],publishToMap,[color[0],color[1],color[2],0.4])
+        addLabel(x,y,z,"Octagon" ,publishToMap)
+    elif label == 4: #BUOY SYMBOL
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.01,0.1,0.1],publishToMap,[color[0],color[1],color[2],0.5])
+        addLabel(x,y,z,"Buoy Symbol: " + str(extra_field),publishToMap)
 
 def addLabel(x,y,z,text,pub,scale=0.25,override_id=None):
     global marker_id

@@ -7,9 +7,8 @@ import math
 from geometry_msgs.msg import Vector3, Vector3Stamped
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
-# from std_msgs.msgs import Header, Float64
+from std_msgs.msg import Header, Float64
 import lane_marker_measure
-
 
 def transformLocalToGlobal(lx,ly,lz):
     trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
@@ -214,7 +213,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None: return None, None, None, None
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > 10: return None, None, None, None
 
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
@@ -224,7 +223,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         pose_conf = x_conf * y_conf
         return x, y, z, pose_conf
     else:
-        print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a dist_from_camera from the camera.")
+        print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
 
 def measureBuoyAngle(depth_cropped):
@@ -257,8 +256,6 @@ down_cam_hfov = 220
 down_cam_vfov = 165.26
 front_cam_hfov = 90
 front_cam_vfov = 65
-
-
 
 bridge = CvBridge()
 tf_buffer = Buffer()

@@ -107,12 +107,13 @@ def detect_on_image(raw_img, camera_id):
                 elif global_class_id == 2: # BUOY
                     theta_z = measureBuoyAngle(depth_cropped)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
-                    obj_theta_z.append(theta_z)
-                    extra_field.append(None)
-                    pose_confidence.append(pose_conf) 
+                    
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
+                    obj_theta_z.append(theta_z)
+                    pose_confidence.append(pose_conf) 
+                    extra_field.append(None)
 
                     buoy_symbols = analyzeBuoy(cropToBbox(img, bbox), debug_img)
                     for symbol_conf, symbol_x, symbol_y, symbol_z, symbol_pose_conf, symbol_priority in buoy_symbols:
