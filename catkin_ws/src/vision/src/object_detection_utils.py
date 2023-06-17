@@ -34,20 +34,20 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.depth_map = None
-def updateX(self, msg):
-    self.x = float(msg.data)
-def updateY(self, msg):
-    self.y = float(msg.data)
-def updateZ(self, msg):
-    self.z = float(msg.data)
-def updateThetaX(self, msg):
-    self.theta_x = float(msg.data)
-def updateThetaY(self, msg):
-    self.theta_y = float(msg.data)
-def updateThetaZ(self, msg):
-    self.theta_z = float(msg.data)
-def updateDepthMap(self, msg):
-    self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
+    def updateX(self, msg):
+        self.x = float(msg.data)
+    def updateY(self, msg):
+        self.y = float(msg.data)
+    def updateZ(self, msg):
+        self.z = float(msg.data)
+    def updateThetaX(self, msg):
+        self.theta_x = float(msg.data)
+    def updateThetaY(self, msg):
+        self.theta_y = float(msg.data)
+    def updateThetaZ(self, msg):
+        self.theta_z = float(msg.data)
+    def updateDepthMap(self, msg):
+        self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
