@@ -88,7 +88,7 @@ class QuaternionServer(BaseServer):
         while not settled and not self.cancelled:
             start = rospy.get_time()
             self.controlEffort(goal_quaternion)
-            while not self.cancelled and self.check_status():
+            while not self.cancelled and self.check_status(goal_position, goal_quaternion):
                 self.controlEffort(goal_quaternion)
                 if(rospy.get_time() - start > interval):
                     settled = True
@@ -114,11 +114,11 @@ class QuaternionServer(BaseServer):
         tolerance_position = 0.5
         tolerance_orientation = 0.05
 
-        x_diff = (not self.goal.do_x.data) or abs(self.position.x - goal_position[0]) <= tolerance_position
-        y_diff = (not self.goal.do_y.data) or abs(self.position.y - goal_position[1]) <= tolerance_position
-        z_diff = (not self.goal.do_z.data) or abs(self.position.z - goal_position[2]) <= tolerance_position
+        x_diff = (not self.goal.do_x.data) or abs(self.position[0] - goal_position[0]) <= tolerance_position
+        y_diff = (not self.goal.do_y.data) or abs(self.position[1] - goal_position[1]) <= tolerance_position
+        z_diff = (not self.goal.do_z.data) or abs(self.position[2] - goal_position[2]) <= tolerance_position
         
-        if self.goal.do_orientation.data:
+        if self.goal.do_quaternion.data:
             x, y, z, w = goal_quaternion
             innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
                 
@@ -155,9 +155,6 @@ class QuaternionServer(BaseServer):
     def kinematic_inversion(self,qe_des,qe):
         Qe2 = self.Qe(qe)
         matrix = np.transpose(Qe2) * -1
-        # changed the order - MAKE SURE IT IS CORRECT
-        print(qe_des)
-        print(matrix)
         return np.matmul(matrix, qe_des) * 2
     
     def Qe(self,qe):
@@ -179,18 +176,17 @@ class QuaternionServer(BaseServer):
         derivative_error_quat = self.calculateDerivativeError(error_quat, self.angular_velocity)
         self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, error_quat, delta_time)
         
-        proportional_quat, integration_quat, derivative_quat = [], [], []
+        proportional_quat, integration_quat, derivative_quat = np.zeros(4), np.zeros(4), np.zeros(4)
         for i in range(4):
             # Calculate proportional term
-            proportional_quat.append(self.Kp * error_quat[i])
+            proportional_quat[i] = self.Kp * error_quat[i]
             # Calculte integral term
-            integration_quat.append(self.Ki * self.integral_error_quat[i])
+            integration_quat[i] = self.Ki * self.integral_error_quat[i]
             # Calculate derivative term
-            derivative_quat.append(self.Kd * derivative_error_quat[i])
+            derivative_quat[i] = self.Kd * derivative_error_quat[i]
             
-
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        # OPTIONAL control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_quat
+        # OPTIONAL control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_quat)
         # ISSUE: error_quat needs to be w,x,y,z for forumla to work
         omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
