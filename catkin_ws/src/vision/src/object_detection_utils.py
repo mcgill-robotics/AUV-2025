@@ -34,20 +34,20 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.depth_map = None
-def updateX(self, msg):
-    self.x = float(msg.data)
-def updateY(self, msg):
-    self.y = float(msg.data)
-def updateZ(self, msg):
-    self.z = float(msg.data)
-def updateThetaX(self, msg):
-    self.theta_x = float(msg.data)
-def updateThetaY(self, msg):
-    self.theta_y = float(msg.data)
-def updateThetaZ(self, msg):
-    self.theta_z = float(msg.data)
-def updateDepthMap(self, msg):
-    self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
+    def updateX(self, msg):
+        self.x = float(msg.data)
+    def updateY(self, msg):
+        self.y = float(msg.data)
+    def updateZ(self, msg):
+        self.z = float(msg.data)
+    def updateThetaX(self, msg):
+        self.theta_x = float(msg.data)
+    def updateThetaY(self, msg):
+        self.theta_y = float(msg.data)
+    def updateThetaZ(self, msg):
+        self.theta_z = float(msg.data)
+    def updateDepthMap(self, msg):
+        self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -187,7 +187,7 @@ def find_intersection(vector, plane_z_pos):
 
     return vector_length_to_plane * vector
 
-def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None)
+def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
         x_center_offset = (pixel_x-(img_width/2)) / img_width #-0.5 to 0.5
@@ -201,10 +201,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
-        global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
-        x = state.x + global_offset_x
-        y = state.y + global_offset_y
-        z = state.z + global_offset_z
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
         pose_conf = x_conf*y_conf*(min(1.0, 5.0/dist_from_camera))
@@ -226,8 +223,8 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
-        x = state.x + obj_pos[0]
-        y = state.y + obj_pos[1]
+        x = obj_pos[0]
+        y = obj_pos[1]
         z = z_pos
         pose_conf = x_conf * y_conf
         return x, y, z, pose_conf
@@ -260,20 +257,18 @@ def measureBuoyAngle(depth_cropped):
 
     return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
     
-    
-    
-
-def measureGateAngle(depth_cropped):
+def measureGateAngle(depth_cropped): # ELIE
     return None
 
-def analyzeGate(img_cropped, debug_img):
+def analyzeGate(img_cropped, debug_img): # AYOUB
     return 0
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
 
 
-rospy.init_node('object_detection_utils')
+rospy.init_node('object_detection')
+
 
 #one publisher per camera
 cropped_img_pub = [
@@ -298,4 +293,3 @@ tf_buffer = Buffer()
 TransformListener(tf_buffer)
 tf_header = Header(frame_id="world")
 state = State()
-rospy.spin()

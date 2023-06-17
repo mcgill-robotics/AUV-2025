@@ -2,19 +2,19 @@
 
 import numpy as np
 import rospy
-import cv2
-from cv_bridge import CvBridge
 import os
 from ultralytics import YOLO
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 from object_detection_utils import *
+import object_detection_utils
 import torch
 
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
     #only predict if i has not reached detect_every yet
+    print("received image")
     global i
     i[camera_id] += 1
     if i[camera_id] <= detect_every: return
@@ -31,6 +31,7 @@ def detect_on_image(raw_img, camera_id):
     
     #run model on img
     detections = model[camera_id].predict(img, device=torch.device('cuda')) #change device for cuda
+    print("running model")
     #initialize empty arrays for object detection frame message
     label = []
     detection_confidence = []
@@ -42,11 +43,13 @@ def detect_on_image(raw_img, camera_id):
     extra_field = []
     #nested for loops get all predictions made by model
     for detection in detections:
-        boxes = detection.boxes.cpu().numpy()
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
         for box in boxes:
             conf = float(list(box.conf)[0])
             #only consider predictinon if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
+                print("confidence too low ({}%)".format(conf*100))
                 continue
             
             bbox = list(box.xywh[0])
@@ -145,20 +148,20 @@ lane_marker_z = -3.7
 octagon_z = 0
 
 if __name__ == '__main__':
-    rospy.init_node('object_detection')
-
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
     min_prediction_confidence = 0.4
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-    quali_model_filename = pwd + "/models/quali_model.pt"
+    gate_model_filename = pwd + "/models/gate_model.pt"
     model = [
         YOLO(down_cam_model_filename),
-        YOLO(quali_model_filename)
+        YOLO(gate_model_filename)
         ]
-    for m in model: m.to(torch.device('cuda'))
+    for m in model:
+        if torch.cuda.is_available(): m.to(torch.device('cuda'))
+        else: print("WARN: CUDA is not available! Running on CPU")
     #count for number of images received per camera
     i = [
         0,
