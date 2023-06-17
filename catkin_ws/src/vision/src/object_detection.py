@@ -43,7 +43,8 @@ def detect_on_image(raw_img, camera_id):
     extra_field = []
     #nested for loops get all predictions made by model
     for detection in detections:
-        boxes = detection.boxes.cpu().numpy()
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
         for box in boxes:
             conf = float(list(box.conf)[0])
             #only consider predictinon if confidence is at least min_prediction_confidence
@@ -158,7 +159,9 @@ if __name__ == '__main__':
         YOLO(down_cam_model_filename),
         YOLO(gate_model_filename)
         ]
-    for m in model: m.to(torch.device('cuda'))
+    for m in model:
+        if torch.cuda.is_available(): m.to(torch.device('cuda'))
+        else: print("WARN: CUDA is not available! Running on CPU")
     #count for number of images received per camera
     i = [
         0,
