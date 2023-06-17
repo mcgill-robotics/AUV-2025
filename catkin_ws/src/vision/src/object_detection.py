@@ -153,10 +153,10 @@ if __name__ == '__main__':
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-    quali_model_filename = pwd + "/models/quali_model.pt"
+    gate_model_filename = pwd + "/models/gate_model.pt"
     model = [
         YOLO(down_cam_model_filename),
-        YOLO(quali_model_filename)
+        YOLO(gate_model_filename)
         ]
     for m in model: m.to(torch.device('cuda'))
     #count for number of images received per camera
