@@ -13,8 +13,8 @@ class QuaternionTest(smach.State):
     def execute(self, ud):
         print("Starting Quaternion Mission")
         try:
-            position = [0,0,0]
-            quaternion = [0,0.707,0,0.707]
+            position = [0, 0, 0]
+            quaternion = [0, 0, 0.7071068, 0.7071068]
             # self.control.move((0,0,0))
             self.control.quaternion_action(position, quaternion)
             # DONE

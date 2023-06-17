@@ -111,8 +111,8 @@ class QuaternionServer(BaseServer):
         if(self.position == None or self.body_quat == None):
             return False
 
-        tolerance_position = 0.5
-        tolerance_orientation = 0.05
+        tolerance_position = 0.2
+        tolerance_orientation = 0.02
 
         x_diff = (not self.goal.do_x.data) or abs(self.position[0] - goal_position[0]) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position[1] - goal_position[1]) <= tolerance_position
