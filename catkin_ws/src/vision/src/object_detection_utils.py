@@ -243,7 +243,8 @@ def analyzeBuoy(img_cropped, debug_img):
     return []
 
 
-rospy.init_node('object_detection_utils')
+rospy.init_node('object_detection')
+
 
 #one publisher per camera
 cropped_img_pub = [
@@ -268,4 +269,3 @@ tf_buffer = Buffer()
 TransformListener(tf_buffer)
 tf_header = Header(frame_id="world")
 state = State()
-rospy.spin()
