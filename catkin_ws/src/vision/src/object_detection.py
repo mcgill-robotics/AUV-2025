@@ -14,13 +14,12 @@ import torch
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
     #only predict if i has not reached detect_every yet
-    print("received image")
     global i
     i[camera_id] += 1
     if i[camera_id] <= detect_every: return
     i[camera_id] = 0
     
-    current_states = {"x:", state.x, "y:", state.y, "z", state.z, "theta_x", state.theta_x, "theta_y", state.theta_y, "theta_z", state.theta_z}
+    current_states = {"x:": state.x, "y:": state.y, "z": state.z, "theta_x": state.theta_x, "theta_y": state.theta_y, "theta_z": state.theta_z}
     if None in current_states.values():
         print("State information missing. Skipping detection.")
         print(current_states)
@@ -30,8 +29,7 @@ def detect_on_image(raw_img, camera_id):
     debug_img = np.copy(img)
     
     #run model on img
-    detections = model[camera_id].predict(img, device=torch.device('cuda')) #change device for cuda
-    print("running model")
+    detections = model[camera_id].predict(img, device=device) #change device for cuda
     #initialize empty arrays for object detection frame message
     label = []
     detection_confidence = []
@@ -162,6 +160,9 @@ if __name__ == '__main__':
     for m in model:
         if torch.cuda.is_available(): m.to(torch.device('cuda'))
         else: print("WARN: CUDA is not available! Running on CPU")
+    
+    if torch.cuda.is_available(): device=torch.device('cuda')
+    else: device = 'cpu'
     #count for number of images received per camera
     i = [
         0,
