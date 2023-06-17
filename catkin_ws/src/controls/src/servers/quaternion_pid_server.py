@@ -2,7 +2,7 @@
 
 import rospy
 import tf
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose, Quaternion
 from sensor_msgs.msg import Imu
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
@@ -27,6 +27,9 @@ class QuaternionServer(BaseServer):
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
+        # self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
+        # self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
+        # self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
         
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
@@ -95,13 +98,13 @@ class QuaternionServer(BaseServer):
     
     def publish_position_pids(self, goal_position):
         if(self.goal.do_x.data):
-            self.pid_x_enable.publish(True)
+            self.pub_x_enable.publish(True)
             self.pub_x_pid.publish(goal_position[0])
         if(self.goal.do_y.data):
-            self.pid_y_enable.publish(True)
+            self.pub_y_enable.publish(True)
             self.pub_y_pid.publish(goal_position[1])
         if(self.goal.do_z.data):
-            self.pid_z_enable.publish(True)
+            self.pub_z_enable.publish(True)
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
@@ -152,6 +155,9 @@ class QuaternionServer(BaseServer):
     def kinematic_inversion(self,qe_des,qe):
         Qe2 = self.Qe(qe)
         matrix = np.transpose(Qe2) * -1
+        # changed the order - MAKE SURE IT IS CORRECT
+        print(qe_des)
+        print(matrix)
         return np.matmul(matrix, qe_des) * 2
     
     def Qe(self,qe):
