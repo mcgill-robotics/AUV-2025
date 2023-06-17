@@ -124,6 +124,10 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
+def clean_depth_error(depth_img, error_threshold=0.5):
+    depth_img[depth_img <= error_threshold] = 100
+    return depth_img
+
 def gate_depth(depth_cropped):
     rows, _ = depth_cropped.shape
     left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
@@ -141,7 +145,7 @@ def lane_marker_depth(depth_cropped):
     return closest_point
 
 def object_depth(depth_cropped, label, error_threshold=0.5):
-    depth_cropped[depth_cropped <= error_threshold] = 100
+    depth_cropped = clean_depth_error(depth_cropped, error_threshold)
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
@@ -234,7 +238,30 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 # TODO!!!!!!!!!!
 
 def measureBuoyAngle(depth_cropped):
-    return None
+    depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)
+    rows, _ = depth_cropped.shape
+    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
+    
+    flattened_array = left_half.flatten()
+    sorted_array = np.sort(flattened_array)
+    left_closest = sorted_array[:10]
+    
+    flattened_array = right_half.flatten()
+    sorted_array = np.sort(flattened_array)
+    right_closest = sorted_array[:10]
+    
+    left_mean, right_mean = np.mean(left_closest), np.mean(right_closest)
+    
+    rotated = -1 # rotated to the right
+    if left_mean > right_mean:
+        rotated = 1 # rotated to the left
+        
+    delta_y, delta_x = abs(left_mean - right_mean), 0.61 # (0.61 == 2 ft)
+
+    return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
+    
+    
+    
 
 def measureGateAngle(depth_cropped):
     return None
