@@ -57,16 +57,10 @@ def detect_on_image(raw_img, camera_id):
             detection_confidence.append(conf)
             #add bbox visualization to img
             debug_img = visualizeBbox(debug_img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
-
+            print(camera_id)
             img_h, img_w, _ = img.shape
             if camera_id == 0: # DOWN CAM
                 if global_class_id == 0: #LANE MARKER
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
-                    pose_confidence.append(pose_conf) 
-                    obj_x.append(pred_obj_x)
-                    obj_y.append(pred_obj_y)
-                    obj_z.append(pred_obj_z) 
-
                     headings, center, debug_img = measureLaneMarker(img, bbox, debug_img)
                     if None in headings:
                         extra_field.append(None)
@@ -75,7 +69,14 @@ def detect_on_image(raw_img, camera_id):
                     else:
                         obj_theta_z.append(state.theta_z + (headings[0]-90))
                         extra_field.append(state.theta_z + (headings[1]-90))
+
+                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
+                    pose_confidence.append(pose_conf) 
+                    obj_x.append(pred_obj_x)
+                    obj_y.append(pred_obj_y)
+                    obj_z.append(pred_obj_z) 
                 elif global_class_id == 4: # OCTAGON
+                    center = bbox
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
                     pose_confidence.append(pose_conf) 
                     obj_x.append(pred_obj_x)
@@ -84,7 +85,8 @@ def detect_on_image(raw_img, camera_id):
                     extra_field.append(None)
                     obj_theta_z.append(None)
             else: # FORWARD CAM
-                depth_cropped = cropToBbox(state.depth, bbox)
+                center = bbox
+                depth_cropped = cropToBbox(np.copy(state.depth), bbox)
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
@@ -170,7 +172,7 @@ if __name__ == '__main__':
         ]
     class_names = [ #one array per camera, name index should be class id
         ["Lane Marker", "Octagon"],
-        ["Lane Marker", "Gate", "Buoy"],
+        ["Gate", "Lane Marker", "Buoy"],
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Buoy Symbol":4}
     #the int argument is used to index debug publisher, model, class names, and i

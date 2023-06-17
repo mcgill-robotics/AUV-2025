@@ -90,7 +90,7 @@ def measureLaneMarker(img, bbox, debug_img):
     line_length = 0.25*min(bbox[2], bbox[3]) #line will be size of shortest bounding box side
     #measure headings from lane marker
     cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
-    cropped_img_pub.publish(cropped_img_to_pub)
+    cropped_img_pubs[0].publish(cropped_img_to_pub)
     headings, center_point = lane_marker_measure.measure_headings(cropped_img)
     if None in (headings, center_point): return (None, None), (None, None), debug_img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
@@ -130,14 +130,14 @@ def clean_depth_error(depth_img, error_threshold=0.5):
 
 def gate_depth(depth_cropped):
     rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
-    left_closest = np.unravel_index(np.argmin(left_half), left_half.shape)
-    right_closest = np.unravel_index(np.argmin(right_half), right_half.shape)
+    left_half, right_half = depth_cropped[:int(rows/2), :], depth_cropped[int(rows/2):, :]
+    left_closest = np.min(left_half)
+    right_closest = np.min(right_half)
     return (left_closest + right_closest) / 2
 
 def buoy_depth(depth_cropped):
     rows, cols = depth_cropped.shape
-    middle_point = depth_cropped[rows/2, cols/2]
+    middle_point = depth_cropped[int(rows/2), int(cols/2)]
     return middle_point
 
 def lane_marker_depth(depth_cropped):
@@ -185,7 +185,7 @@ def find_intersection(vector, plane_z_pos):
 
     if vector_length_to_plane < 0: return None
 
-    return vector_length_to_plane * vector
+    return vector_length_to_plane * np.array(vector)
 
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
@@ -271,7 +271,7 @@ rospy.init_node('object_detection')
 
 
 #one publisher per camera
-cropped_img_pub = [
+cropped_img_pubs = [
     rospy.Publisher('vision/down_cam/cropped', Image, queue_size=1),
     rospy.Publisher('vision/front_cam/cropped', Image, queue_size=1)
 ]

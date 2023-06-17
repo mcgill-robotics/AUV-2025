@@ -4,7 +4,7 @@ import numpy as np
 import math
 from cv_bridge import CvBridge
 
-downscale_amt = None
+longest_downscaled_size = None
 blur1_amt = None
 color_tolerance = None
 blur2_amt = None
@@ -25,8 +25,13 @@ def areTheSame(c1, c2):
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publisher=None, blur2_publisher=None, thresh_publisher=None):
     getParameters()
-    downscaled_size = (int(img.shape[1]*downscale_amt), int(img.shape[0]*downscale_amt))
+    if min(img.shape[0], img.shape[1]) > longest_downscaled_size:
+        scaling_factor = longest_downscaled_size/min(img.shape[0], img.shape[1])
+        downscaled_size = (int(img.shape[1]*scaling_factor), int(img.shape[0]*scaling_factor))
+    else:
+        downscaled_size = (img.shape[1], img.shape[0])
     downscaled = cv2.resize(img, dsize=downscaled_size, interpolation=cv2.INTER_AREA)
+
     if blur1_amt > 0: blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
     else: blurred = downscaled
     img_b, img_g, img_r = cv2.split(blurred)
@@ -100,7 +105,7 @@ def angleBetweenLines(l1, l2):
         return angle_diff
 
 def getParameters():
-    global downscale_amt
+    global longest_downscaled_size
     global blur1_amt
     global color_tolerance
     global blur2_amt
@@ -115,7 +120,7 @@ def getParameters():
                 value = line.strip()
                 if value != '\n' and value != '':
                     values.append(float(value))
-    downscale_amt = values[0]
+    longest_downscaled_size = values[0]
     blur1_amt = values[1]
     color_tolerance = values[2]
     blur2_amt = values[3]
