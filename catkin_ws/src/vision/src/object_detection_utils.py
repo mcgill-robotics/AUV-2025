@@ -183,7 +183,7 @@ def find_intersection(vector, plane_z_pos):
 
     return vector_length_to_plane * vector
 
-def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None)
+def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
         x_center_offset = (pixel_x-(img_width/2)) / img_width #-0.5 to 0.5
@@ -197,10 +197,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
-        global_offset_x, global_offset_y, global_offset_z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
-        x = state.x + global_offset_x
-        y = state.y + global_offset_y
-        z = state.z + global_offset_z
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
         pose_conf = x_conf*y_conf*(min(1.0, 5.0/dist_from_camera))
@@ -222,8 +219,8 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
         x_conf = 1.0 - abs(x_center_offset)
         y_conf = 1.0 - abs(y_center_offset)
-        x = state.x + obj_pos[0]
-        y = state.y + obj_pos[1]
+        x = obj_pos[0]
+        y = obj_pos[1]
         z = z_pos
         pose_conf = x_conf * y_conf
         return x, y, z, pose_conf
@@ -233,13 +230,13 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
 # TODO!!!!!!!!!!
 
-def measureBuoyAngle(depth_cropped):
+def measureBuoyAngle(depth_cropped): 
     return None
 
-def measureGateAngle(depth_cropped):
+def measureGateAngle(depth_cropped): # ELIE
     return None
 
-def analyzeGate(img_cropped, debug_img):
+def analyzeGate(img_cropped, debug_img): # AYOUB
     return 0
 
 def analyzeBuoy(img_cropped, debug_img):
