@@ -155,23 +155,28 @@ def object_depth(depth_cropped, label, error_threshold=0.5):
         dist = buoy_depth(depth_cropped)
     return dist
 
-def eulerToVector(roll_deg, pitch_deg, yaw_deg):
-    roll = math.radians(roll_deg)
-    yaw = math.radians(yaw_deg)
-    pitch = math.radians(pitch_deg)
+def eulerToVectorDownCam(x_deg, y_deg):
+    x_rad = math.radians(x_deg)
+    y_rad = math.radians(y_deg)
 
-    cos_roll = math.cos(roll)
-    cos_yaw = math.cos(yaw)
-    cos_pitch = math.cos(pitch)
-    sin_roll = math.sin(roll)
-    sin_yaw = math.sin(yaw)
-    sin_pitch = math.sin(pitch)
+    x = -math.tan(y_rad)
+    y = math.tan(x_rad)
 
-    x = cos_roll * cos_yaw * cos_pitch + sin_roll * sin_pitch
-    y = cos_roll * sin_yaw
-    z = sin_roll * cos_yaw * cos_pitch - cos_roll * sin_pitch
+    vec = np.array([x,y,-1])
+    
+    return vec / np.linalg.norm(vec)
 
-    return np.array([x,y,z])
+
+def eulerToVectorFrontCam(x_deg, y_deg):
+    x_rad = math.radians(x_deg)
+    y_rad = math.radians(y_deg)
+
+    y = math.tan(x_rad)
+    z = -math.tan(y_rad)
+
+    vec = np.array([1,y, z])
+    
+    return vec / np.linalg.norm(vec)
 
 def find_intersection(vector, plane_z_pos):
     plane_normal = np.array([0,0,1])
@@ -197,7 +202,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         yaw_angle_offset = front_cam_hfov*x_center_offset
         pitch_angle_offset = front_cam_vfov*y_center_offset
         
-        direction_to_object = eulerToVector(0, pitch_angle_offset, yaw_angle_offset)
+        direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
@@ -208,14 +213,14 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         return x,y,z, pose_conf
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
-        x_center_offset = (pixel_x-(img_width/2)) / img_width #-0.5 to 0.5
-        y_center_offset = ((img_height/2)-pixel_y) / img_height #negated since y goes from top to bottom
+        x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
+        y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
         #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
         #assuming FOV increases linearly with distance from center pixel
         roll_angle_offset = down_cam_hfov*x_center_offset
-        pitch_angle_offset = 90 + down_cam_vfov*y_center_offset
+        pitch_angle_offset = down_cam_vfov*y_center_offset
 
-        local_direction_to_object = eulerToVector(roll_angle_offset, pitch_angle_offset, 0)
+        local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
         global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
@@ -265,6 +270,10 @@ def analyzeGate(img_cropped, debug_img): # AYOUB
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
+
+
+local_direction_to_object = eulerToVector(0, 90, 0)
+print(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
 
 
 rospy.init_node('object_detection')
