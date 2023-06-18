@@ -69,6 +69,7 @@ def detect_on_image(raw_img, camera_id):
                     else:
                         obj_theta_z.append(state.theta_z + (headings[0]-90))
                         extra_field.append(state.theta_z + (headings[1]-90))
+                    print("obj_theta_z",obj_theta_z[-1])
 
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     pose_confidence.append(pose_conf) 
@@ -162,7 +163,7 @@ if __name__ == '__main__':
         if torch.cuda.is_available(): m.to(torch.device('cuda'))
         else: print("WARN: CUDA is not available! Running on CPU")
     
-    if torch.cuda.is_available(): device=torch.device('cuda')
+    if torch.cuda.is_available(): device=0
     else: device = 'cpu'
     #count for number of images received per camera
     i = [

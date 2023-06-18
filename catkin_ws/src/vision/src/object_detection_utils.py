@@ -272,11 +272,7 @@ def analyzeBuoy(img_cropped, debug_img):
     return []
 
 
-local_direction_to_object = eulerToVector(0, 90, 0)
-print(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
-
-
-rospy.init_node('object_detection')
+rospy.init_node('object_detection',log_level=rospy.DEBUG)
 
 
 #one publisher per camera
