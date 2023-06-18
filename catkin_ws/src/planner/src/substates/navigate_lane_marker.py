@@ -39,14 +39,17 @@ class NavigateLaneMarker(smach.State):
             origin_obj = self.mapping.getClosestObject(self.origin_class, (auv_current_position[0], auv_current_position[1]))
             origin_position = (origin_obj[1], origin_obj[2])
 
-
+        
         lane_marker_obj = self.mapping.getClosestObject(0, (origin_position[0], origin_position[1]))
         if lane_marker_obj is None:
-
             print("No lane marker in object map! Failed.")
             return 'failure'
-        heading1 = lane_marker_obj[4]
-        heading2 = lane_marker_obj[5]
+        self.control.move(origin_obj[1], origin_obj[2], -1)
+        while lane_marker_obj[4] is None or lane_marker_obj[5] is None:
+            lane_marker_obj = self.mapping.getClosestObject(0, (origin_position[0], origin_position[1]))
+            self.control.move(origin_obj[1], origin_obj[2], -1)
+            heading1 = lane_marker_obj[4]
+            heading2 = lane_marker_obj[5]
 
         # find heading which is pointing the least towards the AUV
         lane_marker_heading1_vec = self.normalizeVector(self.degreesToVector(heading1))
