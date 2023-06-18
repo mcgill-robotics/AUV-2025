@@ -41,8 +41,8 @@ class QuaternionServer(BaseServer):
         self.position = []
         
         self.Kp = 1
-        self.Ki = 1
-        self.Kd = 1
+        self.Ki = 0
+        self.Kd = 0
         self.integral_error_quat = [0, 0, 0, 1]
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
@@ -170,7 +170,6 @@ class QuaternionServer(BaseServer):
         
     def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
-        
         # Calculate error values
         error_quat = self.calculateError(self.body_quat, goal_quat) 
         derivative_error_quat = self.calculateDerivativeError(error_quat, self.angular_velocity)
@@ -184,10 +183,12 @@ class QuaternionServer(BaseServer):
             integration_quat[i] = self.Ki * self.integral_error_quat[i]
             # Calculate derivative term
             derivative_quat[i] = self.Kd * derivative_error_quat[i]
-            
+        
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
         # OPTIONAL control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_quat)
         # ISSUE: error_quat needs to be w,x,y,z for forumla to work
+        control_effort_quat = [control_effort_quat[3], control_effort_quat[0], control_effort_quat[2], control_effort_quat[1]]
+        error_quat = [error_quat[3], error_quat[0], error_quat[1], error_quat[2]]
         omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
         inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
