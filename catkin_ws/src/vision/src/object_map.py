@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rospy
 from auv_msgs.msg import ObjectDetectionFrame, ObjectMap
 import math
@@ -151,6 +152,7 @@ sameObjectRadius = 1 #in same units as state_x, y, z etc (meters i think)
 
 
 if __name__ == '__main__':
+    rospy.init_node('object_map')
     obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
     obj_pub = rospy.Publisher('vision/object_map', ObjectMap, queue_size=1)
     rospy.spin()

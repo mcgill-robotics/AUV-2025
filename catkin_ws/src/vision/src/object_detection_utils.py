@@ -267,7 +267,7 @@ def analyzeBuoy(img_cropped, debug_img):
     return []
 
 
-rospy.init_node('object_detection')
+rospy.init_node('object_detection',log_level=rospy.DEBUG)
 
 
 #one publisher per camera
