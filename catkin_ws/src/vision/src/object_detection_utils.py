@@ -268,8 +268,8 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
     avg_right_depth = np.min(right_half)
 
     left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
-    auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
-    right_pole_angle = 180 - auv_angle - left_pole_angle
+    # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
+    # right_pole_angle = 180 - auv_angle - left_pole_angle
 
     bbox_left = bbox_coordinates[0] - bbox_coordinates[2]/2
 
