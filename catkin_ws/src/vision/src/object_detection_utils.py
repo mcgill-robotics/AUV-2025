@@ -75,13 +75,13 @@ def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     return img
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
-def cropToBbox(img, bbox):
+def cropToBbox(img, bbox, copy=True):
     x_center, y_center, w, h = bbox
     x_min = x_center - w/2
     y_min = y_center - h/2
     x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
-    crop_img = img[y_min:y_max, x_min:x_max]
-    return crop_img
+    if copy: return np.copy(img[y_min:y_max, x_min:x_max])
+    else: return img[y_min:y_max, x_min:x_max]
 
 def measureLaneMarker(img, bbox, debug_img):
     #crop image to lane marker
@@ -91,7 +91,7 @@ def measureLaneMarker(img, bbox, debug_img):
     #measure headings from lane marker
     cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
     cropped_img_pubs[0].publish(cropped_img_to_pub)
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img)
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=True))
     if None in (headings, center_point): return (None, None), (None, None), debug_img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2

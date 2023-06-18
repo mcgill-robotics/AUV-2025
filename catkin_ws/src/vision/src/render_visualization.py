@@ -2,20 +2,16 @@
 
 import rospy
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Point, Quaternion
 import tf
 from std_msgs.msg import Float64
 from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
-from auv_msgs.msg import DvlData
-from std_msgs.msg import Empty
+from auv_msgs.msg import DeadReckonReport
 from geometry_msgs.msg import Wrench
-import time
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation
-from tf2_ros import TransformBroadcaster 
-from geometry_msgs.msg import TransformStamped, Pose
 
 def setup():
     global auv_marker
@@ -305,7 +301,7 @@ def updateReferenceFrames():
 
 def dvlDataCb(msg):
     global dvl_euler_angles
-    dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180]
+    dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.yaw)*math.pi/180]
     updateReferenceFrames()
 
 def effortCb(msg):
@@ -323,7 +319,6 @@ rospy.init_node('render_visualization')
 auv_pub = rospy.Publisher('visualization/auv', Marker, queue_size=999)
 detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=999)
 map_pub = rospy.Publisher('visualization/map', Marker, queue_size=999)
-transform_broadcast = TransformBroadcaster()
 
 print("Waiting 10 seconds so RViz can launch...")
 rospy.sleep(10)
@@ -355,7 +350,7 @@ theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
 sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
-dvl_sub = rospy.Subscriber('dvl_data', DvlData, dvlDataCb)
+dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)
 
 
 rospy.spin()

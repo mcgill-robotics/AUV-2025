@@ -130,7 +130,8 @@ def getParameters():
 #i.e should return two slopes
 #returns lines in format (l1, l2) where l1 is the heading that is closest to that of the AUV, l2 is heading where the AUV should go
 #should also return center point of lane marker (or most central point if not completely contained in image)
-def measure_headings(img, debug=False):
+def measure_headings(img, debug=False, debug_img=None):
+    if debug_img is None: debug_img = img
     if debug:
         cv2.imshow("original", img)
         cv2.waitKey(0)
@@ -177,7 +178,7 @@ def measure_headings(img, debug=False):
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
                 line_thickness = int(0.05*max(edges.shape))
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),line_thickness)
-                cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+                cv2.line(debug_img,(x1,y1),(x2,y2),(0,255,0),2)
         except TypeError:
             break
     if debug:
