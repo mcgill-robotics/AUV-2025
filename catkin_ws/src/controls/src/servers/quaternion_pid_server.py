@@ -37,9 +37,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = []
         self.position = []
         
-        self.Kp = 5
+        self.Kp = 0.04
         self.Ki = 0
-        self.Kd = 1
+        self.Kd = 0.04
         self.integral_error_quat = [0, 0, 0, 1]
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
@@ -144,7 +144,7 @@ class QuaternionServer(BaseServer):
     
     def calculateDerivativeError(self, error, ang_velocity):
         velocity_quat = [ang_velocity[0], ang_velocity[1], ang_velocity[2], 0]
-        return tf.transformations.quaternion_multiply(error, velocity_quat) / (-2)
+        return tf.transformations.quaternion_multiply(velocity_quat, error) / (-2)
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
@@ -173,7 +173,7 @@ class QuaternionServer(BaseServer):
     
     def delta_e(self, qe):
         qe = np.array(qe)
-        if qe[3] > 0:
+        if qe[3] < 0:
             qe = -qe
         delta = np.array([1, 0, 0, 0]) - qe
         return delta
