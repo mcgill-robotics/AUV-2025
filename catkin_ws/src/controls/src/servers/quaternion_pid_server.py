@@ -37,10 +37,10 @@ class QuaternionServer(BaseServer):
         self.body_quat = []
         self.position = []
         
-        self.Kp = 0.04
+        self.Kp = .1
         self.Ki = 0
-        self.Kd = 0.04
-        self.integral_error_quat = [0, 0, 0, 1]
+        self.Kd = .01
+        self.integral_error_quat = 0
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
         self.server.start()        
@@ -138,7 +138,7 @@ class QuaternionServer(BaseServer):
         return goal_position, new_goal_quat 
     
     def calculateError(self, q1, q2):
-        q1_inv = [-q1[0], -q1[1], -q1[2], q1[3]]
+        q1_inv = tf.transformations.quaternion_inverse(q1)
         error_quat = tf.transformations.quaternion_multiply(q1_inv, q2)
         return error_quat
     
@@ -150,6 +150,9 @@ class QuaternionServer(BaseServer):
         return integral_error_quat + (error_quat * delta_time)
     
     def kinematic_inversion(self,qe_des,qe):
+        qe = np.array(qe)
+        if qe[3] < 0:
+            qe = -qe
         Qe2 = self.Qe2(qe)
         matrix = np.transpose(Qe2) * -1
         return np.matmul(matrix, qe_des) * 2
