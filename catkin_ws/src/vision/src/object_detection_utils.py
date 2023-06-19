@@ -161,8 +161,9 @@ def eulerToVectorDownCam(x_deg, y_deg):
     y_rad = math.radians(y_deg)
 
     x = -math.tan(y_rad)
-    y = math.tan(x_rad)
+    y = -math.tan(x_rad)
 
+    # z should not be hardcoded to -1
     vec = np.array([x,y,-1])
     
     return vec / np.linalg.norm(vec)
@@ -172,9 +173,10 @@ def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
 
-    y = math.tan(x_rad)
+    y = -math.tan(x_rad)
     z = -math.tan(y_rad)
 
+    # x should not be hardcoded to 1
     vec = np.array([1,y, z])
     
     return vec / np.linalg.norm(vec)
@@ -196,8 +198,8 @@ def find_intersection(vector, plane_z_pos):
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
-        x_center_offset = (pixel_x-(img_width/2)) / img_width #-0.5 to 0.5
-        y_center_offset = ((img_height/2)-pixel_y) / img_height #negated since y goes from top to bottom
+        x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
+        y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
         #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
         #assuming FOV increases linearly with distance from center pixel
         yaw_angle_offset = front_cam_hfov*x_center_offset
