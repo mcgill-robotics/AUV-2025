@@ -10,6 +10,8 @@ import tf2_geometry_msgs
 from std_msgs.msg import Header, Float64
 import lane_marker_measure
 
+
+
 def transformLocalToGlobal(lx,ly,lz):
     trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
     offset_local = Vector3(lx, ly, lz)
@@ -268,8 +270,36 @@ def measureBuoyAngle(depth_cropped):
 def measureGateAngle(depth_cropped): # ELIE
     return None
 
-def analyzeGate(img_cropped, debug_img): # AYOUB
+
+def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
+
+    # Return the class_id of the symbol on the left of the gate
+    
+    # If no symbol return None
+   
+    mapper = {}
+    symbol_detected = False
+    for box in boxes:
+        xywh = box.xywh
+        x_coord = xywh[0][0].item()
+        confidence = box.conf
+        class_id = box.cls
+        if class_id != gate_class_id and confidence > min_confidence:
+            mapper[class_id] = x_coord
+            symbol_detected = True
+
+    if not symbol_detected: return None
+
+    min_key = int(min(mapper, key=mapper.get))
+
+    if min_key == earth_class_id:
+        return 1
+    
     return 0
+
+
+
+
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
