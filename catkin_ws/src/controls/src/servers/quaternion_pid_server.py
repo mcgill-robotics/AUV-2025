@@ -37,9 +37,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = []
         self.position = []
         
-        self.Kp = 100
+        self.Kp = 5
         self.Ki = 0
-        self.Kd = 0
+        self.Kd = 1
         self.integral_error_quat = [0, 0, 0, 1]
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
@@ -178,7 +178,6 @@ class QuaternionServer(BaseServer):
         delta = np.array([1, 0, 0, 0]) - qe
         return delta
         
-        
     def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
@@ -200,7 +199,6 @@ class QuaternionServer(BaseServer):
             derivative_quat[i] = self.Kd * derivative_error_quat[i]
         
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        
         control_effort_quat = [control_effort_quat[3], control_effort_quat[0], control_effort_quat[2], control_effort_quat[1]]
         delta_error = [delta_error[3], delta_error[0], delta_error[1], delta_error[2]]
         error_quat = [error_quat[3], error_quat[0], error_quat[1], error_quat[2]]
@@ -217,8 +215,6 @@ class QuaternionServer(BaseServer):
                                     [0.          ,  0.                , 0.6490918050833332]])
         
         torque = np.matmul(inertial_matrix, omega_command)
-        print("##################################")
-        # print(torque)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
