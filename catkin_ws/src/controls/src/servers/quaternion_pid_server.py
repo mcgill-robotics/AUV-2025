@@ -33,8 +33,8 @@ class QuaternionServer(BaseServer):
         imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
         
         # Calculation parameters/values
-        self.pose = Pose()
-        self.body_quat = np.quaternion()
+        self.pose = None#Pose()
+        self.body_quat = None#np.quaternion()
         self.position = []
         
         self.Kp = .1
@@ -49,10 +49,7 @@ class QuaternionServer(BaseServer):
         # Assign pose values
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quat.w = data.orientation.w
-        self.body_quat.x = data.orientation.x
-        self.body_quat.y = data.orientation.y
-        self.body_quat.z = data.orientation.z 
+        self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
         self.update_time_interval()
 
     def update_time_interval(self):
@@ -108,7 +105,9 @@ class QuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
-        if(self.position == None or self.body_quat == None):
+        if(self.position == None):
+            return False
+        if(self.body_quat == None):
             return False
 
         tolerance_position = 0.2
@@ -155,9 +154,8 @@ class QuaternionServer(BaseServer):
     def kinematic_inversion(self,qe_des,qe):
         if qe.w < 0:
             qe = -qe
-        Qe2 = self.Qe2(arr)
+        Qe2 = self.Qe2(qe)
         matrix = np.transpose(Qe2) * -1
-        arr = [qe_des.w, qe_des.x, qe_des.y, qe_des.z]
         return np.matmul(matrix, qe_des) * 2
     
     def Q1(self, q):
