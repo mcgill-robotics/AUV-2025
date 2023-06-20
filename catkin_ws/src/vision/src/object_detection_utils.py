@@ -277,8 +277,28 @@ def measureBuoyAngle(depth_cropped):
 
     return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
     
-def measureGateAngle(depth_cropped): # ELIE
-    return None
+def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
+
+    depth_cropped = cropToBbox(depth_img, bbox_coordinates)
+
+    rows, _ = depth_cropped.shape
+    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
+
+    avg_left_depth = np.min(left_half)
+    avg_right_depth = np.min(right_half)
+
+    left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
+    # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
+    # right_pole_angle = 180 - auv_angle - left_pole_angle
+
+    bbox_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+
+    theta_x, _ = get_fov_angle(bbox_left, depth_img.shape, down_cam_hfov, down_cam_vfov)
+
+    gate_angle = state.theta_z + left_pole_angle + theta_x
+
+    return gate_angle
+
 
 
 def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
