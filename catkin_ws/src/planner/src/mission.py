@@ -119,13 +119,3 @@ if __name__ == '__main__':
 
     control = Controller(rospy.Time(0))
     QuaternionTestMission()
-
-        QualiMission()
-
-
-        # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        #testRotationsMission()
-        #laneMarkerGridSearchMission()
-    except KeyboardInterrupt:
-        endMission("Mission end prompted by user. Killing.")
-        exit()
