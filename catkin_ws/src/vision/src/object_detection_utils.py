@@ -263,8 +263,8 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
 def measureBuoyAngle(depth_cropped):
     depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)
-    rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
     
     flattened_array = left_half.flatten()
     sorted_array = np.sort(flattened_array)
