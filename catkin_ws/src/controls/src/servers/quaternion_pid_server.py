@@ -37,7 +37,7 @@ class QuaternionServer(BaseServer):
         self.body_quat = None#np.quaternion()
         self.position = []
         
-        self.Kp = .1
+        self.Kp = 0.04
         self.Ki = 0
         self.Kd = .01
         self.integral_error_quat = np.quaternion()
@@ -105,9 +105,10 @@ class QuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
+        return False
         if(self.position == None):
             return False
-        if(self.body_quat == None):
+        if(self.body_quat is None):
             return False
 
         tolerance_position = 0.2
