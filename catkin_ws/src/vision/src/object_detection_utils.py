@@ -162,7 +162,7 @@ def lane_marker_depth(depth_cropped):
         i = np.random.randint(0, rows)
         j = np.random.randint(0, cols)
         total += depth_cropped[i, j]
-    return total / 30 + 0.1
+    return total / 30 - 0.1
 
 def object_depth(depth_cropped, label, error_threshold=0.5):
     dist = 0
