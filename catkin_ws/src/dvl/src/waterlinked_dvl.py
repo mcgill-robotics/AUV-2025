@@ -58,6 +58,7 @@ def parse_dead_reckon_report(line):
     report.z = z
     report.std = std
     report.roll = roll
+    report.pitch = pitch
     report.yaw = yaw
     report.status = status
     return report

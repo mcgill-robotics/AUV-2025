@@ -34,3 +34,24 @@ rosdep update
 #IntelRealSense driver
 sudo apt-get install -y ros-noetic-realsense2-camera
 sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
+
+
+#IF YOU GET THIS ERROR:
+#   CMake Error: CMake was unable to find a build program corresponding to "Unix Makefiles".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
+#   make[2]: *** [CMakeFiles/depth_sensor_embedded.dir/build.make:70: CMakeFiles/depth_sensor_embedded] Error 1
+#   make[1]: *** [CMakeFiles/Makefile2:1378: CMakeFiles/depth_sensor_embedded.dir/all] Error 2
+#   make: *** [Makefile:146: all] Error 2
+
+# THEN RUN:
+# which cmake
+# cmake --version -> version 1
+# cd /usr/bin/
+# ./cmake --version -> version 2
+
+
+# IF ONE OF THESE CATKIN VERSIONS IS NOT 3.16.3, THEN DELETE THAT VERSION
+# TO DO SO:
+# version 1: navigate to the folder that was returned by `which cmake`, do `rm cmake`
+# version 2: navigate to /usr/bin, do `rm cmake`
+
+# FINALLY: run `catkin clean` and build the packages again

@@ -2,20 +2,16 @@
 
 import rospy
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Point, Quaternion
 import tf
 from std_msgs.msg import Float64
 from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import ObjectMap
-from auv_msgs.msg import DvlData
-from std_msgs.msg import Empty
+from auv_msgs.msg import DeadReckonReport
 from geometry_msgs.msg import Wrench
-import time
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation
-from tf2_ros import TransformBroadcaster 
-from geometry_msgs.msg import TransformStamped, Pose
 
 def setup():
     global auv_marker
@@ -155,18 +151,18 @@ def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
         addHeading(x,y,z,heading1[0],heading1[1],heading1[2],publishToMap,color)
         addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,color)
         addLabel(x,y,z,"Lane Marker",publishToMap)
-    elif label == 1: #QUALI GATE
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,2,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Quali Gate",publishToMap)
-    elif label == 2: #QUALI POLE
-        addLabel(x,y,z,"Quali Pole",publishToMap)
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.05,0.05,3],publishToMap,[color[0],color[1],color[2],0.4])
-    elif label == 3: #GATE TASK
+    elif label == 1: #GATE TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Gate: " + str(extra_field),publishToMap)
-    elif label == 4: #BUOY TASK
+        addLabel(x,y,z,"Gate (symbol on left: " + str(extra_field) + ")",publishToMap)
+    elif label == 2: #BUOY TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Buoy: " + str(extra_field),publishToMap)
+        addLabel(x,y,z,"Buoy",publishToMap)
+    elif label == 3: # OCTAGON
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[1,1,0.1],publishToMap,[color[0],color[1],color[2],0.4])
+        addLabel(x,y,z,"Octagon" ,publishToMap)
+    elif label == 4: #BUOY SYMBOL
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.01,0.1,0.1],publishToMap,[color[0],color[1],color[2],0.5])
+        addLabel(x,y,z,"Buoy Symbol: " + str(extra_field),publishToMap)
 
 def addLabel(x,y,z,text,pub,scale=0.25,override_id=None):
     global marker_id
@@ -305,7 +301,7 @@ def updateReferenceFrames():
 
 def dvlDataCb(msg):
     global dvl_euler_angles
-    dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.heading)*math.pi/180]
+    dvl_euler_angles = [float(msg.roll)*math.pi/180, float(msg.pitch)*math.pi/180, float(msg.yaw)*math.pi/180]
     updateReferenceFrames()
 
 def effortCb(msg):
@@ -323,7 +319,6 @@ rospy.init_node('render_visualization')
 auv_pub = rospy.Publisher('visualization/auv', Marker, queue_size=999)
 detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=999)
 map_pub = rospy.Publisher('visualization/map', Marker, queue_size=999)
-transform_broadcast = TransformBroadcaster()
 
 print("Waiting 10 seconds so RViz can launch...")
 rospy.sleep(10)
@@ -355,7 +350,7 @@ theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
 sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
-dvl_sub = rospy.Subscriber('dvl_data', DvlData, dvlDataCb)
+dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)
 
 
 rospy.spin()

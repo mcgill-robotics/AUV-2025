@@ -38,6 +38,7 @@ def state_cb(pose):
     t2.transform.translation.z = 0
     t2.transform.rotation = pose.orientation
 
+    br.sendTransform(t)
     br.sendTransform(t2)
 
 

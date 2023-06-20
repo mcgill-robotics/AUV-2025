@@ -34,7 +34,7 @@ class Controller:
 
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
-        self.tf_header = Header(frame_id="world")
+        self.tf_header = Header(frame_id="world_rotation")
 
         self.servers = []
         self.effort = 15
@@ -81,7 +81,7 @@ class Controller:
         Performs a coordinate transformation from the auv body frame
         to the world frame.
         """
-        trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
+        trans = self.tf_buffer.lookup_transform("world_rotation", "auv_rotation", self.header_time)
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
         offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
