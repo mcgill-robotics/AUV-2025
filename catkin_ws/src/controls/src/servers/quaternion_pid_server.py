@@ -34,13 +34,13 @@ class QuaternionServer(BaseServer):
         
         # Calculation parameters/values
         self.pose = Pose()
-        self.body_quat = []
+        self.body_quat = np.quaternion()
         self.position = []
         
         self.Kp = .1
         self.Ki = 0
         self.Kd = .01
-        self.integral_error_quat = 0
+        self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
         self.server.start()        
@@ -49,7 +49,10 @@ class QuaternionServer(BaseServer):
         # Assign pose values
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quat = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
+        self.body_quat.w = data.orientation.w
+        self.body_quat.x = data.orientation.x
+        self.body_quat.y = data.orientation.y
+        self.body_quat.z = data.orientation.z 
         self.update_time_interval()
 
     def update_time_interval(self):
@@ -70,7 +73,7 @@ class QuaternionServer(BaseServer):
                 self.execute_goal(displaced_position, displace_quat)
             else:
                 goal_position = [goal.position.x, goal.position.y, goal.position.z]
-                goal_quat = [goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w]
+                goal_quat = np.quaternion(goal.orientation.w, goal.orientation.x, goal.orientation.y, goal.orientation.z)
                 self.execute_goal(goal_position, goal_quat)
         
             # monitor when reached pose
@@ -109,65 +112,67 @@ class QuaternionServer(BaseServer):
             return False
 
         tolerance_position = 0.2
-        tolerance_orientation = 0.02
+        tolerance_orientation = 0.01
 
         x_diff = (not self.goal.do_x.data) or abs(self.position[0] - goal_position[0]) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position[1] - goal_position[1]) <= tolerance_position
         z_diff = (not self.goal.do_z.data) or abs(self.position[2] - goal_position[2]) <= tolerance_position
         
         if self.goal.do_quaternion.data:
-            x, y, z, w = goal_quaternion
-            innert_product = self.body_quat[0]*x + self.body_quat[1]*y + self.body_quat[2]*z + self.body_quat[3]*w
+            # goal_w, goal_x, goal_y, goal_z = goal_quaternion
+            # body_w, body_x, body_y, body_z = self.body_quat
+            # innert_product = goal_w * body_w - goal_x * body_x - goal_y * body_y - goal_z * body_z
                 
-            theta = np.arccos(2 * pow(innert_product, 2) - 1)
+            # theta = np.arccos(2 * pow(innert_product, 2) - 1)
             quat_diff = True
             
-            if abs(theta) > tolerance_orientation:
+            error = self.calculateError(self.body_quat, goal_quaternion)
+            
+            if abs(error.w) > tolerance_orientation:
                 quat_diff = False
-            else:
-                quat_diff = True
         
         return x_diff and y_diff and z_diff and quat_diff
         
     def get_goal_after_displace(self, goal_pose):
-        # new_goal = Pose()
         goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-        displacement_quat = [goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z, goal_pose.orientation.w]
         
-        new_goal_quat = tf.transformations.quaternion_multiply(self.body_quat, displacement_quat)
+        displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
+        
+        new_goal_quat = self.body_quat * displacement_quat
         return goal_position, new_goal_quat 
     
     def calculateError(self, q1, q2):
-        q1_inv = tf.transformations.quaternion_inverse(q1)
-        error_quat = tf.transformations.quaternion_multiply(q1_inv, q2)
-        return error_quat
+        q1_inv = q1.inverse()
+        return q1_inv * q2
     
     def calculateDerivativeError(self, error, ang_velocity):
-        velocity_quat = [ang_velocity[0], ang_velocity[1], ang_velocity[2], 0]
-        return tf.transformations.quaternion_multiply(velocity_quat, error) / (-2)
+        velocity_quat = np.quaternion(0, ang_velocity[0], ang_velocity[1], ang_velocity[2])
+        return (velocity_quat * error) / (-2)
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
     
     def kinematic_inversion(self,qe_des,qe):
-        qe = np.array(qe)
-        if qe[3] < 0:
+        if qe.w < 0:
             qe = -qe
-        Qe2 = self.Qe2(qe)
+        Qe2 = self.Qe2(arr)
         matrix = np.transpose(Qe2) * -1
+        arr = [qe_des.w, qe_des.x, qe_des.y, qe_des.z]
         return np.matmul(matrix, qe_des) * 2
     
     def Q1(self, q):
-        return np.array([[-q[1], -q[2], -q[3]],
-                         [ q[0], -q[3],  q[2]],
-                         [ q[3],  q[0], -q[1]],
-                         [-q[2],  q[1],  q[0]]])
+        arr = [q.w, q.x, q.y, q.z]
+        return np.array([[-arr[1], -arr[2], -arr[3]],
+                         [ arr[0], -arr[3],  arr[2]],
+                         [ arr[3],  arr[0], -arr[1]],
+                         [-arr[2],  arr[1],  arr[0]]])
     
     def Qe2(self,qe):
-        return np.array([[-qe[1], -qe[2], -qe[3]],
-                         [qe[0],   qe[3], -qe[2]],
-                         [-qe[3],  qe[0],  qe[1]],
-                         [qe[2],  -qe[1],  qe[0]]])
+        arr = [qe.w, qe.x, qe.y, qe.z] 
+        return np.array([[-arr[1], -arr[2], -arr[3]],
+                         [arr[0],   arr[3], -arr[2]],
+                         [-arr[3],  arr[0],  arr[1]],
+                         [arr[2],  -arr[1],  arr[0]]])
     
     def orthogonal_matrix(self, q):
         Qe1 = self.Q1(q)
@@ -175,10 +180,9 @@ class QuaternionServer(BaseServer):
         return np.matmul(Qe1, transpose)
     
     def delta_e(self, qe):
-        qe = np.array(qe)
-        if qe[3] < 0:
+        if qe.w < 0:
             qe = -qe
-        delta = np.array([1, 0, 0, 0]) - qe
+        delta = np.quaternion(1, 0, 0, 0) - qe
         return delta
         
     def controlEffort(self, goal_quat):
@@ -192,21 +196,29 @@ class QuaternionServer(BaseServer):
         
         self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, delta_error, delta_time)
         
-        proportional_quat, integration_quat, derivative_quat = np.zeros(4), np.zeros(4), np.zeros(4)
-        for i in range(4):
-            # Calculate proportional term
-            proportional_quat[i] = self.Kp * delta_error[i]
-            # Calculte integral term
-            integration_quat[i] = self.Ki * self.integral_error_quat[i]
-            # Calculate derivative term
-            derivative_quat[i] = self.Kd * derivative_error_quat[i]
+        proportional_quat = np.quaternion()
+        integration_quat = np.quaternion()
+        derivative_quat = np.quaternion()
+        
+        proportional_quat.w = self.Kp * delta_error.w
+        proportional_quat.x = self.Kp * delta_error.x
+        proportional_quat.y = self.Kp * delta_error.y
+        proportional_quat.z = self.Kp * delta_error.z
+
+        integration_quat.w = self.Ki * self.integral_error_quat.w
+        integration_quat.x = self.Ki * self.integral_error_quat.x
+        integration_quat.y = self.Ki * self.integral_error_quat.y
+        integration_quat.z = self.Ki * self.integral_error_quat.z
+        
+        # Calculate derivative term
+        derivative_quat.w = self.Kd * derivative_error_quat.w
+        derivative_quat.x = self.Kd * derivative_error_quat.x
+        derivative_quat.y = self.Kd * derivative_error_quat.y
+        derivative_quat.z = self.Kd * derivative_error_quat.z
         
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        control_effort_quat = [control_effort_quat[3], control_effort_quat[0], control_effort_quat[2], control_effort_quat[1]]
-        delta_error = [delta_error[3], delta_error[0], delta_error[1], delta_error[2]]
-        error_quat = [error_quat[3], error_quat[0], error_quat[1], error_quat[2]]
-        
-        control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_quat)
+        control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
+        control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
         omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
