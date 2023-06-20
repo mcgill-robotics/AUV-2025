@@ -162,10 +162,9 @@ def lane_marker_depth(depth_cropped):
         i = np.random.randint(0, rows)
         j = np.random.randint(0, cols)
         total += depth_cropped[i, j]
-    return total / 30
+    return total / 30 + 0.1
 
 def object_depth(depth_cropped, label, error_threshold=0.5):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold)
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
@@ -262,7 +261,6 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 # TODO!!!!!!!!!!
 
 def measureBuoyAngle(depth_cropped):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
     
