@@ -94,7 +94,7 @@ def measureLaneMarker(img, bbox, debug_img):
     #measure headings from lane marker
     cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
     cropped_img_pubs[0].publish(cropped_img_to_pub)
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=True))
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=False))
     if None in (headings, center_point): return (None, None), (None, None), debug_img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
@@ -164,11 +164,17 @@ def eulerToVectorDownCam(x_deg, y_deg):
 
     x = -math.tan(y_rad)
     y = -math.tan(x_rad)
-
-    # z should not be hardcoded to -1
-    vec = np.array([x,y,-1])
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   z^2 == 1 - x^2 + y^2
+    #   z == -1 * sqrt(1 - x^2 + y^2)
+    try:
+        z = -1 * abs(math.sqrt(1 - (x ** 2 + y ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([x,y,0])
+        vec = vec / np.linalg.norm(vec)
     
-    return vec / np.linalg.norm(vec)
+    return vec
 
 
 def eulerToVectorFrontCam(x_deg, y_deg):
@@ -177,11 +183,17 @@ def eulerToVectorFrontCam(x_deg, y_deg):
 
     y = -math.tan(x_rad)
     z = -math.tan(y_rad)
-
-    # x should not be hardcoded to 1
-    vec = np.array([1,y, z])
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   x^2 == 1 - y^2 + z^2
+    #   x == sqrt(1 - y^2 + z^2)
+    try:
+        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([0,y,z])
+        vec = vec / np.linalg.norm(vec)
     
-    return vec / np.linalg.norm(vec)
+    return vec
 
 def find_intersection(vector, plane_z_pos):
     plane_normal = np.array([0,0,1])
@@ -241,8 +253,6 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
     else:
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
-
-# TODO!!!!!!!!!!
 
 def measureBuoyAngle(depth_cropped):
     depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)

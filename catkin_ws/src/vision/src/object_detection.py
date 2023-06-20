@@ -69,7 +69,6 @@ def detect_on_image(raw_img, camera_id):
                     else:
                         obj_theta_z.append(state.theta_z + (headings[0]-90))
                         extra_field.append(state.theta_z + (headings[1]-90))
-                    print("obj_theta_z",obj_theta_z[-1])
 
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     pose_confidence.append(pose_conf) 
@@ -87,7 +86,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
             else: # FORWARD CAM
                 center = bbox
-                depth_cropped = cropToBbox(np.copy(state.depth), bbox)
+                depth_cropped = cropToBbox(state.depth, bbox)
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
