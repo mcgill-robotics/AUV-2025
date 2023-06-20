@@ -14,7 +14,7 @@ class QuaternionTest(smach.State):
         print("Starting Quaternion Mission")
         try:
             position = [0, 0, 0]
-            quaternion = [0.7071068, 0, 0, 0.7071068]
+            quaternion = [0.7071068, 0, 0.7071068, 0]
             self.control.quaternion_action(position, quaternion)
             # DONE
             print("Completed")
