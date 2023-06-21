@@ -37,12 +37,12 @@ class QuaternionServer(BaseServer):
         self.body_quat = None#np.quaternion()
         self.position = []
         
-        self.Kp = 0.05
+        self.Kp = 0.007
         self.Ki = 0
-        self.Kd = 0
+        self.Kd = 0.008
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
-        self.angular_velocity = np.zeros(3)
+        self.angular_velocity = [0, 0, 0]
         self.server.start()        
         
     def pose_callback(self, data):
@@ -57,7 +57,7 @@ class QuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = np.array([data.gyro.x, -data.gyro.y, -data.gyro.z])
+        self.angular_velocity = [data.gyro.x, -data.gyro.y, -data.gyro.z]
     
     def cancel(self):
         self.controlEffort(self.body_quat)
@@ -145,34 +145,80 @@ class QuaternionServer(BaseServer):
         q1_inv = q1.inverse()
         return q1_inv * q2
     
+    def calculateDerivativeError(self, error, ang_velocity):
+        velocity_quat = np.quaternion(0, ang_velocity[0], ang_velocity[1], ang_velocity[2])
+        return (velocity_quat * error) / (-2)
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
+    
+    def kinematic_inversion(self,qe_des,qe):
+        if qe.w < 0:
+            qe = -qe
+        Qe2 = self.Qe2(qe)
+        matrix = np.transpose(Qe2) * -1
+        return np.matmul(matrix, qe_des) * 2
+    
+    def Q1(self, q):
+        arr = [q.w, q.x, q.y, q.z]
+        return np.array([[-arr[1], -arr[2], -arr[3]],
+                         [ arr[0], -arr[3],  arr[2]],
+                         [ arr[3],  arr[0], -arr[1]],
+                         [-arr[2],  arr[1],  arr[0]]])
+    
+    def Qe2(self,qe):
+        arr = [qe.w, qe.x, qe.y, qe.z] 
+        return np.array([[-arr[1], -arr[2], -arr[3]],
+                         [arr[0],   arr[3], -arr[2]],
+                         [-arr[3],  arr[0],  arr[1]],
+                         [arr[2],  -arr[1],  arr[0]]])
     
     def orthogonal_matrix(self, q):
         Qe1 = self.Q1(q)
         transpose = np.transpose(Qe1.copy())
         return np.matmul(Qe1, transpose)
+    
+    def delta_e(self, qe):
+        if qe.w < 0:
+            qe = -qe
+        delta = np.quaternion(1, 0, 0, 0) - qe
+        return delta
         
     def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
         error_quat = self.calculateError(self.body_quat, goal_quat) 
-        if(error_quat.w < 0):
-            error_quat = -error_quat
+        delta_error = self.delta_e(error_quat)
         
+        derivative_error_quat = self.calculateDerivativeError(delta_error, self.angular_velocity)
         
-        proportional_effort = np.zeros(3)
+        self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, delta_error, delta_time)
         
-        proportional_effort[0] = self.Kp * error_quat.x
-        proportional_effort[1] = self.Kp * error_quat.y
-        proportional_effort[2] = self.Kp * error_quat.z
+        proportional_quat = np.quaternion()
+        integration_quat = np.quaternion()
+        derivative_quat = np.quaternion()
+        
+        proportional_quat.w = self.Kp * delta_error.w
+        proportional_quat.x = self.Kp * delta_error.x
+        proportional_quat.y = self.Kp * delta_error.y
+        proportional_quat.z = self.Kp * delta_error.z
 
+        integration_quat.w = self.Ki * self.integral_error_quat.w
+        integration_quat.x = self.Ki * self.integral_error_quat.x
+        integration_quat.y = self.Ki * self.integral_error_quat.y
+        integration_quat.z = self.Ki * self.integral_error_quat.z
         
         # Calculate derivative term
-        derivative_effort = self.Kd * self.angular_velocity
-        control_effort = proportional_effort + derivative_effort
+        derivative_quat.w = self.Kd * derivative_error_quat.w
+        derivative_quat.x = self.Kd * derivative_error_quat.x
+        derivative_quat.y = self.Kd * derivative_error_quat.y
+        derivative_quat.z = self.Kd * derivative_error_quat.z
+        
+        control_effort_quat = proportional_quat + integration_quat + derivative_quat
+        control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
+        control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
+        omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
@@ -182,7 +228,7 @@ class QuaternionServer(BaseServer):
                                     [0.          ,  0.6490918050833332, 0.                ], 
                                     [0.          ,  0.                , 0.6490918050833332]])
         
-        torque = np.matmul(inertial_matrix, control_effort)
+        torque = np.matmul(inertial_matrix, omega_command)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
