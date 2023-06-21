@@ -39,6 +39,7 @@ def detect_on_image(raw_img, camera_id):
     obj_theta_z = []
     pose_confidence = []
     extra_field = []
+    if camera_id == 1: leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names.index("Earth Symbol"), class_names.index("Abydos Symbol"), class_names.index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
@@ -102,10 +103,8 @@ def detect_on_image(raw_img, camera_id):
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
                     obj_theta_z.append(theta_z)
-                    pose_confidence.append(pose_conf) 
-
-                    symbolOnLeft = analyzeGate(cropToBbox(img, bbox), debug_img)
-                    extra_field.append(symbolOnLeft) # 1 for earth, 0 for the other one
+                    pose_confidence.append(pose_conf)
+                    extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
                 elif global_class_id == 2: # BUOY
                     theta_z = measureBuoyAngle(depth_cropped)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)

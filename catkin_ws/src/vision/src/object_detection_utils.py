@@ -9,6 +9,7 @@ from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 from std_msgs.msg import Header, Float64
 import lane_marker_measure
+import torch
 
 
 
@@ -304,32 +305,30 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
 
 
 
-def analyzeGate(boxes, min_confidence, earth_class_id, abydos_class_id): # AYOUB
-
+def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
     # Return the class_id of the symbol on the left of the gate
-    
     # If no symbol return None
-   
-    mapper = {}
+    gate_elements_detected = {}
     symbol_detected = False
-    for box in boxes:
-        xywh = box.xywh
-        x_coord = xywh[0][0].item()
-        confidence = box.conf
-        class_id = box.cls
-        if (class_id == earth_class_id or class_id == abydos_class_id) and confidence > min_confidence:
-            mapper[class_id] = x_coord
-            symbol_detected = True
-        
+    for detection in detections:
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
+        for box in boxes:
+            bbox = list(box.xywh[0])
+            x_coord = bbox[0]
+            conf = float(list(box.conf)[0])
+            cls_id = int(list(box.cls)[0])
+            if (cls_id == earth_class_id or cls_id == abydos_class_id or cls_id == gate_class_id) and conf > min_confidence:
+                gate_elements_detected[cls_id] = 999999 if cls_id == gate_class_id else x_coord
 
+    if earth_class_id not in gate_elements_detected.keys(): return None
+    elif abydos_class_id not in gate_elements_detected.keys(): return None
+    elif gate_class_id not in gate_elements_detected.keys(): return None
 
-    if not symbol_detected: return None
-
-    min_key = int(min(mapper, key=mapper.get))
+    min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
 
     if min_key == earth_class_id:
         return 1
-    
     return 0
     
     
