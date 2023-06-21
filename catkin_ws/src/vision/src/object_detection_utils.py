@@ -9,6 +9,7 @@ from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 from std_msgs.msg import Header, Float64
 import lane_marker_measure
+import torch
 
 
 
@@ -94,7 +95,7 @@ def measureLaneMarker(img, bbox, debug_img):
     #measure headings from lane marker
     cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
     cropped_img_pubs[0].publish(cropped_img_to_pub)
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=True))
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=False))
     if None in (headings, center_point): return (None, None), (None, None), debug_img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
@@ -177,11 +178,17 @@ def eulerToVectorDownCam(x_deg, y_deg):
 
     x = -math.tan(y_rad)
     y = -math.tan(x_rad)
-
-    # z should not be hardcoded to -1
-    vec = np.array([x,y,-1])
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   z^2 == 1 - x^2 + y^2
+    #   z == -1 * sqrt(1 - x^2 + y^2)
+    try:
+        z = -1 * abs(math.sqrt(1 - (x ** 2 + y ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([x,y,0])
+        vec = vec / np.linalg.norm(vec)
     
-    return vec / np.linalg.norm(vec)
+    return vec
 
 
 def eulerToVectorFrontCam(x_deg, y_deg):
@@ -190,11 +197,17 @@ def eulerToVectorFrontCam(x_deg, y_deg):
 
     y = -math.tan(x_rad)
     z = -math.tan(y_rad)
-
-    # x should not be hardcoded to 1
-    vec = np.array([1,y, z])
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   x^2 == 1 - y^2 + z^2
+    #   x == sqrt(1 - y^2 + z^2)
+    try:
+        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([0,y,z])
+        vec = vec / np.linalg.norm(vec)
     
-    return vec / np.linalg.norm(vec)
+    return vec
 
 def find_intersection(vector, plane_z_pos):
     plane_normal = np.array([0,0,1])
@@ -255,8 +268,6 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
 
-# TODO!!!!!!!!!!
-
 def measureBuoyAngle(depth_cropped):
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
@@ -279,35 +290,60 @@ def measureBuoyAngle(depth_cropped):
 
     return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
     
-def measureGateAngle(depth_cropped): # ELIE
-    return None
+def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
+
+    depth_cropped = cropToBbox(depth_img, bbox_coordinates)
+
+    rows, _ = depth_cropped.shape
+    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
+
+    avg_left_depth = np.min(left_half)
+    avg_right_depth = np.min(right_half)
+
+    left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
+    # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
+    # right_pole_angle = 180 - auv_angle - left_pole_angle
+
+    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+    #assuming FOV increases linearly with distance from center pixel
+    theta_x = front_cam_hfov*x_center_offset
+
+    gate_angle = state.theta_z + left_pole_angle + theta_x
+
+    return gate_angle
 
 
-def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
 
+def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
     # Return the class_id of the symbol on the left of the gate
-    
     # If no symbol return None
-   
-    mapper = {}
+    gate_elements_detected = {}
     symbol_detected = False
-    for box in boxes:
-        xywh = box.xywh
-        x_coord = xywh[0][0].item()
-        confidence = box.conf
-        class_id = box.cls
-        if class_id != gate_class_id and confidence > min_confidence:
-            mapper[class_id] = x_coord
-            symbol_detected = True
+    for detection in detections:
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
+        for box in boxes:
+            bbox = list(box.xywh[0])
+            x_coord = bbox[0]
+            conf = float(list(box.conf)[0])
+            cls_id = int(list(box.cls)[0])
+            if (cls_id == earth_class_id or cls_id == abydos_class_id or cls_id == gate_class_id) and conf > min_confidence:
+                gate_elements_detected[cls_id] = 999999 if cls_id == gate_class_id else x_coord
 
-    if not symbol_detected: return None
+    if earth_class_id not in gate_elements_detected.keys(): return None
+    elif abydos_class_id not in gate_elements_detected.keys(): return None
+    elif gate_class_id not in gate_elements_detected.keys(): return None
 
-    min_key = int(min(mapper, key=mapper.get))
+    min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
 
     if min_key == earth_class_id:
         return 1
-    
     return 0
+    
+    
 
 
 

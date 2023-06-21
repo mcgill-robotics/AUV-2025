@@ -39,6 +39,7 @@ def detect_on_image(raw_img, camera_id):
     obj_theta_z = []
     pose_confidence = []
     extra_field = []
+    if camera_id == 1: leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names.index("Earth Symbol"), class_names.index("Abydos Symbol"), class_names.index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
@@ -69,7 +70,6 @@ def detect_on_image(raw_img, camera_id):
                     else:
                         obj_theta_z.append(state.theta_z + (headings[0]-90))
                         extra_field.append(state.theta_z + (headings[1]-90))
-                    print("obj_theta_z",obj_theta_z[-1])
 
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     pose_confidence.append(pose_conf) 
@@ -97,16 +97,14 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
-                    theta_z = measureGateAngle(depth_cropped)
+                    theta_z = measureGateAngle(state.depth, gate_width, bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
                     obj_theta_z.append(theta_z)
-                    pose_confidence.append(pose_conf) 
-
-                    symbolOnLeft = analyzeGate(cropToBbox(img, bbox), debug_img)
-                    extra_field.append(symbolOnLeft) # 1 for earth, 0 for the other one
+                    pose_confidence.append(pose_conf)
+                    extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
                 elif global_class_id == 2: # BUOY
                     theta_z = measureBuoyAngle(depth_cropped)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
@@ -146,6 +144,7 @@ def detect_on_image(raw_img, camera_id):
 
 lane_marker_z = -3.7
 octagon_z = 0
+gate_width = 3
 
 if __name__ == '__main__':
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
