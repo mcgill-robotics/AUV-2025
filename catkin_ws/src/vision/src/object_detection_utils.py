@@ -257,27 +257,24 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
 
-def measureBuoyAngle(depth_cropped):
+def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
+    depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
-    
-    flattened_array = left_half.flatten()
-    sorted_array = np.sort(flattened_array)
-    left_closest = sorted_array[:10]
-    
-    flattened_array = right_half.flatten()
-    sorted_array = np.sort(flattened_array)
-    right_closest = sorted_array[:10]
-    
-    left_mean, right_mean = np.mean(left_closest), np.mean(right_closest)
-    
-    rotated = -1 # rotated to the right
-    if left_mean > right_mean:
-        rotated = 1 # rotated to the left
-        
-    delta_y, delta_x = abs(left_mean - right_mean), 0.61 # (0.61 == 2 ft)
 
-    return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
+    avg_left_depth = np.min(left_half)
+    avg_right_depth = np.min(right_half)
+
+    left_pole_angle = math.acos((buoy_width^2 + avg_left_depth^2 - avg_right_depth^2)/(2*buoy_width*avg_left_depth))
+
+    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    theta_x = front_cam_hfov * x_center_offset
+
+    gate_angle = state.theta_z + left_pole_angle + theta_x
+
+    return gate_angle
     
 def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)

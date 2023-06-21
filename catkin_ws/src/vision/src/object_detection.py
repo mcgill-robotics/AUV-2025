@@ -144,6 +144,7 @@ def detect_on_image(raw_img, camera_id):
 
 lane_marker_z = -3.7
 octagon_z = 0
+buoy_width = 1.22 
 gate_width = 3
 
 if __name__ == '__main__':
