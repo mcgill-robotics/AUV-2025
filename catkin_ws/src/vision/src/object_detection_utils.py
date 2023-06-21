@@ -293,8 +293,10 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
 
     gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
 
-
-    theta_x, _ = get_fov_angle(bbox_left, depth_img.shape, down_cam_hfov, down_cam_vfov)
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+    #assuming FOV increases linearly with distance from center pixel
+    theta_x = front_cam_hfov*x_center_offset
 
     gate_angle = state.theta_z + left_pole_angle + theta_x
 
