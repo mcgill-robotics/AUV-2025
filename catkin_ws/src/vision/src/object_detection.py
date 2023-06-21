@@ -87,7 +87,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
             else: # FORWARD CAM
                 center = bbox
-                depth_cropped = remove_background(clean_depth_error(cropToBbox(state.depth)), bbox)
+                depth_cropped = remove_background(clean_depth_error(cropToBbox(state.depth, bbox)))
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
