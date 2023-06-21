@@ -96,7 +96,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
-                    theta_z = measureGateAngle(depth_cropped)
+                    theta_z = measureGateAngle(state.depth, gate_width, bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
@@ -145,6 +145,7 @@ def detect_on_image(raw_img, camera_id):
 
 lane_marker_z = -3.7
 octagon_z = 0
+gate_width = 3
 
 if __name__ == '__main__':
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)

@@ -291,7 +291,8 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
     # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
 
-    bbox_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+
 
     theta_x, _ = get_fov_angle(bbox_left, depth_img.shape, down_cam_hfov, down_cam_vfov)
 
