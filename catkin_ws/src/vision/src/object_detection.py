@@ -146,6 +146,7 @@ def detect_on_image(raw_img, camera_id):
 
 lane_marker_z = -3.7
 octagon_z = 0
+buoy_width = 1.22 
 
 if __name__ == '__main__':
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
