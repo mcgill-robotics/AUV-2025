@@ -74,8 +74,7 @@ def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
         fontScale=fontSize, 
         color=TEXT_COLOR, 
-        lineType=cv2.LINE_AA,
-    )
+        lineType=cv2.LINE_AA)
     return img
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
@@ -123,8 +122,7 @@ def measureLaneMarker(img, bbox, debug_img):
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.4, 
             color=HEADING_COLOR, 
-            lineType=cv2.LINE_AA,
-        )
+            lineType=cv2.LINE_AA)
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
@@ -162,7 +160,6 @@ def object_depth(depth_cropped, label, error_threshold=0.5):
 def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-
     x = -math.tan(y_rad)
     y = -math.tan(x_rad)
     # we want sqrt(x^2 + y^2 + z^2) == 1
@@ -174,14 +171,12 @@ def eulerToVectorDownCam(x_deg, y_deg):
     except ValueError:
         vec = np.array([x,y,0])
         vec = vec / np.linalg.norm(vec)
-    
     return vec
 
 
 def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-
     y = -math.tan(x_rad)
     z = -math.tan(y_rad)
     # we want sqrt(x^2 + y^2 + z^2) == 1
@@ -193,21 +188,15 @@ def eulerToVectorFrontCam(x_deg, y_deg):
     except ValueError:
         vec = np.array([0,y,z])
         vec = vec / np.linalg.norm(vec)
-    
     return vec
 
 def find_intersection(vector, plane_z_pos):
     plane_normal = np.array([0,0,1])
     plane_point = np.array([0,0,plane_z_pos])
-
     dot_product = np.dot(vector, plane_normal)
-
     if np.isclose(dot_product, 0):return None
-    
     vector_length_to_plane = ((np.dot(plane_point, plane_normal) - np.dot(np.array([0,0,0]), plane_normal)) / dot_product)
-
     if vector_length_to_plane < 0: return None
-
     return vector_length_to_plane * np.array(vector)
 
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
@@ -279,31 +268,21 @@ def measureBuoyAngle(depth_cropped):
     return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
     
 def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
-
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
-
     rows, _ = depth_cropped.shape
     left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
-
     avg_left_depth = np.min(left_half)
     avg_right_depth = np.min(right_half)
-
     left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
     # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
-
-    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
-
-    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
     #assuming FOV increases linearly with distance from center pixel
     theta_x = front_cam_hfov*x_center_offset
-
     gate_angle = state.theta_z + left_pole_angle + theta_x
-
     return gate_angle
-
-
 
 def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
     # Return the class_id of the symbol on the left of the gate
@@ -331,11 +310,6 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
         return 1
     return 0
     
-    
-
-
-
-
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
