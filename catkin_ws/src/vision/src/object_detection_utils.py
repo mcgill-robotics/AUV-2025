@@ -132,24 +132,37 @@ def clean_depth_error(depth_img, error_threshold=0.5):
     depth_img[depth_img <= error_threshold] = 100
     return depth_img
 
+def remove_background(depth_img):
+    """ set all the points further than the min point by 3 meters to NaN """
+    min_point = np.min(depth_img)
+    depth_img[depth_img > 3 + min_point] = np.NaN
+    return depth_img
+
 def gate_depth(depth_cropped):
-    rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:int(rows/2), :], depth_cropped[int(rows/2):, :]
-    left_closest = np.min(left_half)
-    right_closest = np.min(right_half)
-    return (left_closest + right_closest) / 2
+    """ divide the picture in two (left and right) - get the mean of the 3 min value on each side -
+    mean the two means """
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:,int(cols/2):]
+    left_flattened = left_half.flatten()
+    left_smallest_values = np.partition(left_flattened, 3)[:3]
+    right_flatten = right_half.flatten()
+    right_smallest_values = np.partition(right_flatten, 3)[:3]
+    return (np.mean(left_smallest_values) + np.mean(right_smallest_values)) / 2
 
 def buoy_depth(depth_cropped):
+    """ get the middle point and the points around it and take the mean 
+        assumption - the buoy is a square object that doesn't have any holes, so taking the middle point
+        should always be where the buoy is """
     rows, cols = depth_cropped.shape
-    middle_point = depth_cropped[int(rows/2), int(cols/2)]
-    return middle_point
+    middle_points = [depth_cropped[int(rows/2), int(cols/2)], depth_cropped[int(rows/2)+1, int(cols/2)],
+                    depth_cropped[int(rows/2)-1, int(cols/2)], depth_cropped[int(rows/2), int(cols/2)+1],
+                    depth_cropped[int(rows/2), int(cols/2)-1]]
+    return np.mean(middle_points)
 
 def lane_marker_depth(depth_cropped):
-    closest_point = np.unravel_index(np.argmin(depth_cropped), depth_cropped.shape)
-    return closest_point
+    return np.mean(depth_cropped)
 
-def object_depth(depth_cropped, label, error_threshold=0.5):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold)
+def object_depth(depth_cropped, label):
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
@@ -256,9 +269,8 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         return None, None, None, None
 
 def measureBuoyAngle(depth_cropped):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)
-    rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
     
     flattened_array = left_half.flatten()
     sorted_array = np.sort(flattened_array)
