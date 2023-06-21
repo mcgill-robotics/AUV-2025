@@ -131,10 +131,15 @@ def clean_depth_error(depth_img, error_threshold=0.5):
     depth_img[depth_img <= error_threshold] = 100
     return depth_img
 
+def remove_background(depth_img):
+    """ set all the points further than the min point by 3 meters to NaN """
+    min_point = np.min(depth_img)
+    depth_img[depth_img > 3 + min_point] = np.NaN
+    return depth_img
+
 def gate_depth(depth_cropped):
     """ divide the picture in two (left and right) - get the mean of the 3 min value on each side -
     mean the two means """
-    depth_cropped = np.array(depth_cropped)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:,int(cols/2):]
     left_flattened = left_half.flatten()
@@ -154,17 +159,9 @@ def buoy_depth(depth_cropped):
     return np.mean(middle_points)
 
 def lane_marker_depth(depth_cropped):
-    """ Get 30 random points and take the mean - (some of them might be the floor but 
-        on average it will be very close to where the lane marker is) """
-    rows, cols = depth_cropped.shape
-    total = 0
-    for i in range(30):
-        i = np.random.randint(0, rows)
-        j = np.random.randint(0, cols)
-        total += depth_cropped[i, j]
-    return total / 30 - 0.1
+    return np.mean(depth_cropped)
 
-def object_depth(depth_cropped, label, error_threshold=0.5):
+def object_depth(depth_cropped, label):
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
