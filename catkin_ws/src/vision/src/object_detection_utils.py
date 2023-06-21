@@ -301,7 +301,7 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
 
 
 
-def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
+def analyzeGate(boxes, min_confidence, earth_class_id, abydos_class_id): # AYOUB
 
     # Return the class_id of the symbol on the left of the gate
     
@@ -314,9 +314,11 @@ def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
         x_coord = xywh[0][0].item()
         confidence = box.conf
         class_id = box.cls
-        if class_id != gate_class_id and confidence > min_confidence:
+        if (class_id == earth_class_id or class_id == abydos_class_id) and confidence > min_confidence:
             mapper[class_id] = x_coord
             symbol_detected = True
+        
+
 
     if not symbol_detected: return None
 
@@ -326,6 +328,8 @@ def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
         return 1
     
     return 0
+    
+    
 
 
 
