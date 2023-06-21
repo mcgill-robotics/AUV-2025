@@ -9,6 +9,7 @@ from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 from std_msgs.msg import Header, Float64
 import lane_marker_measure
+import torch
 
 
 
@@ -73,8 +74,7 @@ def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
         fontScale=fontSize, 
         color=TEXT_COLOR, 
-        lineType=cv2.LINE_AA,
-    )
+        lineType=cv2.LINE_AA)
     return img
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
@@ -94,7 +94,7 @@ def measureLaneMarker(img, bbox, debug_img):
     #measure headings from lane marker
     cropped_img_to_pub = bridge.cv2_to_imgmsg(cropped_img, "bgr8")
     cropped_img_pubs[0].publish(cropped_img_to_pub)
-    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=True))
+    headings, center_point = lane_marker_measure.measure_headings(cropped_img, debug_img=cropToBbox(debug_img, bbox, copy=False))
     if None in (headings, center_point): return (None, None), (None, None), debug_img
     center_point_x = center_point[0] + bbox[0] - bbox[2]/2
     center_point_y = center_point[1] + bbox[1] - bbox[3]/2
@@ -122,8 +122,7 @@ def measureLaneMarker(img, bbox, debug_img):
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.4, 
             color=HEADING_COLOR, 
-            lineType=cv2.LINE_AA,
-        )
+            lineType=cv2.LINE_AA)
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
@@ -131,24 +130,37 @@ def clean_depth_error(depth_img, error_threshold=0.5):
     depth_img[depth_img <= error_threshold] = 100
     return depth_img
 
+def remove_background(depth_img):
+    """ set all the points further than the min point by 3 meters to NaN """
+    min_point = np.min(depth_img)
+    depth_img[depth_img > 3 + min_point] = np.NaN
+    return depth_img
+
 def gate_depth(depth_cropped):
-    rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:int(rows/2), :], depth_cropped[int(rows/2):, :]
-    left_closest = np.min(left_half)
-    right_closest = np.min(right_half)
-    return (left_closest + right_closest) / 2
+    """ divide the picture in two (left and right) - get the mean of the 3 min value on each side -
+    mean the two means """
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:,int(cols/2):]
+    left_flattened = left_half.flatten()
+    left_smallest_values = np.partition(left_flattened, 3)[:3]
+    right_flatten = right_half.flatten()
+    right_smallest_values = np.partition(right_flatten, 3)[:3]
+    return (np.mean(left_smallest_values) + np.mean(right_smallest_values)) / 2
 
 def buoy_depth(depth_cropped):
+    """ get the middle point and the points around it and take the mean 
+        assumption - the buoy is a square object that doesn't have any holes, so taking the middle point
+        should always be where the buoy is """
     rows, cols = depth_cropped.shape
-    middle_point = depth_cropped[int(rows/2), int(cols/2)]
-    return middle_point
+    middle_points = [depth_cropped[int(rows/2), int(cols/2)], depth_cropped[int(rows/2)+1, int(cols/2)],
+                    depth_cropped[int(rows/2)-1, int(cols/2)], depth_cropped[int(rows/2), int(cols/2)+1],
+                    depth_cropped[int(rows/2), int(cols/2)-1]]
+    return np.mean(middle_points)
 
 def lane_marker_depth(depth_cropped):
-    closest_point = np.unravel_index(np.argmin(depth_cropped), depth_cropped.shape)
-    return closest_point
+    return np.mean(depth_cropped)
 
-def object_depth(depth_cropped, label, error_threshold=0.5):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold)
+def object_depth(depth_cropped, label):
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
@@ -161,40 +173,43 @@ def object_depth(depth_cropped, label, error_threshold=0.5):
 def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-
     x = -math.tan(y_rad)
     y = -math.tan(x_rad)
-
-    # z should not be hardcoded to -1
-    vec = np.array([x,y,-1])
-    
-    return vec / np.linalg.norm(vec)
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   z^2 == 1 - x^2 + y^2
+    #   z == -1 * sqrt(1 - x^2 + y^2)
+    try:
+        z = -1 * abs(math.sqrt(1 - (x ** 2 + y ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([x,y,0])
+        vec = vec / np.linalg.norm(vec)
+    return vec
 
 
 def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-
     y = -math.tan(x_rad)
     z = -math.tan(y_rad)
-
-    # x should not be hardcoded to 1
-    vec = np.array([1,y, z])
-    
-    return vec / np.linalg.norm(vec)
+    # we want sqrt(x^2 + y^2 + z^2) == 1
+    #   x^2 == 1 - y^2 + z^2
+    #   x == sqrt(1 - y^2 + z^2)
+    try:
+        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([0,y,z])
+        vec = vec / np.linalg.norm(vec)
+    return vec
 
 def find_intersection(vector, plane_z_pos):
     plane_normal = np.array([0,0,1])
     plane_point = np.array([0,0,plane_z_pos])
-
     dot_product = np.dot(vector, plane_normal)
-
     if np.isclose(dot_product, 0):return None
-    
     vector_length_to_plane = ((np.dot(plane_point, plane_normal) - np.dot(np.array([0,0,0]), plane_normal)) / dot_product)
-
     if vector_length_to_plane < 0: return None
-
     return vector_length_to_plane * np.array(vector)
 
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
@@ -242,64 +257,68 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
 
-# TODO!!!!!!!!!!
+def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
+    depth_cropped = cropToBbox(depth_img, bbox_coordinates)
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
 
-def measureBuoyAngle(depth_cropped):
-    depth_cropped = clean_depth_error(depth_cropped, error_threshold=0.2)
+    avg_left_depth = np.min(left_half)
+    avg_right_depth = np.min(right_half)
+
+    left_pole_angle = math.acos((buoy_width^2 + avg_left_depth^2 - avg_right_depth^2)/(2*buoy_width*avg_left_depth))
+
+    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    theta_x = front_cam_hfov * x_center_offset
+
+    gate_angle = state.theta_z + left_pole_angle + theta_x
+
+    return gate_angle
+    
+def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
+    depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     rows, _ = depth_cropped.shape
     left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
-    
-    flattened_array = left_half.flatten()
-    sorted_array = np.sort(flattened_array)
-    left_closest = sorted_array[:10]
-    
-    flattened_array = right_half.flatten()
-    sorted_array = np.sort(flattened_array)
-    right_closest = sorted_array[:10]
-    
-    left_mean, right_mean = np.mean(left_closest), np.mean(right_closest)
-    
-    rotated = -1 # rotated to the right
-    if left_mean > right_mean:
-        rotated = 1 # rotated to the left
-        
-    delta_y, delta_x = abs(left_mean - right_mean), 0.61 # (0.61 == 2 ft)
+    avg_left_depth = np.min(left_half)
+    avg_right_depth = np.min(right_half)
+    left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
+    # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
+    # right_pole_angle = 180 - auv_angle - left_pole_angle
+    gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
+    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+    #assuming FOV increases linearly with distance from center pixel
+    theta_x = front_cam_hfov*x_center_offset
+    gate_angle = state.theta_z + left_pole_angle + theta_x
+    return gate_angle
 
-    return np.arctan(delta_y / delta_x) * rotated * 180 / math.pi
-    
-def measureGateAngle(depth_cropped): # ELIE
-    return None
-
-
-def analyzeGate(boxes, min_confidence, gate_class_id, earth_class_id): # AYOUB
-
+def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
     # Return the class_id of the symbol on the left of the gate
-    
     # If no symbol return None
-   
-    mapper = {}
+    gate_elements_detected = {}
     symbol_detected = False
-    for box in boxes:
-        xywh = box.xywh
-        x_coord = xywh[0][0].item()
-        confidence = box.conf
-        class_id = box.cls
-        if class_id != gate_class_id and confidence > min_confidence:
-            mapper[class_id] = x_coord
-            symbol_detected = True
+    for detection in detections:
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
+        for box in boxes:
+            bbox = list(box.xywh[0])
+            x_coord = bbox[0]
+            conf = float(list(box.conf)[0])
+            cls_id = int(list(box.cls)[0])
+            if (cls_id == earth_class_id or cls_id == abydos_class_id or cls_id == gate_class_id) and conf > min_confidence:
+                gate_elements_detected[cls_id] = 999999 if cls_id == gate_class_id else x_coord
 
-    if not symbol_detected: return None
+    if earth_class_id not in gate_elements_detected.keys(): return None
+    elif abydos_class_id not in gate_elements_detected.keys(): return None
+    elif gate_class_id not in gate_elements_detected.keys(): return None
 
-    min_key = int(min(mapper, key=mapper.get))
+    min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
 
     if min_key == earth_class_id:
         return 1
-    
     return 0
-
-
-
-
+    
 
 def analyzeBuoy(img_cropped, debug_img):
     return []
