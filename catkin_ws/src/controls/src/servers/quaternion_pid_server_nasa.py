@@ -38,11 +38,12 @@ class QuaternionServer(BaseServer):
         self.position = []
         
         self.Kp = .1
-        self.Ki = 0
-        self.Kd = 10.
+        self.Ki = .000001
+        self.Kd = 0.1
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
+        self.times = 0
         self.server.start()        
         
     def pose_callback(self, data):
@@ -149,9 +150,10 @@ class QuaternionServer(BaseServer):
         velocity_quat = np.quaternion(0, ang_velocity[0], ang_velocity[1], ang_velocity[2])
         return (velocity_quat * error) / (-2)
     
-    def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
-        if integral_error_quat > 1: # arbitrary error limit
-            self.integral_error_quat = 0
+    def calculateIntegralError(self, integral_error_quat, error_quat, delta_time, times):
+        if times > 100: # arbitrary error limit
+            self.integral_error_quat = np.quaternion(0, 0, 0, 0)
+            self.times = 0
         return integral_error_quat + (error_quat * delta_time)
     
     def kinematic_inversion(self,qe_des,qe):
@@ -188,12 +190,13 @@ class QuaternionServer(BaseServer):
         
     def controlEffort(self, goal_quat):
         delta_time = (self.time_interval[1] - self.time_interval[0])
+        self.times += 1
         
         # Calculate error values
         error_quat = self.calculateError(self.body_quat, goal_quat) 
         delta_error = self.delta_e(error_quat)
         derivative_error_quat = - self.calculateDerivativeError(error_quat, self.angular_velocity)
-        self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, delta_error, delta_time)
+        self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, delta_error, delta_time, self.times)
         
         # Proportional control
         proportional_quat = np.quaternion()
@@ -217,9 +220,9 @@ class QuaternionServer(BaseServer):
         derivative_quat.z = self.Kd * derivative_error_quat.z
         
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        # control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
-        # control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
-        # omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
+        control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
+        control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
+        omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284,  0.003794052280665], 
@@ -229,8 +232,7 @@ class QuaternionServer(BaseServer):
                                     [0.             ,  0.649_091_805_1, 0.             ], 
                                     [0.             ,  0.             , 0.649_091_805_1]])
         
-        # torque = np.matmul(inertial_matrix, omega_command)
-        torque = np.matmul(inertial_matrix, control_effort_quat)
+        torque = np.matmul(inertial_matrix, omega_command)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
