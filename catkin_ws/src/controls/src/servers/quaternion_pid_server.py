@@ -37,9 +37,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = None#np.quaternion()
         self.position = []
         
-        self.Kp = 0.05
+        self.Kp = 0.1
         self.Ki = 0
-        self.Kd = 0
+        self.Kd = 10
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)

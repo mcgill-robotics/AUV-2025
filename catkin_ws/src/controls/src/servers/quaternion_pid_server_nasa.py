@@ -37,9 +37,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = None#np.quaternion()
         self.position = []
         
-        self.Kp = 0.007
+        self.Kp = .1
         self.Ki = 0
-        self.Kd = 0.008
+        self.Kd = 10.
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
@@ -150,6 +150,8 @@ class QuaternionServer(BaseServer):
         return (velocity_quat * error) / (-2)
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
+        if integral_error_quat > 1: # arbitrary error limit
+            self.integral_error_quat = 0
         return integral_error_quat + (error_quat * delta_time)
     
     def kinematic_inversion(self,qe_des,qe):
@@ -190,45 +192,45 @@ class QuaternionServer(BaseServer):
         # Calculate error values
         error_quat = self.calculateError(self.body_quat, goal_quat) 
         delta_error = self.delta_e(error_quat)
-        
-        derivative_error_quat = self.calculateDerivativeError(delta_error, self.angular_velocity)
-        
+        derivative_error_quat = - self.calculateDerivativeError(error_quat, self.angular_velocity)
         self.integral_error_quat = self.calculateIntegralError(self.integral_error_quat, delta_error, delta_time)
         
+        # Proportional control
         proportional_quat = np.quaternion()
-        integration_quat = np.quaternion()
-        derivative_quat = np.quaternion()
-        
         proportional_quat.w = self.Kp * delta_error.w
         proportional_quat.x = self.Kp * delta_error.x
         proportional_quat.y = self.Kp * delta_error.y
         proportional_quat.z = self.Kp * delta_error.z
 
+        # Integral control
+        integration_quat = np.quaternion()
         integration_quat.w = self.Ki * self.integral_error_quat.w
         integration_quat.x = self.Ki * self.integral_error_quat.x
         integration_quat.y = self.Ki * self.integral_error_quat.y
         integration_quat.z = self.Ki * self.integral_error_quat.z
         
-        # Calculate derivative term
+        # Derivative control
+        derivative_quat = np.quaternion()
         derivative_quat.w = self.Kd * derivative_error_quat.w
         derivative_quat.x = self.Kd * derivative_error_quat.x
         derivative_quat.y = self.Kd * derivative_error_quat.y
         derivative_quat.z = self.Kd * derivative_error_quat.z
         
         control_effort_quat = proportional_quat + integration_quat + derivative_quat
-        control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
-        control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
-        omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
+        # control_effort_arr = [control_effort_quat.w, control_effort_quat.x, control_effort_quat.y, control_effort_quat.z]
+        # control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
+        # omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
-        #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
-        #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
+        #                             [0.000000000000000,  0.709487776484284,  0.003794052280665], 
+        #                             [-0.01644089321621,  0.003794052280665,  0.727193353794052]])
         
-        inertial_matrix = np.array([[0.1376267915,  0.                , 0.                ],
-                                    [0.          ,  0.6490918050833332, 0.                ], 
-                                    [0.          ,  0.                , 0.6490918050833332]])
+        inertial_matrix = np.array([[0.137_626_791_5,  0.             , 0.             ],
+                                    [0.             ,  0.649_091_805_1, 0.             ], 
+                                    [0.             ,  0.             , 0.649_091_805_1]])
         
-        torque = np.matmul(inertial_matrix, omega_command)
+        # torque = np.matmul(inertial_matrix, omega_command)
+        torque = np.matmul(inertial_matrix, control_effort_quat)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
