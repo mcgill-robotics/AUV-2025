@@ -4,7 +4,7 @@ from .utility.vision import *
 from .utility.functions import *
 import math
 
-class NavigateLaneMarker(smach.State):
+class NavigateGate(smach.State):
     def __init__(self, origin_class, control, state, mapping):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
@@ -31,5 +31,5 @@ class NavigateLaneMarker(smach.State):
         self.control.rotateYaw(gate_object[4]) # bring to exact angle 
         self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])
 
-        print("Successfully rotated to lane marker!")
+        print("Successfull")
         return 'success'
