@@ -62,6 +62,6 @@ class NavigateGate(smach.State):
         current_x_position = self.state.x
         current_y_postion = self.state.y
 
-        self.control.moveDeltaLocal((math.sqrt((current_x_position-gate_object[1])^2 + (current_y_postion - gate_object[2])^2),0,0))
+        self.control.moveDeltaLocal((math.sqrt((current_x_position-gate_object[1])**2 + (current_y_postion - gate_object[2])**2),0,0))
 
         return 'success'
