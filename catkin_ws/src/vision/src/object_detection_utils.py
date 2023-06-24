@@ -130,7 +130,7 @@ def clean_depth_error(depth_img, error_threshold=0.5):
 
 def remove_background(depth_img):
     """ set all the points further than the min point by 3 meters to NaN """
-    min_point = np.min(depth_img)
+    min_point = np.nanmin(depth_img)
     depth_img[depth_img > 3 + min_point] = np.NaN
     return depth_img
 
@@ -143,7 +143,7 @@ def gate_depth(depth_cropped):
     left_smallest_values = np.partition(left_flattened, 3)[:3]
     right_flatten = right_half.flatten()
     right_smallest_values = np.partition(right_flatten, 3)[:3]
-    return (np.mean(left_smallest_values) + np.mean(right_smallest_values)) / 2
+    return (np.nanmean(left_smallest_values) + np.nanmean(right_smallest_values)) / 2
 
 def buoy_depth(depth_cropped):
     """ get the middle point and the points around it and take the mean 
@@ -153,10 +153,10 @@ def buoy_depth(depth_cropped):
     middle_points = [depth_cropped[int(rows/2), int(cols/2)], depth_cropped[int(rows/2)+1, int(cols/2)],
                     depth_cropped[int(rows/2)-1, int(cols/2)], depth_cropped[int(rows/2), int(cols/2)+1],
                     depth_cropped[int(rows/2), int(cols/2)-1]]
-    return np.mean(middle_points)
+    return np.nanmean(middle_points)
 
 def lane_marker_depth(depth_cropped):
-    return np.mean(depth_cropped)
+    return np.nanmean(depth_cropped)
 
 def object_depth(depth_cropped, label):
     dist = 0
@@ -251,8 +251,9 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
-    avg_left_depth = np.min(left_half)
-    avg_right_depth = np.min(right_half)
+
+    avg_left_depth = np.nanmin(left_half)
+    avg_right_depth = np.nanmin(right_half)
 
     left_pole_angle = math.acos((buoy_width^2 + avg_left_depth^2 - avg_right_depth^2)/(2*buoy_width*avg_left_depth))
     gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
@@ -264,11 +265,10 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     
 def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
-    rows, _ = depth_cropped.shape
-    left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
-    avg_left_depth = np.min(left_half)
-    avg_right_depth = np.min(right_half)
-
+    _, cols = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
+    avg_left_depth = np.nanmin(left_half)
+    avg_right_depth = np.nanmin(right_half)
     left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
     # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
