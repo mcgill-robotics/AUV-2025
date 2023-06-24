@@ -37,7 +37,9 @@ def detect_on_image(raw_img, camera_id):
     obj_z = []
     obj_theta_z = []
     extra_field = []
-    if camera_id == 1: leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names.index("Earth Symbol"), class_names.index("Abydos Symbol"), class_names.index("Gate"))
+    if camera_id == 1:
+        buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Buoy Symbol 1"), class_names[1].index("Buoy Symbol 2"), class_names[1].index("Buoy"))
+        leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
@@ -108,8 +110,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(state.theta_z + theta_z)
                     extra_field.append(None)
 
-                    buoy_symbols = analyzeBuoy(cropToBbox(img, bbox), debug_img)
-                    for symbol_conf, symbol_x, symbol_y, symbol_z, symbol_priority in buoy_symbols:
+                    for symbol_x, symbol_y, symbol_z, symbol_priority in buoy_symbols:
                         label.append(4)
                         obj_x.append(symbol_x)
                         obj_y.append(symbol_y)
