@@ -189,3 +189,15 @@ class QuaternionServer(BaseServer):
         self.pub_yaw.publish(torque[2])      
     
         
+    def control_effort_dcm(self, goal_quaternion):
+            goal_rotation_matrix = quaternion.as_rotation_matrix(goal_quaternion)
+            body_rotation_matrix = quaternion.as_rotation_matrix(self.body_quat)
+            error_matrix = np.matmul(np.transpose(goal_rotation_matrix), body_rotation_matrix) 
+            error_axis_matrix = (error_matrix - error_matrix.transpose())
+            error_axis = np.array([error_axis_matrix[2, 1], error_axis_matrix[0, 2], error_axis_matrix[1, 0]])
+
+            control_effort = self.Kp * error_axis + self.Kd * self.angular_velocity
+
+            self.pub_roll.publish(control_effort[0])
+            self.pub_pitch.publish(control_effort[1])
+            self.pub_yaw.publish(control_effort[2])
