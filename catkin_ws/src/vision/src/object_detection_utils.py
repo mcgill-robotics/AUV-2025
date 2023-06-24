@@ -48,7 +48,7 @@ class State:
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
     def updateDepthMap(self, msg):
-        self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
+        self.depth = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
         self.depth += np.random.normal(0, 0.1, self.depth.shape)
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image

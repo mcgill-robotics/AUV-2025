@@ -27,21 +27,21 @@ class BaseServer():
 
 
     def establish_pid_publishers(self):
-        self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=50)
-        self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=50)
-        self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=50)
-        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint', Float64, queue_size=50)
-        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=50)
-        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint', Float64, queue_size=50)
+        self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=1)
+        self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=1)
+        self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=1)
+        self.pub_theta_x_pid = rospy.Publisher('theta_x_setpoint', Float64, queue_size=1)
+        self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=1)
+        self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint', Float64, queue_size=1)
         
 
     def establish_pid_enable_publishers(self):
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=50)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=50)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=50)
-        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=50)
-        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=50)
-        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=50)
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
+        self.pub_theta_x_enable = rospy.Publisher('pid_theta_x_enable', Bool, queue_size=1)
+        self.pub_theta_y_enable = rospy.Publisher('pid_theta_y_enable', Bool, queue_size=1)
+        self.pub_theta_z_enable = rospy.Publisher('pid_theta_z_enable', Bool, queue_size=1)
 
     def establish_state_subscribers(self):
         self.position = Point(0,0,0)

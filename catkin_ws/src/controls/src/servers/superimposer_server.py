@@ -21,17 +21,17 @@ class SuperimposerServer(BaseServer):
         self.establish_state_subscribers()
 
 
-        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=50)
-        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=50)
-        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=50)
+        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
 
-        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=50)
-        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=50)
-        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=50)
+        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
+        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
+        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=1)
 
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
 
         self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
         self.server.start()

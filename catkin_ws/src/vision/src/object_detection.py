@@ -38,7 +38,8 @@ def detect_on_image(raw_img, camera_id):
     obj_theta_z = []
     extra_field = []
     if camera_id == 1:
-        buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Buoy Symbol 1"), class_names[1].index("Buoy Symbol 2"), class_names[1].index("Buoy"))
+        buoy_symbols = []
+        # buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Buoy Symbol 1"), class_names[1].index("Buoy Symbol 2"), class_names[1].index("Buoy"))
         leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
