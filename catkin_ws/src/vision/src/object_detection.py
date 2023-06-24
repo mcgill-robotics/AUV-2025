@@ -46,7 +46,7 @@ def detect_on_image(raw_img, camera_id):
         else: boxes = detection.boxes.numpy()
         for box in boxes:
             conf = float(list(box.conf)[0])
-            #only consider predictinon if confidence is at least min_prediction_confidence
+            #only consider prediction if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
                 print("confidence too low ({}%)".format(conf*100))
                 continue
