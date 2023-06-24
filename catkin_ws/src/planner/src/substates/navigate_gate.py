@@ -2,15 +2,18 @@ import rospy
 import smach
 from .utility.vision import *
 from .utility.functions import *
+from .utility.state import *
 import math
 
 class NavigateGate(smach.State):
-    def __init__(self, origin_class, control, state, mapping):
+    def __init__(self, origin_class, control, state, mapping, target_symbol, goThrough):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.origin_class = origin_class
+        self.target_symbol = target_symbol
+        self.goThrough = goThrough
 
     def execute(self, ud):
         print("Starting gate navigation.") 
@@ -31,5 +34,34 @@ class NavigateGate(smach.State):
         self.control.rotateYaw(gate_object[4]) # bring to exact angle 
         self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])
 
-        print("Successfull")
+        print("Successfully centered in front of gate")
+
+        if not self.goThrough:
+            return 'success'
+
+        print("Deciding which side to go through")
+
+        symbol = gate_object[5] #1 if earth on left, 0 if abydos left
+
+        if self.target_symbol == "earth": 
+            if symbol >= 0.5:
+                print("Going through left side")
+                self.control.moveDeltaLocal((0,0.5,0))
+            else : 
+                print("Going through right side")
+                self.control.moveDeltaLocal((0,-0.5,0))
+
+        else: 
+            if symbol <= 0.5:
+                print("Going through left side")
+                self.control.moveDeltaLocal((0,0.5,0))
+            else: 
+                print("Going thorugh right side")
+                self.control.moveDeltaLocal((0,-0.5,0))
+
+        current_x_position = self.state.x
+        current_y_postion = self.state.y
+
+        self.control.moveDeltaLocal((math.sqrt((current_x_position-gate_object[1])^2 + (current_y_postion - gate_object[2])^2),0,0))
+
         return 'success'
