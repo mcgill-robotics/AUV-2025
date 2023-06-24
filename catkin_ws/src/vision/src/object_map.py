@@ -62,7 +62,7 @@ def updateMap(obj_i, observation):
         new_theta_z = observed_theta_z
     else:
         #average both orientations
-        new_extra_field = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
+        new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
     #CALCULATE EXTRA FIELD WHEN APPLICABLE
     if observed_extra_field is None:
@@ -94,7 +94,7 @@ def dist(obj1, obj2):
 def reduceMap():
     for i in range(len(object_map)):
         observed_label, observed_x, observed_y, observed_z, _, _, _ = object_map[i]
-        closest_obj = findClosestObject(observed_label, observed_x, observed_y, observed_z, index_to_ignore=i)
+        closest_obj = findClosestObject([observed_label, observed_x, observed_y, observed_z], indexToIgnore=i)
         if closest_obj == -1: continue
         else:
             object_map[i] = updateMap(closest_obj, object_map[i])

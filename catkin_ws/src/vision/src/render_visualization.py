@@ -253,7 +253,6 @@ def updateAUVThetaY(msg):
 def updateAUVThetaZ(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    # print(roll,pitch,yaw)
     new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*math.pi/180))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
