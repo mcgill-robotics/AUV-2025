@@ -14,7 +14,7 @@ class NavigateGate(smach.State):
 
     def execute(self, ud):
         print("Starting gate navigation.") 
-        auv_current_position = self.state.getPosition()
+        auv_current_position = (self.state.x, self.state.y, self.state.z)
         if self.origin_class == -1: # use auv current position as origin
             origin_position = auv_current_position
         else:
