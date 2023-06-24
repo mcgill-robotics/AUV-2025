@@ -142,8 +142,10 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     # Publish the marker
     pub(heading_marker)
 
-def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
+def addMapMarkers(label,x,y,z,theta_z,in_extra_field,color=(1,0,0)):
     global marker_id
+    if in_extra_field == -1234.5: extra_field = None
+    else: extra_field = in_extra_field
     addDetectionMarker(x, y, z, 0.1, publishToMap, color)
     if label == 0: #LANE MARKER
         heading1 = eulerAngleToUnitVector(0,90,theta_z)

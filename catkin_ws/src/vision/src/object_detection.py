@@ -96,7 +96,6 @@ def detect_on_image(raw_img, camera_id):
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
                     theta_z = measureGateAngle(state.depth_map, gate_width, bbox)
-                    print(theta_z)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
@@ -119,6 +118,8 @@ def detect_on_image(raw_img, camera_id):
                         obj_z.append(symbol_z) 
                         obj_theta_z.append(theta_z)
                         extra_field.append(symbol_priority)
+
+    extra_field = [x if not x is None else -1234.5 for x in extra_field]
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label

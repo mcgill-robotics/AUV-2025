@@ -65,9 +65,9 @@ def updateMap(obj_i, observation):
         new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
     #CALCULATE EXTRA FIELD WHEN APPLICABLE
-    if observed_extra_field is None:
+    if observed_extra_field == -1234.5:
         new_extra_field = current_extra_field
-    elif current_extra_field is None:
+    elif current_extra_field == -1234.5:
         new_extra_field = observed_extra_field
     else:
         if label == 0: # LANE MARKER -> angle, take weighted average

@@ -19,7 +19,8 @@ class ObjectMapper:
             new_map_obj.append(msg.y[i])
             new_map_obj.append(msg.z[i])
             new_map_obj.append(msg.theta_z[i])
-            new_map_obj.append(msg.extra_field[i])
+            if msg.extra_field[i] == -1234.5: new_map_obj.append(None)
+            else: new_map_obj.append(msg.extra_field[i])
             self.map.append(new_map_obj)
 
     def getClass(self,cls):
