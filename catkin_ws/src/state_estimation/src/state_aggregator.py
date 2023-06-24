@@ -20,9 +20,16 @@ DEG_PER_RAD = 180/np.pi
 class State_Aggregator:
 
     def __init__(self):
+        # TODO - keep track of position, orientation, as well as pos/q according to each individual sensor
+        # TODO - StateSource class for the state provided by each sensor + 'overall' state of different frames
+
         # position - based on dvl
-        self.pos_world = np.array([0.0, 0.0, 0.0]) # x, y, z - 'nominal' position relative to global (dvl) frame
-        self.pos_auv = np.array([0.0, 0.0, 0.0]) # position of auv relative to world frame (q_world, pos_world)
+        self.pos_world_dvl = np.array([0.0, 0.0, 0.0]) # x, y, z - 'nominal' position relative to global (dvl) frame
+        self.pos_auv_dvl = np.array([0.0, 0.0, 0.0]) # position of auv relative to world frame (q_world, pos_world_dvl)
+
+        # position - based on depth sensor
+        self.pos_world_depth_sensor = np.array([0.0, 0.0, 0.0])
+        self.pos_auv_depth_sensor = np.array([0.0, 0.0, 0.0])
 
         # orientation - based on imu
         self.q_auv = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
@@ -61,11 +68,11 @@ class State_Aggregator:
         # position in global (NED) frame according to dvl
         pos_dvl = np.array([data.x, data.y, data.z])
 
-        # auv position from pos_world (relative to global frame)
-        pos_auv = pos_dvl - self.pos_world
+        # auv position from pos_world_dvl (relative to global frame)
+        pos_auv = pos_dvl - self.pos_world_dvl
 
         # auv position in world frame - TODO: CHECK
-        self.pos_auv = self.q_world*pos_auv*self.q_world.inverse()
+        self.pos_auv_dvl = self.q_world*pos_auv*self.q_world.inverse()
 
 
     def imu_cb(self, imu_msg):
@@ -79,16 +86,22 @@ class State_Aggregator:
 
 
     def depth_sensor_cb(self, depth_msg):
-        self.z = depth_msg.data
+        # TODO - check does the 0 depth coincide with NED frame?
+        # z position of depth sensor in NED? frame
+        z_global = depth_msg.data
 
 
+
+
+
+    # TODO - merge into single reset subscriber
     def dvl_reset_cb(self, _):
         # new world position offset is current auv position in global (NED) frame
-        self.pos_world = self.pos_auv + self.pos_world
+        self.pos_world_dvl = self.pos_auv_dvl + self.pos_world_dvl
 
-        # pos_auv is still relative to old offfset
-        # by definition it is now at the same point as pos_world
-        self.pos_auv = np.array([0.0, 0.0, 0.0])
+        # pos_auv_dvl is still relative to old offfset
+        # by definition it is now at the same point as pos_world_dvl
+        self.pos_auv_dvl = np.array([0.0, 0.0, 0.0])
 
 
     def imu_reset_cb(self, _):
@@ -143,14 +156,14 @@ class State_Aggregator:
 
     def update_state(self, _):
         # publish pose
-        position = Point(self.pos_auv) # TODO - check nparray parsed - may put directly into Pose
+        position = Point(self.pos_auv_dvl) # TODO - check nparray parsed - may put directly into Pose
         pose = Pose(position, self.q_auv)
         self.pub.publish(pose)
 
         # publish individual degrees of freedom
-        self.pub_x.publish(self.pos_auv[0])
-        self.pub_y.publish(self.pos_auv[1])
-        self.pub_z.publish(self.pos_auv[2])
+        self.pub_x.publish(self.pos_auv_dvl[0])
+        self.pub_y.publish(self.pos_auv_dvl[1])
+        self.pub_z.publish(self.pos_auv_dvl[2])
 
         self.pub_theta_x.publish(self.euler[0])
         self.pub_theta_y.publish(self.euler[1])
