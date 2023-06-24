@@ -53,5 +53,5 @@ sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
 # TO DO SO:
 # version 1: navigate to the folder that was returned by `which cmake`, do `rm cmake`
 # version 2: navigate to /usr/bin, do `rm cmake`
-
+# open new terminal 
 # FINALLY: run `catkin clean` and build the packages again
