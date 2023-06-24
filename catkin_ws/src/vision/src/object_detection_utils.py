@@ -11,8 +11,6 @@ from std_msgs.msg import Header, Float64
 import lane_marker_measure
 import torch
 
-
-
 def transformLocalToGlobal(lx,ly,lz):
     trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
     offset_local = Vector3(lx, ly, lz)
@@ -186,7 +184,6 @@ def eulerToVectorDownCam(x_deg, y_deg):
         vec = vec / np.linalg.norm(vec)
     return vec
 
-
 def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
@@ -227,10 +224,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         
         #convert local offsets to global offsets using tf transform library
         x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
-        x_conf = 1.0 - abs(x_center_offset)
-        y_conf = 1.0 - abs(y_center_offset)
-        pose_conf = x_conf*y_conf*(min(1.0, 5.0/dist_from_camera))
-        return x,y,z, pose_conf
+        return x,y,z
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
         x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
@@ -244,15 +238,11 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > 10: return None, None, None, None
-
-        x_conf = 1.0 - abs(x_center_offset)
-        y_conf = 1.0 - abs(y_center_offset)
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None, None
         x = obj_pos[0]
         y = obj_pos[1]
         z = z_pos
-        pose_conf = x_conf * y_conf
-        return x, y, z, pose_conf
+        return x, y, z
     else:
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
         return None, None, None, None
@@ -261,17 +251,13 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
-
     avg_left_depth = np.min(left_half)
     avg_right_depth = np.min(right_half)
 
     left_pole_angle = math.acos((buoy_width^2 + avg_left_depth^2 - avg_right_depth^2)/(2*buoy_width*avg_left_depth))
-
     gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
-
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-
     gate_angle = state.theta_z + left_pole_angle + theta_x
 
     return gate_angle
@@ -282,13 +268,12 @@ def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
     left_half, right_half = depth_cropped[:rows/2, :], depth_cropped[rows/2:, :]
     avg_left_depth = np.min(left_half)
     avg_right_depth = np.min(right_half)
+
     left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
     # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
-    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
-    #assuming FOV increases linearly with distance from center pixel
     theta_x = front_cam_hfov*x_center_offset
     gate_angle = state.theta_z + left_pole_angle + theta_x
     return gate_angle
@@ -297,7 +282,6 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
     # Return the class_id of the symbol on the left of the gate
     # If no symbol return None
     gate_elements_detected = {}
-    symbol_detected = False
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
         else: boxes = detection.boxes.numpy()
@@ -315,9 +299,8 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
 
     min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
 
-    if min_key == earth_class_id:
-        return 1
-    return 0
+    if min_key == earth_class_id: return 1
+    else: return 0
     
 
 def analyzeBuoy(img_cropped, debug_img):
@@ -342,8 +325,10 @@ BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 down_cam_hfov = 220
 down_cam_vfov = 165.26
-front_cam_hfov = 90
-front_cam_vfov = 65
+front_cam_hfov = 87
+front_cam_vfov = 58
+
+max_dist_to_measure = 10
 
 bridge = CvBridge()
 tf_buffer = Buffer()

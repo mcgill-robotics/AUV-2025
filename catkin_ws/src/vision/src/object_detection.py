@@ -32,12 +32,10 @@ def detect_on_image(raw_img, camera_id):
     detections = model[camera_id].predict(img, device=device) #change device for cuda
     #initialize empty arrays for object detection frame message
     label = []
-    detection_confidence = []
     obj_x = []
     obj_y = []
     obj_z = []
     obj_theta_z = []
-    pose_confidence = []
     extra_field = []
     if camera_id == 1: leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names.index("Earth Symbol"), class_names.index("Abydos Symbol"), class_names.index("Gate"))
     #nested for loops get all predictions made by model
@@ -55,7 +53,6 @@ def detect_on_image(raw_img, camera_id):
             cls_id = int(list(box.cls)[0])
             global_class_id = global_class_ids[class_names[camera_id][cls_id]]
             label.append(global_class_id)
-            detection_confidence.append(conf)
             #add bbox visualization to img
             debug_img = visualizeBbox(debug_img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
             print(camera_id)
@@ -71,15 +68,13 @@ def detect_on_image(raw_img, camera_id):
                         obj_theta_z.append(state.theta_z + (headings[0]-90))
                         extra_field.append(state.theta_z + (headings[1]-90))
 
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
-                    pose_confidence.append(pose_conf) 
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
                 elif global_class_id == 4: # OCTAGON
                     center = bbox
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
-                    pose_confidence.append(pose_conf) 
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -90,7 +85,7 @@ def detect_on_image(raw_img, camera_id):
                 depth_cropped = remove_background(clean_depth_error(cropToBbox(state.depth, bbox)))
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -98,44 +93,37 @@ def detect_on_image(raw_img, camera_id):
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
                     theta_z = measureGateAngle(state.depth, gate_width, bbox)
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-                    obj_theta_z.append(theta_z)
-                    pose_confidence.append(pose_conf)
+                    obj_theta_z.append(state.theta_z + theta_z)
                     extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
                 elif global_class_id == 2: # BUOY
                     theta_z = measureBuoyAngle(depth_cropped)
-                    pred_obj_x, pred_obj_y, pred_obj_z, pose_conf = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
-                    
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-                    obj_theta_z.append(theta_z)
-                    pose_confidence.append(pose_conf) 
+                    obj_theta_z.append(state.theta_z + theta_z)
                     extra_field.append(None)
 
                     buoy_symbols = analyzeBuoy(cropToBbox(img, bbox), debug_img)
-                    for symbol_conf, symbol_x, symbol_y, symbol_z, symbol_pose_conf, symbol_priority in buoy_symbols:
+                    for symbol_conf, symbol_x, symbol_y, symbol_z, symbol_priority in buoy_symbols:
                         label.append(4)
-                        detection_confidence.append(symbol_conf)
                         obj_x.append(symbol_x)
                         obj_y.append(symbol_y)
                         obj_z.append(symbol_z) 
                         obj_theta_z.append(theta_z)
-                        pose_confidence.append(symbol_pose_conf) 
                         extra_field.append(symbol_priority)
     print(obj_x)
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
-    detectionFrame.detection_confidence = detection_confidence
     detectionFrame.x = obj_x
     detectionFrame.y = obj_y
     detectionFrame.z = obj_z
     detectionFrame.theta_z = obj_theta_z
-    detectionFrame.pose_confidence = pose_confidence
     detectionFrame.extra_field = extra_field
     pub.publish(detectionFrame)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
