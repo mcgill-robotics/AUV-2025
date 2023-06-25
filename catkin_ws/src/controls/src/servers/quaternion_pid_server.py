@@ -24,22 +24,23 @@ class QuaternionServer(BaseServer):
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
         
         # Publishers
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
         
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
         imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
+        # quat_sub = rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.quat_callback)
         
         # Calculation parameters/values
         self.pose = None#Pose()
-        self.body_quat = None#np.quaternion()
+        self.body_quat = np.quaternion(1,0,0,0)
         self.position = []
         
-        self.Kp = 0.1
+        self.Kp = 0
         self.Ki = 0
-        self.Kd = 10
+        self.Kd = 0.5
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)
@@ -48,21 +49,23 @@ class QuaternionServer(BaseServer):
     def pose_callback(self, data):
         # Assign pose values
         self.pose = data
-        self.position = [data.position.x, -data.position.y, -data.position.z]
+        self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
-        self.update_time_interval()
+        # self.update_time_interval()
 
     def update_time_interval(self):
         self.time_interval[0] = self.time_interval[1]
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = np.array([data.gyro.x, -data.gyro.y, -data.gyro.z])
-    
+        self.angular_velocity = np.array([-data.gyro.z, data.gyro.y, -data.gyro.x])
+
+
     def cancel(self):
         self.controlEffort(self.body_quat)
     
     def callback(self, goal):
+        print("\n\nQuaternion Server got goal:\n",goal)
         self.goal = goal
         if self.pose != None:
             if(goal.displace):
@@ -84,9 +87,9 @@ class QuaternionServer(BaseServer):
         rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
             start = rospy.get_time()
-            self.controlEffort(goal_quaternion)
+            self.control_effort_dcm(goal_quaternion)
             while not self.cancelled and self.check_status(goal_position, goal_quaternion):
-                self.controlEffort(goal_quaternion)
+                self.control_effort_dcm(goal_quaternion)
                 if(rospy.get_time() - start > interval):
                     settled = True
                     break
@@ -155,6 +158,8 @@ class QuaternionServer(BaseServer):
         return np.matmul(Qe1, transpose)
         
     def controlEffort(self, goal_quat):
+        if(self.body_quat is None):
+            return
         delta_time = (self.time_interval[1] - self.time_interval[0])
         
         # Calculate error values
@@ -183,21 +188,21 @@ class QuaternionServer(BaseServer):
                                     [0.          ,  0.                , 0.6490918050833332]])
         
         torque = np.matmul(inertial_matrix, control_effort)
-        
-        self.pub_roll.publish(torque[0])
-        self.pub_pitch.publish(torque[1])
-        self.pub_yaw.publish(torque[2])      
+        self.pub_roll.publish(control_effort[0])
+        self.pub_pitch.publish(control_effort[1])
+        self.pub_yaw.publish(control_effort[2])     
     
         
     def control_effort_dcm(self, goal_quaternion):
-            goal_rotation_matrix = quaternion.as_rotation_matrix(goal_quaternion)
-            body_rotation_matrix = quaternion.as_rotation_matrix(self.body_quat)
-            error_matrix = np.matmul(np.transpose(goal_rotation_matrix), body_rotation_matrix) 
-            error_axis_matrix = (error_matrix - error_matrix.transpose())
-            error_axis = np.array([error_axis_matrix[2, 1], error_axis_matrix[0, 2], error_axis_matrix[1, 0]])
+        goal_rotation_matrix = quaternion.as_rotation_matrix(goal_quaternion)
+        body_rotation_matrix = quaternion.as_rotation_matrix(self.body_quat)
+        error_matrix = np.matmul(np.transpose(goal_rotation_matrix), body_rotation_matrix) 
+        error_axis_matrix = (error_matrix - error_matrix.transpose())
+        error_axis = np.array([error_axis_matrix[2, 1], error_axis_matrix[0, 2], error_axis_matrix[1, 0]])
 
-            control_effort = self.Kp * error_axis + self.Kd * self.angular_velocity
+        control_effort = self.Kp * error_axis + self.Kd * self.angular_velocity
+        self.pub_roll.publish(0)
+        self.pub_pitch.publish(control_effort[1])
+        self.pub_yaw.publish(control_effort[2])
 
-            self.pub_roll.publish(control_effort[0])
-            self.pub_pitch.publish(control_effort[1])
-            self.pub_yaw.publish(control_effort[2])
+            
