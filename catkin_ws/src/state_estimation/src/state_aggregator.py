@@ -17,22 +17,6 @@ ANGLE_CHANGE_TOL = 90
 
 DEG_PER_RAD = 180/np.pi
 
-class StateSource:
-    def __init__(self):
-        self.pos_world = np.array([0.0, 0.0, 0.0])
-        self.pos_auv = np.array([0.0, 0.0, 0.0])
-
-        self.q_world = np.quaternion(1, 0, 0, 0)
-        self.q_auv = np.quaternion(1, 0, 0, 0)
-
-
-    def data_cb(self, data):
-        return
-
-
-    def reset_cb(self, _):
-        return
-
 
 class State_Aggregator:
 
@@ -52,22 +36,22 @@ class State_Aggregator:
 
         '''DVL state'''
         # position - based on dvl
-        self.pos_world_dvl = np.array([0.0, 0.0, 0.0]) # x, y, z - 'nominal' position relative to global (dvl) frame
+        # self.pos_world_dvl = np.array([0.0, 0.0, 0.0]) # x, y, z - 'nominal' position relative to global (dvl) frame
         self.pos_auv_dvl = np.array([0.0, 0.0, 0.0]) # position of auv relative to world frame (q_world, pos_world_dvl)
 
         # additionally keep track of orientation from dvl (only for comparison)
         self.q_auv_dvl = np.quaternion(1, 0, 0, 0) # orientation relative to q_world (not q_world_dvl) - to compare with imu
-        self.q_world_dvl = np.quaternion(1, 0, 0, 0) # orientation relative to global to compare with q_world
+        # self.q_world_dvl = np.quaternion(1, 0, 0, 0) # orientation relative to global to compare with q_world
 
         '''Depth Sensor State'''
         # position - based on depth sensor
-        self.pos_world_depth_sensor = np.array([0.0, 0.0, 0.0])
+        # self.pos_world_depth_sensor = np.array([0.0, 0.0, 0.0])
         self.pos_auv_depth_sensor = np.array([0.0, 0.0, 0.0])
 
         '''IMU State'''
         # orientation - based on imu
         self.q_auv_imu = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
-        self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu/NED) frame - allows imu reset 
+        # self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu/NED) frame - allows imu reset 
 
         # publishers
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
@@ -80,10 +64,9 @@ class State_Aggregator:
 
         # subscribers
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
+        rospy.Subscriber("/dead_reckon_report",DeadReckonReport, self.dvl_cb)
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
-        rospy.Subscriber("imu_reset", Empty, self.imu_reset_cb)
-        rospy.Subscriber("dead_reckon_report",DeadReckonReport, self.dvl_cb)
-        rospy.Subscriber("dvl_reset", Empty, self.dvl_reset_cb)
+        rospy.Subscriber("/reset_state", Empty, self.reset_state_cb)
 
 
     def dvl_cb(self,data):
@@ -97,13 +80,14 @@ class State_Aggregator:
         # position in global (NED) frame according to dvl
         pos_dvl = np.array([data.x, data.y, data.z])
 
-        # auv position from pos_world_dvl (relative to global frame)
-        pos_auv = pos_dvl - self.pos_world_dvl
+        # auv position from pos_world (relative to global frame)
+        pos_auv = pos_dvl - self.pos_world
 
         # auv position in world frame - TODO: CHECK
         self.pos_auv_dvl = self.q_world*pos_auv*self.q_world.inverse()
 
         # update overall state
+        # TODO - check about views of arrays in numpy
         self.pos_world[0:2] = self.pos_world_dvl[0:2]
         self.pos_auv[0:2] = self.pos_auv_dvl[0:2]
 
@@ -124,23 +108,23 @@ class State_Aggregator:
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
         # z position of depth sensor in NED? frame
-        z_global = depth_msg.data
+        pos_depth = np.array([0.0, 0.0, depth_msg.data])
+
+        # z position offset by world frame position (still in global orientation)
+        pos_auv = z - self.pos_world[2]
+
+        # z position in world frame - TODO: CHECK
+        self.pos_auv_depth_sensor = self.q_world*pos_auv*self.q_world.inverse()
+
+        # update overall state
+        self.pos_auv[2] = self.pos_auv_depth_sensor[2]
 
 
-
-
-
-    # TODO - merge into single reset subscriber
-    def dvl_reset_cb(self, _):
+    def reset_state_cb(self, _):
         # new world position offset is current auv position in global (NED) frame
-        self.pos_world_dvl = self.pos_auv_dvl + self.pos_world_dvl
+        self.pos_world = self.pos_auv + self.pos_world
+        self.pos_auv = np.array([0.0, 0.0, 0.0])
 
-        # pos_auv_dvl is still relative to old offfset
-        # by definition it is now at the same point as pos_world_dvl
-        self.pos_auv_dvl = np.array([0.0, 0.0, 0.0])
-
-
-    def imu_reset_cb(self, _):
         # copy of q_auv in (old) world frame
         q_auv = self.q_auv
         q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
@@ -152,6 +136,13 @@ class State_Aggregator:
         # by definition, it is aligned with the frame of q_world 
         self.q_auv = np.quaternion(1, 0, 0, 0) 
         self.euler = np.array([0.0, 0.0, 0.0])
+
+        # updating estimates for each sensor
+        self.pos_auv_dvl = np.array([0.0, 0.0, 0.0])
+        self.pos_auv_depth_sensor = np.array([0.0, 0.0, 0.0])
+        self.q_auv_dvl = np.quaternion(1, 0, 0, 0)
+        self.q_auv_imu = np.quaternion(1, 0, 0, 0)
+
 
     def update_euler(self):
         # calculate euler angles
@@ -192,14 +183,14 @@ class State_Aggregator:
 
     def update_state(self, _):
         # publish pose
-        position = Point(self.pos_auv_dvl) # TODO - check nparray parsed - may put directly into Pose
+        position = Point(self.pos_auv) # TODO - check nparray parsed - may put directly into Pose
         pose = Pose(position, self.q_auv)
         self.pub.publish(pose)
 
         # publish individual degrees of freedom
-        self.pub_x.publish(self.pos_auv_dvl[0])
-        self.pub_y.publish(self.pos_auv_dvl[1])
-        self.pub_z.publish(self.pos_auv_dvl[2])
+        self.pub_x.publish(self.pos_auv[0])
+        self.pub_y.publish(self.pos_auv[1])
+        self.pub_z.publish(self.pos_auv[2])
 
         self.pub_theta_x.publish(self.euler[0])
         self.pub_theta_y.publish(self.euler[1])
