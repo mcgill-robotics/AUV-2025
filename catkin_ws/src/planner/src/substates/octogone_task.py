@@ -79,7 +79,8 @@ class goThroughOctogone(smach.State):
 
         print("Starting movement through octogone.")
         curr_x, curr_y, _ = self.state.getPosition()
-        self.control.move((curr_x, curr_y, 0))
+        self.control.move((curr_x, curr_y, -1))
+        self.control.kill()
 
         return 'succes'
 
