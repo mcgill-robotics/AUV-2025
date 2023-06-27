@@ -63,7 +63,8 @@ class BreadthFirstSearch(smach.State):
                         self.detectedObject = True
                         self.searchThread.join()
                         self.control.stop_in_place()
-                        print("Found object!")
+                        print("Found object! Waiting 10 seconds to get more observations of object.")
+                        rospy.sleep(10)
                         return 'success'
             print("Breadth-first search timed out.")
             return 'failure'

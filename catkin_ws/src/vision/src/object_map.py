@@ -92,13 +92,16 @@ def dist(obj1, obj2):
     
 #combine similar/close objects in the map into one object
 def reduceMap():
+    num_objs_deleted = 0
     for i in range(len(object_map)):
-        observed_label, observed_x, observed_y, observed_z, _, _, _ = object_map[i]
-        closest_obj = findClosestObject([observed_label, observed_x, observed_y, observed_z], indexToIgnore=i)
+        idx = i - num_objs_deleted
+        observed_label, observed_x, observed_y, observed_z, _, _, _ = object_map[idx]
+        closest_obj = findClosestObject([observed_label, observed_x, observed_y, observed_z], indexToIgnore=idx)
         if closest_obj == -1: continue
         else:
-            object_map[i] = updateMap(closest_obj, object_map[i])
-            del object_map[closest_obj]
+            updateMap(closest_obj, object_map[idx])
+            del object_map[i]
+            num_objs_deleted += 1
 
 #publish a version of the map with only the objects with a certain number of observations
 def publishMap():
