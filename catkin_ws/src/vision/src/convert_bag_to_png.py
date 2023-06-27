@@ -7,6 +7,7 @@ from sensor_msgs.msg import CompressedImage
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
+import os
 
 def image_callback(data):
     global i
