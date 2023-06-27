@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from planner.src.substates.octogone_task import CenterOctogone, goThroughOctogone
 import rospy
 import smach
 
@@ -67,6 +68,22 @@ def Tricks(t):
         else:
             res = "trick not identified"
     endMission("Finished trick. Result {}".format(res))
+
+
+def octogone_task():
+    sm = smach.StateMachine(outcomes=['success', 'failure'])
+    ocotogne_target_class = 3 
+    with sm:
+        smach.StateMachine.add('find_octogone', BreadthFirstSearch(timeout=9999, target_classes=[(ocotogne_target_class, 1)], control=control, mapping=mapping), 
+                transitions={'success': 'center_octogone', 'failure': 'find_octogone'})
+
+        smach.StateMachine.add('center_octogone', CenterOctogone( control=control), 
+                transitions={'success': 'navigate_octogone', 'failure': 'center_octogone'})
+        
+        smach.StateMachine.add('navigate_octogone', goThroughOctogone( control=control,state=state), 
+                transitions={'success': 'succes', 'failure': 'failure'})
+
+
 
 def master_planner():
     control.moveDelta((0, 0, -0.5))
