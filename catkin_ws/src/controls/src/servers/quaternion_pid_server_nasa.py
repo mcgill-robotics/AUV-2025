@@ -106,30 +106,28 @@ class QuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
-        return False
         if(self.position == None):
             return False
         if(self.body_quat is None):
             return False
 
         tolerance_position = 0.2
-        tolerance_orientation = 0.01
+        tolerance_orientation = 0.1
 
         x_diff = (not self.goal.do_x.data) or abs(self.position[0] - goal_position[0]) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position[1] - goal_position[1]) <= tolerance_position
         z_diff = (not self.goal.do_z.data) or abs(self.position[2] - goal_position[2]) <= tolerance_position
         
         if self.goal.do_quaternion.data:
-            # goal_w, goal_x, goal_y, goal_z = goal_quaternion
-            # body_w, body_x, body_y, body_z = self.body_quat
-            # innert_product = goal_w * body_w - goal_x * body_x - goal_y * body_y - goal_z * body_z
+            goal_w, goal_x, goal_y, goal_z = goal_quaternion.w, goal_quaternion.x, goal_quaternion.y, goal_quaternion.z
+            body_w, body_x, body_y, body_z = self.body_quat.w, self.body_quat.x, self.body_quat.y, self.body_quat.z
+            innert_product = goal_w * body_w + goal_x * body_x + goal_y * body_y + goal_z * body_z
                 
-            # theta = np.arccos(2 * pow(innert_product, 2) - 1)
+            theta = np.arccos(2 * pow(innert_product, 2) - 1)
+            print(theta)
             quat_diff = True
             
-            error = self.calculateError(self.body_quat, goal_quaternion)
-            
-            if abs(error.w) > tolerance_orientation:
+            if theta > tolerance_orientation:
                 quat_diff = False
         
         return x_diff and y_diff and z_diff and quat_diff
