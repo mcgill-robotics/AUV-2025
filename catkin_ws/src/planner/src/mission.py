@@ -5,7 +5,7 @@ import smach
 
 from substates.breadth_first_search import *
 from substates.in_place_search import *
-from substates.grid_search import *
+# from substates.grid_search import *
 from substates.linear_search import *
 from substates.navigate_lane_marker import *
 from substates.test_submerged_rotations import *

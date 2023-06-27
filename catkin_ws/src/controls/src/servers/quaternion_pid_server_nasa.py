@@ -33,13 +33,13 @@ class QuaternionServer(BaseServer):
         imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
         
         # Calculation parameters/values
-        self.pose = None#Pose()
-        self.body_quat = None#np.quaternion()
+        self.pose = None
+        self.body_quat = None
         self.position = []
         
-        self.Kp = .1
-        self.Ki = .000001
-        self.Kd = 0.1
+        self.Kp = .01
+        self.Ki = .0
+        self.Kd = 0.01
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
@@ -58,7 +58,7 @@ class QuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = [data.gyro.x, -data.gyro.y, -data.gyro.z]
+        self.angular_velocity = [data.gyro.x, data.gyro.y, data.gyro.z]
     
     def cancel(self):
         self.controlEffort(self.body_quat)
