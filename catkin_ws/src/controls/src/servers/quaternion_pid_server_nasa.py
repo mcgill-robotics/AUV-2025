@@ -24,9 +24,9 @@ class QuaternionServer(BaseServer):
         self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
         
         # Publishers
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=50)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=50)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=50)
+        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
         
         # Subscribers
         pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
