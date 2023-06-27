@@ -176,7 +176,7 @@ def measure_headings(img, debug=False, debug_img=None):
                 #draw the new line we found on top of the original image
                 #remove the line from the edges image by drawing the line with extra thickness
                 #this covers up the line that was detected (edges are in white, the line is drawn in black)
-                line_thickness = int(0.05*max(edges.shape))
+                line_thickness = max(int(0.05*min(edges.shape)), 1)
                 cv2.line(edges,(x1,y1),(x2,y2),(0,0,0),line_thickness)
                 cv2.line(debug_img,(x1,y1),(x2,y2),(0,255,0),2)
         except TypeError:
@@ -258,6 +258,11 @@ def measure_headings(img, debug=False, debug_img=None):
         if centerPoint == None: return None, None
         avgs = []
         for slope in finalLines:
+            dilation_kernel = np.ones((5,5), np.uint8)
+            inverted_thresh_img = cv2.bitwise_not(thresh_img)
+            while (not inverted_thresh_img[int(centerPoint[1])][int(centerPoint[0])] == 255):
+                inverted_thresh_img = cv2.dilate(inverted_thresh_img, dilation_kernel, iterations=1)
+            thresh_img = cv2.bitwise_not(inverted_thresh_img)
             negStepsWithLM = getStepsWithLM(thresh_img, slope, -1, centerPoint)
             posStepsWithLM = getStepsWithLM(thresh_img, slope, 1, centerPoint)
             avgs.append([slope, posStepsWithLM, 1])

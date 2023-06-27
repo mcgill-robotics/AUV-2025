@@ -87,7 +87,7 @@ def main():
     conn.write("CS\n".encode('ascii'))
     conn.flush()
     
-    pub = rospy.Publisher("dvl_data",DvlData, queue_size=50)
+    pub = rospy.Publisher("dvl_data",DvlData, queue_size=1)
   
 
 

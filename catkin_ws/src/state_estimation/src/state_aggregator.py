@@ -33,13 +33,13 @@ class State_Aggregator:
         self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
         # publishers
-        self.pub = rospy.Publisher('pose', Pose, queue_size=50)
-        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+        self.pub = rospy.Publisher('pose', Pose, queue_size=1)
+        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=1)
+        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=1)
+        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=1)
+        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
+        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
+        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
 
         # subscribers
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)

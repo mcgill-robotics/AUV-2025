@@ -5,7 +5,7 @@ from sensor_msgs.msg import Joy
 from std_msgs.msg import Float64
 
 
-pub = rospy.Publisher('heave', Float64, queue_size=50)
+pub = rospy.Publisher('heave', Float64, queue_size=1)
 
 def heave_cb(joy_msg):
     if joy_msg.buttons[1] == 1 and joy_msg.buttons[5] == 1: #heave up
