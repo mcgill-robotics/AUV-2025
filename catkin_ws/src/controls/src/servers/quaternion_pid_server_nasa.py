@@ -37,13 +37,14 @@ class QuaternionServer(BaseServer):
         self.body_quat = None
         self.position = []
         
-        self.Kp = .01
+        self.Kp = .1
         self.Ki = .0
         self.Kd = 0.01
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = [0, 0, 0]
         self.times = 0
+        self.debug = 0
         self.server.start()        
         
     def pose_callback(self, data):
@@ -124,7 +125,6 @@ class QuaternionServer(BaseServer):
             innert_product = goal_w * body_w + goal_x * body_x + goal_y * body_y + goal_z * body_z
                 
             theta = np.arccos(2 * pow(innert_product, 2) - 1)
-            print(theta)
             quat_diff = True
             
             if theta > tolerance_orientation:
@@ -187,7 +187,7 @@ class QuaternionServer(BaseServer):
         return delta
         
     def controlEffort(self, goal_quat):
-        delta_time = (self.time_interval[1] - self.time_interval[0])
+        delta_time = self.time_interval[1] - self.time_interval[0]
         self.times += 1
         
         # Calculate error values
@@ -222,6 +222,10 @@ class QuaternionServer(BaseServer):
         control_effort_quat = np.matmul(self.orthogonal_matrix(error_quat), control_effort_arr)
         omega_command = self.kinematic_inversion(control_effort_quat, error_quat)
         
+        delta_angular_velocity = omega_command - self.angular_velocity
+
+        acceleration = (delta_angular_velocity / delta_time) / 1_000
+        
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284,  0.003794052280665], 
         #                             [-0.01644089321621,  0.003794052280665,  0.727193353794052]])
@@ -230,7 +234,7 @@ class QuaternionServer(BaseServer):
                                     [0.             ,  0.649_091_805_1, 0.             ], 
                                     [0.             ,  0.             , 0.649_091_805_1]])
         
-        torque = np.matmul(inertial_matrix, omega_command)
+        torque = np.matmul(inertial_matrix, acceleration)
         
         self.pub_roll.publish(torque[0])
         self.pub_pitch.publish(torque[1])
