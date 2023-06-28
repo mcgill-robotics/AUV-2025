@@ -38,9 +38,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = np.quaternion(1,0,0,0)
         self.position = []
         
-        self.Kp = 0
+        self.Kp = -0.03
         self.Ki = 0
-        self.Kd = 0.5
+        self.Kd = -0.05
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)
@@ -58,7 +58,7 @@ class QuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = np.array([-data.gyro.z, data.gyro.y, -data.gyro.x])
+        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
 
     def cancel(self):
@@ -87,9 +87,9 @@ class QuaternionServer(BaseServer):
         rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
             start = rospy.get_time()
-            self.control_effort_dcm(goal_quaternion)
+            self.controlEffort(goal_quaternion)
             while not self.cancelled and self.check_status(goal_position, goal_quaternion):
-                self.control_effort_dcm(goal_quaternion)
+                self.controlEffort(goal_quaternion)
                 if(rospy.get_time() - start > interval):
                     settled = True
                     break
@@ -189,7 +189,7 @@ class QuaternionServer(BaseServer):
         
         torque = np.matmul(inertial_matrix, control_effort)
         self.pub_roll.publish(control_effort[0])
-        self.pub_pitch.publish(control_effort[1])
+        self.pub_pitch.publish(-control_effort[1])
         self.pub_yaw.publish(control_effort[2])     
     
         
@@ -201,7 +201,7 @@ class QuaternionServer(BaseServer):
         error_axis = np.array([error_axis_matrix[2, 1], error_axis_matrix[0, 2], error_axis_matrix[1, 0]])
 
         control_effort = self.Kp * error_axis + self.Kd * self.angular_velocity
-        self.pub_roll.publish(0)
+        self.pub_roll.publish(control_effort[0])
         self.pub_pitch.publish(control_effort[1])
         self.pub_yaw.publish(control_effort[2])
 
