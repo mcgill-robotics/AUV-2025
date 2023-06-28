@@ -12,6 +12,8 @@ class NavigateGate(smach.State):
         self.mapping = mapping
         self.state = state
         self.origin_class = origin_class
+        if target_symbol not in ["earth", "abydos"]:
+            raise ValueError("Target symbol must be one of earth or abydos.")
         self.target_symbol = target_symbol
         self.goThrough = goThrough
 
@@ -23,24 +25,34 @@ class NavigateGate(smach.State):
         else:
             origin_position = (0,0,0)
 
-        gate_object = self.mapping.getClosestObject(0, (origin_position[0], origin_position[1]))
-
+        gate_object = self.mapping.getClosestObject(cls=1, pos=(origin_position[0], origin_position[1]))
         if gate_object is None:
             print("No gate in object map! Failed.")
             return 'failure'
-        
+    
+        print("Centering and rotating in front of gate.")
         offset_distance = -3
         offset = offset_distance * degreesToVector(gate_object[4])
         self.control.rotateYaw(gate_object[4]) # bring to exact angle 
-        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])
+        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
+
+        # wait and repeat just to be safe
+        print("Waiting 10 seconds to improve measurement accuracy")
+        rospy.sleep(10)
+
+        print("Re-centering and rotating in front of gate.")
+        self.mapping.updateObject(gate_object)
+        offset_distance = -2
+        offset = offset_distance * degreesToVector(gate_object[4])
+        self.control.rotateYaw(gate_object[4]) # bring to exact angle 
+        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
 
         print("Successfully centered in front of gate")
 
         if not self.goThrough:
             return 'success'
 
-        print("Deciding which side to go through")
-
+        self.mapping.updateObject(gate_object)
         symbol = gate_object[5] #1 if earth on left, 0 if abydos left
 
         if self.target_symbol == "earth": 
@@ -50,18 +62,16 @@ class NavigateGate(smach.State):
             else : 
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-0.5,0))
-
         else: 
             if symbol <= 0.5:
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,0.5,0))
             else: 
-                print("Going thorugh right side")
+                print("Going through right side")
                 self.control.moveDeltaLocal((0,-0.5,0))
 
-        current_x_position = self.state.x
-        current_y_postion = self.state.y
+        self.control.moveDeltaLocal((1.0 + math.sqrt((self.state.x - gate_object[1])**2 + (self.state.y - gate_object[2])**2),0,0))
 
-        self.control.moveDeltaLocal((math.sqrt((current_x_position-gate_object[1])**2 + (current_y_postion - gate_object[2])**2),0,0))
-
+        print("Successfully passed through gate!")
+        
         return 'success'

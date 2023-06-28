@@ -29,7 +29,8 @@ class InPlaceSearch(smach.State):
                 for cls, min_objs in self.target_classes:
                     if len(self.mapping.getClass(cls)) >= min_objs:
                         self.control.stop_in_place()
-                        print("Found object!")
+                        print("Found object! Waiting 10 seconds to get more observations of object.")
+                        rospy.sleep(10)
                         return 'success'
             print("In-place search timed out.")
             return 'failure'

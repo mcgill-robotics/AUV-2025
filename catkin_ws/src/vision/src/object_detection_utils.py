@@ -172,7 +172,7 @@ def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
     x = -math.tan(y_rad)
-    y = -math.tan(x_rad)
+    y = math.tan(x_rad)
     # we want sqrt(x**2 + y**2 + z**2) == 1
     #   z**2 == 1 - x**2 + y**2
     #   z == -1 * sqrt(1 - x**2 + y**2)
@@ -187,7 +187,7 @@ def eulerToVectorDownCam(x_deg, y_deg):
 def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-    y = -math.tan(x_rad)
+    y = math.tan(x_rad)
     z = -math.tan(y_rad)
     # we want sqrt(x**2 + y**2 + z**2) == 1
     #   x**2 == 1 - y**2 + z**2
@@ -256,24 +256,24 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     avg_right_depth = np.nanmin(right_half)
 
     left_pole_angle = (180 * math.acos((buoy_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*buoy_width*avg_left_depth)) / math.pi) - 90
-    gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
-    x_center_offset = (gate_pixel_x_left - (depth_img.shape[1]/2)) / depth_img.shape[1] #-0.5 to 0.5
+    buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+    x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-    gate_angle = state.theta_z - left_pole_angle + theta_x
+    buoy_angle = state.theta_z - left_pole_angle + theta_x
 
-    return gate_angle
+    return buoy_angle
     
-def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
+def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
-    left_pole_angle = (180 * math.acos((gate_length**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_length*avg_left_depth)) / math.pi) - 90
-    # auv_angle = math.acos((avg_left_depth**2 +avg_right_depth**2 - gate_length**2)/(2*avg_left_depth*avg_right_depth))
+    left_pole_angle = (180 * math.acos((gate_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_width*avg_left_depth)) / math.pi) - 90
+    # auv_angle = math.acos((avg_left_depth**2 +avg_right_depth**2 - gate_width**2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
-    x_center_offset = (gate_pixel_x_left - (depth_img.shape[1]/2)) / depth_img.shape[1] #-0.5 to 0.5
+    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov*x_center_offset
     gate_angle = state.theta_z - left_pole_angle + theta_x
     return gate_angle
