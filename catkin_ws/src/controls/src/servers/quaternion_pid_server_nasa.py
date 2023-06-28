@@ -186,13 +186,7 @@ class QuaternionServer(BaseServer):
         delta = np.quaternion(1, 0, 0, 0) - qe
         return delta
         
-    def controlEffort(self, goal_quat):
-        
-        print("######################")
-        print("goal_quat = ", goal_quat)
-        print("body_quat = ", self.body_quat)
-        print("angular velocity = ", self.angular_velocity)
-        
+    def controlEffort(self, goal_quat):       
         delta_time = self.time_interval[1] - self.time_interval[0]
         self.times += 1
         
