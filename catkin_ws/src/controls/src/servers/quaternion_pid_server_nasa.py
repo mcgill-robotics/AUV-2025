@@ -50,7 +50,7 @@ class QuaternionServer(BaseServer):
     def pose_callback(self, data):
         # Assign pose values
         self.pose = data
-        self.position = [data.position.x, -data.position.y, -data.position.z]
+        self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
         self.update_time_interval()
 
@@ -187,6 +187,12 @@ class QuaternionServer(BaseServer):
         return delta
         
     def controlEffort(self, goal_quat):
+        
+        print("######################")
+        print("goal_quat = ", goal_quat)
+        print("body_quat = ", self.body_quat)
+        print("angular velocity = ", self.angular_velocity)
+        
         delta_time = self.time_interval[1] - self.time_interval[0]
         self.times += 1
         
