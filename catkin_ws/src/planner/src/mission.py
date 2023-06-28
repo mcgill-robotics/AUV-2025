@@ -15,9 +15,14 @@ from substates.quali import *
 from substates.trick import *
 from substates.navigate_gate import *
 
-def endMission(msg="Shutting down mission planner."):
+def endMission(msg):
+    print(msg)
+    control.stop_in_place()
+
+def endPlanner(msg="Shutting down mission planner."):
     print(msg)
     control.kill()
+
 
 def testRotationsMission():
     control.moveDelta((0, 0, -2))
@@ -107,7 +112,7 @@ octagon_approximate_location = (0,0,0)
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
-    rospy.on_shutdown(endMission)
+    rospy.on_shutdown(endPlanner)
 
     try:
         # mapping = ObjectMapper()
@@ -121,5 +126,5 @@ if __name__ == '__main__':
         #testRotationsMission()
         #laneMarkerGridSearchMission()
     except KeyboardInterrupt:
-        endMission("Mission end prompted by user. Killing.")
+        endPlanner("Mission end prompted by user. Killing.")
         exit()
