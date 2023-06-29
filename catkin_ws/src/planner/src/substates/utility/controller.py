@@ -164,10 +164,11 @@ class Controller:
             goal.do_theta_z = Bool(False)
         return goal
     
-    def pose_goal(self,position,quaternion,keepers,displace):
+    def pose_goal(self,position,quaternion,displace):
         x,y,z = position
         w,qx,qy,qz = quaternion
         goal = StateQuaternionGoal()
+        goal.displace = displace
         if x is not None:
             goal.pose.position.x = x
             goal.do_x = Bool(True)
