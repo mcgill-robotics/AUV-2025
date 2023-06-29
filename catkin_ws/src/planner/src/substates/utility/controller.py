@@ -156,6 +156,12 @@ class Controller:
         else:
             goal.rotation.y = 0
             goal.do_theta_y = Bool(False)
+        if theta_z is not None:
+            goal.rotation.z = theta_z
+            goal.do_theta_z = Bool(True)
+        else:
+            goal.rotation.z = 0
+            goal.do_theta_z = Bool(False)
         return goal
     
     def pose_goal(self,position,quaternion,keepers,displace):
