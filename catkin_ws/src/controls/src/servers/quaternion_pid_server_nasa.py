@@ -9,19 +9,19 @@ from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
 from math import pow
 import actionlib
-from auv_msgs.msg import QuaternionAction
+from auv_msgs.msg import StateQuaternionAction
 import numpy as np
 import quaternion
 
 
-class QuaternionServer(BaseServer):
+class StateQuaternionServer(BaseServer):
 
     def __init__(self):
         super().__init__()
         print("making quaternion server")
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
-        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         
         # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)

@@ -9,19 +9,19 @@ from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
 from math import pow
 import actionlib
-from auv_msgs.msg import QuaternionAction
+from auv_msgs.msg import StateQuaternionAction
 import numpy as np
 import quaternion
 
 
-class QuaternionServer(BaseServer):
+class StateQuaternionServer(BaseServer):
 
     def __init__(self):
         super().__init__()
         print("making quaternion server")
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
-        self.server = actionlib.SimpleActionServer('quaternion_server', QuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         
         # Publishers
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
@@ -38,9 +38,9 @@ class QuaternionServer(BaseServer):
         self.body_quat = np.quaternion(1,0,0,0)
         self.position = []
         
-        self.Kp = -0.03
+        self.Kp = -0.06
         self.Ki = 0
-        self.Kd = -0.05
+        self.Kd = -0.1
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)
@@ -58,7 +58,7 @@ class QuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
+        self.angular_velocity = np.array([data.gyro.x, -data.gyro.y, data.gyro.z])
 
 
     def cancel(self):
@@ -189,7 +189,7 @@ class QuaternionServer(BaseServer):
         
         torque = np.matmul(inertial_matrix, control_effort)
         self.pub_roll.publish(control_effort[0])
-        self.pub_pitch.publish(-control_effort[1])
+        self.pub_pitch.publish(control_effort[1])
         self.pub_yaw.publish(control_effort[2])     
     
         

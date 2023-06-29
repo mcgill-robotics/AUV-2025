@@ -1,8 +1,8 @@
 <launch>
 	<node name="z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="45" /> 
+		<param name="Kp" value="20" /> 
 		<param name="Ki" value="0.85" />
-		<param name="Kd" value="55" />
+		<param name="Kd" value="30" />
 		<param name="upper_limit" value="2000" />
 		<param name="lower_limit" value="-2000" />
 		<param name="windup_limit" value="2000" />
@@ -16,7 +16,7 @@
 	</node>
 
 	<node name="y_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="60" /> 
+		<param name="Kp" value="20" /> 
 		<param name="Ki" value="0" />
 		<param name="Kd" value="10" />
 		<param name="upper_limit" value="50" />
@@ -32,9 +32,9 @@
 	</node>
 
 	<node name="x_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="60" /> 
+		<param name="Kp" value="20" /> 
 		<param name="Ki" value="0" />
-		<param name="Kd" value="0" />
+		<param name="Kd" value="10" />
 		<param name="upper_limit" value="100" />
 		<param name="lower_limit" value="-100" />
 		<param name="windup_limit" value="2000" />
@@ -80,9 +80,9 @@
 	</node>
 	
 	<node name="theta_z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="-0.03" />
+		<param name="Kp" value="0.03" />
 		<param name="Ki" value="0.0" />
-		<param name="Kd" value="-0.009" />
+		<param name="Kd" value="0.009" />
 		<param name="upper_limit" value="15" />
 		<param name="lower_limit" value="-15" />
 		<param name="windup_limit" value="15" />

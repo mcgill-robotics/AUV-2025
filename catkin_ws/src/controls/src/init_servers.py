@@ -6,7 +6,7 @@ import rospy
 # from servers.SuperimposerServer import *
 from servers.state_server import StateServer
 from servers.superimposer_server import SuperimposerServer
-from servers.quaternion_pid_server_nasa import QuaternionServer
+from servers.state_quaternion_pid_server import StateQuaternionServer
 
 #define preempt callbacks using the cancel methods. This is necessary because action lib does not
 #allow methods to be callback function for preempting.
@@ -29,6 +29,6 @@ if __name__ == "__main__":
     s.server.register_preempt_callback(statePreempt)
     sup = SuperimposerServer()
     sup.server.register_preempt_callback(supPreempt)
-    quat = QuaternionServer()
+    quat = StateQuaternionServer()
     quat.server.register_preempt_callback(quatPreempt)
     rospy.spin()

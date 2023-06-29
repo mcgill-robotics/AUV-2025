@@ -27,7 +27,7 @@ add_message_files(FILES
 add_action_files(FILES
     Direct.action
     State.action
-	Quaternion.action
+	StateQuaternion.action
 	Superimposer.action
 )
 
