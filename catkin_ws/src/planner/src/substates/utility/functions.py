@@ -1,7 +1,7 @@
 import math
 
-def degreesToVector(angleDegrees):
-        angleRadians = angleDegrees * math.pi / 18
+def degreesToVector(yawDegrees):
+        angleRadians = yawDegrees * math.pi / 180
         x = math.cos(angleRadians)
         y = math.sin(angleRadians)
         return [x, y]
