@@ -72,8 +72,7 @@ def tricks(t):
     endMission("Finished trick. Result {}".format(res))
 
 def master_planner():
-    control.moveDelta((0, 0, -0.5))
-    control.rotateYaw(45) # Coin flip repositioning
+    control.moveDelta((0, 0, -1))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
@@ -117,7 +116,7 @@ if __name__ == '__main__':
     try:
         # mapping = ObjectMapper()
         state = StateTracker()
-        control = Controller(rospy.Time(0))
+        control = Controller(lambda: rospy.Time.now())
 
         QualiMission()
 

@@ -20,7 +20,6 @@ class SuperimposerServer(BaseServer):
         self.establish_pid_publishers()
         self.establish_state_subscribers()
 
-
         self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
         self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
@@ -33,11 +32,8 @@ class SuperimposerServer(BaseServer):
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
 
-        self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb= self.callback, auto_start = False)
+        self.server = actionlib.SimpleActionServer('superimposer_server', SuperimposerAction, execute_cb = self.callback, auto_start = False)
         self.server.start()
-
-
-
     
     def callback(self, goal):
         """
@@ -46,16 +42,17 @@ class SuperimposerServer(BaseServer):
         print("received new goal")
         print(goal)
         self.goal = goal
-        self.unset_pids(goal)
+        self.unset_pids()
 
-        if(self.goal.do_surge.data):
-            self.pub_surge.publish(self.goal.effort.force.x)
-        if(self.goal.do_sway.data):
-            self.pub_sway.publish(self.goal.effort.force.y)
-        if(self.goal.do_heave.data):
-            self.pub_heave.publish(self.goal.effort.force.z)
+        if self.goal.is_global.data:
+            if(self.goal.do_x.data): self.pub_global_x.publish(self.goal.effort.force.x)
+            if(self.goal.do_y.data): self.pub_global_y.publish(self.goal.effort.force.y)
+            if(self.goal.do_z.data): self.pub_global_z.publish(self.goal.effort.force.z)
+        else:
+            if(self.goal.do_x.data): self.pub_surge.publish(self.goal.effort.force.x)
+            if(self.goal.do_y.data): self.pub_sway.publish(self.goal.effort.force.y)
+            if(self.goal.do_z.data): self.pub_heave.publish(self.goal.effort.force.z)
 
-        
         if(self.goal.do_roll.data):
             self.pub_roll.publish(self.goal.effort.torque.x)
         if(self.goal.do_pitch.data):
@@ -65,26 +62,35 @@ class SuperimposerServer(BaseServer):
 
         self.server.set_succeeded()
 
-    def unset_pids(self,goal):
+    def unset_pids(self):
         """
         Unsets the pids for the given goal.   
         """
-        if(goal.do_roll.data):
+        if(self.goal.do_roll.data):
             self.pub_theta_x_enable.publish(Bool(False))
-        if(goal.do_pitch.data):
+        if(self.goal.do_pitch.data):
             self.pub_theta_y_enable.publish(Bool(False))
-        if(goal.do_yaw.data):
+        if(self.goal.do_yaw.data):
             self.pub_theta_z_enable.publish(Bool(False))
 
-        # ANTOINE TODO: determine which pids to unset when receiving a superimposer goal
-
-        if(goal.do_surge.data or goal.do_sway.data):
-            self.pub_global_x.publish(0)
-            self.pub_global_y.publish(0)
-            self.pub_x_enable.publish(Bool(False))
-            self.pub_y_enable.publish(Bool(False))
-        if(goal.do_heave.data):
-            self.pub_global_z.publish(0)
-            self.pub_z_enable.publish(Bool(False))
+        if self.goal.is_global.data:
+            if(self.goal.do_x.data):
+                self.pub_x_enable.publish(Bool(False))
+                self.pub_surge.publish(0)
+            if (self.goal.do_y.data):
+                self.pub_y_enable.publish(Bool(False))
+                self.pub_sway.publish(0)
+            if(self.goal.do_z.data):
+                self.pub_z_enable.publish(Bool(False))
+                self.pub_heave.publish(0)
+        else:
+            if(self.goal.do_x.data or self.goal.do_y.data):
+                self.pub_x_enable.publish(Bool(False))
+                self.pub_y_enable.publish(Bool(False))
+                self.pub_global_x.publish(0)
+                self.pub_global_y.publish(0)
+            if(self.goal.do_z.data):
+                self.pub_z_enable.publish(Bool(False))
+                self.pub_global_z.publish(0)
 
     

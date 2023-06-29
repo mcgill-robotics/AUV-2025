@@ -21,7 +21,7 @@ class StateServer(BaseServer):
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
         self.establish_state_subscribers()
-        self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb= self.callback, auto_start = False)
+        self.server = actionlib.SimpleActionServer('state_server', StateAction, execute_cb=self.callback, auto_start=False)
         self.server.start()
 
     def callback(self, goal):
@@ -35,13 +35,11 @@ class StateServer(BaseServer):
         # set the PIDs
         #print(goal.pose)
         self.goal = goal
-        self.enable_pids(goal)
-        if(goal.displace.data):
-            self.goal = self.dispalce_goal(goal)
+        if(goal.displace.data): self.displace_goal()
 
-        print(goal.position,goal.rotation)
+        print(self.goal.position, self.goal.rotation)
         self.publish_setpoints()
-
+        
         # monitor when reached pose
         self.wait_for_settled()
 
@@ -49,37 +47,17 @@ class StateServer(BaseServer):
         if(not self.cancelled):
             self.server.set_succeeded()
     
-    def dispalce_goal(self, goal):
+    def displace_goal(self, goal):
         """
-        Takes in a displacement goal pose and returns the corresponding
+        Modifies displacement goal pose to represent corresponding
         world frame pose.
         """
-        goal.position.x += self.position.x
-        goal.position.y += self.position.y
-        goal.position.z += self.position.z
-
-        goal.rotation.x += self.theta_x
-        goal.rotation.y += self.theta_y
-        goal.rotation.z += self.theta_z
-
- 
-        return goal
-    
-    def enable_pids(self,goal):
-        if(goal.do_x.data):
-            self.pub_x_enable.publish(Bool(True))
-        if(goal.do_y.data):
-            self.pub_y_enable.publish(Bool(True))
-        if(goal.do_z.data):
-            self.pub_z_enable.publish(Bool(True))
-        if(goal.do_theta_x.data):
-            self.pub_theta_x_enable.publish(Bool(True))
-        if(goal.do_theta_y.data):
-            self.pub_theta_y_enable.publish(Bool(True))
-        if(goal.do_theta_z.data):
-            self.pub_theta_z_enable.publish(Bool(True))
-
-        
+        self.goal.position.x += self.position.x
+        self.goal.position.y += self.position.y
+        self.goal.position.z += self.position.z
+        self.goal.rotation.x += self.theta_x
+        self.goal.rotation.y += self.theta_y
+        self.goal.rotation.z += self.theta_z    
 
     def wait_for_settled(self):
         interval = 4
@@ -102,8 +80,7 @@ class StateServer(BaseServer):
             return False
 
         tolerance_position = 0.5
-        tolerance_orientation = 1
-
+        tolerance_orientation = 1 # NOTE: 1 degree tolerance is low - might have to be increased when doing pool test
 
         x_diff = (not self.goal.do_x.data) or abs(self.position.x - self.goal.position.x) <= tolerance_position
         y_diff = (not self.goal.do_y.data) or abs(self.position.y - self.goal.position.y) <= tolerance_position
@@ -114,18 +91,23 @@ class StateServer(BaseServer):
 
         return x_diff and y_diff and z_diff and theta_x_diff and theta_y_diff and theta_z_diff
 
-
     def publish_setpoints(self):
         if (self.goal.do_x.data):
+            self.pub_x_enable.publish(Bool(True))
             self.pub_x_pid.publish(Float64(self.goal.position.x))
         if (self.goal.do_y.data):
+            self.pub_y_enable.publish(Bool(True))
             self.pub_y_pid.publish(Float64(self.goal.position.y))
         if(self.goal.do_z.data):
+            self.pub_z_enable.publish(Bool(True))
             self.pub_z_pid.publish(Float64(self.goal.position.z))
         if(self.goal.do_theta_x.data):
+            self.pub_theta_x_enable.publish(Bool(True))
             self.pub_theta_x_pid.publish(Float64(self.goal.rotation.x))
         if(self.goal.do_theta_y.data):
+            self.pub_theta_y_enable.publish(Bool(True))
             self.pub_theta_y_pid.publish(Float64(self.goal.rotation.y))
         if(self.goal.do_theta_z.data):
+            self.pub_theta_z_enable.publish(Bool(True))
             self.pub_theta_z_pid.publish(Float64(self.goal.rotation.z))
 

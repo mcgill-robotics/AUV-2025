@@ -24,8 +24,6 @@ class BaseServer():
         self.cancelled = False
         self.goal = None
         
-
-
     def establish_pid_publishers(self):
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=1)
         self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=1)
@@ -34,7 +32,6 @@ class BaseServer():
         self.pub_theta_y_pid = rospy.Publisher('theta_y_setpoint', Float64, queue_size=1)
         self.pub_theta_z_pid = rospy.Publisher('theta_z_setpoint', Float64, queue_size=1)
         
-
     def establish_pid_enable_publishers(self):
         self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
         self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
@@ -58,7 +55,6 @@ class BaseServer():
     def set_position(self,data):
         #print("updated pose")
         self.position = data.position
-    
     #callback for subscriber
     def set_theta_x(self,data):
         self.theta_x = data.data
@@ -80,7 +76,5 @@ class BaseServer():
         self.pub_theta_y_pid.publish(self.theta_y)
         self.pub_theta_z_pid.publish(self.theta_z)
     
-        # result = StateResult()
-        # result.status = False
         self.server.set_succeeded()
     

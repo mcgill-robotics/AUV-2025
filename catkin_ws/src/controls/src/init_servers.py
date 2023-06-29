@@ -11,18 +11,16 @@ from servers.superimposer_server import SuperimposerServer
 #allow methods to be callback function for preempting.
 def statePreempt():
     print("preempting state")
-    s.cancel()
+    state_s.cancel()
 
 def supPreempt():
-    print("preempting loc")
-    sup.cancel()
-
-
+    print("preempting superimposer")
+    super_s.cancel()
 
 if __name__ == "__main__":
     rospy.init_node("server manager", log_level=rospy.DEBUG)
-    s = StateServer()
-    s.server.register_preempt_callback(statePreempt)
-    sup = SuperimposerServer()
-    sup.server.register_preempt_callback(supPreempt)
+    state_s = StateServer()
+    state_s.server.register_preempt_callback(statePreempt)
+    super_s = SuperimposerServer()
+    super_s.server.register_preempt_callback(supPreempt)
     rospy.spin()

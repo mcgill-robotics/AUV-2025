@@ -1,11 +1,12 @@
 # goal
 geometry_msgs/Wrench effort
-std_msgs/Bool do_surge
-std_msgs/Bool do_sway
-std_msgs/Bool do_heave
+std_msgs/Bool do_x
+std_msgs/Bool do_y
+std_msgs/Bool do_z
 std_msgs/Bool do_roll
 std_msgs/Bool do_pitch
 std_msgs/Bool do_yaw
+std_msgs/Bool is_global
 ---
 # result
 std_msgs/Bool stopped

@@ -13,7 +13,10 @@ class Trick(smach.State):
     def execute_roll(self, ud):
         print("Starting roll trick")
         try:
-            self.control.rotateDelta((360.0, 0, 0))
+            self.control.rotateDelta((90.0, 0, 0))
+            self.control.rotateDelta((90.0, 0, 0))
+            self.control.rotateDelta((90.0, 0, 0))
+            self.control.rotateDelta((90.0, 0, 0))
 
             print("Completed")
             return 'success'
@@ -25,7 +28,10 @@ class Trick(smach.State):
     def execute_pitch(self, ud):
         print("Starting pitch trick")
         try:
-            self.control.rotateDelta((0, 360.0, 0))
+            self.control.rotateDelta((0, 90.0, 0))
+            self.control.rotateDelta((0, 90.0, 0))
+            self.control.rotateDelta((0, 90.0, 0))
+            self.control.rotateDelta((0, 90.0, 0))
             print("Completed")
             return 'success'
 
@@ -36,7 +42,10 @@ class Trick(smach.State):
     def execute_yaw(self, ud):
         print("Starting yaw trick")
         try:
-            self.control.rotateYaw(360.0)
+            self.control.rotateDelta((0,0,90.0))
+            self.control.rotateDelta((0,0,90.0))
+            self.control.rotateDelta((0,0,90.0))
+            self.control.rotateDelta((0,0,90.0))
 
             print("Completed")
             return 'success'

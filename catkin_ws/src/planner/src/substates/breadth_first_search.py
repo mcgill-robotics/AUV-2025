@@ -30,7 +30,7 @@ class BreadthFirstSearch(smach.State):
             global moving
             moving = False
             
-        movement = [1,0,0]
+        movement = (1,0,0)
         right_turn = (0,0,-90)
 
         while True:
