@@ -66,7 +66,7 @@ class StateQuaternionServer(BaseServer):
     
     def callback(self, goal):
         self.goal = goal
-        if self.pose != None:
+        if self.pose is not None:
             if(goal.displace):
                 displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
                 self.execute_goal(displaced_position, displace_quat)
@@ -107,7 +107,7 @@ class StateQuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
-        if(self.position == None):
+        if(self.position is None):
             return False
         if(self.body_quat is None):
             return False
