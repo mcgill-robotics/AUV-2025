@@ -148,7 +148,6 @@ class StateQuaternionServer(BaseServer):
         q1_inv = q1.inverse()
         return q1_inv * q2
     
-    
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
     
