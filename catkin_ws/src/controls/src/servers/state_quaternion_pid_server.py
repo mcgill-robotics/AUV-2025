@@ -38,9 +38,9 @@ class StateQuaternionServer(BaseServer):
         self.body_quat = np.quaternion(1,0,0,0)
         self.position = []
         
-        self.Kp = -0.06
+        self.Kp = 0.06
         self.Ki = 0
-        self.Kd = -0.1
+        self.Kd = -0.08
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)
@@ -58,7 +58,7 @@ class StateQuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def imu_callback(self, data):
-        self.angular_velocity = np.array([data.gyro.x, -data.gyro.y, data.gyro.z])
+        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
 
     def cancel(self):
@@ -145,8 +145,7 @@ class StateQuaternionServer(BaseServer):
         return goal_position, new_goal_quat 
     
     def calculateError(self, q1, q2):
-        q1_inv = q1.inverse()
-        return q1_inv * q2
+        return q2 * q1.inverse()
     
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
