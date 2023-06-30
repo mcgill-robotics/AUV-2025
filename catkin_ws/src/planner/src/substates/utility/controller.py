@@ -81,15 +81,11 @@ class Controller:
         surge,sway,heave,roll,pitch,yaw = dofs
         
         goal = SuperimposerGoal()
-        if surge is not None:
-            goal.effort.force.x = surge
-            goal.do_surge = Bool(True)
-        else:
-            goal.effort.force.x = 0
-            goal.do_surge = Bool(False)
-            
-        goal.effort.force.y = 0
-        goal.do_sway = Bool(False)
+        goal.effort.force.x = 0 if surge is None else surge
+        goal.do_surge = Bool(False) if surge is None else Bool(True)
+
+        goal.effort.force.y = 0 if sway is None else sway
+        goal.do_sway = Bool(False) if sway is None else Bool(True)
         
         goal.effort.force.z = 0
         goal.do_heave = Bool(False)
