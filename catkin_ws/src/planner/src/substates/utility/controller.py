@@ -223,9 +223,6 @@ class Controller:
     #rotate by this amount (euler)
     def rotateDeltaEuler(self,delta,callback=None):
         x,y,z = delta
-        if x is None: x = self.theta_x
-        if y is None: y = self.theta_y
-        if z is None: z = self.theta_z
         self.rotateDelta(self.euler_to_quaternion(x,y,z), callback=callback)
 
     #move by this amount in local space (i.e. z is always heave)
