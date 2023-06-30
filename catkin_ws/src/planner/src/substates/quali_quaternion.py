@@ -19,7 +19,7 @@ from std_msgs.msg import Float64
 #     4. Pass back through the gate 
 
 
-class Quali(smach.State):
+class QualiQuaternion(smach.State):
     def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
@@ -33,33 +33,33 @@ class Quali(smach.State):
 
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
-            self.control.move((0, 0, -2.0))
-            self.control.rotateEuler((None,None,0))
+            self.control.move((0.0, 0.0, -2.0))
+            self.control.rotate((1, 0.0, 0.0, 0))
             rospy.sleep(2)
 
             # Step 2: Move 14 meters forward
             print("Moving 14 meters forward")
-            self.control.move((14.0, 0, -2.0))
+            self.control.move((14.0, 0.0, -2.0))
             rospy.sleep(2)
 
             # Step 3: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateEuler((None,None,90))
+            self.control.rotateDelta((0.7071068, 0.0, 0.0, 0.7071068))
             rospy.sleep(2)
 
             # Step 4: Move 1 meter forward
             print("Moving 1 meter forward")
-            self.control.move((14.0, 1, -2.0))
+            self.control.move((14.0, 1.0, -2.0))
             rospy.sleep(2)
 
             # Step 5: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateEuler((None,None,180))
+            self.control.rotateDelta((0.7071068, 0.0, 0.0, 0.7071068))
             rospy.sleep(2)
 
             # Step 6: Move 14 meters forward
             print("Moving 14 meters forward")
-            self.control.move((0.0, 1, -2.0))
+            self.control.move((0.0, 1.0, -2.0))
             rospy.sleep(2)
 
             # Step 7: Float to surface (thrusters stop spinning - effort = 0)

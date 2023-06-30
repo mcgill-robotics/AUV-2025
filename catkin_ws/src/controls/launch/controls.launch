@@ -1,6 +1,5 @@
 <launch>
     <arg name="sim" default="false" />
-    <include file="$(find controls)/launch/theta_setpoint_republish.launch" />
     <group unless="$(arg sim)">
         <include file="$(find controls)/launch/pid.launch"/>
     </group>

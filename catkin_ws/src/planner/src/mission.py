@@ -12,8 +12,10 @@ from substates.utility.controller import Controller
 from substates.utility.state import StateTracker
 from substates.utility.vision import *
 from substates.quali import *
+from substates.quaternion_test import *
 from substates.trick import *
 from substates.navigate_gate import *
+from substates.quali_quaternion import *
 
 def endMission(msg):
     print(msg)
@@ -51,29 +53,33 @@ def QualiMission():
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
+    
+def QualiQuaternionMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quali', QualiQuaternion(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished quali mission. Result {}".format(res))
+    
+def QuaternionTestMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quaternion', QuaternionTest(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished quaternion mission. Result {}".format(res))
 
 def tricks(t):
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        if t == "roll":
-            smach.StateMachine.add('roll', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_roll()
-        elif t == "pitch":
-            smach.StateMachine.add('pitch', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_pitch()
-        elif t == "yaw":
-            smach.StateMachine.add('yaw', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_yaw()
-        else:
-            res = "trick not identified"
+        smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
+        transitions={'success': 'success', 'failure':'failure'})
+        res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
 
 def master_planner():
     control.moveDelta((0, 0, -0.5))
-    control.rotateYaw(45) # Coin flip repositioning
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
@@ -119,7 +125,12 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
 
-        QualiMission()
+        # QualiQuaternionMission()
+        # QualiMission()
+        control.move((0,0,-1))
+        tricks("roll")
+        tricks("pitch")
+        tricks("yaw")
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
