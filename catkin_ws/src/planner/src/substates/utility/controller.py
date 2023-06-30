@@ -4,8 +4,7 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
 from std_msgs.msg import Float64, Bool, Header
-from auv_msgs.msg import StateAction, StateGoal, SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal
-from math import hypot
+from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
@@ -15,7 +14,6 @@ import tf2_geometry_msgs
 
 do_displace = Bool(True)
 do_not_displace = Bool(False)
-
 
 """
 Helper class for the planner. Takes in simple commands, converts them to 
@@ -30,21 +28,15 @@ class Controller:
         TransformListener(self.tf_buffer)
         self.tf_header = Header(frame_id="world_rotation")
 
-        self.servers = []
-        self.effort = 15
-        self.seconds_per_meter = 1
+        self.clients = []
 
-        self.StateServer = actionlib.SimpleActionClient('state_server', StateAction)
-        self.servers.append(self.StateServer)
-        self.StateServer.wait_for_server()
+        self.SuperimposerClient = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
+        self.clients.append(self.SuperimposerClient)
+        self.SuperimposerClient.wait_for_server()
 
-        self.SuperimposerServer = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
-        self.servers.append(self.SuperimposerServer)
-        self.SuperimposerServer.wait_for_server()
-
-        self.StateQuaternionStateServer = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
-        self.servers.append(self.StateQuaternionStateServer)
-        self.StateQuaternionStateServer.wait_for_server()
+        self.StateQuaternionStateClient = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
+        self.clients.append(self.StateQuaternionStateClient)
+        self.StateQuaternionStateClient.wait_for_server()
 
         self.x = None
         self.y = None
@@ -52,6 +44,7 @@ class Controller:
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
+        self.orientation = None
 
         self.sub = rospy.Subscriber("pose",Pose,self.set_position)
         self.sub_theta_x = rospy.Subscriber("state_theta_x",Float64, self.set_theta_x)
@@ -62,7 +55,7 @@ class Controller:
         self.x = data.position.x
         self.y = data.position.y
         self.z = data.position.z
-
+        self.orientation = data.orientation
     def set_theta_x(self,data):
         self.theta_x = data.data
     def set_theta_y(self,data):
@@ -75,7 +68,7 @@ class Controller:
         Performs a coordinate transformation from the auv body frame
         to the world frame.
         """
-        trans = self.tf_buffer.lookup_transform("world_rotation", "auv_rotation", self.header_time)
+        trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
         offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
@@ -85,6 +78,7 @@ class Controller:
     #method to easily get goal object
     def get_superimposer_goal(self,dofs):
         surge,sway,heave,roll,pitch,yaw = dofs
+        
         goal = SuperimposerGoal()
         if surge is not None:
             goal.effort.force.x = surge
@@ -124,49 +118,7 @@ class Controller:
     
     #method to easily get goal object
     def get_state_goal(self,state,displace):
-        x,y,z,theta_x,theta_y,theta_z = state
-        goal = StateGoal()
-        if x is not None:
-            goal.position.x = x
-            goal.do_x = Bool(True)
-        else:
-            goal.position.x = 0
-            goal.do_x = Bool(False)
-        if y is not None:
-            goal.position.y = y
-            goal.do_y = Bool(True)
-        else:
-            goal.position.y = 0
-            goal.do_y = Bool(False)
-        if z is not None:
-            goal.position.z = z
-            goal.do_z = Bool(True)
-        else:
-            goal.position.z = 0
-            goal.do_z = Bool(False)
-        if theta_x is not None:
-            goal.rotation.x = theta_x
-            goal.do_theta_x = Bool(True)
-        else:
-            goal.rotation.x = 0
-            goal.do_theta_x = Bool(False)
-        if theta_y is not None:
-            goal.rotation.y = theta_y
-            goal.do_theta_y = Bool(True)
-        else:
-            goal.rotation.y = 0
-            goal.do_theta_y = Bool(False)
-        if theta_z is not None:
-            goal.rotation.z = theta_z
-            goal.do_theta_z = Bool(True)
-        else:
-            goal.rotation.z = 0
-            goal.do_theta_z = Bool(False)
-        return goal
-    
-    def pose_goal(self,position,quaternion,displace):
-        x,y,z = position
-        w,qx,qy,qz = quaternion
+        x,y,z,tw,tx,ty,tz = state
         goal = StateQuaternionGoal()
         goal.displace = displace
         if x is not None:
@@ -187,133 +139,121 @@ class Controller:
         else:
             goal.pose.position.z = 0
             goal.do_z = Bool(False)
-        if quaternion is not None:
-            goal.pose.orientation.w = w
-            goal.pose.orientation.x = qx
-            goal.pose.orientation.y = qy
-            goal.pose.orientation.z = qz
+        if tw is not None:
+            goal.pose.orientation.w = tw
+            goal.pose.orientation.x = tx
+            goal.pose.orientation.y = ty
+            goal.pose.orientation.z = tz
             goal.do_quaternion = Bool(True)
         else:
-            goal.do_quaternion = Bool(False)
-        return goal
-    
-    def quaternion_action(self,position,quaternion):
-        goal = self.pose_goal(position,quaternion,do_not_displace)
-        self.StateQuaternionStateServer.send_goal_and_wait(goal)
+            goal.pose.orientation.w = 0
+            goal.pose.orientation.x = 0
+            goal.pose.orientation.y = 0
+            goal.pose.orientation.z = 0
+            goal.do_quaternion = Bool(True)
 
+        return goal
+
+    def euler_to_quaternion(roll, pitch, yaw):
+        #TODO!
 
     #preempt the current action
     def preemptCurrentAction(self):
-        for server in self.servers:
-            if server.get_state() in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
-                server.cancel_goal()
-        pass
+        for client in self.clients:
+            if client.get_state() in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
+                client.cancel_goal()
 
-    #rotate to this rotation
+    #rotate to this rotation (quaternion)
     def rotate(self,ang,callback=None):
         #if callback = None make this a blocking call
-        #self.preemptCurrentAction()
+        w,x,y,z = ang
+
+        goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_not_displace)
+        if callback is not None:
+            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+    
+    #rotate to this rotation (euler)
+    def rotateEuler(self,ang,callback=None):
         x,y,z = ang
-        goal = self.get_state_goal([None,None,None,x,y,z],do_not_displace)
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
-        else:
-            self.StateServer.send_goal(goal,done_cb=callback)
+        if x is None: x = self.theta_x
+        if y is None: y = self.theta_y
+        if z is None: z = self.theta_z
+        self.rotate(self.euler_to_quaternion(x,y,z), callback=callback)
 
-    def rotateYaw(self,z,callback=None):
-        #if callback = None make this a blocking call
-        #self.preemptCurrentAction()
-        goal = self.get_state_goal([None,None,None,None,None,z],do_not_displace)
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
-        else:
-            self.StateServer.send_goal(goal,done_cb=callback)
-
-    #REQUIRES DVL
     #move to setpoint
     def move(self,pos,callback=None):
-        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
         x,y,z = pos
-        goal = self.get_state_goal([x,y,z,None,None,None],do_not_displace)
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
+        
+        if(callback is not None):
+            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
         else:
-            self.StateServer.send_goal(goal,done_cb=callback)
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    #REQUIRES DVL
-    #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in world space
     def moveDelta(self,delta,callback=None):
         #if callback = None make this a blocking call
         x,y,z = delta
 
-        goal_state = self.get_state_goal([x,y,z,None,None,None],do_displace)
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_displace)
 
-        self.StateServer.send_goal_and_wait(goal_state)     
-        if(callback != None):
-            callback()
+        if(callback is not None):
+            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-
-    #rotate by this amount
+    #rotate by this amount (quaternion)
     def rotateDelta(self,delta,callback=None):
-        #self.preemptCurrentAction()
         #if callback = None make this a blocking call
+        w,x,y,z = delta
+        goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_displace)
+        
+        if(callback is not None):
+            self.SuperimposerClient.send_goal(goal_state, done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+
+    #rotate by this amount (euler)
+    def rotateDeltaEuler(self,delta,callback=None):
         x,y,z = delta
-        goal = self.get_state_goal([None,None,None,x,y,z],do_displace)
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
-        else:
-            self.StateServer.send_goal(goal,done_cb=callback)
+        if x is None: x = self.theta_x
+        if y is None: y = self.theta_y
+        if z is None: z = self.theta_z
+        self.rotateDelta(self.euler_to_quaternion(x,y,z), callback=callback)
 
-    def rotateYawDelta(self, delta, callback=None):
-        goal = self.get_state_goal([None, None, None, None, None, delta], do_displace)
-        if callback == None:
-            self.StateServer.send_goal_and_wait(goal)
-        else:
-            self.StateServer.send_goal(goal, done_cb=callback)
-
-
-    #REQUIRES DVL
-    #NOTE: FOR NOW WE CAN APPROXIMATE WITH MOVING FORWARD FOR X SECONDS FOR POOL TEST
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None):
         x,y,z = delta
+        gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
+        goal_state = self.get_state_goal([gx, gy, gz, None, None, None, None], do_not_displace)
 
-        delta_gx, delta_gy, delta_gz  = self.transformLocalToGlobal(x, y, z)
-
-        gx = delta_gx + self.x
-        gy = delta_gy + self.y
-        gz = delta_gz + self.z
-
-        goal_state = self.get_state_goal([gx, gy, gz, None, None, None], do_not_displace)
-        self.StateServer.send_goal_and_wait(goal_state)
-
-        if(callback != None):
-            callback()
+        if(callback is not None):
+            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #set angular velocity
     def torque(self,vel):
-        #self.preemptCurrentAction()
         x,y,z = vel
         goal = self.get_superimposer_goal([None,None,None,x,y,z])
-        self.SuperimposerServer.send_goal(goal)
+        self.SuperimposerClient.send_goal(goal)
 
     #set thruster velocity in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
-        #self.preemptCurrentAction()
         goal = self.get_superimposer_goal([x,y,None,None,None,None])
-        self.SuperimposerServer.send_goal(goal)
+        self.SuperimposerClient.send_goal(goal)
     
     #stop all thrusters
     def kill(self):
-        # self.preemptCurrentAction()
         goal = self.get_superimposer_goal([0,0,0,0,0,0])
-        self.SuperimposerServer.send_goal(goal)
+        self.SuperimposerClient.send_goal(goal)
 
     #stay still in place
     def stop_in_place(self):
         self.preemptCurrentAction()
-        goal = self.get_state_goal([self.x,self.y,self.z,self.theta_x,self.theta_y,self.theta_z],do_not_displace)
-        self.StateServer.send_goal_and_wait(goal)
+        goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)
