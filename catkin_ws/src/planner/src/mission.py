@@ -73,7 +73,7 @@ def QuaternionTestMission():
 def tricks(t):
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('yaw', Trick(control=control, trick_type=t), 
+        smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))

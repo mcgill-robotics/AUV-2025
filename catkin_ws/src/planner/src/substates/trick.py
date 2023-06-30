@@ -12,19 +12,19 @@ class Trick(smach.State):
 
     def execute(self,ud):
         if self.trick_type == "roll":
-            self.execute_roll()
+            return self.execute_roll()
         elif self.trick_type == "pitch":
-            self.execute_pitch()
+            return self.execute_pitch()
         elif self.trick_type == "yaw":
-            self.execute_yaw()
+            return self.execute_yaw()
 
     
     def execute_roll(self):
         print("Starting roll trick")
         try:
-            self.control.rotateDeltaEuler((120.0, 0, 0))
-            self.control.rotateDeltaEuler((120.0, 0, 0))
-            self.control.rotateDeltaEuler((120.0, 0, 0))
+            self.control.rotateEuler((120.0, 0, 0))
+            self.control.rotateEuler((240.0, 0, 0))
+            self.control.rotateEuler((0.0, 0, 0))
 
             print("Completed")
             return 'success'
@@ -36,9 +36,9 @@ class Trick(smach.State):
     def execute_pitch(self):
         print("Starting pitch trick")
         try:
-            self.control.rotateDeltaEuler((0, 120.0, 0))
-            self.control.rotateDeltaEuler((0, 120.0, 0))
-            self.control.rotateDeltaEuler((0, 120.0, 0))
+            self.control.rotateEuler((0, 120.0, 0))
+            self.control.rotateEuler((0, 240.0, 0))
+            self.control.rotateEuler((0, 0.0, 0))
             print("Completed")
             return 'success'
 
@@ -49,9 +49,9 @@ class Trick(smach.State):
     def execute_yaw(self):
         print("Starting yaw trick")
         try:
-            self.control.rotateDeltaEuler((0,0,120.0))
-            self.control.rotateDeltaEuler((0,0,120.0))
-            self.control.rotateDeltaEuler((0,0,120.0))
+            self.control.rotateEuler((0,0,120.0))
+            self.control.rotateEuler((0,0,240.0))
+            self.control.rotateEuler((0,0,0.0))
 
             print("Completed")
             return 'success'
