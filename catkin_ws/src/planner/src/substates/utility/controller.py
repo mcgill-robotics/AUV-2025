@@ -123,7 +123,7 @@ class Controller:
         goal = StateQuaternionGoal()
 
         goal.displace = displace
-        
+
         goal.pose.position.x = x
         goal.do_x = Bool(False) if x is None else Bool(True)
 
@@ -247,8 +247,7 @@ class Controller:
     
     #stop all thrusters
     def kill(self):
-        goal = self.get_superimposer_goal([0,0,0,0,0,0])
-        self.SuperimposerClient.send_goal(goal)
+        self.preemptCurrentAction()
 
     #stay still in place
     def stop_in_place(self):
