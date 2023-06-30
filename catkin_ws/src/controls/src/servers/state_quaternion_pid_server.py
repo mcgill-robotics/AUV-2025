@@ -1,75 +1,33 @@
 #!/usr/bin/env python3
 
 import rospy
-import tf
-from std_msgs.msg import Float64, Bool
-from geometry_msgs.msg import Pose, Quaternion
-from sensor_msgs.msg import Imu
-from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from servers.base_server import BaseServer
-from math import pow
 import actionlib
 from auv_msgs.msg import StateQuaternionAction
 import numpy as np
 import quaternion
-
+import math
 
 class StateQuaternionServer(BaseServer):
-
     def __init__(self):
         super().__init__()
         print("making quaternion server")
-        self.establish_pid_publishers()
-        self.establish_pid_enable_publishers()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
-        
-        # Publishers
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        
-        # Subscribers
-        pose_sub = rospy.Subscriber('pose', Pose, self.pose_callback)
-        imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.imu_callback)
-        # quat_sub = rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.quat_callback)
-        
         # Calculation parameters/values
-        self.pose = None#Pose()
-        self.body_quat = np.quaternion(1,0,0,0)
-        self.position = []
-        
         self.Kp = 0.06
         self.Ki = 0
         self.Kd = -0.08
         self.integral_error_quat = np.quaternion()
-        self.time_interval = [0, rospy.get_time()] 
+        self.last_integral_time = rospy.get_time()
         self.angular_velocity = np.zeros(3)
         self.server.start()        
-        
-    def pose_callback(self, data):
-        # Assign pose values
-        self.pose = data
-        self.position = [data.position.x, data.position.y, data.position.z]
-        self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
-        # self.update_time_interval()
 
-    def update_time_interval(self):
-        self.time_interval[0] = self.time_interval[1]
-        self.time_interval[1] = rospy.get_time()
-    
-    def imu_callback(self, data):
-        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
-
-
-    def cancel(self):
-        self.controlEffort(self.body_quat)
-    
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
         self.goal = goal
         if self.pose != None:
             if(goal.displace):
-                displaced_position, displace_quat = self.get_goal_after_displace(goal.pose)
+                displaced_position, displace_quat = self.get_goal_after_displace()
                 self.execute_goal(displaced_position, displace_quat)
             else:
                 goal_position = [goal.position.x, goal.position.y, goal.position.z]
@@ -78,6 +36,11 @@ class StateQuaternionServer(BaseServer):
         
             # monitor when reached pose
             self.server.set_succeeded()
+            
+    def get_goal_after_displace(self):
+        goal_position = [self.pose.position.x + self.goal.pose.position.x, self.pose.position.y + self.goal.pose.position.y, self.pose.position.z + self.goal.pose.position.z]
+        displacement_quat = self.body_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+        return goal_position, displacement_quat 
 
     def execute_goal(self, goal_position, goal_quaternion):
         self.publish_position_pids(goal_position)
@@ -108,28 +71,34 @@ class StateQuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
-        if(self.position is None):
-            return False
-        if(self.body_quat is None):
-            return False
+        if(self.pose.position is None): return False
+        if(self.body_quat is None): return False
 
-        error = self.calculateError(self.body_quat, goal_quaternion)
-        if abs(error.w) > 0.98:
-            return True
+        quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
+        pos_error = self.calculatePosError(self.pose.position, goal_position)
+        tolerance_position = 0.5
+        tolerance_quat_w = 0.98
+
+        if abs(quat_error.w) > tolerance_quat_w and abs(pos_error) < tolerance_position: return True
+
         return False
-        
-    def get_goal_after_displace(self, goal_pose):
-        goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-        
-        displacement_quat = np.quaternion(goal_pose.orientation.w, goal_pose.orientation.x, goal_pose.orientation.y, goal_pose.orientation.z)
-        
-        new_goal_quat = self.body_quat * displacement_quat
-        return goal_position, new_goal_quat 
+
+    def cancel(self):
+        self.controlEffort(self.body_quat)
+        super().cancel()
+
+    def update_time_interval(self):
+        self.time_interval[0] = self.time_interval[1]
+        self.time_interval[1] = rospy.get_time()
     
-    def calculateError(self, q1, q2):
+    def calculatePosError(self, auv_pos, goal_pos):
+        return math.sqrt((auv_pos.x - goal_pos[0])**2 + (auv_pos.y - goal_pos[1])**2 + (auv_pos.z - goal_pos[2])**2)
+
+    def calculateQuatError(self, q1, q2):
         return q2 * q1.inverse()
     
-    def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
+    def calculateIntegralError(self, error_quat, delta_time, angular_velocity):
+        return [0,0,0]
         return integral_error_quat + (error_quat * delta_time)
     
     def orthogonal_matrix(self, q):
@@ -138,26 +107,28 @@ class StateQuaternionServer(BaseServer):
         return np.matmul(Qe1, transpose)
         
     def controlEffort(self, goal_quat):
-        if(self.body_quat is None):
-            return
-        delta_time = (self.time_interval[1] - self.time_interval[0])
+        if(self.body_quat is None): return
         
         # Calculate error values
-        error_quat = self.calculateError(self.body_quat, goal_quat) 
+        error_quat = self.calculateQuatError(self.body_quat, goal_quat) 
         if(error_quat.w < 0):
             error_quat = -error_quat
-        
-        
+             
         proportional_effort = np.zeros(3)
         
         proportional_effort[0] = self.Kp * error_quat.x
         proportional_effort[1] = self.Kp * error_quat.y
         proportional_effort[2] = self.Kp * error_quat.z
 
-        
         # Calculate derivative term
         derivative_effort = self.Kd * self.angular_velocity
-        control_effort = proportional_effort + derivative_effort
+
+        # Calculate integral term
+        delta_time = rospy.get_time() - self.last_integral_time
+        integral_effort = self.Ki * self.calculateIntegralError(error_quat, delta_time, self.angular_velocity)
+        self.last_integral_time = rospy.get_time()
+
+        control_effort = proportional_effort + derivative_effort + integral_effort
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
@@ -168,10 +139,9 @@ class StateQuaternionServer(BaseServer):
                                     [0.          ,  0.                , 0.6490918050833332]])
         
         torque = np.matmul(inertial_matrix, control_effort)
-        self.pub_roll.publish(control_effort[0])
-        self.pub_pitch.publish(0*control_effort[1])
-        self.pub_yaw.publish(control_effort[2])     
-    
+        self.pub_roll.publish(torque[0])
+        self.pub_pitch.publish(torque[1])
+        self.pub_yaw.publish(torque[2])
         
     def control_effort_dcm(self, goal_quaternion):
         goal_rotation_matrix = quaternion.as_rotation_matrix(goal_quaternion)
