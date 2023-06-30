@@ -87,33 +87,52 @@ class Controller:
         else:
             goal.effort.force.x = 0
             goal.do_surge = Bool(False)
-        if sway is not None:
-            goal.effort.force.y = sway
-            goal.do_sway = Bool(True)
-        else:
-            goal.effort.force.y = 0
-            goal.do_sway = Bool(False)
-        if heave is not None:
-            goal.effort.force.z = heave
-            goal.do_heave = Bool(True)
-        else:
-            goal.effort.force.z = 0
-            goal.do_heave = Bool(False)
-        if roll is not None:
-            goal.effort.torque.x = roll
-            goal.do_roll = Bool(True)
-        else:
-            goal.effort.torque.x = 0
-            goal.do_roll = Bool(False)
-        if pitch is not None:
-            goal.effort.torque.y = pitch
-            goal.do_pitch = Bool(True)
-        else:
-            goal.effort.torque.y = 0
-            goal.do_pitch = Bool(False)
-        if yaw is not None:
-            goal.effort.torque.z = yaw
-            goal.do_yaw = Bool(True)
+            
+        goal.effort.force.y = 0
+        goal.do_sway = Bool(False)
+        
+        goal.effort.force.z = 0
+        goal.do_heave = Bool(False)
+        
+        goal.effort.torque.x = 0
+        goal.do_roll = Bool(False)
+        
+        goal.effort.torque.y = 0
+        goal.do_pitch = Bool(False)
+        
+        goal.effort.torque.z = 0
+        goal.do_yaw = Bool(False)
+        
+        # if sway is not None:
+        #     goal.effort.force.y = sway
+        #     goal.do_sway = Bool(True)
+        # else:
+        #     goal.effort.force.y = 0
+        #     goal.do_sway = Bool(False)
+        # if heave is not None:
+        #     goal.effort.force.z = heave
+        #     goal.do_heave = Bool(True)
+        # else:
+        #     goal.effort.force.z = 0
+        #     goal.do_heave = Bool(False)
+        # if roll is not None:
+        #     goal.effort.torque.x = roll
+        #     goal.do_roll = Bool(True)
+        # else:
+        #     goal.effort.torque.x = 0
+        #     goal.do_roll = Bool(False)
+        # if pitch is not None:
+        #     goal.effort.torque.y = pitch
+        #     goal.do_pitch = Bool(True)
+        # else:
+        #     goal.effort.torque.y = 0
+        #     goal.do_pitch = Bool(False)
+        # if yaw is not None:
+        #     goal.effort.torque.z = yaw
+        #     goal.do_yaw = Bool(True)
+        # else:
+        #     goal.effort.torque.z = 0
+        #     goal.do_yaw = Bool(False)
 
         return goal
     
@@ -123,20 +142,20 @@ class Controller:
         goal = StateQuaternionGoal()
 
         goal.displace = displace
-
-        goal.pose.position.x = x
+        
+        goal.pose.position.x = 0 if x is None else x
         goal.do_x = Bool(False) if x is None else Bool(True)
 
-        goal.pose.position.y = y
+        goal.pose.position.y = 0 if y is None else y
         goal.do_y = Bool(False) if y is None else Bool(True)
 
-        goal.pose.position.z = z
+        goal.pose.position.z = 0 if z is None else z
         goal.do_z = Bool(False) if z is None else Bool(True)
         
-        goal.pose.orientation.w = tw
-        goal.pose.orientation.x = tx
-        goal.pose.orientation.y = ty
-        goal.pose.orientation.z = tz
+        goal.pose.orientation.w = 1 if tw is None else tw
+        goal.pose.orientation.x = 0 if tx is None else tx
+        goal.pose.orientation.y = 0 if ty is None else ty
+        goal.pose.orientation.z = 0 if tz is None else tz
         goal.do_quaternion = Bool(False) if tz is None else Bool(True)
 
         return goal
