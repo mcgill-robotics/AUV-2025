@@ -22,9 +22,13 @@ class StateQuaternionServer(BaseServer):
         self.last_integral_time = rospy.get_time()
         self.angular_velocity = np.zeros(3)
         self.server.start()        
+        self.pid_thread = None
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
+        if self.pid_thread is not None and goal.do_quaternion.data:
+            self.quaternion_enabled = False
+            self.pid_thread.join()
         self.goal = goal
         if self.pose is not None:
             if(self.goal.displace.data):
@@ -33,7 +37,23 @@ class StateQuaternionServer(BaseServer):
                 goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
                 goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
 
-            threading.Thread(target=self.execute_goal, args=(goal_position, goal_quat)).start()
+            if(self.goal.do_x.data):
+                self.pub_x_enable.publish(True)
+                self.pub_x_pid.publish(goal_position[0])
+                self.pub_surge.publish(0)
+                self.pub_sway.publish(0)
+            if(self.goal.do_y.data):
+                self.pub_y_enable.publish(True)
+                self.pub_y_pid.publish(goal_position[1])
+                self.pub_surge.publish(0)
+                self.pub_sway.publish(0)
+            if(self.goal.do_z.data):
+                self.pub_z_enable.publish(True)
+                self.pub_z_pid.publish(goal_position[2])
+                self.pub_heave.publish(0)
+            if (self.goal.do_quaternion.data):
+                self.pid_thread = threading.Thread(target=self.execute_goal, args=[goal_quat])
+                self.pid_thread.start()
 
             time_to_settle = 4
             settled = False
@@ -52,24 +72,9 @@ class StateQuaternionServer(BaseServer):
         goal_quat = self.body_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
 
-    def execute_goal(self, goal_position, goal_quaternion):
-        if(self.goal.do_x.data):
-            self.pub_x_enable.publish(True)
-            self.pub_x_pid.publish(goal_position[0])
-            self.pub_surge.publish(0)
-            self.pub_sway.publish(0)
-        if(self.goal.do_y.data):
-            self.pub_y_enable.publish(True)
-            self.pub_y_pid.publish(goal_position[1])
-            self.pub_surge.publish(0)
-            self.pub_sway.publish(0)
-        if(self.goal.do_z.data):
-            self.pub_z_enable.publish(True)
-            self.pub_z_pid.publish(goal_position[2])
-            self.pub_heave.publish(0)
-        if (self.goal.do_quaternion.data):
-            self.quaternion_enabled = True
-            while self.quaternion_enabled: self.controlEffort(goal_quaternion)
+    def execute_goal(self, goal_quaternion):
+        self.quaternion_enabled = True
+        while self.quaternion_enabled: self.controlEffort(goal_quaternion)
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
         quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
@@ -108,9 +113,7 @@ class StateQuaternionServer(BaseServer):
     def controlEffort(self, goal_quat): 
         # Calculate error values
         error_quat = self.calculateQuatError(self.body_quat, goal_quat) 
-        if(error_quat.w < 0):
-            error_quat = -error_quat
-        print("Error Quat: " + str(error_quat))
+        if(error_quat.w < 0): error_quat = -error_quat
              
         proportional_effort = np.zeros(3)
         
