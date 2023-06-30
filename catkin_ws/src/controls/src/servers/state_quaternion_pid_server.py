@@ -93,7 +93,7 @@ class StateQuaternionServer(BaseServer):
         self.time_interval[1] = rospy.get_time()
     
     def calculatePosError(self, pos1, pos2):
-        return math.abs(pos1 - pos2)
+        return abs(pos1 - pos2)
 
     def calculateQuatError(self, q1, q2):
         return q1.inverse() * q2
