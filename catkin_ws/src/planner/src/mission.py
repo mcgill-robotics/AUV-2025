@@ -15,6 +15,7 @@ from substates.quali import *
 from substates.quaternion_test import *
 from substates.trick import *
 from substates.navigate_gate import *
+from substates.quali_quaternion import *
 
 def endMission(msg):
     print(msg)
@@ -49,6 +50,14 @@ def QualiMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('quali', Quali(control=control), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished quali mission. Result {}".format(res))
+    
+def QualiQuaternionMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quali', QualiQuaternion(control=control), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
@@ -128,7 +137,7 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
 
-        QuaternionTestMission()
+        QualiQuaternionMission()
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
