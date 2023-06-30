@@ -6,9 +6,9 @@ from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
 from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal
 from actionlib_msgs.msg import GoalStatus
+from tf import transformations
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
-import numpy as np
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -29,6 +29,11 @@ class Controller:
         TransformListener(self.tf_buffer)
         self.tf_header = Header(frame_id="world_rotation")
 
+        self.sub = rospy.Subscriber("pose",Pose,self.set_position)
+        self.sub_theta_x = rospy.Subscriber("state_theta_x",Float64, self.set_theta_x)
+        self.sub_theta_y = rospy.Subscriber("state_theta_y",Float64, self.set_theta_y)
+        self.sub_theta_z = rospy.Subscriber("state_theta_z",Float64, self.set_theta_z)
+
         self.clients = []
 
         self.SuperimposerClient = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
@@ -46,11 +51,6 @@ class Controller:
         self.theta_y = None
         self.theta_z = None
         self.orientation = None
-
-        self.sub = rospy.Subscriber("pose",Pose,self.set_position)
-        self.sub_theta_x = rospy.Subscriber("state_theta_x",Float64, self.set_theta_x)
-        self.sub_theta_y = rospy.Subscriber("state_theta_y",Float64, self.set_theta_y)
-        self.sub_theta_z = rospy.Subscriber("state_theta_z",Float64, self.set_theta_z)
 
     def set_position(self,data):
         self.x = data.position.x
@@ -157,18 +157,7 @@ class Controller:
         return goal
 
     def euler_to_quaternion(self, roll, pitch, yaw):
-        cy = np.cos(yaw * 0.5)
-        sy = np.sin(yaw * 0.5)
-        cp = np.cos(pitch * 0.5)
-        sp = np.sin(pitch * 0.5)
-        cr = np.cos(roll * 0.5)
-        sr = np.sin(roll * 0.5)
-
-        w = cy * cp * cr + sy * sp * sr
-        x = cy * cp * sr - sy * sp * cr
-        y = sy * cp * sr + cy * sp * cr
-        z = sy * cp * cr - cy * sp * sr
-        return [w, x, y, z]
+        return transformations.quaternion_from_euler(roll, pitch, yaw, 'rxyz')
 
     #preempt the current action
     def preemptCurrentAction(self):

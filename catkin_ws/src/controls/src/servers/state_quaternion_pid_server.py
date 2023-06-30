@@ -22,6 +22,7 @@ class StateQuaternionServer(BaseServer):
         self.last_integral_time = rospy.get_time()
         self.angular_velocity = np.zeros(3)
         self.server.start()        
+        self.quaternion_enabled = False
         self.pid_thread = None
 
     def callback(self, goal):

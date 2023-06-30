@@ -2,9 +2,8 @@
 
 import rospy
 from std_msgs.msg import Float64, Bool
-from geometry_msgs.msg import Pose, Quaternion, Point
-from sensor_msgs.msg import Imu
-from sbg_driver.msg import SbgEkfQuat, SbgImuData
+from geometry_msgs.msg import Pose
+from sbg_driver.msg import SbgImuData
 import numpy as np
 
 """
@@ -23,7 +22,6 @@ class BaseServer():
         self.cancelled = False
         self.goal = None
         self.pose = None
-        self.quaternion_enabled = False
         self.body_quat = np.quaternion(1,0,0,0)
         self.establish_effort_publishers()
         self.establish_pid_publishers()

@@ -136,8 +136,9 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
 
-        QualiQuaternionMission()
+        # QualiQuaternionMission()
         # QualiMission()
+        tricks()
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
