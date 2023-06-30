@@ -27,7 +27,7 @@ class SuperimposerServer(BaseServer):
         self.unset_pids()
 
         if(self.goal.do_surge.data): self.pub_surge.publish(self.goal.effort.force.x)
-        # if(self.goal.do_sway.data): self.pub_sway.publish(self.goal.effort.force.y)
+        if(self.goal.do_sway.data): self.pub_sway.publish(self.goal.effort.force.y)
         # if(self.goal.do_heave.data): self.pub_heave.publish(self.goal.effort.force.z)
         
         # if(self.goal.do_roll.data): self.pub_roll.publish(self.goal.effort.torque.x)
@@ -47,9 +47,9 @@ class SuperimposerServer(BaseServer):
         if (self.goal.do_surge.data): 
             self.pub_x_enable.publish(Bool(False))
             self.pub_global_x.publish(0)
-        # if(self.goal.do_sway.data):
-        #     self.pub_y_enable.publish(Bool(False))
-        #     self.pub_global_y.publish(0)
+        if(self.goal.do_sway.data):
+            self.pub_y_enable.publish(Bool(False))
+            self.pub_global_y.publish(0)
         # if(self.goal.do_heave.data):
         #     self.pub_global_z.publish(0)
         #     self.pub_z_enable.publish(Bool(False))
