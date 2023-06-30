@@ -5,9 +5,8 @@ import smach
 from std_msgs.msg import Float64
 
 class QuaternionTest(smach.State):
-    def __init__(self, control=None):
+    def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("control argument is None")
         self.control = control
     
     def execute(self, ud):

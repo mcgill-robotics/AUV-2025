@@ -5,12 +5,21 @@ import smach
 from std_msgs.msg import Float64
 
 class Trick(smach.State):
-    def __init__(self, control=None):
+    def __init__(self, control, trick_type):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("control argument is None")
         self.control = control
+        self.trick_type = trick_type
+
+    def execute(self,ud):
+        if self.trick_type == "roll":
+            self.execute_roll()
+        elif self.trick_type == "pitch":
+            self.execute_pitch()
+        elif self.trick_type == "yaw":
+            self.execute_yaw()
+
     
-    def execute_roll(self, ud):
+    def execute_roll(self):
         print("Starting roll trick")
         try:
             self.control.rotateDeltaEuler((120.0, 0, 0))
@@ -24,7 +33,7 @@ class Trick(smach.State):
             print("Roll trick interrupted by user.")
             return 'failure'    
     
-    def execute_pitch(self, ud):
+    def execute_pitch(self):
         print("Starting pitch trick")
         try:
             self.control.rotateDeltaEuler((0, 120.0, 0))
@@ -37,7 +46,7 @@ class Trick(smach.State):
             print("Pitch trick interrupted by user.")
             return 'failure'   
     
-    def execute_yaw(self, ud):
+    def execute_yaw(self):
         print("Starting yaw trick")
         try:
             self.control.rotateDeltaEuler((0,0,120.0))

@@ -73,20 +73,9 @@ def QuaternionTestMission():
 def tricks(t):
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        if t == "roll":
-            smach.StateMachine.add('roll', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_roll()
-        elif t == "pitch":
-            smach.StateMachine.add('pitch', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_pitch()
-        elif t == "yaw":
-            smach.StateMachine.add('yaw', Trick(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_yaw()
-        else:
-            res = "trick not identified"
+        smach.StateMachine.add('yaw', Trick(control=control, trick_type=t), 
+        transitions={'success': 'success', 'failure':'failure'})
+        res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
 
 def master_planner():
@@ -137,8 +126,11 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
 
         # QualiQuaternionMission()
-        QualiMission()
-        # tricks()
+        # QualiMission()
+        control.move((0,0,-1))
+        tricks("roll")
+        tricks("pitch")
+        tricks("yaw")
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
