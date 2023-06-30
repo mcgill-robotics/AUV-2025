@@ -12,7 +12,6 @@ import threading
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
-        print("making quaternion server")
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         # Calculation parameters/values
         
@@ -28,7 +27,7 @@ class StateQuaternionServer(BaseServer):
         print("\n\nQuaternion Server got goal:\n",goal)
         self.goal = goal
         if self.pose is not None:
-            if(self.goal.displace):
+            if(self.goal.displace.data):
                 goal_position, goal_quat = self.get_goal_after_displace()
             else:
                 goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
@@ -111,6 +110,7 @@ class StateQuaternionServer(BaseServer):
         error_quat = self.calculateQuatError(self.body_quat, goal_quat) 
         if(error_quat.w < 0):
             error_quat = -error_quat
+        print("Error Quat: " + str(error_quat))
              
         proportional_effort = np.zeros(3)
         
@@ -126,7 +126,7 @@ class StateQuaternionServer(BaseServer):
         integral_effort = self.Ki * self.calculateIntegralError(error_quat, delta_time, self.angular_velocity)
         self.last_integral_time = rospy.get_time()
 
-        control_effort = proportional_effort + derivative_effort + integral_effort
+        control_effort = proportional_effort + derivative_effort # + integral_effort
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 

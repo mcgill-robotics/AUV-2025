@@ -20,7 +20,6 @@ class StateQuaternionServer(BaseServer):
 
     def __init__(self):
         super().__init__()
-        print("making quaternion server")
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
@@ -84,7 +83,6 @@ class StateQuaternionServer(BaseServer):
         self.publish_position_pids(goal_position)
         interval = 4
         settled = False
-        print("waiting for settled")
         rate = rospy.Rate(100)  
         while not settled and not self.cancelled:
             start = rospy.get_time()
@@ -94,8 +92,7 @@ class StateQuaternionServer(BaseServer):
                 if(rospy.get_time() - start > interval):
                     settled = True
                     break
-                rate.sleep()
-        print("settled")      
+                rate.sleep()   
     
     def publish_position_pids(self, goal_position):
         if(self.goal.do_x.data):

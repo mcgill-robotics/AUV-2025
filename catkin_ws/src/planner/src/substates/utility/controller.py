@@ -160,7 +160,7 @@ class Controller:
 
         return goal
 
-    def euler_to_quaternion(roll, pitch, yaw):
+    def euler_to_quaternion(self, roll, pitch, yaw):
         cy = np.cos(yaw * 0.5)
         sy = np.sin(yaw * 0.5)
         cp = np.cos(pitch * 0.5)

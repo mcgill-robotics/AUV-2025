@@ -91,7 +91,6 @@ def tricks(t):
 
 def master_planner():
     control.moveDelta((0, 0, -0.5))
-    control.rotateYaw(45) # Coin flip repositioning
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
@@ -138,6 +137,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
 
         QualiQuaternionMission()
+        # QualiMission()
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----

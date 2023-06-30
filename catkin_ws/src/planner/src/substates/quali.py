@@ -35,7 +35,7 @@ class Quali(smach.State):
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
             self.control.move((0, 0, -2.0))
-            self.control.rotateYaw(0)
+            self.control.rotateEuler((None,None,0))
             rospy.sleep(2)
 
             # Step 2: Move 14 meters forward
@@ -45,7 +45,7 @@ class Quali(smach.State):
 
             # Step 3: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateYaw(-90)
+            self.control.rotateEuler((None,None,-90))
             rospy.sleep(2)
 
             # Step 4: Move 1 meter forward
@@ -55,7 +55,7 @@ class Quali(smach.State):
 
             # Step 5: Rotate 90 degrees 
             print("Rotating 90 degrees")
-            self.control.rotateYaw(-180)
+            self.control.rotateEuler((None,None,-180))
             rospy.sleep(2)
 
             # Step 6: Move 14 meters forward

@@ -20,7 +20,6 @@ and a method to publish setpoints to the pids.
 """
 class BaseServer():
     def __init__(self) -> None:
-        print("starting server")
         self.cancelled = False
         self.goal = None
         self.pose = None

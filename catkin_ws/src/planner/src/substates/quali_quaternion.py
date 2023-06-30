@@ -35,7 +35,7 @@ class QualiQuaternion(smach.State):
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
             self.control.move((0.0, 0.0, -2.0))
-            self.control.rotate((0.7071068, 0.0, 0.0, 0.7071068))
+            self.control.rotate((1, 0.0, 0.0, 0))
             rospy.sleep(2)
 
             # Step 2: Move 14 meters forward

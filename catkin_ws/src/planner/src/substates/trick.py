@@ -36,7 +36,7 @@ class Trick(smach.State):
     def execute_yaw(self, ud):
         print("Starting yaw trick")
         try:
-            self.control.rotateYaw(360.0)
+            self.control.rotate((None,None,360.0))
 
             print("Completed")
             return 'success'

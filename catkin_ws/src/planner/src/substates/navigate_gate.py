@@ -33,7 +33,7 @@ class NavigateGate(smach.State):
         print("Centering and rotating in front of gate.")
         offset_distance = -3
         offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotateYaw(gate_object[4]) # bring to exact angle 
+        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
         self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
 
         # wait and repeat just to be safe
@@ -44,7 +44,7 @@ class NavigateGate(smach.State):
         self.mapping.updateObject(gate_object)
         offset_distance = -2
         offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotateYaw(gate_object[4]) # bring to exact angle 
+        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
         self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
 
         print("Successfully centered in front of gate")
