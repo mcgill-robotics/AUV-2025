@@ -14,9 +14,10 @@ class StateQuaternionServer(BaseServer):
         print("making quaternion server")
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         # Calculation parameters/values
-        self.Kp = 0.06
+        
+        self.Kp = 0.07
         self.Ki = 0
-        self.Kd = -0.08
+        self.Kd = -0.1
         self.integral_error_quat = np.quaternion()
         self.last_integral_time = rospy.get_time()
         self.angular_velocity = np.zeros(3)
@@ -95,7 +96,7 @@ class StateQuaternionServer(BaseServer):
         return math.sqrt((auv_pos.x - goal_pos[0])**2 + (auv_pos.y - goal_pos[1])**2 + (auv_pos.z - goal_pos[2])**2)
 
     def calculateQuatError(self, q1, q2):
-        return q2 * q1.inverse()
+        return q1.inverse() * q2
     
     def calculateIntegralError(self, error_quat, delta_time, angular_velocity):
         return [0,0,0]
@@ -139,9 +140,10 @@ class StateQuaternionServer(BaseServer):
                                     [0.          ,  0.                , 0.6490918050833332]])
         
         torque = np.matmul(inertial_matrix, control_effort)
-        self.pub_roll.publish(torque[0])
-        self.pub_pitch.publish(torque[1])
-        self.pub_yaw.publish(torque[2])
+        self.pub_roll.publish(control_effort[0])
+        self.pub_pitch.publish(control_effort[1])
+        self.pub_yaw.publish(control_effort[2])     
+    
         
     def control_effort_dcm(self, goal_quaternion):
         goal_rotation_matrix = quaternion.as_rotation_matrix(goal_quaternion)

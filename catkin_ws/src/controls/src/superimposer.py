@@ -58,7 +58,7 @@ class Superimposer:
         force_auv = Vector3(surge, sway, heave)
         torque_auv = Vector3(roll, pitch, yaw)
 
-        self.header.stamp = rospy.Time.now()
+        self.header.stamp = rospy.Time(0)
         force_global_stmp = Vector3Stamped(
                 header=self.header, vector=force_global)
 
@@ -66,7 +66,7 @@ class Superimposer:
             # convert global force vector into robot reference frame
             # TODO use message filters to assure tf/data is available
             trans = self.tf_buffer.lookup_transform(
-                    "auv_rotation", "world_rotation", rospy.Time.now())
+                    "auv_rotation", "world_rotation", rospy.Time(0))
 
             force_global_transformed = tf2_geometry_msgs.do_transform_vector3(
                     force_global_stmp, trans)

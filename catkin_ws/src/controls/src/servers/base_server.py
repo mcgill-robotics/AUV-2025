@@ -71,6 +71,7 @@ class BaseServer():
     def set_pose(self,data):
         self.pose = data
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
+        if (self.body_quat.w < 0): self.body_quat = -self.body_quat
     #callback for subscriber
     def set_theta_x(self,data):
         self.theta_x = data.data
