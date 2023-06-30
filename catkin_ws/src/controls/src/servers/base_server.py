@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import rospy
-from geometry_msgs.msg import 
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose, Quaternion, Point
 from sensor_msgs.msg import Imu

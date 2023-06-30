@@ -2,8 +2,8 @@
 
 import rospy
 
-from .servers.superimposer_server import SuperimposerServer
-from .servers.state_quaternion_pid_server import StateQuaternionServer
+from servers.superimposer_server import SuperimposerServer
+from servers.state_quaternion_pid_server import StateQuaternionServer
 
 #define preempt callbacks using the cancel methods. This is necessary because action lib does not
 #allow methods to be callback function for preempting.
