@@ -12,9 +12,9 @@ import lane_marker_measure
 import torch
 
 def transformLocalToGlobal(lx,ly,lz):
-    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time.now())
+    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
     offset_local = Vector3(lx, ly, lz)
-    tf_header.stamp = rospy.Time.now()
+    tf_header.stamp = rospy.Time(0)
     offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
     offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
     return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)

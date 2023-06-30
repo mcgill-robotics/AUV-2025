@@ -126,7 +126,7 @@ if __name__ == '__main__':
     try:
         # mapping = ObjectMapper()
         state = StateTracker()
-        control = Controller(lambda : rospy.Time.now())
+        control = Controller(rospy.Time(0))
 
         QuaternionTestMission()
 
