@@ -11,12 +11,16 @@ class StateTracker:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
+        self.theta_z_sub = rospy.Subscriber('pose', Float64, self.updatePose)
         self.x = None
         self.y = None
         self.z = None
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
+        self.pose = None
+    def updatePose(self,msg):
+        self.pose = msg
     def updateX(self, msg):
         self.x = float(msg.data)
     def updateY(self, msg):

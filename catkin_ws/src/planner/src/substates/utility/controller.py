@@ -8,6 +8,7 @@ from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAc
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
+import numpy as np
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -120,42 +121,39 @@ class Controller:
     def get_state_goal(self,state,displace):
         x,y,z,tw,tx,ty,tz = state
         goal = StateQuaternionGoal()
+
         goal.displace = displace
-        if x is not None:
-            goal.pose.position.x = x
-            goal.do_x = Bool(True)
-        else:
-            goal.pose.position.x = 0
-            goal.do_x = Bool(False)
-        if y is not None:
-            goal.pose.position.y = y
-            goal.do_y = Bool(True)
-        else:
-            goal.pose.position.y = 0
-            goal.do_y = Bool(False)
-        if z is not None:
-            goal.pose.position.z = z
-            goal.do_z = Bool(True)
-        else:
-            goal.pose.position.z = 0
-            goal.do_z = Bool(False)
-        if tw is not None:
-            goal.pose.orientation.w = tw
-            goal.pose.orientation.x = tx
-            goal.pose.orientation.y = ty
-            goal.pose.orientation.z = tz
-            goal.do_quaternion = Bool(True)
-        else:
-            goal.pose.orientation.w = 0
-            goal.pose.orientation.x = 0
-            goal.pose.orientation.y = 0
-            goal.pose.orientation.z = 0
-            goal.do_quaternion = Bool(True)
+        
+        goal.pose.position.x = x
+        goal.do_x = Bool(False) if x is None else Bool(True)
+
+        goal.pose.position.y = y
+        goal.do_y = Bool(False) if y is None else Bool(True)
+
+        goal.pose.position.z = z
+        goal.do_z = Bool(False) if z is None else Bool(True)
+        
+        goal.pose.orientation.w = tw
+        goal.pose.orientation.x = tx
+        goal.pose.orientation.y = ty
+        goal.pose.orientation.z = tz
+        goal.do_quaternion = Bool(False) if tz is None else Bool(True)
 
         return goal
 
     def euler_to_quaternion(roll, pitch, yaw):
-        #TODO!
+        cy = np.cos(yaw * 0.5)
+        sy = np.sin(yaw * 0.5)
+        cp = np.cos(pitch * 0.5)
+        sp = np.sin(pitch * 0.5)
+        cr = np.cos(roll * 0.5)
+        sr = np.sin(roll * 0.5)
+
+        w = cy * cp * cr + sy * sp * sr
+        x = cy * cp * sr - sy * sp * cr
+        y = sy * cp * sr + cy * sp * cr
+        z = sy * cp * cr - cy * sp * sr
+        return [w, x, y, z]
 
     #preempt the current action
     def preemptCurrentAction(self):
