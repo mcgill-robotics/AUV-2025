@@ -137,8 +137,8 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
 
         # QualiQuaternionMission()
-        # QualiMission()
-        tricks()
+        QualiMission()
+        # tricks()
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----

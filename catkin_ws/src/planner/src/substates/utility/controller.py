@@ -9,6 +9,7 @@ from actionlib_msgs.msg import GoalStatus
 from tf import transformations
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
+import math
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -157,7 +158,8 @@ class Controller:
         return goal
 
     def euler_to_quaternion(self, roll, pitch, yaw):
-        return transformations.quaternion_from_euler(roll, pitch, yaw, 'rxyz')
+        q = transformations.quaternion_from_euler(math.pi*roll/180, math.pi*pitch/180, math.pi*yaw/180, 'rxyz')
+        return [q[3], q[0], q[1], q[2]]
 
     #preempt the current action
     def preemptCurrentAction(self):
