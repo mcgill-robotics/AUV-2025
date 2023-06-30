@@ -38,9 +38,9 @@ class StateQuaternionServer(BaseServer):
         self.body_quat = np.quaternion(1,0,0,0)
         self.position = []
         
-        self.Kp = 0.06
+        self.Kp = 0.07
         self.Ki = 0
-        self.Kd = -0.08
+        self.Kd = -0.1
         self.integral_error_quat = np.quaternion()
         self.time_interval = [0, rospy.get_time()] 
         self.angular_velocity = np.zeros(3)
@@ -51,6 +51,8 @@ class StateQuaternionServer(BaseServer):
         self.pose = data
         self.position = [data.position.x, data.position.y, data.position.z]
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
+        if(self.body_quat.w < 0):
+            self.body_quat = -self.body_quat
         # self.update_time_interval()
 
     def update_time_interval(self):
@@ -108,6 +110,7 @@ class StateQuaternionServer(BaseServer):
             self.pub_z_pid.publish(goal_position[2])
         
     def check_status(self, goal_position, goal_quaternion):
+        return False
         if(self.position is None):
             return False
         if(self.body_quat is None):
@@ -127,7 +130,7 @@ class StateQuaternionServer(BaseServer):
         return goal_position, new_goal_quat 
     
     def calculateError(self, q1, q2):
-        return q2 * q1.inverse()
+        return q1.inverse() * q2
     
     def calculateIntegralError(self, integral_error_quat, error_quat, delta_time):
         return integral_error_quat + (error_quat * delta_time)
@@ -159,6 +162,7 @@ class StateQuaternionServer(BaseServer):
         derivative_effort = self.Kd * self.angular_velocity
         control_effort = proportional_effort + derivative_effort
         
+
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
         #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
@@ -169,7 +173,7 @@ class StateQuaternionServer(BaseServer):
         
         torque = np.matmul(inertial_matrix, control_effort)
         self.pub_roll.publish(control_effort[0])
-        self.pub_pitch.publish(0*control_effort[1])
+        self.pub_pitch.publish(control_effort[1])
         self.pub_yaw.publish(control_effort[2])     
     
         
