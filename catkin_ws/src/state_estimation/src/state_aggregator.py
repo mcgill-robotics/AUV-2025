@@ -17,7 +17,6 @@ ANGLE_CHANGE_TOL = 90
 
 DEG_PER_RAD = 180/np.pi
 
-
 class State_Aggregator:
 
     def __init__(self):
@@ -30,7 +29,7 @@ class State_Aggregator:
         self.pos_auv = np.array([0.0, 0.0, 0.0])
 
         # overall orientation (imu)
-        self.q_world = np.quaternion(1, 0, 0, 0)
+        self.q_world = np.quaternion(0, 1, 0, 0)
         self.q_auv = np.quaternion(1, 0, 0, 0)
         self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
@@ -83,8 +82,9 @@ class State_Aggregator:
         # auv position from pos_world (relative to global frame)
         pos_auv = pos_dvl - self.pos_world
 
-        # auv position in world frame - TODO: CHECK
-        self.pos_auv_dvl = self.q_world*pos_auv*self.q_world.inverse()
+        # auv position in world frame
+        self.pos_auv_dvl = quaternion.rotate_vectors(self.q_world, pos_auv)
+
 
         # update overall state
         # TODO - check about views of arrays in numpy
@@ -108,15 +108,17 @@ class State_Aggregator:
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
         # z position of depth sensor in NED? frame
-        pos_depth = np.array([0.0, 0.0, depth_msg.data])
+        pos_depth = np.array([0.0, 0.0, -depth_msg.data]) 
+        #TODO - because depth sensor is relative to NWU, assumption of all sensors being in NED?
 
         # z position offset by world frame position (still in global orientation)
-        pos_auv = z - self.pos_world[2]
+        pos_auv = pos_depth - self.pos_world
+        # q_pos_auv = np.quaternion(0, pos_auv[0], pos_auv[1], pos_auv[2])
 
-        # z position in world frame - TODO: CHECK
-        self.pos_auv_depth_sensor = self.q_world*pos_auv*self.q_world.inverse()
-
-        # update overall state
+        # z position in world frame
+        self.pos_auv_depth_sensor = quaternion.rotate_vectors(self.q_world, pos_auv)
+        
+        # update overall state - TODO - check how this looks in world frame 
         self.pos_auv[2] = self.pos_auv_depth_sensor[2]
 
 
@@ -130,7 +132,7 @@ class State_Aggregator:
         q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
 
         # new world quaternion is q_auv in global (imu) frame
-        self.q_world = self.q_world.inverse()*q_auv
+        self.q_world = self.q_world*q_auv
 
         # q_auv is still relative to old q_world, so is recalculated
         # by definition, it is aligned with the frame of q_world 
@@ -155,7 +157,7 @@ class State_Aggregator:
         q = self.q_auv
         q = np.array([q.x, q.y, q.z, q.w])
         
-        # rotations are applied to ‘s’tatic or ‘r’otating frame
+        # rotations are applied to ‘s'tatic or ‘r’otating frame
         # we're just getting the first angle - this assumes
         # that the other angles are fixed 
         # TODO - these angles don't combine, only to be treated individually
@@ -183,7 +185,7 @@ class State_Aggregator:
 
     def update_state(self, _):
         # publish pose
-        position = Point(self.pos_auv) # TODO - check nparray parsed - may put directly into Pose
+        position = Point(self.pos_auv[0], self.pos_auv[1], self.pos_auv[2]) # TODO - check nparray parsed - may put directly into Pose
         pose = Pose(position, self.q_auv)
         self.pub.publish(pose)
 
