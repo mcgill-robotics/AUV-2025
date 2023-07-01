@@ -78,13 +78,17 @@ class State_Aggregator:
         self.q_auv_dvl = self.q_world.inverse()*q_dvl
 
         # position in global (NED) frame according to dvl
-        pos_dvl = np.array([data.x, data.y, data.z])
+        pos_dvl = np.array([data.x, data.y, data.z]) 
 
         # auv position from pos_world (relative to global frame)
         pos_auv = pos_dvl - self.pos_world
 
         # auv position in world frame
         self.pos_auv_dvl = quaternion.rotate_vectors(self.q_world, pos_auv)
+
+        # TODO - this is a hack because the position gets altered 
+        # due to nominal world frame (TO FIX)
+        self.pos_auv_dvl[1] = -self.pos_auv_dvl[1]
 
         # update overall state
         # TODO - check about views of arrays in numpy
