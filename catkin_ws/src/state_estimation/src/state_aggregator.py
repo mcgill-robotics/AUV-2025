@@ -117,23 +117,25 @@ class State_Aggregator:
 
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
-        # z position of depth sensor (and assumed AUV TODO) in NED? frame
+        # position of depth sensor (and assumed AUV TODO) in NED? frame
         pos_depth = np.array([0.0, 0.0, depth_msg.data]) 
 
-        # z position/offset from pos_world (relative to global orientation)
+        # position/offset from pos_world (relative to global orientation)
         pos_auv = pos_depth - self.pos_world
 
-        # z position in world frame
+        # position in world frame
         self.pos_auv_depth_sensor = quaternion.rotate_vectors(self.q_world, pos_auv)
         
-        # update overall state - TODO - check how this looks in world frame 
+        # update overall state - TODO - when AUV is rotated depth might correspond to other axes 
         self.pos_auv[2] = self.pos_auv_depth_sensor[2]
 
 
     def reset_state_cb(self, _):
+        # TODO - for now, only reset the orientation
+        # maybe on reset find best world frame that keeps the same x-y plane?
         # new world position is current AUV position in global frame
-        self.pos_world = self.pos_auv + self.pos_world
-        self.pos_auv = np.array([0.0, 0.0, 0.0])
+        # self.pos_world = self.pos_auv + self.pos_world
+        # self.pos_auv = np.array([0.0, 0.0, 0.0])
 
         # copy of q_auv in (old) world frame
         q_auv = self.q_auv
@@ -148,8 +150,8 @@ class State_Aggregator:
         self.euler = np.array([0.0, 0.0, 0.0])
 
         # updating estimates for each sensor
-        self.pos_auv_dvl = np.array([0.0, 0.0, 0.0])
-        self.pos_auv_depth_sensor = np.array([0.0, 0.0, 0.0])
+        # self.pos_auv_dvl = np.array([0.0, 0.0, 0.0])
+        # self.pos_auv_depth_sensor = np.array([0.0, 0.0, 0.0])
         self.q_auv_dvl = np.quaternion(1, 0, 0, 0)
         self.q_auv_imu = np.quaternion(1, 0, 0, 0)
 
