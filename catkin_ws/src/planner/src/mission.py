@@ -115,6 +115,7 @@ def master_planner():
     endMission("Finished Robosub with result: " + str(res))
 
 octagon_approximate_location = (0,0,0)
+#
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
