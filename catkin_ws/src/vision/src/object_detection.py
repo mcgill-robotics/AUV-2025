@@ -40,7 +40,7 @@ def detect_on_image(raw_img, camera_id):
     extra_field = []
     if camera_id == 1:
         buoy_symbols = []
-        # buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Buoy Symbol 1"), class_names[1].index("Buoy Symbol 2"), class_names[1].index("Buoy"))
+        buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Buoy"), state.depth_map)
         leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
@@ -111,13 +111,13 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(theta_z)
                     extra_field.append(None)
 
-                    for symbol_x, symbol_y, symbol_z, symbol_priority in buoy_symbols:
-                        label.append(4)
+                    for symbol_x, symbol_y, symbol_z, symbol_class_id in buoy_symbols:
+                        label.append(symbol_class_id)
                         obj_x.append(symbol_x)
                         obj_y.append(symbol_y)
                         obj_z.append(symbol_z) 
                         obj_theta_z.append(theta_z)
-                        extra_field.append(symbol_priority)
+                        extra_field.append(None)
 
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
     #create object detection frame message and publish it
@@ -141,7 +141,7 @@ gate_width = 3
 if __name__ == '__main__':
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
-    min_prediction_confidence = 0.1
+    min_prediction_confidence = 0.4
     
     pwd = os.path.realpath(os.path.dirname(__file__))
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
@@ -163,7 +163,7 @@ if __name__ == '__main__':
         ]
     class_names = [ #one array per camera, name index should be class id
         ["Lane Marker", "Octagon"],
-        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol"],
+        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy"],
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":4}
     #the int argument is used to index debug publisher, model, class names, and i

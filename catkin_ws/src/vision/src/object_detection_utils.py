@@ -201,13 +201,12 @@ def eulerToVectorFrontCam(x_deg, y_deg):
     return vec
 
 def find_intersection(vector, plane_z_pos):
-    plane_normal = np.array([0,0,1])
-    plane_point = np.array([0,0,plane_z_pos])
-    dot_product = np.dot(vector, plane_normal)
-    if np.isclose(dot_product, 0):return None
-    vector_length_to_plane = ((np.dot(plane_point, plane_normal) - np.dot(np.array([0,0,0]), plane_normal)) / dot_product)
-    if vector_length_to_plane < 0: return None
-    return vector_length_to_plane * np.array(vector)
+    if vector[2] == 0: return None
+
+    scaling_factor = plane_z_pos / vector[2]
+    if scaling_factor < 0: return None
+
+    return np.array(vector) * scaling_factor
 
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
@@ -236,6 +235,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
         local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
         global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
         if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None
@@ -303,7 +303,7 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
     else: return 0.0
     
 
-def analyzeBuoy(img_cropped, debug_img):
+def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buoy_class_id, depth_map):
     return []
 
 
@@ -323,8 +323,8 @@ visualisation_pubs = [
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
-down_cam_hfov = 220
-down_cam_vfov = 165.26
+down_cam_hfov = 87 #set to 220 when not in sim!
+down_cam_vfov = 65 #set to 165.26 when not in sim!
 front_cam_hfov = 87
 front_cam_vfov = 58
 
