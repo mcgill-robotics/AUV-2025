@@ -70,8 +70,9 @@ class State_Aggregator:
 
     def dvl_cb(self,data):
         # quaternion in global (NED) frame
-        q_dvl = quaternion_from_euler(data.roll, data.pitch, data.yaw)
-        q_dvl = np.quaternion(q_dvl.w, q_dvl.x, q_dvl.y, q_dvl.z) 
+        q_dvl = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
+        # transformations returns quaternion as nparray [w, x, y, z]
+        q_dvl = np.quaternion(q_dvl[3], q_dvl[1], q_dvl[2], q_dvl[3]) 
 
         # quaternion in q_world (based on imu) frame
         self.q_auv_dvl = self.q_world.inverse()*q_dvl
@@ -85,10 +86,8 @@ class State_Aggregator:
         # auv position in world frame
         self.pos_auv_dvl = quaternion.rotate_vectors(self.q_world, pos_auv)
 
-
         # update overall state
         # TODO - check about views of arrays in numpy
-        self.pos_world[0:2] = self.pos_world_dvl[0:2]
         self.pos_auv[0:2] = self.pos_auv_dvl[0:2]
 
 
