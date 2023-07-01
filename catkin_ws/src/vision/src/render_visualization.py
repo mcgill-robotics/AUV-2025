@@ -58,12 +58,12 @@ def objectDetectCb(msg):
         addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.075, detection_pub.publish, (0,1,0))
 
 def objectMapCb(msg):
-    global object_map_ids
+    global object_map_markers
     #spawn red spheres and text (for label, object-specific info) on objects in map
-    for map_marker in object_map_ids:
+    for map_marker in object_map_markers:
         map_marker.action = Marker.DELETE
         map_pub.publish(map_marker)
-    object_map_ids = []
+    object_map_markers = []
     for i in range(len(msg.label)):
         addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
     
@@ -326,7 +326,7 @@ rospy.sleep(10)
 print("Starting visualization!")
 
 dvl_euler_angles = [0,0,0]
-object_map_ids = []
+object_map_markers = []
 marker_id = 0
 
 groundTruths = [
@@ -336,8 +336,8 @@ groundTruths = [
 currentEffort = {"surge":0, "sway":0, "heave":0, "roll":0, "pitch":0, "yaw":0}
 
 def publishToMap(marker):
-    global object_map_ids
-    object_map_ids.append(marker)
+    global object_map_markers
+    object_map_markers.append(marker)
     map_pub.publish(marker)
 
 setup()

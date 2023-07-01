@@ -306,6 +306,29 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
 def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buoy_class_id, depth_map):
     return []
 
+def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
+    label_counts = {}
+    selected_detections = []
+    for i in range(len(labels)):
+        if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
+            candidate_obj_conf = confidences[i]
+            min_conf_i = min(selected_detections, key=lambda x : confidences[x])
+            if confidences[min_conf_i] < candidate_obj_conf:
+                selected_detections.remove(min_conf_i)
+                selected_detections.append(i)
+        else:
+            label_counts[labels[i]] = label_counts.get(labels[i], 0) + 1
+            selected_detections.append(i)
+
+    selected_labels = [labels[si] for si in selected_detections]
+    selected_objs_x = [objs_x[si] for si in selected_detections]
+    selected_objs_y = [objs_y[si] for si in selected_detections]
+    selected_objs_z = [objs_z[si] for si in selected_detections]
+    selected_objs_theta_z = [objs_theta_z[si] for si in selected_detections]
+    selected_extra_fields = [extra_fields[si] for si in selected_detections]
+
+    return selected_labels, selected_objs_x, selected_objs_y, selected_objs_z, selected_objs_theta_z, selected_extra_fields
+
 
 rospy.init_node('object_detection') #,log_level=rospy.DEBUG
 

@@ -38,6 +38,7 @@ def detect_on_image(raw_img, camera_id):
     obj_z = []
     obj_theta_z = []
     extra_field = []
+    confidences = []
     if camera_id == 1:
         buoy_symbols = []
         buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Buoy"), state.depth_map)
@@ -57,6 +58,7 @@ def detect_on_image(raw_img, camera_id):
             cls_id = int(list(box.cls)[0])
             global_class_id = global_class_ids[class_names[camera_id][cls_id]]
             label.append(global_class_id)
+            confidences.append(conf)
             #add bbox visualization to img
             debug_img = visualizeBbox(debug_img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
             img_h, img_w, _ = img.shape
@@ -68,8 +70,15 @@ def detect_on_image(raw_img, camera_id):
                         obj_theta_z.append(None)
                         center = bbox
                     else:
-                        obj_theta_z.append(state.theta_z + (headings[0]-90))
-                        extra_field.append(state.theta_z + (headings[1]-90))
+                        heading1 = state.theta_z + (headings[0]-90)
+                        heading2 = state.theta_z + (headings[1]-90)
+                        if heading1 > heading2:
+                            obj_theta_z.append(heading1)
+                            extra_field.append(heading2)
+                        else:
+                            obj_theta_z.append(heading2)
+                            extra_field.append(heading1)
+
 
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     obj_x.append(pred_obj_x)
@@ -120,6 +129,9 @@ def detect_on_image(raw_img, camera_id):
                         extra_field.append(None)
 
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
+
+    label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidences, max_counts_per_label)
+
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
     detectionFrame.label = label
@@ -166,6 +178,9 @@ if __name__ == '__main__':
         ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy"],
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":4}
+
+    max_counts_per_label = [1, 1, 1, 1, 2, 2]
+
     #the int argument is used to index debug publisher, model, class names, and i
     subs = [
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0),

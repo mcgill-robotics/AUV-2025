@@ -61,6 +61,9 @@ def updateMap(obj_i, observation):
     elif current_theta_z is None:
         new_theta_z = observed_theta_z
     else:
+        while abs(observed_theta_z-current_theta_z) > 180:
+            if observed_theta_z > current_theta_z: current_theta_z += 360
+            else: observed_theta_z += 360
         #average both orientations
         new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
@@ -71,6 +74,9 @@ def updateMap(obj_i, observation):
         new_extra_field = observed_extra_field
     else:
         if label == 0: # LANE MARKER -> angle, take weighted average
+            while abs(observed_extra_field-current_extra_field) > 180:
+                if observed_extra_field > current_extra_field: current_extra_field += 360
+                else: observed_extra_field += 360
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
         elif label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
@@ -107,6 +113,7 @@ def reduceMap():
 def publishMap():
     confirmedMap = [obj for obj in object_map if obj[6] > min_observations]
     map_msg = ObjectMap()
+    map_msg.label = [obj[0] for obj in confirmedMap]
     map_msg.x = [obj[1] for obj in confirmedMap]
     map_msg.y = [obj[2] for obj in confirmedMap]
     map_msg.z = [obj[3] for obj in confirmedMap]
