@@ -76,7 +76,7 @@ class State_Aggregator:
         # quaternion of DVL in NED frame
         q_dvl = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
         # transformations returns quaternion as nparray [w, x, y, z]
-        q_dvl = np.quaternion(q_dvl[3], q_dvl[1], q_dvl[2], q_dvl[3]) 
+        q_dvl = np.quaternion(q_dvl[3], q_dvl[0], q_dvl[1], q_dvl[2]) 
 
         # quaternion of AUV in NED frame
         q_auv = self.q_dvl_mount.inverse()*q_dvl
