@@ -29,7 +29,8 @@ class State_Aggregator:
         self.pos_auv = np.array([0.0, 0.0, 0.0])
 
         # overall orientation (imu)
-        self.q_world = np.quaternion(0, 1, 0, 0)
+        self.q_global = np.quaternion(0, 1, 0, 0) # orientation of inertial global frame relative to NED (we use NWU convention) - TODO - not needed
+        self.q_world = np.quaternion(1, 0, 0, 0)
         self.q_auv = np.quaternion(1, 0, 0, 0)
         self.euler = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv
 
@@ -39,6 +40,8 @@ class State_Aggregator:
         self.pos_auv_dvl = np.array([0.0, 0.0, 0.0]) # position of auv relative to world frame (q_world, pos_world_dvl)
 
         # additionally keep track of orientation from dvl (only for comparison)
+        self.q_dvl_mount = np.quaternion(1, 0, 0, 0) # initial orientation of DVL in AUV frame (measured/assumed based on mounting of sensor) #TODO
+        #TODO - include position mounting for sensors
         self.q_auv_dvl = np.quaternion(1, 0, 0, 0) # orientation relative to q_world (not q_world_dvl) - to compare with imu
         # self.q_world_dvl = np.quaternion(1, 0, 0, 0) # orientation relative to global to compare with q_world
 
@@ -49,8 +52,9 @@ class State_Aggregator:
 
         '''IMU State'''
         # orientation - based on imu
+        self.q_imu_mount = np.quaternion(0, 1, 0, 0) # initial orientation of imu in AUV frame (measured/assumed based on mounting of sensor)
         self.q_auv_imu = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV as seen from world frame
-        # self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu/NED) frame - allows imu reset 
+        # self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
 
         # publishers
         self.pub = rospy.Publisher('pose', Pose, queue_size=50)
@@ -69,26 +73,25 @@ class State_Aggregator:
 
 
     def dvl_cb(self,data):
-        # quaternion in global (NED) frame
+        # quaternion of DVL in NED frame
         q_dvl = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
         # transformations returns quaternion as nparray [w, x, y, z]
         q_dvl = np.quaternion(q_dvl[3], q_dvl[1], q_dvl[2], q_dvl[3]) 
 
-        # quaternion in q_world (based on imu) frame
-        self.q_auv_dvl = self.q_world.inverse()*q_dvl
+        # quaternion of AUV in NED frame
+        q_auv = self.q_dvl_mount.inverse()*q_dvl
 
-        # position in global (NED) frame according to dvl
+        # quaternion of AUV in world frame
+        self.q_auv_dvl = self.q_world.inverse()*q_auv
+
+        # position of DVL (and also AUV TODO) in NED frame
         pos_dvl = np.array([data.x, data.y, data.z]) 
 
-        # auv position from pos_world (relative to global frame)
+        # AUV position/offset from pos_world (relative to global frame)
         pos_auv = pos_dvl - self.pos_world
 
-        # auv position in world frame
+        # AUV position in world frame
         self.pos_auv_dvl = quaternion.rotate_vectors(self.q_world, pos_auv)
-
-        # TODO - this is a hack because the position gets altered 
-        # due to nominal world frame (TO FIX)
-        self.pos_auv_dvl[1] = -self.pos_auv_dvl[1]
 
         # update overall state
         # TODO - check about views of arrays in numpy
@@ -96,12 +99,16 @@ class State_Aggregator:
 
 
     def imu_cb(self, imu_msg):
-        # quaternion in global (imu/NED) frame
+        # quaternion of imu in NED frame
         q_imu = imu_msg.quaternion
         q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
 
-        # quaternion in world frame
-        self.q_auv_imu = self.q_world.inverse()*q_imu
+        # quaternion of AUV in NED frame
+        # sensor is mounted, may be oriented differently from AUV axes
+        q_auv = self.q_imu_mount.inverse()*q_imu
+
+        # quaternion of AUV in world frame
+        self.q_auv_imu = self.q_world.inverse()*q_auv
 
         # update overall state
         self.q_auv = self.q_auv_imu
@@ -110,13 +117,11 @@ class State_Aggregator:
 
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
-        # z position of depth sensor in NED? frame
-        pos_depth = np.array([0.0, 0.0, -depth_msg.data]) 
-        #TODO - because depth sensor is relative to NWU, assumption of all sensors being in NED?
+        # z position of depth sensor (and assumed AUV TODO) in NED? frame
+        pos_depth = np.array([0.0, 0.0, depth_msg.data]) 
 
-        # z position offset by world frame position (still in global orientation)
+        # z position/offset from pos_world (relative to global orientation)
         pos_auv = pos_depth - self.pos_world
-        # q_pos_auv = np.quaternion(0, pos_auv[0], pos_auv[1], pos_auv[2])
 
         # z position in world frame
         self.pos_auv_depth_sensor = quaternion.rotate_vectors(self.q_world, pos_auv)
@@ -126,7 +131,7 @@ class State_Aggregator:
 
 
     def reset_state_cb(self, _):
-        # new world position offset is current auv position in global (NED) frame
+        # new world position is current AUV position in global frame
         self.pos_world = self.pos_auv + self.pos_world
         self.pos_auv = np.array([0.0, 0.0, 0.0])
 
