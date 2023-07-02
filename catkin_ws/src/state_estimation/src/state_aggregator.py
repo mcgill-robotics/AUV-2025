@@ -57,7 +57,8 @@ class State_Aggregator:
         # self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
 
         # publishers
-        self.pub = rospy.Publisher('pose', Pose, queue_size=50)
+        self.pub_auv = rospy.Publisher('pose', Pose, queue_size=50)
+        self.pub_world = rospy.Publisher('pose_world', Pose, queue_size=50)
         self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
         self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
         self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
@@ -79,7 +80,7 @@ class State_Aggregator:
         q_dvl = np.quaternion(q_dvl[3], q_dvl[0], q_dvl[1], q_dvl[2]) 
 
         # quaternion of AUV in global frame
-        q_auv = self.q_dvl_mount.inverse()*q_global.inverse()*q_dvl
+        q_auv = self.q_dvl_mount.inverse()*self.q_global.inverse()*q_dvl
 
         # quaternion of AUV in world frame
         self.q_auv_dvl = self.q_world.inverse()*q_auv
@@ -108,7 +109,7 @@ class State_Aggregator:
 
         # quaternion of AUV in global frame
         # sensor is mounted, may be oriented differently from AUV axes
-        q_auv = self.q_imu_mount.inverse()*q_global*q_imu
+        q_auv = self.q_imu_mount.inverse()*self.q_global*q_imu
 
         # quaternion of AUV in world frame
         self.q_auv_imu = self.q_world.inverse()*q_auv
@@ -121,7 +122,7 @@ class State_Aggregator:
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
         # position of depth sensor (and assumed AUV TODO) in NED? frame
-        pos_depth = np.array([0.0, 0.0, depth_msg.data]) 
+        pos_depth = np.array([0.0, 0.0, -depth_msg.data]) # TODO - depth is currrently lower (negative) - opposite of NED
 
         # position of depth sensor/AUV in global frame
         pos_depth = quaternion.rotate_vectors(self.q_global.inverse(), pos_depth)
@@ -200,10 +201,15 @@ class State_Aggregator:
 
 
     def update_state(self, _):
-        # publish pose
+        # publish AUV pose
         position = Point(self.pos_auv[0], self.pos_auv[1], self.pos_auv[2]) # TODO - check nparray parsed - may put directly into Pose
         pose = Pose(position, self.q_auv)
-        self.pub.publish(pose)
+        self.pub_auv.publish(pose)
+
+        # publish world pose
+        position = Point(self.pos_world[0], self.pos_world[1], self.pos_world[2]) # TODO - check nparray parsed - may put directly into Pose
+        pose = Pose(position, self.q_world)
+        self.pub_world.publish(pose)
 
         # publish individual degrees of freedom
         self.pub_x.publish(self.pos_auv[0])

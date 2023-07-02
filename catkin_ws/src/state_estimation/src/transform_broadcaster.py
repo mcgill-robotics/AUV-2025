@@ -11,7 +11,7 @@ Listens to the pose topic to get the transformation, then broadcast it as a tf2 
 The world frame is north east up.
 '''
 
-def state_cb(pose):
+def auv_cb(pose):
     br = TransformBroadcaster()
 
     t = TransformStamped()
@@ -42,7 +42,26 @@ def state_cb(pose):
     br.sendTransform(t2)
 
 
+def world_cb(pose):
+    br = TransformBroadcaster()
+
+    t = TransformStamped()
+    
+    t.header.stamp = rospy.Time.now()
+    t.header.frame_id = "global"
+
+    t.child_frame_id = "world"
+
+    t.transform.translation.x = pose.position.x
+    t.transform.translation.y = pose.position.y
+    t.transform.translation.z = pose.position.z 
+    t.transform.rotation = pose.orientation
+
+    br.sendTransform(t)
+
+
 if __name__ == '__main__':
     rospy.init_node('transform_broadcaster')
-    rospy.Subscriber('pose', Pose, state_cb, queue_size=50)
+    rospy.Subscriber('pose', Pose, auv_cb, queue_size=50)
+    rospy.Subscriber('pose_world', Pose, world_cb, queue_size=50)
     rospy.spin()
