@@ -78,14 +78,17 @@ class State_Aggregator:
         # transformations returns quaternion as nparray [w, x, y, z]
         q_dvl = np.quaternion(q_dvl[3], q_dvl[0], q_dvl[1], q_dvl[2]) 
 
-        # quaternion of AUV in NED frame
-        q_auv = self.q_dvl_mount.inverse()*q_dvl
+        # quaternion of AUV in global frame
+        q_auv = self.q_dvl_mount.inverse()*q_global.inverse()*q_dvl
 
         # quaternion of AUV in world frame
         self.q_auv_dvl = self.q_world.inverse()*q_auv
 
         # position of DVL (and also AUV TODO) in NED frame
         pos_dvl = np.array([data.x, data.y, data.z]) 
+
+        # position of DVL in global frame
+        pos_dvl = quaternion.rotate_vectors(self.q_global.inverse(), pos_dvl)
 
         # AUV position/offset from pos_world (relative to global frame)
         pos_auv = pos_dvl - self.pos_world
@@ -103,9 +106,9 @@ class State_Aggregator:
         q_imu = imu_msg.quaternion
         q_imu = np.quaternion(q_imu.w, q_imu.x, q_imu.y, q_imu.z) 
 
-        # quaternion of AUV in NED frame
+        # quaternion of AUV in global frame
         # sensor is mounted, may be oriented differently from AUV axes
-        q_auv = self.q_imu_mount.inverse()*q_imu
+        q_auv = self.q_imu_mount.inverse()*q_global*q_imu
 
         # quaternion of AUV in world frame
         self.q_auv_imu = self.q_world.inverse()*q_auv
@@ -119,6 +122,9 @@ class State_Aggregator:
         # TODO - check does the 0 depth coincide with NED frame?
         # position of depth sensor (and assumed AUV TODO) in NED? frame
         pos_depth = np.array([0.0, 0.0, depth_msg.data]) 
+
+        # position of depth sensor/AUV in global frame
+        pos_depth = quaternion.rotate_vectors(self.q_global.inverse(), pos_depth)
 
         # position/offset from pos_world (relative to global orientation)
         pos_auv = pos_depth - self.pos_world
