@@ -2,6 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Pose
 
 class StateTracker:
     def __init__(self):
@@ -11,28 +12,28 @@ class StateTracker:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.state_x = None
-        self.state_y = None
-        self.state_z = None
-        self.state_theta_x = None
-        self.state_theta_y = None
-        self.state_theta_z = None
+        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
+        self.x = None
+        self.y = None
+        self.z = None
+        self.theta_x = None
+        self.theta_y = None
+        self.theta_z = None
+        self.pose = None
+    def updatePose(self,msg):
+        self.pose = msg
     def updateX(self, msg):
-        self.state_x = float(msg.data)
+        self.x = float(msg.data)
     def updateY(self, msg):
-        self.state_y = float(msg.data)
+        self.y = float(msg.data)
     def updateZ(self, msg):
-        self.state_z = float(msg.data)
+        self.z = float(msg.data)
     def updateThetaX(self, msg):
-        self.state_theta_x = float(msg.data)
+        self.theta_x = float(msg.data)
     def updateThetaY(self, msg):
-        self.state_theta_y = float(msg.data)
+        self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
-        self.state_theta_z = float(msg.data)
-    def getPosition(self):
-        return (self.state_x, self.state_y, self.state_z)
-    def getRotation(self):
-        return (self.state_theta_x, self.state_theta_y, self.state_theta_z)
+        self.theta_z = float(msg.data)
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()

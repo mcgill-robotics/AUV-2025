@@ -5,7 +5,6 @@ import smach
 
 from substates.breadth_first_search import *
 from substates.in_place_search import *
-from substates.grid_search import *
 from substates.linear_search import *
 from substates.navigate_lane_marker import *
 from substates.test_submerged_rotations import *
@@ -13,13 +12,19 @@ from substates.utility.controller import Controller
 from substates.utility.state import StateTracker
 from substates.utility.vision import *
 from substates.quali import *
+from substates.quaternion_test import *
 from substates.trick import *
-from substates.reposition import *
 from substates.navigate_gate import *
+from substates.quali_quaternion import *
 
-def endMission(msg="Shutting down mission planner."):
+def endMission(msg):
+    print(msg)
+    control.stop_in_place()
+
+def endPlanner(msg="Shutting down mission planner."):
     print(msg)
     control.kill()
+
 
 def testRotationsMission():
     control.moveDelta((0, 0, -2))
@@ -48,77 +53,90 @@ def QualiMission():
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
-
-def Tricks(t):
+    
+def QualiQuaternionMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        if t == "roll":
-            smach.StateMachine.add('roll', Tricks(control=control), 
+        smach.StateMachine.add('quali', QualiQuaternion(control=control), 
             transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_roll()
-        elif t == "pitch":
-            smach.StateMachine.add('pitch', Tricks(control=control), 
+    res = sm.execute()
+    endMission("Finished quali mission. Result {}".format(res))
+    
+def QuaternionTestMission():
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('quaternion', QuaternionTest(control=control), 
             transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_pitch()
-        elif t == "yaw":
-            smach.StateMachine.add('yaw', Tricks(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-            res = sm.execute_yaw()
-        else:
-            res = "trick not identified"
+    res = sm.execute()
+    endMission("Finished quaternion mission. Result {}".format(res))
+
+def tricks(t):
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
+        transitions={'success': 'success', 'failure':'failure'})
+        res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
 
 def master_planner():
     control.moveDelta((0, 0, -0.5))
-    control.rotateYaw(45) # Coin flip repositioning
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
-                transitions={'success': 'navigate_gate', 'failure': 'reposition_find_gate'})
-
-        # Add state machine to go backwards and heave and rotate (looking around) - if success, look again for gate
-        smach.StateMachine.add('reposition_find_gate', RepositionGateBuoy(control=control),
-                transitions={'success': 'find_gate', 'failure': 'failure'})
+                transitions={'success': 'navigate_gate', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate', NavigateGate(control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False), 
+                transitions={'success': 'tricks', 'failure': 'failure'})
+        
+        smach.StateMachine.add('tricks', Trick(control=control), 
+                transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
+        
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
+        
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(target_classes=[(0, 1)], control=control, mapping=mapping), 
-                transitions={'success': 'navigate_lane_marker', 'failure': 'reposition_find_lane_marker'})
-
-        # Add state machine to heave (more vision agle)
-        smach.StateMachine.add('reposition_find_lane_marker', RepositionLaneMarker(control=control),
-                transitions={'success': 'find_lane_marker', 'failure': 'failure'})
+                transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
+        
         smach.StateMachine.add('find_buoy', LinearSearch(timeout=9999, forward_speed=5, target_classes=[(2,1)], control=control, mapping=mapping), 
-                transitions={'success': 'navigate_buoy', 'failure': 'reposition_find_buoy'})
-
-        # Add state machine to go backwards
-        smach.StateMachine.add('reposition_find_buoy', RepositionGateBuoy(control=control),
-                transitions={'success': 'find_buoy', 'failure': 'failure'})
+                transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state), 
-                transitions={'success': '??'})
+                transitions={'success': 'find_octagon', 'failure':'failure'})
+        
+        smach.StateMachine.add('find_octagon', OctagonSearch(search_point=octagon_approximate_location, control=control, mapping=mapping, state=state), 
+                transitions={'success': 'navigate_octagon', 'failure':'failure'})
+        
+        smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
+                transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
-    endMission("Finished Robosub!")
+    endMission("Finished Robosub with result: " + str(res))
 
+octagon_approximate_location = (0,0,0)
+#
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
-    rospy.on_shutdown(endMission)
+    rospy.on_shutdown(endPlanner)
 
     try:
         # mapping = ObjectMapper()
-        # state = StateTracker()
+        state = StateTracker()
         control = Controller(rospy.Time(0))
 
-        QualiMission()
+        # QualiQuaternionMission()
+        # QualiMission()
+        control.move((0,0,-1))
+        tricks("roll")
+        tricks("pitch")
+        tricks("yaw")
 
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #testRotationsMission()
         #laneMarkerGridSearchMission()
     except KeyboardInterrupt:
-        endMission("Mission end prompted by user. Killing.")
+        endPlanner("Mission end prompted by user. Killing.")
         exit()

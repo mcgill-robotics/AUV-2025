@@ -61,16 +61,22 @@ def updateMap(obj_i, observation):
     elif current_theta_z is None:
         new_theta_z = observed_theta_z
     else:
+        while abs(observed_theta_z-current_theta_z) > 180:
+            if observed_theta_z > current_theta_z: current_theta_z += 360
+            else: observed_theta_z += 360
         #average both orientations
-        new_extra_field = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
+        new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
     #CALCULATE EXTRA FIELD WHEN APPLICABLE
-    if observed_extra_field is None:
+    if observed_extra_field == -1234.5:
         new_extra_field = current_extra_field
-    elif current_extra_field is None:
+    elif current_extra_field == -1234.5:
         new_extra_field = observed_extra_field
     else:
         if label == 0: # LANE MARKER -> angle, take weighted average
+            while abs(observed_extra_field-current_extra_field) > 180:
+                if observed_extra_field > current_extra_field: current_extra_field += 360
+                else: observed_extra_field += 360
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
         elif label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
@@ -92,18 +98,22 @@ def dist(obj1, obj2):
     
 #combine similar/close objects in the map into one object
 def reduceMap():
+    num_objs_deleted = 0
     for i in range(len(object_map)):
-        observed_label, observed_x, observed_y, observed_z, _, _, _ = object_map[i]
-        closest_obj = findClosestObject(observed_label, observed_x, observed_y, observed_z, index_to_ignore=i)
+        idx = i - num_objs_deleted
+        observed_label, observed_x, observed_y, observed_z, _, _, _ = object_map[idx]
+        closest_obj = findClosestObject([observed_label, observed_x, observed_y, observed_z], indexToIgnore=idx)
         if closest_obj == -1: continue
         else:
-            object_map[i] = updateMap(closest_obj, object_map[i])
-            del object_map[closest_obj]
+            updateMap(closest_obj, object_map[idx])
+            del object_map[i]
+            num_objs_deleted += 1
 
 #publish a version of the map with only the objects with a certain number of observations
 def publishMap():
     confirmedMap = [obj for obj in object_map if obj[6] > min_observations]
     map_msg = ObjectMap()
+    map_msg.label = [obj[0] for obj in confirmedMap]
     map_msg.x = [obj[1] for obj in confirmedMap]
     map_msg.y = [obj[2] for obj in confirmedMap]
     map_msg.z = [obj[3] for obj in confirmedMap]

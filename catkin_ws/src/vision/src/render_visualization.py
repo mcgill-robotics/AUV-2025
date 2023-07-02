@@ -58,12 +58,12 @@ def objectDetectCb(msg):
         addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.075, detection_pub.publish, (0,1,0))
 
 def objectMapCb(msg):
-    global object_map_ids
+    global object_map_markers
     #spawn red spheres and text (for label, object-specific info) on objects in map
-    for map_marker in object_map_ids:
+    for map_marker in object_map_markers:
         map_marker.action = Marker.DELETE
         map_pub.publish(map_marker)
-    object_map_ids = []
+    object_map_markers = []
     for i in range(len(msg.label)):
         addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
     
@@ -142,8 +142,10 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     # Publish the marker
     pub(heading_marker)
 
-def addMapMarkers(label,x,y,z,theta_z,extra_field,color=(1,0,0)):
+def addMapMarkers(label,x,y,z,theta_z,in_extra_field,color=(1,0,0)):
     global marker_id
+    if in_extra_field == -1234.5: extra_field = None
+    else: extra_field = in_extra_field
     addDetectionMarker(x, y, z, 0.1, publishToMap, color)
     if label == 0: #LANE MARKER
         heading1 = eulerAngleToUnitVector(0,90,theta_z)
@@ -253,7 +255,6 @@ def updateAUVThetaY(msg):
 def updateAUVThetaZ(msg):
     global auv_marker
     roll, pitch, yaw = tf.transformations.euler_from_quaternion([auv_marker.pose.orientation.x, auv_marker.pose.orientation.y, auv_marker.pose.orientation.z, auv_marker.pose.orientation.w])
-    # print(roll,pitch,yaw)
     new_quaternion = Quaternion(*tf.transformations.quaternion_from_euler(roll, pitch, float(msg.data)*math.pi/180))
     auv_marker.pose.orientation = new_quaternion
     auv_pub.publish(auv_marker)
@@ -325,7 +326,7 @@ rospy.sleep(10)
 print("Starting visualization!")
 
 dvl_euler_angles = [0,0,0]
-object_map_ids = []
+object_map_markers = []
 marker_id = 0
 
 groundTruths = [
@@ -335,8 +336,8 @@ groundTruths = [
 currentEffort = {"surge":0, "sway":0, "heave":0, "roll":0, "pitch":0, "yaw":0}
 
 def publishToMap(marker):
-    global object_map_ids
-    object_map_ids.append(marker)
+    global object_map_markers
+    object_map_markers.append(marker)
     map_pub.publish(marker)
 
 setup()

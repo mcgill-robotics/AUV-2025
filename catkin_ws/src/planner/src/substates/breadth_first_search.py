@@ -9,11 +9,9 @@ import threading
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class BreadthFirstSearch(smach.State):
         ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
-    def __init__(self, timeout, expansionAmt, target_classes=[], min_objs=1, control=None, mapping=None):
+    def __init__(self, timeout, expansionAmt, control, mapping, min_objs=1, target_classes=[]):
         super().__init__(outcomes=['success', 'failure'])
-        if control == None: raise ValueError("control argument is None")
         self.control = control
-        if mapping == None: raise ValueError("mapping argument is None")
         self.mapping = mapping
         self.detectedObject = False
         self.timeout = timeout
@@ -63,7 +61,8 @@ class BreadthFirstSearch(smach.State):
                         self.detectedObject = True
                         self.searchThread.join()
                         self.control.stop_in_place()
-                        print("Found object!")
+                        print("Found object! Waiting 10 seconds to get more observations of object.")
+                        rospy.sleep(10)
                         return 'success'
             print("Breadth-first search timed out.")
             return 'failure'

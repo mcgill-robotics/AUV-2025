@@ -31,7 +31,7 @@ class Superimposer:
         # just update the time
         self.header = Header(frame_id="auv_rotation")
 
-        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=50)
+        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
 
 
     def update_effort(self, _):
@@ -46,12 +46,12 @@ class Superimposer:
         effort
         '''
 
-        surge = self.surge.val + rospy.get_param("~surge_offset", 0)
-        sway = self.sway.val + rospy.get_param("~sway_offset", 0)
-        heave = self.heave.val + rospy.get_param("~heave_offset", 0)
-        roll = self.roll.val + rospy.get_param("~roll_offset", 0)
-        pitch = self.pitch.val + rospy.get_param("~pitch_offset", 0)
-        yaw = self.yaw.val + rospy.get_param("~yaw_offset", 0)
+        surge = self.surge.val
+        sway = self.sway.val
+        heave = self.heave.val
+        roll = self.roll.val
+        pitch = self.pitch.val
+        yaw = self.yaw.val
 
         force_global = Vector3(
                 self.global_x.val, self.global_y.val, self.global_z.val)

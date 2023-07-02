@@ -48,8 +48,8 @@ class State:
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
     def updateDepthMap(self, msg):
-        self.depth = bridge.imgmsg_to_cv2(msg, "passthrough")
-        self.depth += np.random.normal(0, 0.1, self.depth.shape)
+        self.depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
+        self.depth_map += np.random.normal(0, 0.1, self.depth_map.shape)
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -101,10 +101,10 @@ def measureLaneMarker(img, bbox, debug_img):
         #get angle, line start and line end from heading slope
         slope = math.tan((angle/-180)*math.pi)
         #calculate line x length from total length
-            #line_length = sqrt(line_x_length^2 + line_y_length^2)
-            #line_length^2 = line_x_length^2 + (line_x_length*slope)^2
-            #line_length^2 = line_x_length^2 * (1 + slope^2)
-            #line_x_length = sqrt(line_length^2 / (1 + slope^2))
+            #line_length = sqrt(line_x_length**2 + line_y_length**2)
+            #line_length**2 = line_x_length**2 + (line_x_length*slope)**2
+            #line_length**2 = line_x_length**2 * (1 + slope**2)
+            #line_x_length = sqrt(line_length**2 / (1 + slope**2))
         line_x_length = math.sqrt((line_length ** 2) / (1 + slope ** 2))
         if abs(angle) > 90: #heading goes into negative x
             line_end = (int(center_point[0]-line_x_length), int(center_point[1] - slope*line_x_length)) # (x,y)
@@ -172,10 +172,10 @@ def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
     x = -math.tan(y_rad)
-    y = -math.tan(x_rad)
-    # we want sqrt(x^2 + y^2 + z^2) == 1
-    #   z^2 == 1 - x^2 + y^2
-    #   z == -1 * sqrt(1 - x^2 + y^2)
+    y = math.tan(x_rad)
+    # we want sqrt(x**2 + y**2 + z**2) == 1
+    #   z**2 == 1 - x**2 + y**2
+    #   z == -1 * sqrt(1 - x**2 + y**2)
     try:
         z = -1 * abs(math.sqrt(1 - (x ** 2 + y ** 2)))
         vec = np.array([x,y,z])
@@ -187,11 +187,11 @@ def eulerToVectorDownCam(x_deg, y_deg):
 def eulerToVectorFrontCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
-    y = -math.tan(x_rad)
+    y = math.tan(x_rad)
     z = -math.tan(y_rad)
-    # we want sqrt(x^2 + y^2 + z^2) == 1
-    #   x^2 == 1 - y^2 + z^2
-    #   x == sqrt(1 - y^2 + z^2)
+    # we want sqrt(x**2 + y**2 + z**2) == 1
+    #   x**2 == 1 - y**2 + z**2
+    #   x == sqrt(1 - y**2 + z**2)
     try:
         x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
         vec = np.array([x,y,z])
@@ -201,13 +201,12 @@ def eulerToVectorFrontCam(x_deg, y_deg):
     return vec
 
 def find_intersection(vector, plane_z_pos):
-    plane_normal = np.array([0,0,1])
-    plane_point = np.array([0,0,plane_z_pos])
-    dot_product = np.dot(vector, plane_normal)
-    if np.isclose(dot_product, 0):return None
-    vector_length_to_plane = ((np.dot(plane_point, plane_normal) - np.dot(np.array([0,0,0]), plane_normal)) / dot_product)
-    if vector_length_to_plane < 0: return None
-    return vector_length_to_plane * np.array(vector)
+    if vector[2] == 0: return None
+
+    scaling_factor = plane_z_pos / vector[2]
+    if scaling_factor < 0: return None
+
+    return np.array(vector) * scaling_factor
 
 def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
     if dist_from_camera is not None: # ASSUMES FRONT CAMERA
@@ -236,16 +235,17 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
 
         local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
         global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None, None
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None
         x = obj_pos[0]
         y = obj_pos[1]
         z = z_pos
         return x, y, z
     else:
         print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
-        return None, None, None, None
+        return None, None, None
 
 def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
@@ -255,27 +255,27 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
 
-    left_pole_angle = math.acos((buoy_width^2 + avg_left_depth^2 - avg_right_depth^2)/(2*buoy_width*avg_left_depth))
-    gate_pixel_left = bbox_coordinates[0] - bbox_coordinates[2]/2
-    x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_left) / depth_img.shape[1] #-0.5 to 0.5
+    left_pole_angle = (180 * math.acos((buoy_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*buoy_width*avg_left_depth)) / math.pi) - 90
+    buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
+    x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-    gate_angle = state.theta_z + left_pole_angle + theta_x
+    buoy_angle = state.theta_z - left_pole_angle + theta_x
 
-    return gate_angle
+    return buoy_angle
     
-def measureGateAngle(depth_img, gate_length, bbox_coordinates): # ELIE
+def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
-    left_pole_angle = math.acos((gate_length^2 + avg_left_depth^2 - avg_right_depth^2)/(2*gate_length*avg_left_depth))
-    # auv_angle = math.acos((avg_left_depth^2 +avg_right_depth^2 - gate_length^2)/(2*avg_left_depth*avg_right_depth))
+    left_pole_angle = (180 * math.acos((gate_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_width*avg_left_depth)) / math.pi) - 90
+    # auv_angle = math.acos((avg_left_depth**2 +avg_right_depth**2 - gate_width**2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov*x_center_offset
-    gate_angle = state.theta_z + left_pole_angle + theta_x
+    gate_angle = state.theta_z - left_pole_angle + theta_x
     return gate_angle
 
 def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
@@ -299,15 +299,38 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
 
     min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
 
-    if min_key == earth_class_id: return 1
-    else: return 0
+    if min_key == earth_class_id: return 1.0
+    else: return 0.0
     
 
-def analyzeBuoy(img_cropped, debug_img):
+def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buoy_class_id, depth_map):
     return []
 
+def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
+    label_counts = {}
+    selected_detections = []
+    for i in range(len(labels)):
+        if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
+            candidate_obj_conf = confidences[i]
+            min_conf_i = min(selected_detections, key=lambda x : confidences[x])
+            if confidences[min_conf_i] < candidate_obj_conf:
+                selected_detections.remove(min_conf_i)
+                selected_detections.append(i)
+        else:
+            label_counts[labels[i]] = label_counts.get(labels[i], 0) + 1
+            selected_detections.append(i)
 
-rospy.init_node('object_detection',log_level=rospy.DEBUG)
+    selected_labels = [labels[si] for si in selected_detections]
+    selected_objs_x = [objs_x[si] for si in selected_detections]
+    selected_objs_y = [objs_y[si] for si in selected_detections]
+    selected_objs_z = [objs_z[si] for si in selected_detections]
+    selected_objs_theta_z = [objs_theta_z[si] for si in selected_detections]
+    selected_extra_fields = [extra_fields[si] for si in selected_detections]
+
+    return selected_labels, selected_objs_x, selected_objs_y, selected_objs_z, selected_objs_theta_z, selected_extra_fields
+
+
+rospy.init_node('object_detection') #,log_level=rospy.DEBUG
 
 
 #one publisher per camera
@@ -323,8 +346,8 @@ visualisation_pubs = [
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
-down_cam_hfov = 220
-down_cam_vfov = 165.26
+down_cam_hfov = 87 #set to 220 when not in sim!
+down_cam_vfov = 65 #set to 165.26 when not in sim!
 front_cam_hfov = 87
 front_cam_vfov = 58
 

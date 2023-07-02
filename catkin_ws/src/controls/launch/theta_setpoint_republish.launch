@@ -1,4 +1,0 @@
-<launch>
-	<node name="theta_setpoint_republish" pkg="controls" type="theta_setpoint_republish.py" respawn="true" output="screen">
-    </node>
-</launch>
