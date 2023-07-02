@@ -30,7 +30,8 @@ class ObjectMapper:
                 objs_with_class.append(obj)
         return objs_with_class
 
-    def getClosestObject(self,pos,cls=None,closest_object_dist=999999):
+    def getClosestObject(self,pos,cls=None):
+        closest_object_dist=999999
         closest_object = None
         for obj in self.map:
             if obj[0] == cls or cls is None:

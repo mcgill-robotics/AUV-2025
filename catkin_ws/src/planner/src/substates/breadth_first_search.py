@@ -9,7 +9,7 @@ import threading
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class BreadthFirstSearch(smach.State):
         ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
-    def __init__(self, timeout, expansionAmt, control, mapping, min_objs=1, target_classes=[]):
+    def __init__(self, expansionAmt, control, mapping, target_classes, timeout):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

@@ -16,6 +16,7 @@ from substates.quaternion_test import *
 from substates.trick import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
+from substates.navigate_buoy import *
 
 def endMission(msg):
     print(msg)
@@ -82,31 +83,31 @@ def master_planner():
     control.moveDelta((0, 0, -0.5))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(1, 1)], control=control, mapping=mapping), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=9999, target_classes=[(global_class_ids["Gate"], 1)], control=control, mapping=mapping), 
                 transitions={'success': 'navigate_gate', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False), 
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
-        smach.StateMachine.add('tricks', Trick(control=control), 
+        smach.StateMachine.add('tricks', Trick(control=control, trick_type="roll"), 
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(target_classes=[(0, 1)], control=control, mapping=mapping), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=60, expansionAmt=1, target_classes=[(global_class_ids["Lane Marker"], 1)], control=control, mapping=mapping), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_buoy', LinearSearch(timeout=9999, forward_speed=5, target_classes=[(2,1)], control=control, mapping=mapping), 
+        smach.StateMachine.add('find_buoy', LinearSearch(timeout=9999, forward_speed=5, target_classes=[(global_class_ids["Buoy"],1)], control=control, mapping=mapping), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
                 transitions={'success': 'find_octagon', 'failure':'failure'})
         
-        smach.StateMachine.add('find_octagon', OctagonSearch(search_point=octagon_approximate_location, control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('find_octagon', OctagonSearch(search_point=octagon_approximate_location, target_class=global_class_ids["Octagon"], control=control, mapping=mapping, state=state), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
@@ -115,16 +116,18 @@ def master_planner():
     endMission("Finished Robosub with result: " + str(res))
 
 octagon_approximate_location = (0,0,0)
-#
+global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
+
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
     try:
-        # mapping = ObjectMapper()
+        mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
+        target_symbol = "Earth Symbol" # "Abydos Symbol"
 
         # QualiQuaternionMission()
         # QualiMission()

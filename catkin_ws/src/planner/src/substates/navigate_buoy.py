@@ -5,28 +5,25 @@ from .utility.functions import *
 from .utility.state import *
 import math
 
-class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, goThrough, gate_class):
+class NavigateBuoy(smach.State):
+    def __init__(self, control, state, mapping, target_symbol_class, buoy_class):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
-        if target_symbol not in ["Earth Symbol", "Abydos Symbol"]:
-            raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
-        self.target_symbol = target_symbol
-        self.gate_class = gate_class
-        self.goThrough = goThrough
+        self.target_symbol_class = target_symbol_class
+        self.buoy_class = buoy_class
 
     def execute(self, ud):
-        print("Starting gate navigation.") 
+        print("Starting buoy navigation.") 
         origin_position = (self.state.x, self.state.y)
 
-        gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(origin_position[0], origin_position[1]))
+        gate_object = self.mapping.getClosestObject(cls=self.buoy_class, pos=(origin_position[0], origin_position[1]))
         if gate_object is None:
-            print("No gate in object map! Failed.")
+            print("No buoy in object map! Failed.")
             return 'failure'
     
-        print("Centering and rotating in front of gate.")
+        print("Centering and rotating in front of buoy.")
         offset_distance = -3
         offset = offset_distance * degreesToVector(gate_object[4])
         self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
@@ -36,7 +33,7 @@ class NavigateGate(smach.State):
         print("Waiting 10 seconds to improve measurement accuracy")
         rospy.sleep(10)
 
-        print("Re-centering and rotating in front of gate.")
+        print("Re-centering and rotating in front of buoy.")
         self.mapping.updateObject(gate_object)
         offset_distance = -2
         offset = offset_distance * degreesToVector(gate_object[4])
@@ -51,7 +48,7 @@ class NavigateGate(smach.State):
         self.mapping.updateObject(gate_object)
         symbol = gate_object[5] #1 if earth on left, 0 if abydos left
 
-        if self.target_symbol == "Earth Symbol": 
+        if self.target_symbol == "earth": 
             if symbol >= 0.5:
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,0.5,0))
@@ -66,7 +63,7 @@ class NavigateGate(smach.State):
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-0.5,0))
 
-        self.control.moveDeltaLocal((3.0,0.0,0.0))
+        self.control.moveDeltaLocal((1.0 + math.sqrt((self.state.x - gate_object[1])**2 + (self.state.y - gate_object[2])**2),0,0))
 
         print("Successfully passed through gate!")
         
