@@ -40,3 +40,29 @@ class RepositionLaneMarker(smach.State):
             return 'failure' 
         
 
+class RepositionOctogone(smach.State):
+    def __init__(self, control, positions):
+        super().__init__(outcomes=['success', 'failure'], 
+                        input_keys=['counter_in'], 
+                        output_keys=['counter_out'])
+        if control == None: raise ValueError("control argument is None")
+        self.control = control
+        self.positions = positions
+
+    def execute(self, ud):
+        """ Go to position """
+
+        if (ud.counter_in == len(self.positions)):
+            # If all positions were visited
+            return 'failure'
+        
+        try:
+            self.control.move(self.positions[ud.counter_in])
+            ud.counter_out = ud.couter_in + 1
+            print("Completed")
+            return 'success'
+
+        except KeyboardInterrupt:
+            print("Reposition octogone interrupted by user.")
+            return 'failure' 
+

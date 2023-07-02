@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from planner.src.substates.octogone_task import CenterOctogone, goThroughOctogone
+from substates.octogone_task import NavigateOctogone
 import rospy
 import smach
 
@@ -70,18 +70,23 @@ def Tricks(t):
     endMission("Finished trick. Result {}".format(res))
 
 
-def octogone_task():
+def octogone_task(octogone_positions):
     sm = smach.StateMachine(outcomes=['success', 'failure'])
-    ocotogne_target_class = 3 
+    ocotogne_target_class = 3
+    sm.userdata.sm_counter = 0
     with sm:
-        smach.StateMachine.add('find_octogone', BreadthFirstSearch(timeout=9999, target_classes=[(ocotogne_target_class, 1)], control=control, mapping=mapping), 
-                transitions={'success': 'center_octogone', 'failure': 'find_octogone'})
-
-        smach.StateMachine.add('center_octogone', CenterOctogone( control=control), 
-                transitions={'success': 'navigate_octogone', 'failure': 'center_octogone'})
         
-        smach.StateMachine.add('navigate_octogone', goThroughOctogone( control=control,state=state), 
+        smach.StateMachine.add('find_octogone', BreadthFirstSearch(timeout=9999, target_classes=[(ocotogne_target_class, 1)], control=control, mapping=mapping), 
+            transitions={'success': 'navigate_octogone', 'failure': 'reposition_octogone'})
+        
+        smach.StateMachine.add('reposition_octogone', RepositionOctogone(control=control, positions=octogone_positions), 
+                transitions={'success': 'find_octogone', 'failure': 'failure'},
+                remapping={'counter_in':'sm_counter', 'counter_out':'sm_counter'}
+            )
+        
+        smach.StateMachine.add('navigate_octogone', NavigateOctogone(control=control,state=state), 
                 transitions={'success': 'succes', 'failure': 'failure'})
+
 
 
 
