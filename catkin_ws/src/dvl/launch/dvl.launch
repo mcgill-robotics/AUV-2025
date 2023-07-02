@@ -1,5 +1,5 @@
 <launch>
-  <arg name="port" default="/dev/ttyUSB0" doc="serial port"/>
+  <arg name="port" default="/dev/ttyUSB2" doc="serial port"/>
   <arg name="baudrate" default="115200" doc="serial baud rate"/>
 
   <node name="waterlinked_driver"
