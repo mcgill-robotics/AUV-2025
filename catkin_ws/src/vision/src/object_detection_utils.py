@@ -11,8 +11,8 @@ from std_msgs.msg import Header, Float64
 import lane_marker_measure
 import torch
 
-def transformLocalToGlobal(lx,ly,lz):
-    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
+def transformLocalToGlobal(lx,ly,lz,camera_id):
+    trans = states[camera_id].coordinate_transform
     offset_local = Vector3(lx, ly, lz)
     tf_header.stamp = rospy.Time(0)
     offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
@@ -35,21 +35,36 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.depth_map = None
+        self.paused = False
+        self.coordinate_transform = None
     def updateX(self, msg):
+        if self.paused: return
         self.x = float(msg.data)
     def updateY(self, msg):
+        if self.paused: return
         self.y = float(msg.data)
     def updateZ(self, msg):
+        if self.paused: return
         self.z = float(msg.data)
     def updateThetaX(self, msg):
+        if self.paused: return
         self.theta_x = float(msg.data)
     def updateThetaY(self, msg):
+        if self.paused: return
         self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
+        if self.paused: return
         self.theta_z = float(msg.data)
     def updateDepthMap(self, msg):
+        if self.paused: return
         self.depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
         self.depth_map += np.random.normal(0, 0.1, self.depth_map.shape)
+    def pause(self):
+        self.paused = True
+        self.coordinate_transform = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
+    def resume(self):
+        self.paused = False
+        self.coordinate_transform = None
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -222,7 +237,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
-        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2], 1)
         return x,y,z
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
@@ -234,11 +249,11 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         pitch_angle_offset = down_cam_vfov*y_center_offset
 
         local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
         x = obj_pos[0]
         y = obj_pos[1]
         z = z_pos
@@ -259,7 +274,7 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-    buoy_angle = state.theta_z - left_pole_angle + theta_x
+    buoy_angle = states[1].theta_z - left_pole_angle + theta_x
 
     return buoy_angle
     
@@ -275,7 +290,7 @@ def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov*x_center_offset
-    gate_angle = state.theta_z - left_pole_angle + theta_x
+    gate_angle = states[1].theta_z - left_pole_angle + theta_x
     return gate_angle
 
 def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
@@ -357,4 +372,4 @@ bridge = CvBridge()
 tf_buffer = Buffer()
 TransformListener(tf_buffer)
 tf_header = Header(frame_id="world")
-state = State()
+states = (State(), State())

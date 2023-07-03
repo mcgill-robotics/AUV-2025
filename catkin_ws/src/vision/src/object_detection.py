@@ -19,7 +19,7 @@ def detect_on_image(raw_img, camera_id):
     if i[camera_id] <= detect_every: return
     i[camera_id] = 0
     
-    current_states = {"x:": state.x, "y:": state.y, "z": state.z, "theta_x": state.theta_x, "theta_y": state.theta_y, "theta_z": state.theta_z, "depth": state.depth_map}
+    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z, "depth": states[camera_id].depth_map}
     for v in current_states.values():
         if v is None:
             print("State information missing. Skipping detection.")
@@ -27,6 +27,7 @@ def detect_on_image(raw_img, camera_id):
             return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
+    states[camera_id].pause()
     debug_img = np.copy(img)
     
     #run model on img
@@ -41,7 +42,7 @@ def detect_on_image(raw_img, camera_id):
     confidences = []
     if camera_id == 1:
         buoy_symbols = []
-        buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Buoy"), state.depth_map)
+        buoy_symbols = analyzeBuoy(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Buoy"), states[camera_id].depth_map)
         leftmost_gate_symbol = analyzeGate(detections, min_prediction_confidence, class_names[1].index("Earth Symbol"), class_names[1].index("Abydos Symbol"), class_names[1].index("Gate"))
     #nested for loops get all predictions made by model
     for detection in detections:
@@ -70,8 +71,8 @@ def detect_on_image(raw_img, camera_id):
                         obj_theta_z.append(None)
                         center = bbox
                     else:
-                        heading1 = state.theta_z + (headings[0]-90)
-                        heading2 = state.theta_z + (headings[1]-90)
+                        heading1 = states[camera_id].theta_z + (headings[0]-90)
+                        heading2 = states[camera_id].theta_z + (headings[1]-90)
                         if heading1 > heading2:
                             obj_theta_z.append(heading1)
                             extra_field.append(heading2)
@@ -94,7 +95,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
             else: # FORWARD CAM
                 center = bbox
-                depth_cropped = remove_background(clean_depth_error(cropToBbox(state.depth_map, bbox)))
+                depth_cropped = remove_background(clean_depth_error(cropToBbox(states[camera_id].depth_map, bbox)))
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
@@ -104,7 +105,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
-                    theta_z = measureGateAngle(state.depth_map, gate_width, bbox)
+                    theta_z = measureGateAngle(states[camera_id].depth_map, gate_width, bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
@@ -144,6 +145,7 @@ def detect_on_image(raw_img, camera_id):
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     debug_img = bridge.cv2_to_imgmsg(debug_img, "bgr8")
     visualisation_pubs[camera_id].publish(debug_img)
+    states[camera_id].resume()
 
 lane_marker_z = -3.7
 octagon_z = 0
