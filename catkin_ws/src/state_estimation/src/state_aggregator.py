@@ -57,14 +57,14 @@ class State_Aggregator:
         # self.q_world_imu = np.quaternion(0, 1, 0, 0) # 'nominal' orientation, relative to global (imu) frame - allows imu reset 
 
         # publishers
-        self.pub_auv = rospy.Publisher('pose', Pose, queue_size=50)
-        self.pub_world = rospy.Publisher('pose_world', Pose, queue_size=50)
-        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=50)
-        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=50)
-        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=50)
-        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=50)
-        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=50)
-        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=50)
+        self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
+        self.pub_world = rospy.Publisher('pose_world', Pose, queue_size=1)
+        self.pub_x = rospy.Publisher('state_x', Float64, queue_size=1)
+        self.pub_y = rospy.Publisher('state_y', Float64, queue_size=1)
+        self.pub_z = rospy.Publisher('state_z', Float64, queue_size=1)
+        self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
+        self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
+        self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
 
         # subscribers
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
