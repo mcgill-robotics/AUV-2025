@@ -17,6 +17,8 @@ from substates.trick import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
 from substates.navigate_buoy import *
+from substates.octagon_task import *
+
 
 def endMission(msg):
     print(msg)
