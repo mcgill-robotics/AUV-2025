@@ -4,26 +4,22 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import numpy as np
 import math
-from geometry_msgs.msg import Vector3, Vector3Stamped
-from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
-from std_msgs.msg import Header, Float64
+from std_msgs.msg import Float64
 import lane_marker_measure
 import torch
+from geometry_msgs.msg import Pose
+import quaternion
 
 def transformLocalToGlobal(lx,ly,lz,camera_id):
-    trans = states[camera_id].coordinate_transform
-    offset_local = Vector3(lx, ly, lz)
-    tf_header.stamp = rospy.Time(0)
-    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
-    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
-    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
+    rotation = states[camera_id].q_auv
+    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 class State:
     def __init__(self):
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
+        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
@@ -36,7 +32,7 @@ class State:
         self.theta_z = None
         self.depth_map = None
         self.paused = False
-        self.coordinate_transform = None
+        self.q_auv = None
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -59,12 +55,13 @@ class State:
         if self.paused: return
         self.depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
         self.depth_map += np.random.normal(0, 0.1, self.depth_map.shape)
+    def updatePose(self,msg):
+        if self.paused: return
+        self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def pause(self):
         self.paused = True
-        self.coordinate_transform = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
     def resume(self):
         self.paused = False
-        self.coordinate_transform = None
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -369,7 +366,4 @@ front_cam_vfov = 58
 max_dist_to_measure = 10
 
 bridge = CvBridge()
-tf_buffer = Buffer()
-TransformListener(tf_buffer)
-tf_header = Header(frame_id="world")
 states = (State(), State())
