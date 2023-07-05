@@ -70,14 +70,15 @@ class State_Aggregator:
         q_dvl = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
         q_dvl = np.quaternion(q_dvl[3], q_dvl[0], q_dvl[1], q_dvl[2]) # transformations returns quaternion as nparray [w, x, y, z]
 
+
         # quaternion of AUV in global frame
-        q_auv_global_dvl = self.q_dvl_mount_auv.inverse()*self.q_global_ned.inverse()*q_dvl
+        self.q_auv_global_dvl = self.q_dvl_mount_auv.inverse()*self.q_global_ned.inverse()*q_dvl
 
         # position of DVL (and also AUV TODO) in NED frame
         pos_dvl = np.array([data.x, data.y, data.z]) 
 
         # position of DVL in global frame
-        pos_auv_global_dvl = quaternion.rotate_vectors(self.q_global_ned.inverse(), pos_dvl)
+        self.pos_auv_global_dvl = quaternion.rotate_vectors(self.q_global_ned.inverse(), pos_dvl)
 
 
     def imu_cb(self, imu_msg):
@@ -123,7 +124,7 @@ class State_Aggregator:
 
     def update_q_auv_world(self):
         # currently only using the imu for orientation
-        q_auv_global = self.q_auv_global_imu
+        self.q_auv_global = self.q_auv_global_imu
 
         # quaternion of AUV in world frame
         self.q_auv_world = self.q_world_global.inverse()*self.q_auv_global
@@ -131,7 +132,7 @@ class State_Aggregator:
 
     def update_pos_auv_world(self):
         # aggregate AUV position in global frame
-        pos_auv_global = np.array([
+        self.pos_auv_global = np.array([
             self.pos_auv_global_dvl[0], 
             self.pos_auv_global_dvl[1], 
             self.pos_auv_global_ds[2]])
