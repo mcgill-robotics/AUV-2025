@@ -62,7 +62,8 @@ class State_Aggregator:
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
         rospy.Subscriber("/dead_reckon_report",DeadReckonReport, self.dvl_cb)
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
-        rospy.Subscriber("/reset_state", Empty, self.reset_state_cb)
+        rospy.Subscriber("/reset_state_full", Empty, self.reset_state_full_cb)
+        rospy.Subscriber("/reset_state_planar", Empty, self.reset_state_planar_cb)
 
 
     def dvl_cb(self,data):
@@ -102,24 +103,55 @@ class State_Aggregator:
         self.pos_auv_global_ds = quaternion.rotate_vectors(self.q_global_ned.inverse(), pos_depth)
 
 
-    def reset_state_cb(self, _):
-        # TODO - for now, only reset the orientation
-        # maybe on reset find best world frame that keeps the same x-y plane?
+    def reset_state_full_cb(self, _):
+        '''
+        Snaps the world frame to the AUV frame (position + orientation)
+        '''
         # new world position is current AUV position in global frame
         self.pos_world_global = self.pos_auv_global
         self.pos_auv_world = np.array([0.0, 0.0, 0.0])
 
-        # copy of q_auv in (old) world frame
-        q_auv = self.q_auv_world
-        q_auv = np.quaternion(q_auv.w, q_auv.x, q_auv.y, q_auv.z)
-
-        # new world quaternion is q_auv in global (imu) frame
-        self.q_world_global = self.q_world_global*q_auv
+        # new world quaternion is q_auv in global frame
+        self.q_world_global = self.q_world_global*self.q_auv_world
 
         # q_auv is still relative to old q_world, so is recalculated
         # by definition, it is aligned with the frame of q_world 
         self.q_auv_world = np.quaternion(1, 0, 0, 0) 
-        self.euler_auv_world = np.array([0.0, 0.0, 0.0]) # TODO - calculate at publish
+        self.euler_auv_world = np.array([0.0, 0.0, 0.0])
+
+
+    def reset_state_planar_cb(self, _):
+        ''' 
+        Snaps world frame to AUV position, 
+        and similar orientation - except keeping the same (global) x-y plane 
+
+        - this method is a bit hackish 
+        and should only be used when the orientation of the AUV 
+        is aproximately only yaw relative to global frame, 
+        it may give unwanted results at other extreme orientations
+        '''
+        # new world position is current AUV position in global frame
+        # TODO - should this not reset z?
+        self.pos_world_global = self.pos_auv_global
+        self.pos_auv_world = np.array([0.0, 0.0, 0.0])
+
+        # new world quaternion is yaw rotation of AUV in global frame
+        q = self.q_auv_global
+        q_auv_global = np.array([q.x, q.y, q.z, q.w])
+        theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[0]
+        q_world_global = transformations.quaternion_from_euler(0, 0, theta_z)
+        self.q_world_global = np.quaternion(q_world_global[3], q_world_global[0], q_world_global[1], q_world_global[2])
+
+        # q_auv is still relative to old world frame, so is recalculated
+        # note - the new AUV frame does not necessarily coincide with the 
+        # new world frame since we are using only the yaw component of 
+        # q_auv_global when determining the world frame
+        self.q_auv_world = self.q_world_global.inverse()*self.q_auv_global
+
+        # euler is reset to erase any windup, then is brought to
+        # the actual euler angle of the AUV
+        self.euler_auv_world = np.array([0.0, 0.0, 0.0])
+        self.update_euler()
 
 
     def update_q_auv_world(self):
@@ -145,7 +177,7 @@ class State_Aggregator:
 
 
     def update_euler(self):
-        # calculate euler angles
+        # calculate euler angles based on self.q_auv_world
         # *note* the tf.transformations module is used instead of
         # quaternion package because it gives the euler angles
         # as roll/pitch/yaw (XYZ) whereas the latter chooses
