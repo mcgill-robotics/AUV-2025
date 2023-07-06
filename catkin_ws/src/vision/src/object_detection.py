@@ -84,7 +84,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-                elif global_class_id == 4: # OCTAGON
+                elif global_class_id == 4: # OCTAGON TABLE
                     center = bbox
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
                     obj_x.append(pred_obj_x)
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         ["Lane Marker", "Octagon Table"],
         ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy", "Octagon Table", "Octagon"],
         ]
-    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon Table":6}
+    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2]
 
