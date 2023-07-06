@@ -185,7 +185,7 @@ if __name__ == '__main__':
         ["Lane Marker", "Octagon"],
         ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy"],
         ]
-    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":4}
+    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2]
 

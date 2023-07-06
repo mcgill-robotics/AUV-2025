@@ -9,7 +9,7 @@ import threading
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class InPlaceSearch(smach.State):
         ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
-    def __init__(self, timeout, control, mapping, target_classes=[], min_objs=1):
+    def __init__(self, timeout, control, mapping, target_classes):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

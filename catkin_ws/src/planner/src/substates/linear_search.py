@@ -9,7 +9,7 @@ import threading
 #ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
 class LinearSearch(smach.State):
     ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
-    def __init__(self, timeout, forward_speed, control, mapping, target_classes=[]):
+    def __init__(self, timeout, forward_speed, control, mapping, target_classes):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

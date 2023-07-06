@@ -14,22 +14,20 @@ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 import math
 
+# distances in m
+dx_1 = 0.397 # T1 -> T2
+dx_2 = 0.395 # T7 -> T8, T5 -> T6 
+dy_1 = 0.514 # T6 -> T7, T5 -> T8
+dy_2 = 0.779 # perpendicular T3 -> T4
 
-# d = 0.224 #m
-# D_1 = 0.895 #m
-# D_2 = 0.778 #m
-
-d = 0.284 #m
-hypot = math.sqrt(math.pow(0.672/2,2) + math.pow(0.258/2,2)) #m
-D_2 = 0.571 #m
 
 T = np.matrix(
-        [[-1.,  -1.,  0.,    0.,    0.,     0.,     0.,     0.],
-        [  0.,   0.,  1.,   -1.,    0.,     0.,     0.,     0.],
-        [  0.,   0.,  0.,    0.,   -1.,    -1.,    -1.,    -1.],
-        [  0.,   0.,  0.,    0.,   -d/2,    d/2,   -d/2,    d/2],
-        [  0.,   0.,  0.,    0.,   D_2/2,   D_2/2, -D_2/2, -D_2/2],
-        [  d/2, -d/2, hypot, hypot, 0.,     0.,     0.,     0.]]
+        [[    -1.,     -1.,   0.,   0.,      0.,     0.,     0.,       0.],
+        [      0.,      0.,   1.,  -1.,      0.,     0.,     0.,       0.],
+        [      0.,      0.,   0.,   0.,     -1.,    -1.,    -1.,      -1.],
+        [      0.,      0.,   0.,   0., -dx_2/2, dx_2/2,  dx_2/2, -dx_2/2],
+        [      0.,      0.,   0.,   0.,  dy_1/2, dy_1/2, -dy_1/2, -dy_1/2],
+        [  dx_1/2, -dx_1/2, dy_2, dy_2,      0.,     0.,      0.,      0.]]
         )
 
 # forces produced by T200 thruster at 14V (N)
