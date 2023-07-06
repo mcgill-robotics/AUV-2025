@@ -137,6 +137,7 @@ def measureLaneMarker(img, bbox, debug_img):
     return headings, center_point, debug_img
 
 def clean_depth_error(depth_img, error_threshold=0.5):
+    """ set all the points with a depth error smaller than the threshold to 100 """
     depth_img[depth_img <= error_threshold] = 100
     return depth_img
 
@@ -170,6 +171,13 @@ def buoy_depth(depth_cropped):
 def lane_marker_depth(depth_cropped):
     return np.nanmean(depth_cropped)
 
+def octagon_table_depth(depth_cropped):
+    """ get the 10 smallest values, take the mean and add 0.6096m to it. The octagon table has width and depth = 2 * 0.6096; 
+        by adding 0.6096 to the mean of the 10 smallest values, we get the distance from the camera to the center of the octagon table """
+    smallest_values = np.partition(depth_cropped.flatten(), 10)[:10]
+    smallest_mean = np.nanmean(smallest_values)
+    return smallest_mean + 0.6096
+
 def object_depth(depth_cropped, label):
     dist = 0
     if label == 0:
@@ -178,9 +186,9 @@ def object_depth(depth_cropped, label):
         dist = gate_depth(depth_cropped)
     elif label == 2:
         dist = buoy_depth(depth_cropped)
-    # elif label == 3:
-    #     dist = buoy_depth(depth_cropped)
-    #TODO!!!!
+    elif label == 3:
+        dist = octagon_table_depth(depth_cropped)
+
     return dist
 
 def eulerToVectorDownCam(x_deg, y_deg):
