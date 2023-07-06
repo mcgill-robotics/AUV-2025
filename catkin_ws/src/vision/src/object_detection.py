@@ -156,8 +156,10 @@ if __name__ == '__main__':
     min_prediction_confidence = 0.4
     
     pwd = os.path.realpath(os.path.dirname(__file__))
-    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-    gate_model_filename = pwd + "/models/front_cam_model.pt"
+    # down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    # gate_model_filename = pwd + "/models/front_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
+    gate_model_filename = pwd + "/models/front_cam_sim.pt"
     model = [
         YOLO(down_cam_model_filename),
         YOLO(gate_model_filename)
@@ -174,10 +176,10 @@ if __name__ == '__main__':
         0
         ]
     class_names = [ #one array per camera, name index should be class id
-        ["Lane Marker", "Octagon"],
-        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy"],
+        ["Lane Marker", "Octagon Table"],
+        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy", "Octagon Table", "Octagon"],
         ]
-    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
+    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon Table":6}
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2]
 
