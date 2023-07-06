@@ -4,9 +4,9 @@ import rospy
 from servers.base_server import BaseServer
 import actionlib
 from auv_msgs.msg import StateQuaternionAction
+from geometry_msgs.msg import Quaternion
 import numpy as np
-import threading
-
+import quaternion
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
@@ -51,8 +51,13 @@ class StateQuaternionServer(BaseServer):
                 self.pub_z_pid.publish(goal_position[2])
                 self.pub_heave.publish(0)
             if (self.goal.do_quaternion.data):
-                self.pid_thread = threading.Thread(target=self.execute_goal, args=[goal_quat])
-                self.pid_thread.start()
+                self.pub_quat_enable.publish(True)
+                goal_msg = Quaternion()
+                goal_msg.w = goal_quat.w
+                goal_msg.x = goal_quat.x
+                goal_msg.y = goal_quat.y
+                goal_msg.z = goal_quat.z
+                self.pub_quat_pid.publish(goal_msg)
 
             time_to_settle = 4
             settled = False
@@ -101,44 +106,3 @@ class StateQuaternionServer(BaseServer):
     def calculateQuatError(self, q1, q2):
         return q1.inverse() * q2
     
-    def calculateIntegralError(self, error_quat, delta_time, angular_velocity):
-        return [0,0,0]
-    
-    def orthogonal_matrix(self, q):
-        Qe1 = self.Q1(q)
-        transpose = np.transpose(Qe1.copy())
-        return np.matmul(Qe1, transpose)
-        
-    def controlEffort(self, goal_quat): 
-        # Calculate error values
-        error_quat = self.calculateQuatError(self.body_quat, goal_quat) 
-        if(error_quat.w < 0): error_quat = -error_quat
-             
-        proportional_effort = np.zeros(3)
-        
-        proportional_effort[0] = self.Kp * error_quat.x
-        proportional_effort[1] = self.Kp * error_quat.y
-        proportional_effort[2] = self.Kp * error_quat.z
-
-        # Calculate derivative term
-        derivative_effort = self.Kd * self.angular_velocity
-
-        # Calculate integral term
-        delta_time = rospy.get_time() - self.last_integral_time
-        integral_effort = self.Ki * self.calculateIntegralError(error_quat, delta_time, self.angular_velocity)
-        self.last_integral_time = rospy.get_time()
-
-        control_effort = proportional_effort + derivative_effort # + integral_effort
-        
-        # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
-        #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
-        #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
-        
-        inertial_matrix = np.array([[0.1376267915,  0.                , 0.                ],
-                                    [0.          ,  0.6490918050833332, 0.                ], 
-                                    [0.          ,  0.                , 0.6490918050833332]])
-        
-        torque = np.matmul(inertial_matrix, control_effort)
-        self.pub_roll.publish(control_effort[0])
-        self.pub_pitch.publish(control_effort[1])
-        self.pub_yaw.publish(control_effort[2])                 

@@ -46,4 +46,10 @@
 		<param name="setpoint_topic" value="x_setpoint" />
 		<param name="pid_enable_topic" value="pid_x_enable" />
 	</node>
+
+	<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
+		<param name="Kp" value="0.07" />
+		<param name="Ki" value="0.0" />
+		<param name="Kd" value="0.1" />
+	</node>
 </launch>

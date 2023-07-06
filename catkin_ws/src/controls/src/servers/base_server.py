@@ -2,7 +2,11 @@
 
 import rospy
 from std_msgs.msg import Float64, Bool
+<<<<<<< Updated upstream
 from geometry_msgs.msg import Pose
+=======
+from geometry_msgs.msg import Pose, Vector3, Quaternion
+>>>>>>> Stashed changes
 from sbg_driver.msg import SbgImuData
 import numpy as np
 
@@ -43,11 +47,13 @@ class BaseServer():
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=1)
         self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=1)
         self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=1)
+        self.pub_quat_pid = rospy.Publisher('quat_setpoint', Quaternion, queue_size=1)
         
     def establish_pid_enable_publishers(self):
         self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
         self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
         self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
+        self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
 
     def establish_state_subscribers(self):
         self.sub = rospy.Subscriber("pose",Pose,self.set_pose)
