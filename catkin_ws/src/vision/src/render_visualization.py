@@ -159,9 +159,9 @@ def addMapMarkers(label,x,y,z,theta_z,in_extra_field,color=(1,0,0)):
     elif label == 2: #BUOY TASK
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Buoy",publishToMap)
-    elif label == 3: # OCTAGON
+    elif label == 3: # OCTAGON TABLE
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[1,1,0.1],publishToMap,[color[0],color[1],color[2],0.4])
-        addLabel(x,y,z,"Octagon" ,publishToMap)
+        addLabel(x,y,z,"Octagon Table" ,publishToMap)
     elif label == 4: #BUOY SYMBOL
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.01,0.1,0.1],publishToMap,[color[0],color[1],color[2],0.5])
         addLabel(x,y,z,"Buoy Symbol: " + str(extra_field),publishToMap)
