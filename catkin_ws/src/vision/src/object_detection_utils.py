@@ -172,11 +172,11 @@ def lane_marker_depth(depth_cropped):
     return np.nanmean(depth_cropped)
 
 def octagon_table_depth(depth_cropped):
-    """ get the 10 smallest values, take the mean and add 1.2192m to it. The octagon table has width and depth = 2 * 1.2192m; 
-        by adding 1.2192m to the mean of the 10 smallest values, we get the distance from the camera to the center of the octagon table """
+    """ get the 10 smallest values, take the mean and add 0.6096m to it. The octagon table has width and depth = 2 * 0.6096; 
+        by adding 0.6096 to the mean of the 10 smallest values, we get the distance from the camera to the center of the octagon table """
     smallest_values = np.partition(depth_cropped.flatten(), 10)[:10]
     smallest_mean = np.nanmean(smallest_values)
-    return smallest_mean + 1.2192
+    return smallest_mean + 0.6096
 
 def object_depth(depth_cropped, label):
     dist = 0
