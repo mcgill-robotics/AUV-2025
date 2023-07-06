@@ -57,8 +57,6 @@ def detect_on_image(raw_img, camera_id):
             bbox = list(box.xywh[0])
             cls_id = int(list(box.cls)[0])
             global_class_id = global_class_ids[class_names[camera_id][cls_id]]
-            label.append(global_class_id)
-            confidences.append(conf)
             #add bbox visualization to img
             debug_img = visualizeBbox(debug_img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
             img_h, img_w, _ = img.shape
@@ -86,6 +84,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
+
                 elif global_class_id == 3: # OCTAGON TABLE
                     label.append(global_class_id)
                     confidences.append(conf)
