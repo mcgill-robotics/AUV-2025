@@ -57,13 +57,13 @@ def detect_on_image(raw_img, camera_id):
             bbox = list(box.xywh[0])
             cls_id = int(list(box.cls)[0])
             global_class_id = global_class_ids[class_names[camera_id][cls_id]]
-            label.append(global_class_id)
-            confidences.append(conf)
             #add bbox visualization to img
             debug_img = visualizeBbox(debug_img, bbox, class_names[camera_id][cls_id] + " " + str(conf*100) + "%")
             img_h, img_w, _ = img.shape
             if camera_id == 0: # DOWN CAM
                 if global_class_id == 0: #LANE MARKER
+                    label.append(global_class_id)
+                    confidences.append(conf)
                     headings, center, debug_img = measureLaneMarker(img, bbox, debug_img)
                     if None in headings:
                         extra_field.append(None)
@@ -85,6 +85,8 @@ def detect_on_image(raw_img, camera_id):
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
                 elif global_class_id == 4: # OCTAGON
+                    label.append(global_class_id)
+                    confidences.append(conf)
                     center = bbox
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
                     obj_x.append(pred_obj_x)
@@ -97,6 +99,8 @@ def detect_on_image(raw_img, camera_id):
                 depth_cropped = remove_background(clean_depth_error(cropToBbox(state.depth_map, bbox)))
                 dist_from_camera = object_depth(depth_cropped, global_class_id)
                 if global_class_id == 0: # LANE MARKER
+                    label.append(global_class_id)
+                    confidences.append(conf)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
@@ -104,6 +108,8 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(None)
                     extra_field.append(None)
                 elif global_class_id == 1: # GATE
+                    label.append(global_class_id)
+                    confidences.append(conf)
                     theta_z = measureGateAngle(state.depth_map, gate_width, bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
@@ -112,6 +118,8 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(theta_z)
                     extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
                 elif global_class_id == 2: # BUOY
+                    label.append(global_class_id)
+                    confidences.append(conf)
                     theta_z = measureBuoyAngle(depth_cropped)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
