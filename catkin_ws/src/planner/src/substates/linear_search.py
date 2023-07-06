@@ -4,7 +4,6 @@ import rospy
 import smach
 from .utility.vision import *
 import time
-import threading
 
 #ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
 class LinearSearch(smach.State):

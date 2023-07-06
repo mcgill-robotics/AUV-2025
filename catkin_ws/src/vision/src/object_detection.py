@@ -7,7 +7,6 @@ from ultralytics import YOLO
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 from object_detection_utils import *
-import object_detection_utils
 import torch
 
 #callback when an image is received
@@ -18,6 +17,7 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] += 1
     if i[camera_id] <= detect_every: return
     i[camera_id] = 0
+    states[camera_id].pause()
     
     current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z, "depth": states[camera_id].depth_map}
     for v in current_states.values():
@@ -27,7 +27,6 @@ def detect_on_image(raw_img, camera_id):
             return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
-    states[camera_id].pause()
     debug_img = np.copy(img)
     
     #run model on img
@@ -80,17 +79,15 @@ def detect_on_image(raw_img, camera_id):
                             obj_theta_z.append(heading2)
                             extra_field.append(heading1)
 
-
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-
                 elif global_class_id == 3: # OCTAGON TABLE
                     label.append(global_class_id)
                     confidences.append(conf)
                     center = bbox
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_table_z)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -137,8 +134,18 @@ def detect_on_image(raw_img, camera_id):
                         obj_z.append(symbol_z) 
                         obj_theta_z.append(theta_z)
                         extra_field.append(None)
+                elif global_class_id == 3: # OCTAGON TABLE
+                    label.append(global_class_id)
+                    confidences.append(conf)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
+                    obj_x.append(pred_obj_x)
+                    obj_y.append(pred_obj_y)
+                    obj_z.append(pred_obj_z) 
+                    obj_theta_z.append(None)
+                    extra_field.append(None)
 
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
+    obj_theta_z = [x if not x is None else -1234.5 for x in obj_theta_z]
 
     label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidences, max_counts_per_label)
 
@@ -156,8 +163,9 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(debug_img)
     states[camera_id].resume()
 
-lane_marker_z = -3.7
-octagon_z = 0
+pool_depth = -4
+lane_marker_z = pool_depth + 0.3
+octagon_table_z = pool_depth + 0.6
 buoy_width = 1.22 
 gate_width = 3
 
@@ -192,7 +200,7 @@ if __name__ == '__main__':
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
-    max_counts_per_label = [1, 1, 1, 1, 2, 2]
+    max_counts_per_label = [1, 1, 1, 1, 2, 2, 1]
 
     #the int argument is used to index debug publisher, model, class names, and i
     subs = [

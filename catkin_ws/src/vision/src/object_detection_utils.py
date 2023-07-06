@@ -178,6 +178,9 @@ def object_depth(depth_cropped, label):
         dist = gate_depth(depth_cropped)
     elif label == 2:
         dist = buoy_depth(depth_cropped)
+    # elif label == 3:
+    #     dist = buoy_depth(depth_cropped)
+    #TODO!!!!
     return dist
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -321,7 +324,9 @@ def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buo
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
     label_counts = {}
     selected_detections = []
+
     for i in range(len(labels)):
+        if None in [objs_x[i], objs_y[i], objs_z[i]]: continue
         if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
             candidate_obj_conf = confidences[i]
             min_conf_i = min(selected_detections, key=lambda x : confidences[x])
