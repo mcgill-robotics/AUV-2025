@@ -109,7 +109,7 @@ def master_planner():
         smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
                 transitions={'success': 'find_octagon', 'failure':'failure'})
         
-        smach.StateMachine.add('find_octagon', OctagonSearch(search_point=octagon_approximate_location, target_class=global_class_ids["Octagon"], control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('find_octagon', OctagonSearch(search_point=octagon_approximate_location, target_class=global_class_ids["Octagon Table"], control=control, mapping=mapping, state=state), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
@@ -118,7 +118,7 @@ def master_planner():
     endMission("Finished Robosub with result: " + str(res))
 
 octagon_approximate_location = (0,0,0)
-global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
+global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
 
 if __name__ == '__main__':
