@@ -106,8 +106,8 @@ class State_Aggregator:
         # TODO - for now, only reset the orientation
         # maybe on reset find best world frame that keeps the same x-y plane?
         # new world position is current AUV position in global frame
-        # self.pos_world = self.pos_auv + self.pos_world
-        # self.pos_auv = np.array([0.0, 0.0, 0.0])
+        self.pos_world_global = self.pos_auv_global
+        self.pos_auv_world = np.array([0.0, 0.0, 0.0])
 
         # copy of q_auv in (old) world frame
         q_auv = self.q_auv_world
