@@ -14,7 +14,7 @@ class TestSubmergedRotations(smach.State):
             for rot in [(90,0,0), (0,90,0), (0,0,90), (-90,0,0), (0,-90,0), (0,0,-90)]:
                 for i in range(4):
                     print("Rotating by {}.".format(rot))
-                    self.control.rotateDelta(rot)
+                    self.control.rotateDeltaEuler(rot)
                     print("Holding for {} seconds.".format(self.hold_time))
                     rospy.sleep(self.hold_time)
             return 'success'

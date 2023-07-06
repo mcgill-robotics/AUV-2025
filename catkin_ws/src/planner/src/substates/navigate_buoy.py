@@ -16,55 +16,44 @@ class NavigateBuoy(smach.State):
 
     def execute(self, ud):
         print("Starting buoy navigation.") 
-        origin_position = (self.state.x, self.state.y)
 
-        gate_object = self.mapping.getClosestObject(cls=self.buoy_class, pos=(origin_position[0], origin_position[1]))
-        if gate_object is None:
+        buoy_object = self.mapping.getClosestObject(cls=self.buoy_class, pos=(self.state.x, self.state.y))
+        if buoy_object is None:
             print("No buoy in object map! Failed.")
             return 'failure'
     
         print("Centering and rotating in front of buoy.")
-        offset_distance = -3
-        offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
-        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
+        offset_distance = -2
+        offset = offset_distance * degreesToVector(buoy_object[4])
+        self.control.rotateEuler((None,None,buoy_object[4])) # bring to exact angle 
+        self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of gate
 
-        # wait and repeat just to be safe
+        # wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
         rospy.sleep(10)
 
         print("Re-centering and rotating in front of buoy.")
-        self.mapping.updateObject(gate_object)
-        offset_distance = -2
-        offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
-        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
+        self.mapping.updateObject(buoy_object)
+        offset = offset_distance * degreesToVector(buoy_object[4])
 
+        homing_rotation = (None,None,buoy_object[4])
+        homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
+
+        self.control.rotateEuler(homing_rotation) # bring to exact angle 
+        self.control.move(homing_position) # move in front of gate
         print("Successfully centered in front of gate")
 
-        if not self.goThrough:
-            return 'success'
+        buoy_symbols = self.mapping.getClass(cls=self.target_symbol_class)
+        if len(buoy_symbols) == 0:
+            print("No buoy symbol in object map! Failed.")
+            return 'failure'
 
-        self.mapping.updateObject(gate_object)
-        symbol = gate_object[5] #1 if earth on left, 0 if abydos left
+        for symbol in buoy_symbols:
+            print("Touching symbol.")
+            self.control.move(symbol[1:4]) # move in front of gate
+            print("Returning to homing position.")
+            self.control.move(homing_position) # move in front of gate
 
-        if self.target_symbol == "earth": 
-            if symbol >= 0.5:
-                print("Going through left side")
-                self.control.moveDeltaLocal((0,0.5,0))
-            else : 
-                print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.5,0))
-        else: 
-            if symbol <= 0.5:
-                print("Going through left side")
-                self.control.moveDeltaLocal((0,0.5,0))
-            else: 
-                print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.5,0))
-
-        self.control.moveDeltaLocal((1.0 + math.sqrt((self.state.x - gate_object[1])**2 + (self.state.y - gate_object[2])**2),0,0))
-
-        print("Successfully passed through gate!")
+        print("Successfully completed buoy task!")
         
         return 'success'
