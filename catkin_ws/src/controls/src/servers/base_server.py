@@ -57,8 +57,8 @@ class BaseServer():
         self.imu_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
 
     def set_ang_vel(self, data):
-        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
-        
+        self.angular_velocity = np.array([data.x, data.y, data.z])
+
     #callback for subscriber
     def set_pose(self,data):
         self.pose = data
