@@ -84,7 +84,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-                elif global_class_id == 4: # OCTAGON TABLE
+                elif global_class_id == 3: # OCTAGON TABLE
                     center = bbox
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(bbox[0], bbox[1], img_h, img_w, z_pos=octagon_z)
                     obj_x.append(pred_obj_x)
