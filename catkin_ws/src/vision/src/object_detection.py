@@ -84,7 +84,8 @@ def detect_on_image(raw_img, camera_id):
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
-                elif global_class_id == 4: # OCTAGON
+
+                elif global_class_id == 3: # OCTAGON TABLE
                     label.append(global_class_id)
                     confidences.append(conf)
                     center = bbox
@@ -164,8 +165,10 @@ if __name__ == '__main__':
     min_prediction_confidence = 0.4
     
     pwd = os.path.realpath(os.path.dirname(__file__))
-    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-    gate_model_filename = pwd + "/models/front_cam_model.pt"
+    # down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    # gate_model_filename = pwd + "/models/front_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
+    gate_model_filename = pwd + "/models/front_cam_sim.pt"
     model = [
         YOLO(down_cam_model_filename),
         YOLO(gate_model_filename)
@@ -182,10 +185,10 @@ if __name__ == '__main__':
         0
         ]
     class_names = [ #one array per camera, name index should be class id
-        ["Lane Marker", "Octagon"],
-        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy"],
+        ["Lane Marker", "Octagon Table"],
+        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy", "Octagon Table", "Octagon"],
         ]
-    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
+    global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2]
 

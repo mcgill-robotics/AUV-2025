@@ -109,7 +109,7 @@ def master_planner():
     endMission("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
 octagon_approximate_location = (0,0,0)
-global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon":3, "Earth Symbol":4, "Abydos Symbol":5}
+global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
 
 if __name__ == '__main__':
