@@ -4,26 +4,22 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import numpy as np
 import math
-from geometry_msgs.msg import Vector3, Vector3Stamped
-from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
-from std_msgs.msg import Header, Float64
+from std_msgs.msg import Float64
 import lane_marker_measure
 import torch
+from geometry_msgs.msg import Pose
+import quaternion
 
-def transformLocalToGlobal(lx,ly,lz):
-    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
-    offset_local = Vector3(lx, ly, lz)
-    tf_header.stamp = rospy.Time(0)
-    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
-    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
-    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
+def transformLocalToGlobal(lx,ly,lz,camera_id):
+    rotation = states[camera_id].q_auv
+    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 class State:
     def __init__(self):
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
+        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
@@ -35,21 +31,37 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.depth_map = None
+        self.paused = False
+        self.q_auv = None
     def updateX(self, msg):
+        if self.paused: return
         self.x = float(msg.data)
     def updateY(self, msg):
+        if self.paused: return
         self.y = float(msg.data)
     def updateZ(self, msg):
+        if self.paused: return
         self.z = float(msg.data)
     def updateThetaX(self, msg):
+        if self.paused: return
         self.theta_x = float(msg.data)
     def updateThetaY(self, msg):
+        if self.paused: return
         self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
+        if self.paused: return
         self.theta_z = float(msg.data)
     def updateDepthMap(self, msg):
+        if self.paused: return
         self.depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
         self.depth_map += np.random.normal(0, 0.1, self.depth_map.shape)
+    def updatePose(self,msg):
+        if self.paused: return
+        self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+    def pause(self):
+        self.paused = True
+    def resume(self):
+        self.paused = False
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -125,6 +137,7 @@ def measureLaneMarker(img, bbox, debug_img):
     return headings, center_point, debug_img
 
 def clean_depth_error(depth_img, error_threshold=0.5):
+    """ set all the points with a depth error smaller than the threshold to 100 """
     depth_img[depth_img <= error_threshold] = 100
     return depth_img
 
@@ -158,6 +171,13 @@ def buoy_depth(depth_cropped):
 def lane_marker_depth(depth_cropped):
     return np.nanmean(depth_cropped)
 
+def octagon_table_depth(depth_cropped):
+    """ get the 10 smallest values, take the mean and add 0.6096m to it. The octagon table has width and depth = 2 * 0.6096; 
+        by adding 0.6096 to the mean of the 10 smallest values, we get the distance from the camera to the center of the octagon table """
+    smallest_values = np.partition(depth_cropped.flatten(), 10)[:10]
+    smallest_mean = np.nanmean(smallest_values)
+    return smallest_mean + 0.6096
+
 def object_depth(depth_cropped, label):
     dist = 0
     if label == 0:
@@ -166,6 +186,9 @@ def object_depth(depth_cropped, label):
         dist = gate_depth(depth_cropped)
     elif label == 2:
         dist = buoy_depth(depth_cropped)
+    elif label == 3:
+        dist = octagon_table_depth(depth_cropped)
+
     return dist
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -222,7 +245,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
-        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2], 1)
         return x,y,z
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
@@ -234,11 +257,11 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         pitch_angle_offset = down_cam_vfov*y_center_offset
 
         local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
         x = obj_pos[0]
         y = obj_pos[1]
         z = z_pos
@@ -259,7 +282,7 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-    buoy_angle = state.theta_z - left_pole_angle + theta_x
+    buoy_angle = states[1].theta_z - left_pole_angle + theta_x
 
     return buoy_angle
     
@@ -275,7 +298,7 @@ def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov*x_center_offset
-    gate_angle = state.theta_z - left_pole_angle + theta_x
+    gate_angle = states[1].theta_z - left_pole_angle + theta_x
     return gate_angle
 
 def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
@@ -309,7 +332,9 @@ def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buo
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
     label_counts = {}
     selected_detections = []
+
     for i in range(len(labels)):
+        if None in [objs_x[i], objs_y[i], objs_z[i]]: continue
         if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
             candidate_obj_conf = confidences[i]
             min_conf_i = min(selected_detections, key=lambda x : confidences[x])
@@ -354,7 +379,4 @@ front_cam_vfov = 58
 max_dist_to_measure = 10
 
 bridge = CvBridge()
-tf_buffer = Buffer()
-TransformListener(tf_buffer)
-tf_header = Header(frame_id="world")
-state = State()
+states = (State(), State())

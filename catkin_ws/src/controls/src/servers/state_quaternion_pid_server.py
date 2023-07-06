@@ -5,9 +5,8 @@ from servers.base_server import BaseServer
 import actionlib
 from auv_msgs.msg import StateQuaternionAction
 import numpy as np
-import quaternion
-import math
 import threading
+import quaternion
 
 class StateQuaternionServer(BaseServer):
     def __init__(self):

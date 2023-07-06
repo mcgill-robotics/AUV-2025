@@ -18,7 +18,8 @@ class ObjectMapper:
             new_map_obj.append(msg.x[i])
             new_map_obj.append(msg.y[i])
             new_map_obj.append(msg.z[i])
-            new_map_obj.append(msg.theta_z[i])
+            if msg.theta_z[i] == -1234.5: new_map_obj.append(None)
+            else: new_map_obj.append(msg.theta_z[i])
             if msg.extra_field[i] == -1234.5: new_map_obj.append(None)
             else: new_map_obj.append(msg.extra_field[i])
             self.map.append(new_map_obj)
@@ -30,7 +31,8 @@ class ObjectMapper:
                 objs_with_class.append(obj)
         return objs_with_class
 
-    def getClosestObject(self,pos,cls=None,closest_object_dist=999999):
+    def getClosestObject(self,pos,cls=None):
+        closest_object_dist=999999
         closest_object = None
         for obj in self.map:
             if obj[0] == cls or cls is None:

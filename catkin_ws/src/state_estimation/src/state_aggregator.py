@@ -5,10 +5,11 @@ import numpy as np
 import quaternion
 from tf import transformations
 
-from geometry_msgs.msg import Point, Pose, Quaternion 
+from geometry_msgs.msg import Point, Pose, Quaternion, Vector3
 from sbg_driver.msg import SbgEkfQuat
 from std_msgs.msg import Empty, Float64
 from auv_msgs.msg import DeadReckonReport
+from sbg_driver.msg import SbgImuData
 
 
 # angles that change by more than 90 degrees between readings 
@@ -57,6 +58,7 @@ class State_Aggregator:
         self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
         self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
         self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
+        self.pub_angular_velocity = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
 
         # subscribers
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.imu_cb)
@@ -64,6 +66,11 @@ class State_Aggregator:
         rospy.Subscriber("/depth", Float64, self.depth_sensor_cb)
         rospy.Subscriber("/reset_state_full", Empty, self.reset_state_full_cb)
         rospy.Subscriber("/reset_state_planar", Empty, self.reset_state_planar_cb)
+        self.imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.set_imu)
+
+        
+    def set_imu(self, data):
+        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
 
     def dvl_cb(self,data):
@@ -237,6 +244,9 @@ class State_Aggregator:
         self.pub_theta_x.publish(self.euler_auv_world[0])
         self.pub_theta_y.publish(self.euler_auv_world[1])
         self.pub_theta_z.publish(self.euler_auv_world[2])
+
+        angular_velocity = Vector3(self.angular_velocity[0], self.angular_velocity[1], self.angular_velocity[2])
+        self.pub_angular_velocity.publish(angular_velocity)
 
 
 
