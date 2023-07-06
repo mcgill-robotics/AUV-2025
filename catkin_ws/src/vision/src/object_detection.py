@@ -165,7 +165,7 @@ def detect_on_image(raw_img, camera_id):
 
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
-octagon_table_z = pool_depth + 0.6
+octagon_table_z = pool_depth + 1.0668
 buoy_width = 1.22 
 gate_width = 3
 
