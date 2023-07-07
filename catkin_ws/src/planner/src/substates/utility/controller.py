@@ -26,6 +26,14 @@ class Controller:
         print("starting controller")
         self.header_time = header_time
 
+        self.x = None
+        self.y = None
+        self.z = None
+        self.theta_x = None
+        self.theta_y = None
+        self.theta_z = None
+        self.orientation = None
+
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
         self.tf_header = Header(frame_id="world_rotation")
@@ -44,14 +52,6 @@ class Controller:
         self.StateQuaternionStateClient = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
         self.clients.append(self.StateQuaternionStateClient)
         self.StateQuaternionStateClient.wait_for_server()
-
-        self.x = None
-        self.y = None
-        self.z = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
-        self.orientation = None
 
     def set_position(self,data):
         self.x = data.position.x

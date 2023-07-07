@@ -7,8 +7,8 @@ from auv_msgs.msg import ObjectMap
 class ObjectMapper:
     def __init__(self):
         #replace with map subscriber in future
-        self.obj_sub = rospy.Subscriber('vision/object_map', ObjectMap, self.mapUpdateCb)
         self.map = []
+        self.obj_sub = rospy.Subscriber('vision/object_map', ObjectMap, self.mapUpdateCb)
 
     def mapUpdateCb(self,msg):
         self.map = []

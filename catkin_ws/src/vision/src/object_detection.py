@@ -70,8 +70,14 @@ def detect_on_image(raw_img, camera_id):
                         obj_theta_z.append(None)
                         center = bbox
                     else:
-                        heading1 = states[camera_id].theta_z + (headings[0]-90)
-                        heading2 = states[camera_id].theta_z + (headings[1]-90)
+                        if headings[0] < -90:
+                            heading1 = states[camera_id].theta_z + (headings[0]+270)
+                        else:
+                            heading1 = states[camera_id].theta_z + (headings[0]-90)
+                        if headings[1] < -90:
+                            heading2 = states[camera_id].theta_z + (headings[1]+270)
+                        else:
+                            heading2 = states[camera_id].theta_z + (headings[1]-90)
                         if heading1 > heading2:
                             obj_theta_z.append(heading1)
                             extra_field.append(heading2)
@@ -202,11 +208,12 @@ if __name__ == '__main__':
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2, 1]
 
+    pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
+
     #the int argument is used to index debug publisher, model, class names, and i
     subs = [
         rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0),
         rospy.Subscriber('/vision/front_cam/image_rgb', Image, detect_on_image, 1)
         ]
-
-    pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
+    
     rospy.spin()
