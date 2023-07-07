@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-
-from in_place_search import InPlaceSearch
-import rospy
 import smach
 from .utility.vision import *
 
