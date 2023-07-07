@@ -58,6 +58,7 @@ class StateQuaternionServer(BaseServer):
                 while not self.cancelled and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
                     if(rospy.get_time() - start > time_to_settle):
                         settled = True
+                        print("settled")
                         break
                     rospy.sleep(0.01)
 

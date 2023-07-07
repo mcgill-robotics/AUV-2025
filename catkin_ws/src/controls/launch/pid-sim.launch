@@ -49,7 +49,7 @@
 
 	<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
 		<param name="Kp" value="0.1" />
-		<param name="Ki" value="0.01" />
+		<param name="Ki" value="0.0" />
 		<param name="Kd" value="0.1" />
 		<param name="windup_limit" value="0.5" />
 	</node>

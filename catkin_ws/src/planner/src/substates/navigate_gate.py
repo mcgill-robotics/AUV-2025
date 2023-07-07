@@ -11,7 +11,7 @@ class NavigateGate(smach.State):
         self.control = control
         self.mapping = mapping
         self.state = state
-        if target_symbol not in ["Earth", "Abydos"]:
+        if target_symbol not in ["Earth Symbol", "Abydos Symbol"]:
             raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
         self.target_symbol = target_symbol
         self.gate_class = gate_class

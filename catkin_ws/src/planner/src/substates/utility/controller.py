@@ -216,7 +216,7 @@ class Controller:
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_displace)
         
         if(callback is not None):
-            self.SuperimposerClient.send_goal(goal_state, done_cb=callback)
+            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
         else:
             self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 

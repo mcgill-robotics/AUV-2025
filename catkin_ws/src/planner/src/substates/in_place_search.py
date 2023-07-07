@@ -20,19 +20,18 @@ class InPlaceSearch(smach.State):
 
     def doRotation(self):
         rotating = False
-        def rotationComplete(): #called when rotation is complete
-            global rotating
-            rotating = False
+        def rotationComplete(arg1, arg2): #called when rotation is complete
+            self.rotating = False
             
         turn_amt = (0,0,-60)
 
         while True:
             #move forward
             print("Rotating by {}.".format(turn_amt))
-            rotating = True
+            self.rotating = True
             self.control.rotateDeltaEuler(turn_amt, rotationComplete)
             #check for object detected while rotating
-            while rotating:
+            while self.rotating:
                 if self.detectedObject: return # stop grid search when object found
 
     def execute(self, ud):
