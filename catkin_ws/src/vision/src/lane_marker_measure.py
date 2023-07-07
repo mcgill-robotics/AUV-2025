@@ -261,7 +261,7 @@ def measure_headings(img, debug=False, debug_img=None):
         
         #get the center point of the lane marker using the rectangle defined by the 4 lines on the lane markers edges
         centerPoint = getCenterPoint(linesToFindCenter)
-        if centerPoint == None: return None, None
+        if centerPoint == None or centerPoint[0] < 0 or centerPoint[1] < 0 or centerPoint[0] >= thresh_img.shape[1] or centerPoint[1] >= thresh_img.shape[0]: return None, None
         avgs = []
         for slope in finalLines:
             dilation_kernel = np.ones((5,5), np.uint8)
