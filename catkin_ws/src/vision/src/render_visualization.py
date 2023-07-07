@@ -46,7 +46,7 @@ def setup():
     addHeading(0,0,0,1,0,0,auv_pub.publish,(1,0,1))# 7 - DVL x direction
     addHeading(0,0,0,0,1,0,auv_pub.publish,(1,1,0))# 8 - DVL y direction
     addHeading(0,0,0,0,0,1,auv_pub.publish,(0,1,1))# 9 - DVL z direction
-    addLabel(0,0,1,"Surge:0\nSway:0\nHeave:0\nRoll:0\nPitch:0\nYaw:0",publishToMap,0.15)
+    addLabel(0,0,1,"Surge:0\nSway:0\nHeave:0\nRoll:0\nPitch:0\nYaw:0",auv_pub.publish,0.15)
 
     for gt in groundTruths:
         addMapMarkers(gt[0],gt[1],gt[2],gt[3],gt[4],gt[5],(1,1,1))
@@ -58,12 +58,18 @@ def objectDetectCb(msg):
         addDetectionMarker(msg.x[i], msg.y[i], msg.z[i], 0.075, detection_pub.publish, (0,1,0))
 
 def objectMapCb(msg):
+    global updates
+    updates += 1
+    if updates >= update_map_every:
+        updates = 0
+    else:
+        return
     global object_map_markers
     #spawn red spheres and text (for label, object-specific info) on objects in map
     for map_marker in object_map_markers:
-        rospy.sleep(0.1)
         map_marker.action = Marker.DELETE
         map_pub.publish(map_marker)
+        rospy.sleep(0.01)
     object_map_markers = []
     for i in range(len(msg.label)):
         addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
@@ -271,21 +277,21 @@ def updateAUVX(msg):
     addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
-    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1, "Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1, "Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 def updateAUVY(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, float(msg.data), auv_marker.pose.position.z)  # Set the desired position 
     addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
-    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 def updateAUVZ(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, auv_marker.pose.position.y, float(msg.data))  # Set the desired position
     addDetectionMarker(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.05,auv_pub.publish,(1,0,0))
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
-    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 
 def updateReferenceFrames():
     global auv_marker
@@ -319,7 +325,7 @@ def effortCb(msg):
     currentEffort["roll"] = msg.torque.x
     currentEffort["pitch"] = msg.torque.y
     currentEffort["yaw"] = msg.torque.z
-    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),publishToMap,0.15,override_id=10)
+    addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 
 rospy.init_node('render_visualization')
 
@@ -334,6 +340,9 @@ print("Starting visualization!")
 dvl_euler_angles = [0,0,0]
 object_map_markers = []
 marker_id = 0
+
+update_map_every = 5
+updates = 0
 
 groundTruths = [
     #add objects here, format is [label,x,y,z,theta_z,extra_field]

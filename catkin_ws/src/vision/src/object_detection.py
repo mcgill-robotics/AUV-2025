@@ -196,7 +196,7 @@ if __name__ == '__main__':
         ]
     class_names = [ #one array per camera, name index should be class id
         ["Lane Marker", "Octagon Table"],
-        ["Lane Marker", "Gate", "Earth Symbol", "Abydos Symbol", "Buoy", "Octagon Table", "Octagon"],
+        ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 

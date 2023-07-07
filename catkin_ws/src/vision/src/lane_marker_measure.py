@@ -56,11 +56,17 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
         for p in range(len(blurred[r])):
             thresh_img[r][p] = mask(blurred[r][p])
 
+    dilation_kernel = np.ones((5,5), np.uint8)
+    inverted_thresh_img = cv2.bitwise_not(thresh_img)
+    while np.sum(inverted_thresh_img)/(255*3*inverted_thresh_img.shape[0]*inverted_thresh_img.shape[1]) < 0.2:
+        inverted_thresh_img = cv2.dilate(inverted_thresh_img, dilation_kernel, iterations=1)
+    thresh_img = cv2.bitwise_not(inverted_thresh_img)
+
+
     if tol_publisher != None: tol_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
 
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
-    thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
-    
+    if blur2_amt > 0: thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
     if blur2_publisher != None: blur2_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
     
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
