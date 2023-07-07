@@ -2,11 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64, Bool
-<<<<<<< Updated upstream
-from geometry_msgs.msg import Pose
-=======
-from geometry_msgs.msg import Pose, Vector3, Quaternion
->>>>>>> Stashed changes
+from geometry_msgs.msg import Pose, Quaternion
 from sbg_driver.msg import SbgImuData
 import numpy as np
 

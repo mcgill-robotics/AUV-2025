@@ -13,21 +13,12 @@ class StateQuaternionServer(BaseServer):
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         # Calculation parameters/values
         
-        self.Kp = 0.07
-        self.Ki = 0
-        self.Kd = -0.1
-        self.integral_error_quat = np.quaternion()
-        self.last_integral_time = rospy.get_time()
-        self.angular_velocity = np.zeros(3)
         self.server.start()        
-        self.quaternion_enabled = False
-        self.pid_thread = None
+
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
-        if self.pid_thread is not None and goal.do_quaternion.data:
-            self.quaternion_enabled = False
-            self.pid_thread.join()
+        self.cancelled = False
         self.goal = goal
         if self.pose is not None:
             if(self.goal.displace.data):
@@ -96,10 +87,6 @@ class StateQuaternionServer(BaseServer):
 
         return True
 
-    def update_time_interval(self):
-        self.time_interval[0] = self.time_interval[1]
-        self.time_interval[1] = rospy.get_time()
-    
     def calculatePosError(self, pos1, pos2):
         return abs(pos1 - pos2)
 

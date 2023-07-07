@@ -8,17 +8,20 @@ import quaternion
 
 class QuaternionPID:
 
-    def __init__(self,Kp,Ki,Kd):
+    def __init__(self):
 
-        self.Kp = Kp
-        self.Ki = Ki
-        self.Kd = Kd
+        self.Kp = rospy.get_param("~Kp")
+        self.Ki = rospy.get_param("~Ki")
+        self.Kd = rospy.get_param("~Kd")
+
+        self.windup_limit = rospy.get_param("~windup_limit")
 
         self.body_quat = np.quaternion(1,0,0,0)
-        self.angular_velocity = np.array([0,0,0])
+        self.angular_velocity = np.array([0.0,0.0,0.0])
         self.goal_quat = None
         self.enabled = False
-        self.torque_integral = np.array([0,0,0])
+        self.previous_time = rospy.get_time()
+        self.torque_integral = np.array([0.0,0.0,0.0])
 
         self.pose_sub = rospy.Subscriber("pose",Pose,self.set_pose)
         self.angular_velocity_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
@@ -31,7 +34,7 @@ class QuaternionPID:
 
     def set_pose(self,data):
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
-        if (self.body_quat.w < 0): self.body_quat = -self.body_quat
+        if (self.body_quat.w < 0): self.body_quat = -self.body_quat            
     
     def set_ang_vel(self, data):
         self.angular_velocity = np.array([data.x, data.y, data.z])
@@ -39,7 +42,13 @@ class QuaternionPID:
     def set_goal(self, data):
         self.goal_quat = np.quaternion(data.w, data.x, data.y, data.z)
         if (self.goal_quat.w < 0): self.goal_quat = -self.goal_quat
+
         self.torque_integral = np.array([0,0,0])
+        self.previous_time = rospy.get_time()
+
+        self.Kp = rospy.get_param("~Kp")
+        self.Ki = rospy.get_param("~Ki")
+        self.Kd = rospy.get_param("~Kd")
     
     def set_enabled(self, data):
         self.enabled = data.data
@@ -48,7 +57,7 @@ class QuaternionPID:
         rate = rospy.Rate(100)
 
         while not rospy.is_shutdown():
-            if self.enabled:
+            if self.enabled and self.goal_quat is not None:
                 roll_effort, pitch_effort, yaw_effort = self.controlEffort()
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)
@@ -60,10 +69,19 @@ class QuaternionPID:
 
     def controlEffort(self): 
         # Calculate error values
-        error_quat = self.calculateQuatError(self.body_quat, self.goal_quat) 
+        error_quat = self.calculateQuatError(self.body_quat, self.goal_quat)
+
         if(error_quat.w < 0): error_quat = -error_quat
-             
+
+        curr_time = rospy.get_time()
+        delta_t = curr_time - self.previous_time
+        self.previous_time = curr_time
+        axis = np.array([error_quat.x, error_quat.y, error_quat.z])
+        diff = axis * delta_t
+        self.torque_integral = self.torque_integral + diff
         proportional_effort = np.zeros(3)
+        if (np.linalg.norm(self.torque_integral) > self.windup_limit):
+            self.torque_integral = self.windup_limit * self.torque_integral / np.linalg.norm(self.torque_integral)
         
         proportional_effort[0] = self.Kp * error_quat.x
         proportional_effort[1] = self.Kp * error_quat.y
@@ -72,10 +90,12 @@ class QuaternionPID:
         # Calculate derivative term
         derivative_effort = self.Kd * self.angular_velocity
 
+        integral_effort = self.Ki * self.torque_integral
+
         # Calculate integral term
         self.last_integral_time = rospy.get_time()
 
-        control_effort = proportional_effort - derivative_effort # + integral_effort
+        control_effort = proportional_effort - derivative_effort + integral_effort
         
         # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
@@ -90,9 +110,6 @@ class QuaternionPID:
     
 if __name__ == "__main__":
     rospy.init_node("quaternion_pid", log_level=rospy.DEBUG)
-    Kp = rospy.get_param("~Kp")
-    Ki = rospy.get_param("~Ki")
-    Kd = rospy.get_param("~Kd")
-    pid = QuaternionPID(Kp, Ki, Kd)
+    pid = QuaternionPID()
     pid.execute()
     rospy.spin()
