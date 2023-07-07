@@ -88,17 +88,17 @@ class Controller:
         goal.effort.force.y = 0 if sway is None else sway
         goal.do_sway = Bool(False) if sway is None else Bool(True)
         
-        goal.effort.force.z = 0
-        goal.do_heave = Bool(False)
-        
-        goal.effort.torque.x = 0
-        goal.do_roll = Bool(False)
-        
-        goal.effort.torque.y = 0
-        goal.do_pitch = Bool(False)
-        
-        goal.effort.torque.z = 0
-        goal.do_yaw = Bool(False)
+        goal.effort.force.z = 0 if heave is None else heave
+        goal.do_heave = Bool(False) if heave is None else Bool(True)
+
+        goal.effort.torque.x = 0 if roll is None else roll
+        goal.do_roll = Bool(False) if roll is None else Bool(True)
+
+        goal.effort.torque.y = 0 if pitch is None else pitch
+        goal.do_pitch = Bool(False) if pitch is None else Bool(True)
+
+        goal.effort.torque.z = 0 if yaw is None else yaw
+        goal.do_yaw = Bool(False) if yaw is None else Bool(True)
         
         # if sway is not None:
         #     goal.effort.force.y = sway
