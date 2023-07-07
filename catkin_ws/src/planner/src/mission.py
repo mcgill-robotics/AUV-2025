@@ -7,7 +7,6 @@ from substates.breadth_first_search import *
 from substates.in_place_search import *
 from substates.linear_search import *
 from substates.navigate_lane_marker import *
-from substates.test_submerged_rotations import *
 from substates.utility.controller import Controller
 from substates.utility.state import StateTracker
 from substates.utility.vision import *
@@ -27,15 +26,6 @@ def endMission(msg):
 def endPlanner(msg="Shutting down mission planner."):
     print(msg)
     control.kill()
-
-def testRotationsMission():
-    control.moveDelta((0, 0, -2))
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('test_submerged_rotations', TestSubmergedRotations(hold_time = 5.0, control=control), 
-                transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endMission("Finished rotation test mission.")
 
 def QualiMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 

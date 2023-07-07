@@ -2,8 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64, Bool
-from geometry_msgs.msg import Pose, Quaternion
-from sbg_driver.msg import SbgImuData
+from geometry_msgs.msg import Pose, Quaternion, Vector3
 import numpy as np
 
 """
@@ -56,10 +55,11 @@ class BaseServer():
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
-        self.imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.set_imu)
+        self.imu_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
 
-    def set_imu(self, data):
-        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
+    def set_ang_vel(self, data):
+        self.angular_velocity = np.array([data.x, data.y, data.z])
+
     #callback for subscriber
     def set_pose(self,data):
         self.pose = data

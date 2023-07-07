@@ -7,6 +7,7 @@ from auv_msgs.msg import StateQuaternionAction
 from geometry_msgs.msg import Quaternion
 import numpy as np
 import quaternion
+
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
