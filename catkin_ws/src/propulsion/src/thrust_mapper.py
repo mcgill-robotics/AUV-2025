@@ -88,11 +88,18 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(forces_msg.HEAVE_STERN_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
 
+    global pwm_msg 
     pwm_msg = ThrusterMicroseconds(pwm_arr)
+    publish_us(pwm_msg)
+
+
+def publish_us(_):
     pub.publish(pwm_msg)
+
 
 #turns off the thursters when the node dies
 def shutdown():
+    timer.shutdown()
     msg = ThrusterMicroseconds([1500]*8)
     pub.publish(msg)
 
@@ -110,8 +117,10 @@ def re_arm():
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
+    pwm_msg = ThrusterMicroseconds([1500]*8)
     pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
     sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
+    timer = rospy.Timer(rospy.Duration(0.1), publish_us)
     rospy.on_shutdown(shutdown)
     re_arm()
     rospy.spin()
