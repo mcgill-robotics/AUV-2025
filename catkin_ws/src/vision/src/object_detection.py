@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from sensor_msgs.msg import Image
 from auv_msgs.msg import ObjectDetectionFrame
 from object_detection_utils import *
+import object_detection_utils
 import torch
 
 #callback when an image is received
@@ -176,7 +177,6 @@ buoy_width = 1.22
 gate_width = 3
 
 if __name__ == '__main__':
-    rospy.init_node('object_detection')
     detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
     #only report predictions with confidence at least 40%
     min_prediction_confidence = 0.4
