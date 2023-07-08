@@ -12,10 +12,10 @@ class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.previous_goal_quat = None
         # Calculation parameters/values
         
         self.server.start()        
-
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
@@ -43,6 +43,7 @@ class StateQuaternionServer(BaseServer):
                 self.pub_z_pid.publish(goal_position[2])
                 self.pub_heave.publish(0)
             if (self.goal.do_quaternion.data):
+                self.previous_goal_quat = goal_quat
                 self.pub_quat_enable.publish(True)
                 goal_msg = Quaternion()
                 goal_msg.w = goal_quat.w
@@ -66,7 +67,8 @@ class StateQuaternionServer(BaseServer):
 
     def get_goal_after_displace(self):
         goal_position = [self.pose.position.x + self.goal.pose.position.x, self.pose.position.y + self.goal.pose.position.y, self.pose.position.z + self.goal.pose.position.z]
-        goal_quat = self.body_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+        if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
+        goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
 
     def execute_goal(self, goal_quaternion):
