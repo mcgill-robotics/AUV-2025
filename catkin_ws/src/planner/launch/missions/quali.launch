@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="planner" name="mission" type="mission.py" args="__mission:=quali" respawn="False" output="screen"/>
+</launch>
