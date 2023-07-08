@@ -251,6 +251,8 @@ class Controller:
     #stop all thrusters
     def kill(self):
         self.preemptCurrentAction()
+        goal = self.get_superimposer_goal([0,0,0,0,0,0])
+        self.SuperimposerClient.send_goal(goal)
 
     #stay still in place
     def stop_in_place(self):
