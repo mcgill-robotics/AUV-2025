@@ -51,5 +51,6 @@
 		<param name="Kp" value="0.07" />
 		<param name="Ki" value="0.0" />
 		<param name="Kd" value="0.1" />
+		<param name="windup_limit" value="100" />
 	</node>
 </launch>

@@ -12,11 +12,11 @@ class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.previous_goal_quat = None
         # Calculation parameters/values
         self.goal_position = None
         self.goal_quat = None
         self.server.start()        
-
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
@@ -47,6 +47,7 @@ class StateQuaternionServer(BaseServer):
                 self.pub_z_pid.publish(goal_position[2])
                 self.pub_heave.publish(0)
             if (goal.do_quaternion.data):
+
                 self.pub_quat_enable.publish(True)
                 goal_msg = Quaternion()
                 goal_msg.w = goal_quat.w

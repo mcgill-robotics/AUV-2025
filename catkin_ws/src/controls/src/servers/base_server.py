@@ -79,10 +79,10 @@ class BaseServer():
     def cancel(self):
         self.cancelled = True
 
-        self.quaternion_enabled = False
         self.pub_x_enable.publish(Bool(False))
         self.pub_y_enable.publish(Bool(False))
         self.pub_z_enable.publish(Bool(False))
+        self.pub_quat_enable.publish(Bool(False))
 
         self.pub_global_x.publish(0)
         self.pub_global_y.publish(0)

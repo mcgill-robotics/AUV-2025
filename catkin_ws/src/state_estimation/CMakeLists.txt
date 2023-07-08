@@ -6,6 +6,7 @@ set(MSG_DEP_SET geometry_msgs std_msgs auv_msgs)
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
 	depth_sensor
+	dvl
 	imu
 	rospy
     tf
@@ -18,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
 	depth_sensor
+	dvl
 	imu
 	rospy
     tf

@@ -42,6 +42,11 @@ class Controller:
         self.sub_theta_x = rospy.Subscriber("state_theta_x",Float64, self.set_theta_x)
         self.sub_theta_y = rospy.Subscriber("state_theta_y",Float64, self.set_theta_y)
         self.sub_theta_z = rospy.Subscriber("state_theta_z",Float64, self.set_theta_z)
+        
+        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
+        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
+        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
+        self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
 
         self.clients = []
 
@@ -253,9 +258,17 @@ class Controller:
         self.preemptCurrentAction()
         goal = self.get_superimposer_goal([0,0,0,0,0,0])
         self.SuperimposerClient.send_goal(goal)
+        self.pub_x_enable.publish(Bool(False))
+        self.pub_y_enable.publish(Bool(False))
+        self.pub_z_enable.publish(Bool(False))
+        self.pub_quat_enable.publish(Bool(False))
 
     #stay still in place
-    def stop_in_place(self):
-        self.preemptCurrentAction()
+    def stop_in_place(self, callback=None):
+        goal = self.get_superimposer_goal([0,0,0,0,0,0])
         goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
-        self.StateQuaternionStateClient.send_goal_and_wait(goal)
+        self.SuperimposerClient.send_goal(goal)
+        if(callback is not None):
+            self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal)

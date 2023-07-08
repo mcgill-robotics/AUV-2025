@@ -2,7 +2,7 @@
 
 import rospy
 import smach
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Empty
 
 
 # DESCRIPTION OF QUALI TASK (DETERMINED IN THE 2023 HANDBOOK):
@@ -28,8 +28,9 @@ class Quali(smach.State):
         print("Starting Quali Mission")
         try:
             # Step 0: Set DVL to zero
-            # pub_DVL = rospy.Publisher('/[DVL_something]', Float64, queue_size=1)
-            # pub_DVL.publish((0, 0, 0))
+            pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
+            pub_DVL.publish(Empty())
+            
 
             # Step 1: Submerge 2 meters
             print("Descending 2 meters")
