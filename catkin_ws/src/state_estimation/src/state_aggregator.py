@@ -34,6 +34,9 @@ class State_Aggregator:
         self.q_auv_world = np.quaternion(1, 0, 0, 0) # orientation of AUV in world frame - updated before publication
         self.euler_auv_world = np.array([0.0, 0.0, 0.0]) # to determine when wrap-around happens, tracks q_auv_world
 
+        # overall angular velocity # TODO - integrate
+        self.angular_velocity = np.array([0.0, 0.0, 0.0])
+
         '''DVL'''
         self.pos_auv_global_dvl = np.array([0.0, 0.0, 0.0]) # position of AUV relative to global frame - according to DVL
         self.q_auv_global_dvl = np.quaternion(1, 0, 0, 0) # w, x, y, z - orientation of AUV relative to global frame 
