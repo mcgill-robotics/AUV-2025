@@ -3,7 +3,7 @@
 import rospy
 from servers.base_server import BaseServer
 import actionlib
-from auv_msgs.msg import StateQuaternionAction, StateQuaternionGoal
+from auv_msgs.msg import StateQuaternionAction
 from geometry_msgs.msg import Quaternion
 import numpy as np
 import quaternion
