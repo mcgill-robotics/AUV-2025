@@ -22,10 +22,10 @@ class BreadthFirstSearch(smach.State):
     def doBreadthFirstSearch(self):
         rotating = False
         moving = False
-        def rotationComplete(): #called when rotation is complete
+        def rotationComplete(self, msg): #called when rotation is complete
             global rotating
             rotating = False
-        def movementComplete(): #called when translation is complete
+        def movementComplete(self, msg): #called when translation is complete
             global moving
             moving = False
             

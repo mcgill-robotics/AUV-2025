@@ -28,7 +28,10 @@ class NavigateGate(smach.State):
     
         print("Centering and rotating in front of gate.")
         offset_distance = -3
-        offset = offset_distance * degreesToVector(gate_object[4])
+        offset = []
+        dtv = degreesToVector(gate_object[4])
+        for i in range(len(dtv)):
+            offset.append(offset_distance * dtv[i])
         self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
@@ -38,7 +41,10 @@ class NavigateGate(smach.State):
 
         print("Re-centering and rotating in front of gate.")
         self.mapping.updateObject(gate_object)
-        offset = offset_distance * degreesToVector(gate_object[4])
+        offset = []
+        dtv = degreesToVector(gate_object[4])
+        for i in range(len(dtv)):
+            offset.append(offset_distance * dtv[i])
         self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 

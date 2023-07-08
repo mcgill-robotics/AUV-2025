@@ -58,6 +58,18 @@ def tricks(t):
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
+    
+def GateMission():
+    control.moveDelta((0, 0, -0.5))
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        # smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
+        #         transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
+        
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
+                transitions={'success': 'success', 'failure': 'failure'})
+    res = sm.execute()
+    endMission("Finished Gate mission. Result {}".format(res))
 
 def master_planner():
     control.moveDelta((1, 0, -0.5))
@@ -112,7 +124,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
 
-        master_planner()
+        GateMission()
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #testRotationsMission()
