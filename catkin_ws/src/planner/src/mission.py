@@ -2,6 +2,7 @@
 
 import rospy
 import smach
+import sys
 
 from substates.breadth_first_search import *
 from substates.in_place_search import *
@@ -106,13 +107,29 @@ if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
+
     try:
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
 
-        master_planner()
+        # get mission to run from command line argument
+        # TODO - this is a bit hackish but probably fine
+        mission = sys.argv[1] 
+        if mission.startswith("__mission"):
+            mission = mission.replace("__mission:=", "")
+        else:
+            mission = None
+
+
+        print("mission", mission)
+        if mission is None:
+            master_planner()
+        elif mission == "quali":
+            QualiMission()
+        else:
+            raise Exception("invalid mission")
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #testRotationsMission()
