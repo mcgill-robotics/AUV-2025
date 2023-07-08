@@ -3,7 +3,7 @@
 import rospy
 from servers.base_server import BaseServer
 import actionlib
-from auv_msgs.msg import StateQuaternionAction
+from auv_msgs.msg import StateQuaternionAction, StateQuaternionGoal
 from geometry_msgs.msg import Quaternion
 import numpy as np
 import quaternion
@@ -13,36 +13,40 @@ class StateQuaternionServer(BaseServer):
         super().__init__()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         # Calculation parameters/values
-        
+        self.goal_position = None
+        self.goal_quat = None
         self.server.start()        
 
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
         self.cancelled = False
-        self.goal = goal
         if self.pose is not None:
-            if(self.goal.displace.data):
-                goal_position, goal_quat = self.get_goal_after_displace()
+            if(goal.displace.data):
+                goal_position, goal_quat = self.get_goal_after_displace(goal)
+                self.goal_position = goal_position
+                self.goal_quat = goal_quat
             else:
-                goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
-                goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+                goal_position = [goal.pose.position.x, goal.pose.position.y, goal.pose.position.z]
+                goal_quat = np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+                self.goal_position = goal_position
+                self.goal_quat = goal_quat
 
-            if(self.goal.do_x.data):
+            if(goal.do_x.data):
                 self.pub_x_enable.publish(True)
                 self.pub_x_pid.publish(goal_position[0])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
-            if(self.goal.do_y.data):
+            if(goal.do_y.data):
                 self.pub_y_enable.publish(True)
                 self.pub_y_pid.publish(goal_position[1])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
-            if(self.goal.do_z.data):
+            if(goal.do_z.data):
                 self.pub_z_enable.publish(True)
                 self.pub_z_pid.publish(goal_position[2])
                 self.pub_heave.publish(0)
-            if (self.goal.do_quaternion.data):
+            if (goal.do_quaternion.data):
                 self.pub_quat_enable.publish(True)
                 goal_msg = Quaternion()
                 goal_msg.w = goal_quat.w
@@ -55,7 +59,7 @@ class StateQuaternionServer(BaseServer):
             settled = False
             while not settled and not self.cancelled:
                 start = rospy.get_time()
-                while not self.cancelled and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
+                while not self.cancelled and self.check_status(goal_position, goal_quat, goal.do_x.data, goal.do_y.data, goal.do_z.data, goal.do_quaternion.data):
                     if(rospy.get_time() - start > time_to_settle):
                         settled = True
                         print("settled")
@@ -64,14 +68,18 @@ class StateQuaternionServer(BaseServer):
 
         self.server.set_succeeded()
 
-    def get_goal_after_displace(self):
-        goal_position = [self.pose.position.x + self.goal.pose.position.x, self.pose.position.y + self.goal.pose.position.y, self.pose.position.z + self.goal.pose.position.z]
-        goal_quat = self.body_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
-        return goal_position, goal_quat 
+    def get_goal_after_displace(self, goal):
+        if self.goal_position is None or self.goal_quat is None:
+            goal_position = [self.pose.position.x + goal.pose.position.x, self.pose.position.y + goal.pose.position.y, goal.pose.position.z + goal.pose.position.z]
+            goal_quat = self.body_quat * np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+        else:
+            goal_position = [self.goal_position[0] + goal.pose.position.x, self.goal_position[1] + goal.pose.position.y, self.goal_position[2] + goal.pose.position.z]
+            goal_quat = self.goal_quat * np.quaternion(goal.pose.orientation.w, goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z)
+        
+        self.goal_position = goal_position
+        self.goal_quat = goal_quat
 
-    def execute_goal(self, goal_quaternion):
-        self.quaternion_enabled = True
-        while self.quaternion_enabled: self.controlEffort(goal_quaternion)
+        return goal_position, goal_quat 
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
         quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
