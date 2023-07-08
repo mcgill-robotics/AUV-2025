@@ -1,6 +1,0 @@
-<launch>
-	<include file="$(find planner)/launch/stub.launch" />
-	<include file="$(find controls)/launch/controls.launch" />
-	<include file="$(find propulsion)/launch/no_firmware.launch" />
-	<include file="$(find auv_description)/launch/auv_description.launch" />
-</launch>
