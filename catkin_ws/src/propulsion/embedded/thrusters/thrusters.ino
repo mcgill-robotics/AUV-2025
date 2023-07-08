@@ -29,7 +29,7 @@ const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
 const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
 const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
 
-int kill_state = 1;
+int kill_state = 1; //off
 
 Servo thrusters[8];
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
@@ -53,7 +53,7 @@ void thrustersOff(){
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
 	// lastCommand = millis();
 	const uint16_t* microseconds = tc.microseconds;
-	if(kill_state == 1){
+	if(kill_state == 0){
 		updateThrusters(microseconds);
 	}
 	else{
