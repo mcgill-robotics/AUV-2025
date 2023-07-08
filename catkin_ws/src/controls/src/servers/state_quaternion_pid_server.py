@@ -70,10 +70,6 @@ class StateQuaternionServer(BaseServer):
         if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
         goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
-
-    def execute_goal(self, goal_quaternion):
-        self.quaternion_enabled = True
-        while self.quaternion_enabled: self.controlEffort(goal_quaternion)
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
         quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
