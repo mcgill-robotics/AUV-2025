@@ -7,12 +7,13 @@ from .utility.functions import *
 import math
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, origin_class, control, state, mapping):
+    def __init__(self, origin_class, control, state, mapping, lane_marker_class):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.origin_class = origin_class
+        self.lane_marker_class = lane_marker_class
 
     def execute(self, ud):
         print("Starting lane marker navigation.") 
@@ -23,13 +24,13 @@ class NavigateLaneMarker(smach.State):
             origin_obj = self.mapping.getClosestObject(cls=self.origin_class, pos=(auv_current_position[0], auv_current_position[1]))
             origin_position = (origin_obj[1], origin_obj[2])
         
-        lane_marker_obj = self.mapping.getClosestObject(cls=0, pos=(origin_position[0], origin_position[1]))
+        lane_marker_obj = self.mapping.getClosestObject(cls=self.lane_marker_class, pos=(origin_position[0], origin_position[1]))
         if lane_marker_obj is None:
             print("No lane marker in object map! Failed.")
             return 'failure'
         
         attempts = 0
-        self.control.move(lane_marker_obj[1], lane_marker_obj[2], -1)
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -1))
         while lane_marker_obj[4] is None or lane_marker_obj[5] is None:
             attempts += 1
             if attempts > 5: 
@@ -37,15 +38,15 @@ class NavigateLaneMarker(smach.State):
                 return 'failure'
             rospy.sleep(5.0)
             self.mapping.updateObject(lane_marker_obj)
-            self.control.move(lane_marker_obj[1], lane_marker_obj[2], -1)
+            self.control.move((lane_marker_obj[1], lane_marker_obj[2], -1))
         
         #Waiting 10 seconds and repeating to make sure it's correct
         print("Waiting 10 seconds to ensure correct measurement of lane marker")
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move(lane_marker_obj[1], lane_marker_obj[2], -1)
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -1))
         rospy.sleep(10)
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move(lane_marker_obj[1], lane_marker_obj[2], -1)
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -1))
 
         heading1 = lane_marker_obj[4]
         heading2 = lane_marker_obj[5]
@@ -61,8 +62,8 @@ class NavigateLaneMarker(smach.State):
         print("Rotating to lane marker target heading.")
 
         #   rotate to that heading
-        if heading1_dot < heading2_dot: self.control.rotate((0,0,heading1))
-        else: self.control.rotate((0,0,heading2))
+        if heading1_dot < heading2_dot: self.control.rotateEuler((0,0,heading1))
+        else: self.control.rotateEuler((0,0,heading2))
 
         print("Successfully rotated to lane marker!")
         return 'success'

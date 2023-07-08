@@ -7,8 +7,8 @@ from auv_msgs.msg import ObjectMap
 class ObjectMapper:
     def __init__(self):
         #replace with map subscriber in future
-        self.obj_sub = rospy.Subscriber('vision/object_map', ObjectMap, self.mapUpdateCb)
         self.map = []
+        self.obj_sub = rospy.Subscriber('vision/object_map', ObjectMap, self.mapUpdateCb)
 
     def mapUpdateCb(self,msg):
         self.map = []
@@ -18,7 +18,8 @@ class ObjectMapper:
             new_map_obj.append(msg.x[i])
             new_map_obj.append(msg.y[i])
             new_map_obj.append(msg.z[i])
-            new_map_obj.append(msg.theta_z[i])
+            if msg.theta_z[i] == -1234.5: new_map_obj.append(None)
+            else: new_map_obj.append(msg.theta_z[i])
             if msg.extra_field[i] == -1234.5: new_map_obj.append(None)
             else: new_map_obj.append(msg.extra_field[i])
             self.map.append(new_map_obj)

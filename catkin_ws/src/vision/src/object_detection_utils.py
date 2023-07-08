@@ -4,30 +4,18 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import numpy as np
 import math
-from geometry_msgs.msg import Vector3, Vector3Stamped
-from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
-from std_msgs.msg import Header, Float64
+from std_msgs.msg import Float64
 import lane_marker_measure
 import torch
+from geometry_msgs.msg import Pose
+import quaternion
 
-def transformLocalToGlobal(lx,ly,lz):
-    trans = tf_buffer.lookup_transform("world", "auv_base", rospy.Time(0))
-    offset_local = Vector3(lx, ly, lz)
-    tf_header.stamp = rospy.Time(0)
-    offset_local_stmp = Vector3Stamped(header=tf_header, vector=offset_local)
-    offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
-    return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
+def transformLocalToGlobal(lx,ly,lz,camera_id):
+    rotation = states[camera_id].q_auv
+    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 class State:
     def __init__(self):
-        self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
-        self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
-        self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
-        self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
-        self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updateDepthMap)
         self.x = None
         self.y = None
         self.z = None
@@ -35,21 +23,45 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.depth_map = None
+        self.paused = False
+        self.q_auv = None
+        self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
+        self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
+        self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
+        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
+        self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
+        self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updateDepthMap)
     def updateX(self, msg):
+        if self.paused: return
         self.x = float(msg.data)
     def updateY(self, msg):
+        if self.paused: return
         self.y = float(msg.data)
     def updateZ(self, msg):
+        if self.paused: return
         self.z = float(msg.data)
     def updateThetaX(self, msg):
+        if self.paused: return
         self.theta_x = float(msg.data)
     def updateThetaY(self, msg):
+        if self.paused: return
         self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
+        if self.paused: return
         self.theta_z = float(msg.data)
     def updateDepthMap(self, msg):
+        if self.paused: return
         self.depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
         self.depth_map += np.random.normal(0, 0.1, self.depth_map.shape)
+    def updatePose(self,msg):
+        if self.paused: return
+        self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+    def pause(self):
+        self.paused = True
+    def resume(self):
+        self.paused = False
 
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
@@ -124,8 +136,10 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-def clean_depth_error(depth_img, error_threshold=0.5):
-    depth_img[depth_img <= error_threshold] = 100
+def clean_depth_error(depth_img):
+    """ set all the points with a depth error smaller than the threshold to 100 """
+    depth_img[depth_img <= 0.6] = 10000
+    depth_img[depth_img >= 10] = 10000
     return depth_img
 
 def remove_background(depth_img):
@@ -135,30 +149,36 @@ def remove_background(depth_img):
     return depth_img
 
 def gate_depth(depth_cropped):
-    """ divide the picture in two (left and right) - get the mean of the 3 min value on each side -
+    """ divide the picture in two (left and right) - get the mean of the 50 min value on each side -
     mean the two means """
     _, cols = depth_cropped.shape
     left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:,int(cols/2):]
     left_flattened = left_half.flatten()
-    left_smallest_values = np.partition(left_flattened, 3)[:3]
+    left_smallest_values = np.partition(left_flattened, 50)[:50]
     right_flatten = right_half.flatten()
-    right_smallest_values = np.partition(right_flatten, 3)[:3]
+    right_smallest_values = np.partition(right_flatten, 50)[:50]
     return (np.nanmean(left_smallest_values) + np.nanmean(right_smallest_values)) / 2
 
 def buoy_depth(depth_cropped):
-    """ get the middle point and the points around it and take the mean 
-        assumption - the buoy is a square object that doesn't have any holes, so taking the middle point
-        should always be where the buoy is """
+    """ get the middle half of the image and take the mean """
     rows, cols = depth_cropped.shape
-    middle_points = [depth_cropped[int(rows/2), int(cols/2)], depth_cropped[int(rows/2)+1, int(cols/2)],
-                    depth_cropped[int(rows/2)-1, int(cols/2)], depth_cropped[int(rows/2), int(cols/2)+1],
-                    depth_cropped[int(rows/2), int(cols/2)-1]]
-    return np.nanmean(middle_points)
+    return np.nanmean(depth_cropped[int(rows/4):int(3*rows/4), int(cols/4):int(3*cols/4)])
 
 def lane_marker_depth(depth_cropped):
     return np.nanmean(depth_cropped)
 
+def octagon_table_depth(depth_cropped):
+    """ get the 50 smallest values, take the mean and add 0.6096m to it. The octagon table has width and depth = 2 * 0.6096; 
+        by adding 0.6096 to the mean of the 50 smallest values, we get the distance from the camera to the center of the octagon table """
+    rows, cols = depth_cropped.shape
+    center_depth = depth_cropped[int(rows/4):int(3*rows/4), int(cols/4):int(3*cols/4)]
+    smallest_values = np.partition(center_depth.flatten(), 50)[:50]
+    smallest_mean = np.nanmean(smallest_values)
+    return smallest_mean + 0.6096
+
 def object_depth(depth_cropped, label):
+    depth_cropped = clean_depth_error(depth_cropped)
+    depth_cropped = remove_background(depth_cropped)
     dist = 0
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
@@ -166,6 +186,9 @@ def object_depth(depth_cropped, label):
         dist = gate_depth(depth_cropped)
     elif label == 2:
         dist = buoy_depth(depth_cropped)
+    elif label == 3:
+        dist = octagon_table_depth(depth_cropped)
+
     return dist
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -222,7 +245,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         vector_to_object = direction_to_object * dist_from_camera
         
         #convert local offsets to global offsets using tf transform library
-        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2])
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2], 1)
         return x,y,z
     elif z_pos is not None: # ASSUMES DOWN CAMERA
         #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
@@ -234,11 +257,11 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         pitch_angle_offset = down_cam_vfov*y_center_offset
 
         local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2])
+        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
         # solve for point that is defined by the intersection of the direction to the object and it's z position
         obj_pos = find_intersection(global_direction_to_object, z_pos)
-        if obj_pos is None or np.linalg.norm(obj_pos - np.array([state.x, state.y, state.z])) > max_dist_to_measure: return None, None, None
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
         x = obj_pos[0]
         y = obj_pos[1]
         z = z_pos
@@ -248,10 +271,11 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         return None, None, None
 
 def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
+    depth_img = clean_depth_error(depth_img)
+    depth_img = remove_background(depth_img)
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
-    _, cols = depth_cropped.shape
-    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
-
+    _, width = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(width/2)], depth_cropped[:, int(width/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
 
@@ -259,14 +283,16 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
-    buoy_angle = state.theta_z - left_pole_angle + theta_x
+    buoy_angle = states[1].theta_z + left_pole_angle + theta_x
 
     return buoy_angle
     
 def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
+    depth_img = clean_depth_error(depth_img)
+    depth_img = remove_background(depth_img)
     depth_cropped = cropToBbox(depth_img, bbox_coordinates)
-    _, cols = depth_cropped.shape
-    left_half, right_half = depth_cropped[:, :int(cols/2)], depth_cropped[:, int(cols/2):]
+    _, width = depth_cropped.shape
+    left_half, right_half = depth_cropped[:, :int(width/2)], depth_cropped[:, int(width/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
     left_pole_angle = (180 * math.acos((gate_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_width*avg_left_depth)) / math.pi) - 90
@@ -275,7 +301,7 @@ def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - gate_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov*x_center_offset
-    gate_angle = state.theta_z - left_pole_angle + theta_x
+    gate_angle = states[1].theta_z + left_pole_angle + theta_x
     return gate_angle
 
 def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gate_class_id): # AYOUB
@@ -309,7 +335,9 @@ def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buo
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
     label_counts = {}
     selected_detections = []
+
     for i in range(len(labels)):
+        if None in [objs_x[i], objs_y[i], objs_z[i]]: continue
         if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
             candidate_obj_conf = confidences[i]
             min_conf_i = min(selected_detections, key=lambda x : confidences[x])
@@ -354,7 +382,4 @@ front_cam_vfov = 58
 max_dist_to_measure = 10
 
 bridge = CvBridge()
-tf_buffer = Buffer()
-TransformListener(tf_buffer)
-tf_header = Header(frame_id="world")
-state = State()
+states = (State(), State())

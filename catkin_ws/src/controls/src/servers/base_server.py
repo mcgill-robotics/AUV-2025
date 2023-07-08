@@ -2,8 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64, Bool
-from geometry_msgs.msg import Pose
-from sbg_driver.msg import SbgImuData
+from geometry_msgs.msg import Pose, Quaternion, Vector3
 import numpy as np
 
 """
@@ -43,21 +42,24 @@ class BaseServer():
         self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=1)
         self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=1)
         self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=1)
+        self.pub_quat_pid = rospy.Publisher('quat_setpoint', Quaternion, queue_size=1)
         
     def establish_pid_enable_publishers(self):
         self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
         self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
         self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
+        self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
 
     def establish_state_subscribers(self):
         self.sub = rospy.Subscriber("pose",Pose,self.set_pose)
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
-        self.imu_sub = rospy.Subscriber("/sbg/imu_data", SbgImuData, self.set_imu)
+        self.imu_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
 
-    def set_imu(self, data):
-        self.angular_velocity = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
+    def set_ang_vel(self, data):
+        self.angular_velocity = np.array([data.x, data.y, data.z])
+
     #callback for subscriber
     def set_pose(self,data):
         self.pose = data

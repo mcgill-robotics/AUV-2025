@@ -15,7 +15,6 @@ def objectDetectCb(msg):
 #add an object detection frame to the object map
 def addObservation(msg):
     for i in range(len(msg.label)):
-        if msg.x[i] is None or msg.y[i] is None or msg.z[i] is None: continue
         #find which object this detection pertains to
         obj_i = findClosestObject([msg.label[i], msg.x[i], msg.y[i], msg.z[i]])
         #if it does not pertain to any preexisting object add it to the map
@@ -55,10 +54,10 @@ def updateMap(obj_i, observation):
     
     #CALCULATE THETA Z
     #if no theta z measurement keep current theta z
-    if observed_theta_z is None:
+    if observed_theta_z == -1234.5:
         new_theta_z = current_theta_z
     #if there was no previous theta z but observation has a theta z set theta z to observation theta z
-    elif current_theta_z is None:
+    elif current_theta_z == -1234.5:
         new_theta_z = observed_theta_z
     else:
         while abs(observed_theta_z-current_theta_z) > 180:
@@ -80,7 +79,7 @@ def updateMap(obj_i, observation):
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
         elif label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
             new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
-        else: return
+        else: new_extra_field = -1234.5
         #TODO: elif for symbols?
 
     object_map[obj_i][1] = new_x
@@ -127,9 +126,7 @@ object_map = []
 
 sameObjectRadius = 1.5 #in same units as state_x, y, z etc (meters i think)
 
-
-if __name__ == '__main__':
-    rospy.init_node('object_map')
-    obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
-    obj_pub = rospy.Publisher('vision/object_map', ObjectMap, queue_size=1)
-    rospy.spin()
+rospy.init_node('object_map')
+obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
+obj_pub = rospy.Publisher('vision/object_map', ObjectMap, queue_size=1)
+rospy.spin()

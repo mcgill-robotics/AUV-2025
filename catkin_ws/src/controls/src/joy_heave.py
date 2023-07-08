@@ -15,8 +15,6 @@ def heave_cb(joy_msg):
     else: #neither button pressed; reset heave
         pub.publish(Float64(0.0))
 
-rospy.Subscriber('joy', Joy, heave_cb )
-
 if __name__ == '__main__':
     rospy.init_node('joy_heave')
     rospy.Subscriber('joy', Joy, heave_cb )

@@ -29,8 +29,8 @@ class NavigateGate(smach.State):
         print("Centering and rotating in front of gate.")
         offset_distance = -3
         offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
-        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
+        self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
+        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         # wait and repeat just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
@@ -38,10 +38,9 @@ class NavigateGate(smach.State):
 
         print("Re-centering and rotating in front of gate.")
         self.mapping.updateObject(gate_object)
-        offset_distance = -2
         offset = offset_distance * degreesToVector(gate_object[4])
-        self.control.rotate((None,None,gate_object[4])) # bring to exact angle 
-        self.control.move(gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3]) # move in front of gate
+        self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
+        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         print("Successfully centered in front of gate")
 
@@ -54,19 +53,19 @@ class NavigateGate(smach.State):
         if self.target_symbol == "Earth Symbol": 
             if symbol >= 0.5:
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,0.5,0))
+                self.control.moveDeltaLocal((0,0.75,0)) # a quarter of gate width
             else : 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.5,0))
+                self.control.moveDeltaLocal((0,-0.75,0)) # a quarter of gate width
         else: 
             if symbol <= 0.5:
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,0.5,0))
+                self.control.moveDeltaLocal((0,0.75,0)) # a quarter of gate width
             else: 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.5,0))
+                self.control.moveDeltaLocal((0,-0.75,0)) # a quarter of gate width
 
-        self.control.moveDeltaLocal((3.0,0.0,0.0))
+        self.control.moveDeltaLocal((5.0,0.0,0.0))
 
         print("Successfully passed through gate!")
         
