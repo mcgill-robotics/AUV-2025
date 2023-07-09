@@ -29,13 +29,12 @@ const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
 const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
 const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
 
-int kill_state = 1; //off
+uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
 
 Servo thrusters[8];
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
 
 void updateThrusters(const uint16_t microseconds[8]){
-		
 	thrusters[SRG_P].writeMicroseconds(microseconds[SRG_P]);
 	thrusters[SRG_S].writeMicroseconds(microseconds[SRG_S]);
 	thrusters[SWY_BW].writeMicroseconds(microseconds[SWY_BW]);
@@ -46,19 +45,8 @@ void updateThrusters(const uint16_t microseconds[8]){
 	thrusters[HVE_ST_S].writeMicroseconds(microseconds[HVE_ST_S]);
 }
 
-void thrustersOff(){
-	updateThrusters(offCommand);
-}
-
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
-	// lastCommand = millis();
-	const uint16_t* microseconds = tc.microseconds;
-	if(kill_state == 0){
-		updateThrusters(microseconds);
-	}
-	else{
-		thrustersOff();
-	}
+	microseconds = tc.microseconds;
 }
 
 void initThrusters(){
@@ -72,27 +60,25 @@ void initThrusters(){
 	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
 
 	//set initial thruster effort (OFF)
-	thrustersOff();
+	updateThrusters(offCommand);
 }
-
 
 ros::NodeHandle nh;
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("propulsion/thruster_microseconds", &commandCb);
 
 void setup() {
-	// lastCommand = millis();
 	initThrusters();
 	pinMode(A0, INPUT_PULLUP);
 	nh.subscribe(sub);
 	nh.initNode();
-	
 }
 
 void loop() {
-	// if(millis() - lastCommand >= 1000){
-	// 	thrustersOff();
-	// }
-	// listen for commands
-	kill_state = digitalRead(A0);
+	if(digitalRead(A0) == 0){
+		updateThrusters(microseconds);
+	}
+	else{
+		updateThrusters(offCommand);
+	}
 	nh.spinOnce(); 
 }
