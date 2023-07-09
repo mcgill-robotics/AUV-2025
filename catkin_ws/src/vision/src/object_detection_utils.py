@@ -335,7 +335,28 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
     
 
 def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buoy_class_id, depth_map):
-    return []
+    detection_measures = []
+    object_positions = []
+    buoy_depth = None
+    for detection in detections:
+        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
+        else: boxes = detection.boxes.numpy()
+        for box in boxes:
+            bbox = list(box.xywh[0])
+            conf = float(list(box.conf)[0])
+            cls_id = int(list(box.cls)[0])
+            if (cls_id == earth_class_id or cls_id == abydos_class_id or cls_id == buoy_class_id) and conf > min_confidence:
+                if (cls_id == buoy_class_id):
+                    buoy_depth = object_depth(cropToBbox(depth_map, bbox, True), 2)
+                x, y, w, h = bbox
+                box_measures = [cls_id, x, y, conf]
+                detection_measures.append(box_measures)
+    
+    for measure in detection_measures:
+        x, y, z = getObjectPosition(measure[1], measure[2], depth_map.shape[0], depth_map.shape[1], buoy_depth, None)
+        object_positions.append([measure[0], x, y, z, measure[3]])
+
+    return object_positions
 
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences, max_counts_per_label):
     label_counts = {}
