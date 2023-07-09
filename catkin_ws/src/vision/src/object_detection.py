@@ -126,7 +126,7 @@ def detect_on_image(raw_img, camera_id):
                 elif global_class_id == 2: # BUOY
                     label.append(global_class_id)
                     confidences.append(conf)
-                    theta_z = measureBuoyAngle(depth_cropped)
+                    theta_z = measureBuoyAngle(depth_cropped, buoy_width, bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, dist_from_camera=dist_from_camera)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
