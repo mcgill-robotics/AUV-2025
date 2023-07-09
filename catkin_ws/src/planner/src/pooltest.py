@@ -3,8 +3,6 @@
 import rospy
 import smach
 
-from simple_term_menu import TerminalMenu
-
 # TODO - simplify? uncouple with mission
 from mission import *
 
@@ -33,7 +31,6 @@ if __name__ == "__main__":
     for option in options:
         print(option)
 
-    # terminal_menu = TerminalMenu(options)
     menu_index = input()
 
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
