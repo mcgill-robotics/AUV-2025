@@ -332,7 +332,6 @@ def analyzeGate(detections, min_confidence, earth_class_id, abydos_class_id, gat
 
     if min_key == earth_class_id: return 1.0
     else: return 0.0
-    
 
 def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buoy_class_id, depth_map):
     detection_measures = []
@@ -348,7 +347,8 @@ def analyzeBuoy(detections, min_confidence, earth_class_id, abydos_class_id, buo
             if (cls_id == earth_class_id or cls_id == abydos_class_id or cls_id == buoy_class_id) and conf > min_confidence:
                 if (cls_id == buoy_class_id):
                     buoy_depth = object_depth(cropToBbox(depth_map, bbox, True), 2)
-                x, y, w, h = bbox
+                    continue
+                x, y, _, _ = bbox
                 box_measures = [cls_id, x, y, conf]
                 detection_measures.append(box_measures)
     
