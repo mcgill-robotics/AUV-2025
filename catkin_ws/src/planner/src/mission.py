@@ -44,6 +44,17 @@ def QualiQuaternionMission():
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
     
+def GateMission():
+    control.move((0,0,0))
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
+            transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
+            transitions={'success': 'success', 'failure':'failure'})
+    res = sm.execute()
+    endMission("Finished gate mission. Result {}".format(res))
+    
 def QuaternionTestMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -113,23 +124,25 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
+        
+        GateMission()  
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
-        mission = sys.argv[1] 
-        if mission.startswith("__mission"):
-            mission = mission.replace("__mission:=", "")
-        else:
-            mission = None
+        # mission = sys.argv[1] 
+        # if mission.startswith("__mission"):
+        #     mission = mission.replace("__mission:=", "")
+        # else:
+        #     mission = None
 
 
-        print("mission", mission)
-        if mission is None:
-            master_planner()
-        elif mission == "quali":
-            QualiMission()
-        else:
-            raise Exception("invalid mission")
+        # print("mission", mission)
+        # if mission is None:
+        #     master_planner()
+        # elif mission == "quali":
+        #     QualiMission()
+        # else:
+        #     raise Exception("invalid mission")
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #testRotationsMission()

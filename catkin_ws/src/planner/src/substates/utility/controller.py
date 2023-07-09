@@ -266,8 +266,8 @@ class Controller:
     #stay still in place
     def stop_in_place(self, callback=None):
         goal = self.get_superimposer_goal([0,0,0,0,0,0])
-        goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
         self.SuperimposerClient.send_goal(goal)
+        goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
         else:
