@@ -137,9 +137,6 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
         
-        control.moveDelta((0, 0, -0.5))
-        control.rotateEuler((0,0,0))
-        
         GateMission()  
 
         # get mission to run from command line argument

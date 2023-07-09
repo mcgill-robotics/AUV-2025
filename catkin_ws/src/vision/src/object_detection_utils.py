@@ -179,7 +179,7 @@ def octagon_table_depth(depth_cropped):
 def object_depth(depth_cropped, label):
     depth_cropped = clean_depth_error(depth_cropped)
     depth_cropped = remove_background(depth_cropped)
-    dist = 0
+    dist = None
     if label == 0:
         dist = lane_marker_depth(depth_cropped)
     elif label == 1:
@@ -240,6 +240,7 @@ def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=
         #assuming FOV increases linearly with distance from center pixel
         yaw_angle_offset = front_cam_hfov*x_center_offset
         pitch_angle_offset = front_cam_vfov*y_center_offset
+        print("pitch angle offset: ", pitch_angle_offset)
         
         direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
         vector_to_object = direction_to_object * dist_from_camera
