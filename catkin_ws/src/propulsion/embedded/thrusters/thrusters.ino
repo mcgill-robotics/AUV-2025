@@ -1,6 +1,7 @@
 #include <ros.h>
 #include <Servo.h>
 #include <auv_msgs/ThrusterMicroseconds.h>
+
 /* 
 NOTE: pins 2-9 were chosen instead of 0-7, since 
 pins 0 and 1 function differently.
@@ -46,7 +47,7 @@ void updateThrusters(const uint16_t microseconds[8]){
 }
 
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
-	microseconds = tc.microseconds;
+	 memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
 }
 
 void initThrusters(){
