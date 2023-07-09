@@ -278,8 +278,10 @@ def measureBuoyAngle(depth_img, buoy_width, bbox_coordinates):
     left_half, right_half = depth_cropped[:, :int(width/2)], depth_cropped[:, int(width/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
-
-    left_pole_angle = (180 * math.acos((buoy_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*buoy_width*avg_left_depth)) / math.pi) - 90
+    try:
+        left_pole_angle = (180 * math.acos((buoy_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*buoy_width*avg_left_depth)) / math.pi) - 90
+    except:
+        return None
     buoy_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2
     x_center_offset = ((depth_img.shape[1]/2) - buoy_pixel_x_left) / depth_img.shape[1] #-0.5 to 0.5
     theta_x = front_cam_hfov * x_center_offset
@@ -295,7 +297,10 @@ def measureGateAngle(depth_img, gate_width, bbox_coordinates): # ELIE
     left_half, right_half = depth_cropped[:, :int(width/2)], depth_cropped[:, int(width/2):]
     avg_left_depth = np.nanmin(left_half)
     avg_right_depth = np.nanmin(right_half)
-    left_pole_angle = (180 * math.acos((gate_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_width*avg_left_depth)) / math.pi) - 90
+    try:
+        left_pole_angle = (180 * math.acos((gate_width**2 + avg_left_depth**2 - avg_right_depth**2)/(2*gate_width*avg_left_depth)) / math.pi) - 90
+    except:
+        return None
     # auv_angle = math.acos((avg_left_depth**2 +avg_right_depth**2 - gate_width**2)/(2*avg_left_depth*avg_right_depth))
     # right_pole_angle = 180 - auv_angle - left_pole_angle
     gate_pixel_x_left = bbox_coordinates[0] - bbox_coordinates[2]/2

@@ -22,12 +22,14 @@ class BreadthFirstSearch(smach.State):
     def doBreadthFirstSearch(self):
         rotating = False
         moving = False
-        def rotationComplete(): #called when rotation is complete
+        
+        def rotationCompleteBFS(self, msg): #called when rotation is complete
             global rotating
             rotating = False
-        def movementComplete(): #called when translation is complete
+        def movementCompleteBFS(self, msg): #called when translation is complete
             global moving
             moving = False
+                
             
         movement = [1,0,0]
         right_turn = (0,0,-90)
@@ -36,7 +38,7 @@ class BreadthFirstSearch(smach.State):
             #move forward
             print("Moving by {}.".format(movement))
             moving = True
-            self.control.moveDeltaLocal(movement, movementComplete)
+            self.control.moveDeltaLocal(movement, movementCompleteBFS)
             #check for object detected while moving
             while moving:
                 if self.detectedObject: return # stop grid search when object found
@@ -45,7 +47,7 @@ class BreadthFirstSearch(smach.State):
             #rotate right 90 degrees
             print("Rotating by {}.".format(right_turn))
             rotating = True
-            self.control.rotateDeltaEuler(right_turn, rotationComplete)
+            self.control.rotateDeltaEuler(right_turn, rotationCompleteBFS)
             #check for object detected while rotating
             while rotating:
                 if self.detectedObject: return # stop grid search when object found
@@ -72,4 +74,5 @@ class BreadthFirstSearch(smach.State):
             self.searchThread.join()
             print("Breadth-first search interrupted by user.")
             return 'failure'
+
 
