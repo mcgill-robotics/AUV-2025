@@ -50,7 +50,7 @@ class State_Aggregator:
 
         '''IMU'''
         self.q_auv_global_imu = np.quaternion(1, 0, 0, 0) 
-        self.q_imu_mount_auv = np.quaternion(0, 1, 0, 0) 
+        self.q_imu_mount_auv = np.quaternion(1, 0, 0, 0) 
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
