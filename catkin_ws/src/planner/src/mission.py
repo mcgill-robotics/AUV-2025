@@ -70,9 +70,22 @@ def tricks(t):
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
+    
+def laneMarkerMission():
+    control.move((0,0,0))
+    sm = smach.StateMachine(outcomes=['success', 'failure'])
+    with sm:
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
+                transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
+
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=-1, control=control, mapping=mapping, state=state, lane_marker_class=global_class_ids["Lane Marker"]), 
+                transitions={'success': 'success', 'failure': 'failure'})
+        res = sm.execute()
+    endMission("Finished lane marker. Result {}".format(res))
+        
 
 def master_planner():
-    control.moveDelta((1, 0, -0.5))
+    control.moveDelta((0, 0, -1.))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
@@ -125,7 +138,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
         
-        GateMission()  
+        laneMarkerMission()  
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
