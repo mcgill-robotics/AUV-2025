@@ -170,6 +170,7 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(debug_img)
     states[camera_id].resume()
 
+world_to_global_z_origin = 0 #FOR ROBOSUB, CHANGE THIS TO CONSIDER THE Z POS OF THE AUV WHEN RESETTING STATE PLANAR
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
 octagon_table_z = pool_depth + 1.0668
