@@ -138,7 +138,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
         
-        laneMarkerMission()  
+        GateMission()  
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
