@@ -134,11 +134,12 @@ def detect_on_image(raw_img, camera_id):
                     obj_theta_z.append(theta_z)
                     extra_field.append(None)
 
-                    for symbol_x, symbol_y, symbol_z, symbol_class_id in buoy_symbols:
+                    for symbol_x, symbol_y, symbol_z, symbol_class_id, confidence in buoy_symbols:
                         label.append(symbol_class_id)
                         obj_x.append(symbol_x)
                         obj_y.append(symbol_y)
                         obj_z.append(symbol_z) 
+                        confidences.append(confidence)
                         obj_theta_z.append(theta_z)
                         extra_field.append(None)
                 elif global_class_id == 3: # OCTAGON TABLE
@@ -206,6 +207,7 @@ if __name__ == '__main__':
         ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
         ]
     global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
+    #NOTE: WHEN UPDATING ALSO UPDATE object_depth() IN OBJECT_DETECTION_UTILS!
 
     max_counts_per_label = [1, 1, 1, 1, 2, 2, 1]
 

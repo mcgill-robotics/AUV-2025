@@ -61,7 +61,6 @@ def tricks(t):
     endMission("Finished trick. Result {}".format(res))
 
 def master_planner():
-    control.moveDelta((1, 0, -0.5))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
@@ -113,6 +112,9 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
+        
+        control.moveDelta((0, 0, -0.5))
+        control.rotateEuler((0,0,0))
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
