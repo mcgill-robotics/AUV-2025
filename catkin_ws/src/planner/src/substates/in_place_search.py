@@ -23,7 +23,7 @@ class InPlaceSearch(smach.State):
         def rotationComplete(arg1, arg2): #called when rotation is complete
             self.rotating = False
             
-        turn_amt = (0,0,-60)
+        turn_amt = (0,0,-30)
 
         while True:
             #move forward
