@@ -42,11 +42,9 @@ def findClosestObject(observation, indexToIgnore=-1):
     else: return min(close_objs, key=lambda i : dist((object_map[i][1],object_map[i][2],object_map[i][3]), (observed_x, observed_y, observed_z)))
 
 def angleDifference(ang1, ang2):
-    diff = ang1-ang2
-    while abs(diff) > 180:
-        if diff > 180: diff -= 360
-        else: diff += 360
-    return diff
+    diff = (ang1-ang2) % 360
+    if diff > 180: diff -= 360
+    return abs(diff)
 
 #NOT 100% SURE ABOUT PROBABILITIES
 #update the object map using probabilities to improve estimate of object pose and label
