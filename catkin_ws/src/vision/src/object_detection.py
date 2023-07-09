@@ -79,12 +79,8 @@ def detect_on_image(raw_img, camera_id):
                             heading2 = states[camera_id].theta_z + (headings[1]+270)
                         else:
                             heading2 = states[camera_id].theta_z + (headings[1]-90)
-                        if heading1 > heading2:
-                            obj_theta_z.append(heading1)
-                            extra_field.append(heading2)
-                        else:
-                            obj_theta_z.append(heading2)
-                            extra_field.append(heading1)
+                        obj_theta_z.append(heading1)
+                        extra_field.append(heading2)
 
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPosition(center[0], center[1], img_h, img_w, z_pos=lane_marker_z)
                     obj_x.append(pred_obj_x)
@@ -173,7 +169,7 @@ def detect_on_image(raw_img, camera_id):
 world_to_global_z_origin = 0 #FOR ROBOSUB, CHANGE THIS TO CONSIDER THE Z POS OF THE AUV WHEN RESETTING STATE PLANAR
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
-octagon_table_z = pool_depth + 1.0668
+octagon_table_z = pool_depth + 1.2
 buoy_width = 1.22 
 gate_width = 3
 

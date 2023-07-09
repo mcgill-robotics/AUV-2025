@@ -41,6 +41,13 @@ def findClosestObject(observation, indexToIgnore=-1):
     #return closest object to observation
     else: return min(close_objs, key=lambda i : dist((object_map[i][1],object_map[i][2],object_map[i][3]), (observed_x, observed_y, observed_z)))
 
+def angleDifference(ang1, ang2):
+    diff = ang1-ang2
+    while abs(diff) > 180:
+        if diff > 180: diff -= 360
+        else: diff += 360
+    return diff
+
 #NOT 100% SURE ABOUT PROBABILITIES
 #update the object map using probabilities to improve estimate of object pose and label
 def updateMap(obj_i, observation):
@@ -51,36 +58,66 @@ def updateMap(obj_i, observation):
     new_x = (num_new_observations*observed_x + num_observations*current_x) / (num_observations + num_new_observations)
     new_y = (num_new_observations*observed_y + num_observations*current_y) / (num_observations + num_new_observations)
     new_z = (num_new_observations*observed_z + num_observations*current_z) / (num_observations + num_new_observations)
-    
-    #CALCULATE THETA Z
-    #if no theta z measurement keep current theta z
-    if observed_theta_z == -1234.5:
-        new_theta_z = current_theta_z
-    #if there was no previous theta z but observation has a theta z set theta z to observation theta z
-    elif current_theta_z == -1234.5:
-        new_theta_z = observed_theta_z
-    else:
-        while abs(observed_theta_z-current_theta_z) > 180:
-            if observed_theta_z > current_theta_z: current_theta_z += 360
-            else: observed_theta_z += 360
-        #average both orientations
-        new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
-    #CALCULATE EXTRA FIELD WHEN APPLICABLE
-    if observed_extra_field == -1234.5:
-        new_extra_field = current_extra_field
-    elif current_extra_field == -1234.5:
-        new_extra_field = observed_extra_field
+    if label == 0: #LANE MARKER HAD TO DEALT WITH DIFFERENTLY FOR THETA Z AND EXTRA_FIELD
+        #if no theta z measurement keep current theta z
+        if observed_theta_z == -1234.5 and observed_extra_field == -1234.5:
+            new_theta_z = current_theta_z
+            new_extra_field = current_extra_field
+        #if there was no previous theta z but observation has a theta z set theta z to observation theta z
+        elif current_extra_field == -1234.5 and current_theta_z == -1234.5:
+            new_theta_z = observed_theta_z
+            new_extra_field = observed_extra_field
+        else:
+            #find closest match between observed angles and current angles
+            if angleDifference(observed_theta_z, current_theta_z) < angleDifference(observed_theta_z, current_extra_field):
+                #CLOSEST ANGLES ARE OBSERVED THETA_Z AND CURRENT THETA_Z
+                while abs(observed_theta_z-current_theta_z) > 180:
+                    if observed_theta_z > current_theta_z: observed_theta_z -= 360
+                    else: observed_theta_z += 360
+                new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
+                #CLOSEST ANGLES ARE OBSERVED EXTRA_FIELD AND CURRENT EXTRA_FIELD
+                while abs(observed_extra_field-current_extra_field) > 180:
+                    if observed_extra_field > current_extra_field: current_extra_field += 360
+                    else: observed_extra_field += 360
+                new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
+            else:
+                #CLOSEST ANGLES ARE OBSERVED THETA_Z AND CURRENT EXTRA_FIELD
+                while abs(observed_theta_z-current_extra_field) > 180:
+                    if observed_theta_z > current_extra_field: observed_theta_z -= 360
+                    else: observed_theta_z += 360
+                new_extra_field = (num_new_observations*observed_theta_z + num_observations*current_extra_field) / (num_observations + num_new_observations)
+                #CLOSEST ANGLES ARE OBSERVED EXTRA_FIELD AND CURRENT THETA_Z
+                while abs(observed_extra_field-current_theta_z) > 180:
+                    if observed_extra_field > current_theta_z: observed_extra_field -= 360
+                    else: observed_extra_field += 360
+                new_theta_z = (num_new_observations*observed_extra_field + num_observations*current_theta_z) / (num_observations + num_new_observations)
+    
     else:
-        if label == 0: # LANE MARKER -> angle, take weighted average
-            while abs(observed_extra_field-current_extra_field) > 180:
-                if observed_extra_field > current_extra_field: current_extra_field += 360
-                else: observed_extra_field += 360
-            new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
-        elif label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
-            new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
-        else: new_extra_field = -1234.5
-        #TODO: elif for symbols?
+        #CALCULATE THETA Z
+        #if no theta z measurement keep current theta z
+        if observed_theta_z == -1234.5:
+            new_theta_z = current_theta_z
+        #if there was no previous theta z but observation has a theta z set theta z to observation theta z
+        elif current_theta_z == -1234.5:
+            new_theta_z = observed_theta_z
+        else:
+            while abs(observed_theta_z-current_theta_z) > 180:
+                if observed_theta_z > current_theta_z: current_theta_z += 360
+                else: observed_theta_z += 360
+            #average both orientations
+            new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
+
+        #CALCULATE EXTRA FIELD WHEN APPLICABLE
+        if observed_extra_field == -1234.5:
+            new_extra_field = current_extra_field
+        elif current_extra_field == -1234.5:
+            new_extra_field = observed_extra_field
+        else:
+            if label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
+                new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
+            else: new_extra_field = -1234.5
+            #TODO: elif for symbols?
 
     object_map[obj_i][1] = new_x
     object_map[obj_i][2] = new_y

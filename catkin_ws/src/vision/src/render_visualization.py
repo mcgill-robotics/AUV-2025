@@ -163,13 +163,13 @@ def addMapMarkers(label,x,y,z,in_theta_z,in_extra_field,color=(1,0,0)):
         addHeading(x,y,z,heading2[0],heading2[1],heading2[2],publishToMap,color)
         addLabel(x,y,z,"Lane Marker",publishToMap)
     elif label == 1: #GATE TASK
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,3,1],publishToMap,[color[0],color[1],color[2],0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,3,1.5],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Gate (left: " + str("None" if extra_field < 0 else ("earth" if extra_field > 0.5 else "abydos")) + ")",publishToMap)
     elif label == 2: #BUOY TASK
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,0.5,1],publishToMap,[color[0],color[1],color[2],0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.1,1.2,1.2],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Buoy",publishToMap)
     elif label == 3: # OCTAGON TABLE
-        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[1,1,0.75],publishToMap,[color[0],color[1],color[2],0.4])
+        addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[1.2,1.2,1.2],publishToMap,[color[0],color[1],color[2],0.4])
         addLabel(x,y,z,"Octagon Table" ,publishToMap)
     elif label == 4: #EARTH SYMBOL
         addCustomObject(Marker.CUBE,[x,y,z],(0,0,theta_z*math.pi/180),[0.01,0.2,0.2],publishToMap,[color[0],color[1],color[2],0.4])
