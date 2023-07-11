@@ -24,7 +24,10 @@ class NavigateBuoy(smach.State):
     
         print("Centering and rotating in front of buoy.")
         offset_distance = -2
-        offset = offset_distance * degreesToVector(buoy_object[4])
+        dtv = degreesToVector(buoy_object[4])
+        offset = [] 
+        for i in range(len(dtv)):
+            offset.append(offset_distance * dtv[i]) 
         self.control.rotateEuler((None,None,buoy_object[4])) # bring to exact angle 
         self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of gate
 
@@ -34,8 +37,10 @@ class NavigateBuoy(smach.State):
 
         print("Re-centering and rotating in front of buoy.")
         self.mapping.updateObject(buoy_object)
-        offset = offset_distance * degreesToVector(buoy_object[4])
-
+        dtv = degreesToVector(buoy_object[4])
+        offset = [] 
+        for i in range(len(dtv)):
+            offset.append(offset_distance * dtv[i]) 
         homing_rotation = (None,None,buoy_object[4])
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 

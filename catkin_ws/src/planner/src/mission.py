@@ -55,6 +55,19 @@ def GateMission():
     res = sm.execute()
     endMission("Finished gate mission. Result {}".format(res))
     
+def BuoysMission():
+    control.move((0,0,-2))
+    sm = smach.StateMachine(outcomes=['success', 'failure'])
+    with sm:
+        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
+                transitions={'success': 'navigate_buoy', 'failure': 'failure'})
+
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
+                transitions={'success': 'success', 'failure':'failure'})
+        
+    res = sm.execute()
+    endMission("Finished buoy mission. Result {}".format(res))
+    
 def QuaternionTestMission():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -137,7 +150,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
         
-        GateMission()  
+        BuoysMission()  
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
