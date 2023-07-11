@@ -34,7 +34,9 @@ def findClosestObject(observation, indexToIgnore=-1):
         obj_label, obj_x, obj_y, obj_z, _, _, _ = object_map[obj_i]
         if observed_label != obj_label or obj_i == indexToIgnore: continue
         #find distance between object in map and observation
-        if dist((obj_x, obj_y, obj_z), (observed_x, observed_y, observed_z)) < sameObjectRadius:
+        #ignore Z position when reducing map
+        objs_distance_apart = dist((obj_x, obj_y, obj_z), (observed_x, observed_y, observed_z)) if indexToIgnore == -1 else dist((obj_x, obj_y, 0), (observed_x, observed_y, 0))
+        if objs_distance_apart < sameObjectRadius:
             close_objs.append(obj_i)
     #if there is only one object within radius return that
     if len(close_objs) == 0: return -1

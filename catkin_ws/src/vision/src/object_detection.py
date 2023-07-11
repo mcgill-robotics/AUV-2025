@@ -52,7 +52,7 @@ def detect_on_image(raw_img, camera_id):
             conf = float(list(box.conf)[0])
             #only consider prediction if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
-                print("confidence too low ({}%)".format(conf*100))
+                print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
                 continue
             
             bbox = list(box.xywh[0])

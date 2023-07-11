@@ -47,9 +47,9 @@ def setup():
     addHeading(0,0,0,0,1,0,auv_pub.publish,(1,1,0))# 8 - DVL y direction
     addHeading(0,0,0,0,0,1,auv_pub.publish,(0,1,1))# 9 - DVL z direction
     addLabel(0,0,1,"Surge:0\nSway:0\nHeave:0\nRoll:0\nPitch:0\nYaw:0",auv_pub.publish,0.15) # 10 - effort
-    addHeading(-1000,-1000,-1000,1,0,0,auv_pub.publish,(1,0.8,0)) # 11 - setpoint x axis
-    addHeading(-1000,-1000,-1000,0,1,0,auv_pub.publish,(1,0.8,0)) # 12 - setpoint y axis
-    addHeading(-1000,-1000,-1000,0,0,1,auv_pub.publish,(1,0.8,0)) # 13 - setpoint z axis
+    addHeading(-1000,0,0,1,0,0,auv_pub.publish,(1,1,1)) # 11 - setpoint x axis
+    addHeading(-1000,0,0,0,1,0,auv_pub.publish,(1,1,1)) # 12 - setpoint y axis
+    addHeading(-1000,0,0,0,0,1,auv_pub.publish,(1,1,1)) # 13 - setpoint z axis
 
     for gt in groundTruths:
         addMapMarkers(gt[0],gt[1],gt[2],gt[3],gt[4],gt[5],(1,1,1))
@@ -58,7 +58,7 @@ def objectDetectCb(msg):
     #spawn blue spheres object detections
     for i in range(len(msg.label)):
         #NOTE: if performance becomes an issue, publish a marker array with all markers at once
-        addSphere(msg.x[i], msg.y[i], msg.z[i], 0.075, publish_detection_marker, (0,1,0))
+        add_detection_marker(msg.x[i], msg.y[i], msg.z[i])
 
 def objectMapCb(msg):
     global updates
@@ -254,23 +254,31 @@ def eulerAngleToUnitVector(x,y,z):
 
 def publish_breadcrumb(marker):
     global breadcrumb_markers
-    if len(breadcrumb_markers) >= max_breadcrumbs:
-        breadcrumb_markers[0].action = Marker.DELETE
-        auv_pub.publish(breadcrumb_markers[0])
-        rospy.sleep(0.01)
-        del breadcrumb_markers[0]
-    auv_pub.publish(marker)
     breadcrumb_markers.append(marker)
+    auv_pub.publish(marker)
+
+def add_breadcrumb(x,y,z):
+    global breadcrumb_markers
+    if len(breadcrumb_markers) >= max_breadcrumbs:
+        breadcrumb_marker = breadcrumb_markers.pop(0)
+        breadcrumb_marker.pose.position = Point(x,y,z)
+        publish_breadcrumb(breadcrumb_marker)
+    else:
+        addSphere(x,y,z,0.02,publish_breadcrumb,(1,0,0))
 
 def publish_detection_marker(marker):
     global detection_markers
-    if len(detection_markers) >= max_detection_markers:
-        detection_markers[0].action = Marker.DELETE
-        auv_pub.publish(detection_markers[0])
-        rospy.sleep(0.01)
-        del detection_markers[0]
-    detection_pub.publish(marker)
     detection_markers.append(marker)
+    detection_pub.publish(marker)
+
+def add_detection_marker(x,y,z):
+    global detection_markers
+    if len(detection_markers) >= max_detection_markers:
+        detection_marker = detection_markers.pop(0)
+        detection_marker.pose.position = Point(x,y,z)
+        publish_detection_marker(detection_marker)
+    else:
+        addSphere(x,y,z,0.075,publish_detection_marker,(0,1,0))
 
 def updateAUVThetaX(msg):
     global auv_marker
@@ -296,21 +304,21 @@ def updateAUVThetaZ(msg):
 def updateAUVX(msg):
     global auv_marker
     auv_marker.pose.position = Point(float(msg.data), auv_marker.pose.position.y, auv_marker.pose.position.z)  # Set the desired position
-    addSphere(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.01,publish_breadcrumb,(1,0,0))
+    add_breadcrumb(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z)
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1, "Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 def updateAUVY(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, float(msg.data), auv_marker.pose.position.z)  # Set the desired position 
-    addSphere(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.01,publish_breadcrumb,(1,0,0))
+    add_breadcrumb(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z)
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
 def updateAUVZ(msg):
     global auv_marker
     auv_marker.pose.position = Point(auv_marker.pose.position.x, auv_marker.pose.position.y, float(msg.data))  # Set the desired position
-    addSphere(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z,0.01,publish_breadcrumb,(1,0,0))
+    add_breadcrumb(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z)
     auv_pub.publish(auv_marker)
     updateReferenceFrames()
     addLabel(auv_marker.pose.position.x,auv_marker.pose.position.y,auv_marker.pose.position.z+1,"Surge:{}\nSway:{}\nHeave:{}\nRoll:{}\nPitch:{}\nYaw:{}".format(currentEffort["surge"], currentEffort["sway"], currentEffort["heave"], currentEffort["roll"], currentEffort["pitch"], currentEffort["yaw"]),auv_pub.publish,0.15,override_id=10)
@@ -366,11 +374,11 @@ def setpointZCb(msg):
 
 def setpointQuatCb(msg):
     global current_setpoint
-    current_setpoint[3] = [msg.w, msg.x, msg.y, msg.z]
+    current_setpoint[3] = [msg.x, msg.y, msg.z, msg.w]
     updateSetpointMarker()
 
 def updateSetpointMarker():
-    setpoint_euler_angles = tf.transformations.euler_from_quaternion([current_setpoint[3][1], current_setpoint[3][2], current_setpoint[3][3], current_setpoint[3][0]])
+    setpoint_euler_angles = tf.transformations.euler_from_quaternion([current_setpoint[3][0], current_setpoint[3][1], current_setpoint[3][2], current_setpoint[3][3]])
     dir_x = transformToWorldVector([1,0,0],setpoint_euler_angles)
     dir_y = transformToWorldVector([0,1,0],setpoint_euler_angles)
     dir_z = transformToWorldVector([0,0,1],setpoint_euler_angles)
@@ -393,9 +401,9 @@ dvl_euler_angles = [0,0,0]
 breadcrumb_markers = []
 max_breadcrumbs = 500
 detection_markers = []
-max_detection_markers = 100
+max_detection_markers = 50
 object_map_markers = []
-current_setpoint = [-1000,-1000,-1000,[1,0,0,0]]
+current_setpoint = [0,0,0,[0,0,0,1]]
 marker_id = 0
 
 update_map_every = 5
@@ -425,9 +433,9 @@ map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
 sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
 dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)
 
-x_setpoint_sub = rospy.Subscriber('setpoint_x', Float64, setpointXCb)
-y_setpoint_sub = rospy.Subscriber('setpoint_y', Float64, setpointYCb)
-z_setpoint_sub = rospy.Subscriber('setpoint_z', Float64, setpointZCb)
+x_setpoint_sub = rospy.Subscriber('x_setpoint', Float64, setpointXCb)
+y_setpoint_sub = rospy.Subscriber('y_setpoint', Float64, setpointYCb)
+z_setpoint_sub = rospy.Subscriber('z_setpoint', Float64, setpointZCb)
 quat_setpoint_sub = rospy.Subscriber('quat_setpoint', Quaternion, setpointQuatCb)
 
 
