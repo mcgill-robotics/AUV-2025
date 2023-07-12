@@ -100,33 +100,45 @@ def laneMarkerMission():
 def master_planner():
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
+        # NO BIG BUGS
+        # MAYBE ADD CHANGE DEPTH IF NOT FINDING OBJECT
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
+        # NO BIG BUGS!
         smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
+        # UNTESTED
         smach.StateMachine.add('tricks', Trick(control=control, trick_type="roll"), 
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
+        # NO BIG BUGS - RETEST AFTER FIXING VISION
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
+        # NO BIG BUGS!
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
+        # GOES TO WRONG HEADING
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state, lane_marker_class=global_class_ids["Lane Marker"]), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
-        
+           
+        # CHANGE LINEAR SEARCH TO STEPS INSTEAD OF CONSTANT SPEED
+        # TEST WITH MISSION PLANNER
+        # OTHER THAN THAT NO BIG BUGS!
         smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=10, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
+        # TEST WHEN BUOY CAN BE DETECTED RELIABLY
         smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
                 transitions={'success': 'go_near_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('go_near_octagon', GoToOctagon(control=control, search_point=octagon_approximate_location),
                 transitions={'success': 'find_octagon', 'failure':'failure'})
         
+        # NO BIG BUGS!
         smach.StateMachine.add('find_octagon', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Octagon"], min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         

@@ -17,11 +17,10 @@ class NavigateLaneMarker(smach.State):
 
     def execute(self, ud):
         print("Starting lane marker navigation.") 
-        auv_current_position = (self.state.x, self.state.y)
         if self.origin_class == -1: # use auv current position as origin
-            origin_position = auv_current_position
+            origin_position = (0,0)
         else:
-            origin_obj = self.mapping.getClosestObject(cls=self.origin_class, pos=(auv_current_position[0], auv_current_position[1]))
+            origin_obj = self.mapping.getClosestObject(cls=self.origin_class, pos=(self.state.x, self.state.y))
             origin_position = (origin_obj[1], origin_obj[2])
         
         lane_marker_obj = self.mapping.getClosestObject(cls=self.lane_marker_class, pos=(origin_position[0], origin_position[1]))
