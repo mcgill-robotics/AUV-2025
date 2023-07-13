@@ -181,8 +181,9 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 
 def cleanPointCloud(point_cloud):
     #TODO!
+    # NOTE: NEEDS TO BE REALLY ROBUST! ANGLE MEASUREMENT AND POSITION ESTIMATION RELY ON IT
     #CLEAN -> set all values which are too low or too high to NaN
-    #REMOVE BACKGROUND -> ?
+    #REMOVE BACKGROUND -> find a good way
     return point_cloud
 
 def getObjectPositionFrontCam(bbox):
@@ -190,7 +191,7 @@ def getObjectPositionFrontCam(bbox):
         lx = np.nanmean(cropped_point_cloud[:,:,0])
         ly = np.nanmean(cropped_point_cloud[:,:,1])
         lz = np.nanmean(cropped_point_cloud[:,:,2])
-        x,y,z = transformLocalToGlobal(lx,ly,lz,1)
+        x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
         return states[1].x + x, states[1].y + y, states[1].z + z
         # TODO! SEPERATE CASE FOR GATE?
 
@@ -202,25 +203,20 @@ def measureAngle(bbox, global_class_name):
         #REMOVE NANs from point clouds
         left_point_cloud = left_point_cloud[~np.isnan(left_point_cloud)]
         right_point_cloud = right_point_cloud[~np.isnan(right_point_cloud)]
-        #randomly sample 50 points in left/right half of buoy
-        left_samples = np.random.choice([True, False], shape=left_point_cloud.shape, replace=False)
-        right_samples = np.random.choice([True, False], shape=right_point_cloud.shape, replace=False)
-        left_points = left_point_cloud[left_samples]
-        right_points = right_point_cloud[right_samples]
-        #sum left points together and right points together
-        left_sum_point = np.sum(left_points, axis=(0,1))
-        right_sum_point = np.sum(right_points, axis=(0,1))
+        #sum left points together and right points together so we get two very large (x,y) points
+        left_sum_point = np.sum(left_point_cloud, axis=(0,1))
+        right_sum_point = np.sum(right_point_cloud, axis=(0,1))
         #measure angle of summed vector (effectively a weight average where the weight is the magnitude of the vector)
         return measureYaw(left_sum_point, right_sum_point)
     else: return None
 
 # returns an angle between a horizontal vector (i.e. a vector on the negative y axis) and the vector between a left and right (x,y) point on a gate or buoy
 def measureYaw(leftPoint, rightPoint):
-    zero_angle_vector = (0,-1)
-    arg_vector = (rightPoint[0] - leftPoint[0], rightPoint[1] - leftPoint[1])
-    magnitude_zero_vector = math.sqrt(zero_angle_vector[0]**2 + zero_angle_vector[1]**2)
-    magnitude_arg_vector = math.sqrt(arg_vector[0]**2 + arg_vector[1]**2)
-    dot_product = zero_angle_vector[0] * arg_vector[1] + zero_angle_vector[1] * arg_vector[1]
+    zero_angle_vector = np.array([0,-1])
+    magnitude_zero_vector = 1
+    arg_vector = rightPoint - leftPoint
+    magnitude_arg_vector = np.linalg.norm(arg_vector)
+    dot_product = np.dot(zero_angle_vector, arg_vector)
     return math.acos(dot_product / (magnitude_zero_vector * magnitude_arg_vector)) * 180 / math.pi
 
 def analyzeGate(detections):
@@ -269,6 +265,7 @@ def analyzeBuoy(detections):
     if buoy_was_detected: return symbols
     else: return []
 
+#selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences):
     label_counts = {}
     selected_detections = []
