@@ -27,6 +27,8 @@ if __name__ == "__main__":
             '[9] buoy task', 
             '[a] octagon task', 
             ]
+    
+    target_symbol = "Earth Symbol" # "Abydos Symbol"
 
     for option in options:
         print(option)
@@ -38,19 +40,19 @@ if __name__ == "__main__":
         # breadth first search
         if menu_index == '0':
             smach.StateMachine.add('breadth_first_search', 
-                BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
+                BreadthFirstSearch(timeout=120, expansionAmt=1, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'success', 'failure':'failure'})
 
         # in-place search
         elif menu_index == '1':
             smach.StateMachine.add('in_place_search', 
-                InPlaceSearch(timeout=120, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
+                InPlaceSearch(timeout=120, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'success', 'failure':'failure'})
 
         # linear search
         elif menu_index == '2':
             smach.StateMachine.add('linear_search', 
-                LinearSearch(timeout=120, forward_speed=10, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping),
+                LinearSearch(timeout=120, forward_speed=10, target_class="Buoy", min_objects=1, control=control, mapping=mapping),
                 transitions={'success': 'success', 'failure':'failure'})
 
         # quaternion test
@@ -75,7 +77,7 @@ if __name__ == "__main__":
         elif menu_index == '6':
             smach.StateMachine.add('gate', 
                 # TODO - add states to find/align to gate?
-                NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]),
+                NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol),
                 transitions={'success': 'success', 'failure':'failure'})
 
         # trick 
@@ -88,21 +90,21 @@ if __name__ == "__main__":
         elif menu_index == '8':
             smach.StateMachine.add('lane_marker', 
                 # TODO - add states to find to lane marker?
-                NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state, lane_marker_class=global_class_ids["Lane Marker"]),
+                NavigateLaneMarker(origin_class="Gate", control=control, mapping=mapping, state=state),
                 transitions={'success': 'success', 'failure':'failure'})
 
         # buoy task 
         elif menu_index == '9':
             smach.StateMachine.add('buoy', 
                 # TODO - add states to find buoy?
-                NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]),
+                NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol),
                 transitions={'success': 'success', 'failure':'failure'})
 
         # octagon 
         elif menu_index == 'a':
             smach.StateMachine.add('octagon', 
                 # TODO - add states to find octagon?
-                NavigateOctagon(control=control, mapping=mapping, state=state, octagon_class=global_class_ids["Octagon"]),
+                NavigateOctagon(control=control, mapping=mapping, state=state),
                 transitions={'success': 'success', 'failure':'failure'})
 
         else: 

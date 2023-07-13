@@ -48,9 +48,9 @@ def GateMission():
     control.move((0,0,0))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished gate mission. Result {}".format(res))
@@ -59,10 +59,10 @@ def BuoysMission():
     control.move((0,0,-2))
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class="Buoy", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol), 
                 transitions={'success': 'success', 'failure':'failure'})
         
     res = sm.execute()
@@ -88,10 +88,10 @@ def laneMarkerMission():
     control.move((0,0,0))
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=-1, control=control, mapping=mapping, state=state, lane_marker_class=global_class_ids["Lane Marker"]), 
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure': 'failure'})
         res = sm.execute()
     endMission("Finished lane marker. Result {}".format(res))
@@ -102,11 +102,11 @@ def master_planner():
     with sm:
         # NO BIG BUGS
         # MAYBE ADD CHANGE DEPTH IF NOT FINDING OBJECT
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
         # NO BIG BUGS!
-        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
         # UNTESTED
@@ -114,41 +114,40 @@ def master_planner():
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
         # NO BIG BUGS - RETEST AFTER FIXING VISION
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
         # NO BIG BUGS!
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
         # GOES TO WRONG HEADING
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class=1, control=control, mapping=mapping, state=state, lane_marker_class=global_class_ids["Lane Marker"]), 
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="Gate", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
            
         # CHANGE LINEAR SEARCH TO STEPS INSTEAD OF CONSTANT SPEED
         # TEST WITH MISSION PLANNER
         # OTHER THAN THAT NO BIG BUGS!
-        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=10, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=10, target_class="Buoy", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
         # TEST WHEN BUOY CAN BE DETECTED RELIABLY
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, buoy_class=global_class_ids["Buoy"], target_symbol_class=global_class_ids[target_symbol]), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol), 
                 transitions={'success': 'go_near_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('go_near_octagon', GoToOctagon(control=control, search_point=octagon_approximate_location),
                 transitions={'success': 'find_octagon', 'failure':'failure'})
         
         # NO BIG BUGS!
-        smach.StateMachine.add('find_octagon', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Octagon"], min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_octagon', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class="Octagon Table", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         
-        smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state, octagon_class=global_class_ids["Octagon"]), 
+        smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
 octagon_approximate_location = (5,5)
-global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}
 
 
 if __name__ == '__main__':

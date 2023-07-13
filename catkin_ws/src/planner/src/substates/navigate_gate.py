@@ -6,7 +6,7 @@ from .utility.state import *
 import math
 
 class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, goThrough, gate_class):
+    def __init__(self, control, state, mapping, target_symbol, goThrough):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
@@ -14,14 +14,13 @@ class NavigateGate(smach.State):
         if target_symbol not in ["Earth Symbol", "Abydos Symbol"]:
             raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
         self.target_symbol = target_symbol
-        self.gate_class = gate_class
         self.goThrough = goThrough
 
     def execute(self, ud):
         print("Starting gate navigation.") 
         origin_position = (self.state.x, self.state.y)
 
-        gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(origin_position[0], origin_position[1]))
+        gate_object = self.mapping.getClosestObject(cls="Gate", pos=(origin_position[0], origin_position[1]))
         if gate_object is None:
             print("No gate in object map! Failed.")
             return 'failure'

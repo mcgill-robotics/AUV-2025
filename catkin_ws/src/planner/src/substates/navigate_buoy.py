@@ -6,18 +6,17 @@ from .utility.state import *
 import math
 
 class NavigateBuoy(smach.State):
-    def __init__(self, control, state, mapping, target_symbol_class, buoy_class):
+    def __init__(self, control, state, mapping, target_symbol):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
-        self.target_symbol_class = target_symbol_class
-        self.buoy_class = buoy_class
+        self.target_symbol = target_symbol
 
     def execute(self, ud):
         print("Starting buoy navigation.") 
 
-        buoy_object = self.mapping.getClosestObject(cls=self.buoy_class, pos=(self.state.x, self.state.y))
+        buoy_object = self.mapping.getClosestObject(cls="Buoy", pos=(self.state.x, self.state.y))
         if buoy_object is None:
             print("No buoy in object map! Failed.")
             return 'failure'
@@ -48,7 +47,7 @@ class NavigateBuoy(smach.State):
         self.control.move(homing_position) # move in front of gate
         print("Successfully centered in front of gate")
 
-        buoy_symbols = self.mapping.getClass(cls=self.target_symbol_class)
+        buoy_symbols = self.mapping.getClass(cls=self.target_symbol)
         if len(buoy_symbols) == 0:
             print("No buoy symbol in object map! Failed.")
             return 'failure'

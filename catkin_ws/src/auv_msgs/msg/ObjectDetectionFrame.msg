@@ -1,5 +1,5 @@
 #array containing classes detected
-int16[] label
+string[] label
 #object pose
 float64[] x
 float64[] y
