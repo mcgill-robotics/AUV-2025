@@ -13,7 +13,8 @@ class StateQuaternionServer(BaseServer):
         super().__init__()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         self.previous_goal_quat = None
-        # Calculation parameters/values
+        self.min_safe_goal_depth = -3
+        self.max_safe_goal_depth = -1
         
         self.server.start()        
 
@@ -40,7 +41,9 @@ class StateQuaternionServer(BaseServer):
                 self.pub_sway.publish(0)
             if(self.goal.do_z.data):
                 self.pub_z_enable.publish(True)
-                self.pub_z_pid.publish(goal_position[2])
+                safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
+                if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
+                self.pub_z_pid.publish()
                 self.pub_heave.publish(0)
             if (self.goal.do_quaternion.data):
                 self.previous_goal_quat = goal_quat
