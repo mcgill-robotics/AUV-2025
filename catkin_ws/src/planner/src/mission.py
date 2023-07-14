@@ -2,17 +2,15 @@
 
 import rospy
 import smach
-import sys
 
 from substates.breadth_first_search import *
 from substates.in_place_search import *
 from substates.linear_search import *
 from substates.navigate_lane_marker import *
-from substates.utility.controller import Controller
-from substates.utility.state import StateTracker
+from substates.utility.controller import *
+from substates.utility.state import *
 from substates.utility.vision import *
 from substates.quali import *
-from substates.quaternion_test import *
 from substates.trick import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
@@ -45,7 +43,6 @@ def QualiQuaternionMission():
     endMission("Finished quali mission. Result {}".format(res))
     
 def GateMission():
-    control.move((0,0,0))
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
@@ -56,7 +53,6 @@ def GateMission():
     endMission("Finished gate mission. Result {}".format(res))
     
 def BuoysMission():
-    control.move((0,0,-2))
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
         smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
@@ -67,14 +63,6 @@ def BuoysMission():
         
     res = sm.execute()
     endMission("Finished buoy mission. Result {}".format(res))
-    
-def QuaternionTestMission():
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('quaternion', QuaternionTest(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endMission("Finished quaternion mission. Result {}".format(res))
 
 def tricks(t):
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
@@ -85,7 +73,6 @@ def tricks(t):
     endMission("Finished trick. Result {}".format(res))
     
 def laneMarkerMission():
-    control.move((0,0,0))
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
@@ -145,7 +132,7 @@ def master_planner():
         smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state, octagon_class=global_class_ids["Octagon"]), 
                 transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
-    endMission("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
+    endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
 octagon_approximate_location = (5,5)
 global_class_ids = {"Lane Marker":0, "Gate":1, "Buoy":2, "Octagon Table":3, "Earth Symbol":4, "Abydos Symbol":5, "Octagon":6}

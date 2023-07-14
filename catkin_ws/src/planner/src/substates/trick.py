@@ -11,6 +11,10 @@ class Trick(smach.State):
         self.trick_type = trick_type
 
     def execute(self,ud):
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
+        
         if self.trick_type == "roll":
             return self.execute_roll()
         elif self.trick_type == "pitch":

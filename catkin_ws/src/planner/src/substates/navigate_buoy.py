@@ -16,6 +16,9 @@ class NavigateBuoy(smach.State):
 
     def execute(self, ud):
         print("Starting buoy navigation.") 
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
 
         buoy_object = self.mapping.getClosestObject(cls=self.buoy_class, pos=(self.state.x, self.state.y))
         if buoy_object is None:
@@ -29,7 +32,7 @@ class NavigateBuoy(smach.State):
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
         self.control.rotateEuler((None,None,buoy_object[4])) # bring to exact angle 
-        self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of gate
+        self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of buoy
 
         # wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
@@ -45,7 +48,7 @@ class NavigateBuoy(smach.State):
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 
         self.control.rotateEuler(homing_rotation) # bring to exact angle 
-        self.control.move(homing_position) # move in front of gate
+        self.control.move(homing_position) # move in front of buoy
         print("Successfully centered in front of gate")
 
         buoy_symbols = self.mapping.getClass(cls=self.target_symbol_class)
@@ -55,9 +58,9 @@ class NavigateBuoy(smach.State):
 
         for symbol in buoy_symbols:
             print("Touching symbol.")
-            self.control.move(symbol[1:4]) # move in front of gate
+            self.control.move(symbol[1:4]) # move to symbol
             print("Returning to homing position.")
-            self.control.move(homing_position) # move in front of gate
+            self.control.move(homing_position) # move in front of buoy
 
         print("Successfully completed buoy task!")
         
