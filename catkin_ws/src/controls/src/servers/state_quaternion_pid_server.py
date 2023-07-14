@@ -43,7 +43,7 @@ class StateQuaternionServer(BaseServer):
                 self.pub_z_enable.publish(True)
                 safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
-                self.pub_z_pid.publish()
+                self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
             if (self.goal.do_quaternion.data):
                 self.previous_goal_quat = goal_quat
