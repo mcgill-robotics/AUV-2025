@@ -17,6 +17,10 @@ class NavigateLaneMarker(smach.State):
 
     def execute(self, ud):
         print("Starting lane marker navigation.") 
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
+        
         if self.origin_class == -1: # use auv current position as origin
             origin_position = (0,0)
         else:
