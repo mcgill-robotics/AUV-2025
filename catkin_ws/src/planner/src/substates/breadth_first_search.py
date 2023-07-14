@@ -48,27 +48,24 @@ class BreadthFirstSearch(smach.State):
 
     def execute(self, ud):
         print("Starting breadth-first search.")
-        try:
-            self.searchThread = threading.Thread(target=self.doBreadthFirstSearch)
-            self.searchThread.start()
-            startTime = time.time()
-            while startTime + self.timeout > time.time(): 
-                if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
-                    self.detectedObject = True
-                    self.searchThread.join()
-                    self.control.stop_in_place()
-                    print("Found object! Waiting 10 seconds to get more observations of object.")
-                    rospy.sleep(10)
-                    return 'success'
-            print("Breadth-first search timed out.")
-            return 'failure'
-        except KeyboardInterrupt:
-            self.detectedObject = True
-            self.control.stop_in_place()
-            self.searchThread.join()
-            print("Breadth-first search interrupted by user.")
-            return 'failure'
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
 
+        self.searchThread = threading.Thread(target=self.doBreadthFirstSearch)
+        self.searchThread.start()
+        startTime = time.time()
+        while startTime + self.timeout > time.time(): 
+            if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
+                self.detectedObject = True
+                self.searchThread.join()
+                self.control.stop_in_place()
+                print("Found object! Waiting 10 seconds to get more observations of object.")
+                rospy.sleep(10)
+                return 'success'
+        self.control.stop_in_place()
+        print("Breadth-first search timed out.")
+        return 'failure'
 
 def movementComplete(msg1=None, msg2=None): #called when translation is complete
     global moving

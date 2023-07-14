@@ -24,8 +24,16 @@ class InPlaceSearch(smach.State):
             self.rotating = False
             
         turn_amt = (0,0,-30)
+        num_turns = 0
+        num_full_turns = 0
 
         while True:
+            if (num_turns >= 360/abs(turn_amt[2])):
+                num_turns = 0
+                num_full_turns += 1
+                if num_full_turns == 1: self.control.move((None,None,-3))
+                elif num_full_turns == 2: self.control.move((None,None,-1))
+                else: return
             #move forward
             print("Rotating by {}.".format(turn_amt))
             self.rotating = True
@@ -33,26 +41,26 @@ class InPlaceSearch(smach.State):
             #check for object detected while rotating
             while self.rotating:
                 if self.detectedObject: return # stop grid search when object found
+            num_turns += 1
 
     def execute(self, ud):
         print("Starting in-place search.")
-        try:          
-            self.searchThread = threading.Thread(target=self.doRotation)
-            self.searchThread.start()
-            print("Starting rotation.")
-            startTime = time.time()
-            while startTime + self.timeout > time.time(): 
-                if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
-                    self.detectedObject = True
-                    self.searchThread.join()
-                    self.control.stop_in_place()
-                    print("Found object! Waiting 10 seconds to get more observations of object.")
-                    rospy.sleep(10)
-                    return 'success'
-            print("In-place search timed out.")
-            return 'failure'
-        except KeyboardInterrupt:
-            self.control.stop_in_place()
-            print("In-place search interrupted by user.")
-            return 'failure'
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
 
+        self.searchThread = threading.Thread(target=self.doRotation)
+        self.searchThread.start()
+        print("Starting rotation.")
+        startTime = time.time()
+        while startTime + self.timeout > time.time(): 
+            if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
+                self.detectedObject = True
+                self.searchThread.join()
+                self.control.stop_in_place()
+                print("Found object! Waiting 10 seconds to get more observations of object.")
+                rospy.sleep(10)
+                return 'success'
+        self.control.stop_in_place()
+        print("In-place search timed out.")
+        return 'failure'
