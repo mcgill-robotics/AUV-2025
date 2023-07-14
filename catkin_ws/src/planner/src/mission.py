@@ -12,6 +12,7 @@ from substates.utility.state import *
 from substates.utility.vision import *
 from substates.quali import *
 from substates.trick import *
+from substates.trick_effort import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
 from substates.navigate_buoy import *
@@ -27,6 +28,7 @@ def endPlanner(msg="Shutting down mission planner."):
     control.kill()
 
 def QualiMission():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('quali', Quali(control=control), 
@@ -35,6 +37,7 @@ def QualiMission():
     endMission("Finished quali mission. Result {}".format(res))
     
 def QualiQuaternionMission():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('quali', QualiQuaternion(control=control), 
@@ -43,6 +46,7 @@ def QualiQuaternionMission():
     endMission("Finished quali mission. Result {}".format(res))
     
 def GateMission():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class=global_class_ids["Gate"], min_objects=1, control=control, mapping=mapping), 
@@ -53,6 +57,7 @@ def GateMission():
     endMission("Finished gate mission. Result {}".format(res))
     
 def BuoysMission():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
         smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class=global_class_ids["Buoy"], min_objects=1, control=control, mapping=mapping), 
@@ -65,14 +70,25 @@ def BuoysMission():
     endMission("Finished buoy mission. Result {}".format(res))
 
 def tricks(t):
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
+
+def tricks_effort(t):
+    global sm
+    sm = smach.StateMachine(outcomes=['success', 'failure']) 
+    with sm:
+        smach.StateMachine.add('trick', TrickEffort(control=control, trick_type=t, effort=10), 
+        transitions={'success': 'success', 'failure':'failure'})
+        res = sm.execute()
+    endMission("Finished trick. Result {}".format(res))
     
 def laneMarkerMission():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Lane Marker"], min_objects=1, control=control, mapping=mapping), 
@@ -85,6 +101,7 @@ def laneMarkerMission():
         
 
 def master_planner():
+    global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         # NO BIG BUGS
@@ -142,12 +159,12 @@ if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
-
     try:
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
         target_symbol = "Earth Symbol" # "Abydos Symbol"
+        sm = None
         
         BuoysMission()  
 
@@ -172,5 +189,7 @@ if __name__ == '__main__':
         #testRotationsMission()
         #laneMarkerGridSearchMission()
     except KeyboardInterrupt:
+        #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME
+        if sm is not None: sm.request_preempt()
         endPlanner("Mission end prompted by user. Killing.")
         exit()
