@@ -1,7 +1,7 @@
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 from ultralytics import YOLO
 from auv_msgs.msg import ObjectDetectionFrame
 import numpy as np
@@ -12,7 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
-
+from sensor_msgs import point_cloud2
 class State:
     def __init__(self):
         self.x = None
@@ -31,7 +31,8 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud', Image, self.updatePointCloud)
+        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud', PointCloud2, self.updatePointCloud)
+        self.point_cloud_pub = rospy.Publisher('point_cloud_test', PointCloud2, queue_size=10)
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -52,8 +53,21 @@ class State:
         self.theta_z = float(msg.data)
     def updatePointCloud(self, msg):
         if self.paused: return
-        self.point_cloud = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
-        self.point_cloud += np.random.normal(0, 0.1, self.point_cloud.shape)
+        pc = point_cloud2.read_points_list(msg)
+        pc = np.array(pc)
+        pc = pc[:,[2,0,1]]
+        pc[:,2] *= -1
+        pc[:,1] *= -1
+        
+
+        # for debug in rviz
+        # msg = point_cloud2.create_cloud_xyz32(msg.header, pc)
+        # self.point_cloud_pub.publish(msg)
+
+        pc = pc.reshape(msg.height, msg.width, 3)
+        self.point_cloud = pc
+        # print(pc)
+
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -179,6 +193,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     return x, y, z
 
 def cleanPointCloud(point_cloud):
+    return point_cloud
     #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
     median_blur_size = 10
     point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
