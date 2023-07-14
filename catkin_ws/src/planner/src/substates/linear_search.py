@@ -20,22 +20,20 @@ class LinearSearch(smach.State):
 
     def execute(self, ud):
         print("Starting linear search.")
-        try:
-            self.control.forceLocal((self.forward_speed, 0))
-            startTime = time.time()
-            while startTime + self.timeout > time.time(): 
-                if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
-                    self.detectedObject = True
-                    self.control.stop_in_place()
-                    print("Found object! Waiting 10 seconds to get more observations of object.")
-                    rospy.sleep(10)
-                    return 'success'
-            print("Linear search timed out.")
-            return 'failure'
-        except KeyboardInterrupt:
-            self.detectedObject = True
-            self.control.stop_in_place()
-            self.searchThread.join()
-            print("Linear search interrupted by user.")
-            return 'failure'
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
+
+        self.control.forceLocal((self.forward_speed, 0))
+        startTime = time.time()
+        while startTime + self.timeout > time.time(): 
+            if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
+                self.detectedObject = True
+                self.control.stop_in_place()
+                print("Found object! Waiting 10 seconds to get more observations of object.")
+                rospy.sleep(10)
+                return 'success'
+        self.control.stop_in_place()
+        print("Linear search timed out.")
+        return 'failure'
 

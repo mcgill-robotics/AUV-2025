@@ -18,9 +18,11 @@ class NavigateGate(smach.State):
 
     def execute(self, ud):
         print("Starting gate navigation.") 
-        origin_position = (self.state.x, self.state.y)
+        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0,0,None))
 
-        gate_object = self.mapping.getClosestObject(cls="Gate", pos=(origin_position[0], origin_position[1]))
+        gate_object = self.mapping.getClosestObject(cls="Gate", pos=(self.state.x, self.state.y))
         if gate_object is None:
             print("No gate in object map! Failed.")
             return 'failure'
