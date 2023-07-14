@@ -59,7 +59,6 @@ class State:
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def pause(self):
         self.paused = True
-        self.point_cloud = cleanPointCloud(self.point_cloud)
     def resume(self):
         self.paused = False
 
@@ -180,14 +179,17 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     return x, y, z
 
 def cleanPointCloud(point_cloud):
-    #TODO!
-    # NOTE: NEEDS TO BE REALLY ROBUST! ANGLE MEASUREMENT AND POSITION ESTIMATION RELY ON IT
-    #CLEAN -> set all values which are too low or too high to NaN
-    #REMOVE BACKGROUND -> find a good way
+    #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
+    median_blur_size = 10
+    point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
+    #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
+    closest_x_point = np.nanmin(point_cloud[:, :, 0])
+    far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
+    point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
     return point_cloud
 
 def getObjectPositionFrontCam(bbox):
-        cropped_point_cloud = cropToBbox(states[1].point_cloud, bbox, copy=False)
+        cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))
         lx = np.nanmean(cropped_point_cloud[:,:,0])
         ly = np.nanmean(cropped_point_cloud[:,:,1])
         lz = np.nanmean(cropped_point_cloud[:,:,2])
@@ -197,15 +199,12 @@ def getObjectPositionFrontCam(bbox):
 
 def measureAngle(bbox, global_class_name):
     if global_class_name in ["Gate", "Buoy"]:
-        cropped_point_cloud = cropToBbox(states[1].point_cloud, bbox, copy=False)[:,:,0:2] # ignore z position of points
+        cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))[:,:,0:2] # ignore z position of points
         left_point_cloud = cropped_point_cloud[:, :cropped_point_cloud.shape[1]/2]
         right_point_cloud = cropped_point_cloud[:, cropped_point_cloud.shape[1]/2:]
-        #REMOVE NANs from point clouds
-        left_point_cloud = left_point_cloud[~np.isnan(left_point_cloud)]
-        right_point_cloud = right_point_cloud[~np.isnan(right_point_cloud)]
         #sum left points together and right points together so we get two very large (x,y) points
-        left_sum_point = np.sum(left_point_cloud, axis=(0,1))
-        right_sum_point = np.sum(right_point_cloud, axis=(0,1))
+        left_sum_point = np.nansum(left_point_cloud, axis=(0,1))
+        right_sum_point = np.nansum(right_point_cloud, axis=(0,1))
         #measure angle of summed vector (effectively a weight average where the weight is the magnitude of the vector)
         return measureYaw(left_sum_point, right_sum_point)
     else: return None
