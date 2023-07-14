@@ -61,8 +61,10 @@ class State:
         
 
         # for debug in rviz
-        # msg = point_cloud2.create_cloud_xyz32(msg.header, pc)
-        # self.point_cloud_pub.publish(msg)
+        msg = point_cloud2.create_cloud_xyz32(msg.header, pc)
+        msg.header.frame_id = "auv_base"
+        msg.header.stamp = rospy.Time.now()
+        self.point_cloud_pub.publish(msg)
 
         pc = pc.reshape(msg.height, msg.width, 3)
         self.point_cloud = pc
