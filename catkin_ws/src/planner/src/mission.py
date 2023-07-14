@@ -165,6 +165,15 @@ if __name__ == '__main__':
         target_symbol = "Earth Symbol" # "Abydos Symbol"
         sm = None
         
+        #SINCE I CANT TEST MYSELF UNTIL I HAVE TUNED CUSTOM PIDs FOR MY COMPUTER THIS IS WHAT NEEDS TESTING FOR REFERENCE (RECENT CHANGES):
+            # - rotate delta
+            # - tricks effort mission
+            # - tricks mission
+            # - quali mission
+            # - quali quaternion mission
+            # - in place search depth changes
+            # - navigate lane marker
+
         BuoysMission()  
 
         # get mission to run from command line argument
