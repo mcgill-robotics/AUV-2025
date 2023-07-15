@@ -174,8 +174,13 @@ if __name__ == '__main__':
             # - quali quaternion mission
             # - in place search depth changes
             # - navigate lane marker
-
-        BuoysMission()  
+        control.move((None,None,-1))
+        while True:
+            control.rotateEuler((0,0,0))
+            control.rotateEuler((0,0,90))
+            control.rotateEuler((0,90,90))
+            control.rotateEuler((-90,0,0))
+        #BuoysMission()  
 
         # get mission to run from command line argument
         # TODO - this is a bit hackish but probably fine
@@ -190,7 +195,7 @@ if __name__ == '__main__':
         # if mission is None:
         #     master_planner()
         # elif mission == "quali":
-        #     QualiMission()
+        #QualiMission()
         # else:
         #     raise Exception("invalid mission")
 
