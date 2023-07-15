@@ -54,10 +54,10 @@ class QuaternionPID:
         rate = rospy.Rate(100)
 
         while not rospy.is_shutdown():
-            self.Kp = rospy.get_param("~Kp")
-            self.Ki = rospy.get_param("~Ki")
-            self.Kd = rospy.get_param("~Kd")
             if self.enabled and self.goal_quat is not None:
+                self.Kp = rospy.get_param("~Kp")
+                self.Ki = rospy.get_param("~Ki")
+                self.Kd = rospy.get_param("~Kd")
                 roll_effort, pitch_effort, yaw_effort = self.controlEffort()
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)
