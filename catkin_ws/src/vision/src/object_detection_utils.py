@@ -330,12 +330,9 @@ states = (State(), State())
 min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
-world_to_global_z_origin = 0 #FOR ROBOSUB, CHANGE THIS TO CONSIDER THE Z POS OF THE AUV WHEN RESETTING STATE PLANAR
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
 octagon_table_z = pool_depth + 1.2
-buoy_width = 1.22 
-gate_width = 3
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
