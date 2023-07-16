@@ -1,9 +1,6 @@
 import rospy
 import smach
-from .utility.vision import *
 from .utility.functions import *
-from .utility.state import *
-import math
 
 class NavigateGate(smach.State):
     def __init__(self, control, state, mapping, target_symbol, goThrough):

@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-from .utility.vision import *
 import time
 import threading
 
@@ -20,16 +19,10 @@ class BreadthFirstSearch(smach.State):
         self.min_objects = min_objects
 
     def doBreadthFirstSearch(self):
+        global rotating
+        global moving
         rotating = False
-        moving = False
-        
-        def rotationCompleteBFS(self, msg): #called when rotation is complete
-            global rotating
-            rotating = False
-        def movementCompleteBFS(self, msg): #called when translation is complete
-            global moving
-            moving = False
-                
+        moving = False                
             
         movement = [1,0,0]
         right_turn = (0,0,-90)
@@ -38,7 +31,7 @@ class BreadthFirstSearch(smach.State):
             #move forward
             print("Moving by {}.".format(movement))
             moving = True
-            self.control.moveDeltaLocal(movement, movementCompleteBFS)
+            self.control.moveDeltaLocal(movement, movementComplete)
             #check for object detected while moving
             while moving:
                 if self.detectedObject: return # stop grid search when object found
@@ -47,7 +40,7 @@ class BreadthFirstSearch(smach.State):
             #rotate right 90 degrees
             print("Rotating by {}.".format(right_turn))
             rotating = True
-            self.control.rotateDeltaEuler(right_turn, rotationCompleteBFS)
+            self.control.rotateDeltaEuler(right_turn, rotationComplete)
             #check for object detected while rotating
             while rotating:
                 if self.detectedObject: return # stop grid search when object found
@@ -73,3 +66,11 @@ class BreadthFirstSearch(smach.State):
         print("Breadth-first search timed out.")
         return 'failure'
 
+def movementComplete(msg1=None, msg2=None): #called when translation is complete
+    global moving
+    moving = False
+    
+def rotationComplete(msg1=None, msg2=None): #called when rotation is complete
+    global rotating
+    rotating = False
+    

@@ -111,6 +111,9 @@ def detect_on_image(raw_img, camera_id):
                     obj_z.append(pred_obj_z) 
                     obj_theta_z.append(theta_z)
                     extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
+                    print("gate")
+                    print(pred_obj_x, pred_obj_y, pred_obj_z, theta_z)
+                    print("----")
                 elif global_class_name == "Buoy": # BUOY
                     label.append(global_class_name)
                     confidences.append(conf)
@@ -143,7 +146,7 @@ def detect_on_image(raw_img, camera_id):
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
     obj_theta_z = [x if not x is None else -1234.5 for x in obj_theta_z]
 
-    label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidences, max_counts_per_label)
+    label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidences)
 
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
