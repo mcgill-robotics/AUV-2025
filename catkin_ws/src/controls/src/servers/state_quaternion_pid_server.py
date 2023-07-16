@@ -13,6 +13,9 @@ class StateQuaternionServer(BaseServer):
         super().__init__()
         self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         self.previous_goal_quat = None
+        self.previous_goal_x = None
+        self.previous_goal_y = None
+        self.previous_goal_z = None
         self.min_safe_goal_depth = -3
         self.max_safe_goal_depth = -1
         
@@ -30,16 +33,19 @@ class StateQuaternionServer(BaseServer):
                 goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
 
             if(self.goal.do_x.data):
+                self.previous_goal_x = goal_position[0]
                 self.pub_x_enable.publish(True)
                 self.pub_x_pid.publish(goal_position[0])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
             if(self.goal.do_y.data):
+                self.previous_goal_y = goal_position[1]
                 self.pub_y_enable.publish(True)
                 self.pub_y_pid.publish(goal_position[1])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
             if(self.goal.do_z.data):
+                self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(True)
                 safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
@@ -69,7 +75,10 @@ class StateQuaternionServer(BaseServer):
         self.server.set_succeeded()
 
     def get_goal_after_displace(self):
-        goal_position = [self.pose.position.x + self.goal.pose.position.x, self.pose.position.y + self.goal.pose.position.y, self.pose.position.z + self.goal.pose.position.z]
+        if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
+        if self.previous_goal_y is None: self.previous_goal_y = self.pose.position.y
+        if self.previous_goal_z is None: self.previous_goal_z = self.pose.position.z
+        goal_position = [self.previous_goal_x + self.goal.pose.position.x, self.previous_goal_y + self.goal.pose.position.y, self.previous_goal_z + self.goal.pose.position.z]
         if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
         goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
