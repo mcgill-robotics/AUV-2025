@@ -100,7 +100,9 @@ if __name__ == "__main__":
 
         else: 
             exit()
-
-    res = sm.execute()
+    try:
+        res = sm.execute()
+    except KeyboardInterrupt:
+        if sm is not None: sm.request_preempt()
     endMission("Finished mission. Result {}".format(res))
 

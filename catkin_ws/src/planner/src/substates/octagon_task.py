@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import smach
-from .utility.vision import *
-
-
 
 class NavigateOctagon(smach.State):
     def __init__(self, control, state, mapping, octagon_class):

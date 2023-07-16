@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-from .utility.vision import *
 import time
 
 #ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
