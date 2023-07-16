@@ -46,10 +46,6 @@ class QuaternionPID:
 
         self.torque_integral = np.array([0,0,0])
         self.previous_time = rospy.get_time()
-
-        self.Kp = rospy.get_param("~Kp")
-        self.Ki = rospy.get_param("~Ki")
-        self.Kd = rospy.get_param("~Kd")
     
     def set_enabled(self, data):
         self.enabled = data.data
@@ -59,6 +55,9 @@ class QuaternionPID:
 
         while not rospy.is_shutdown():
             if self.enabled and self.goal_quat is not None:
+                self.Kp = rospy.get_param("~Kp")
+                self.Ki = rospy.get_param("~Ki")
+                self.Kd = rospy.get_param("~Kd")
                 roll_effort, pitch_effort, yaw_effort = self.controlEffort()
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)

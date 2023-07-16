@@ -2,9 +2,7 @@
 
 import rospy
 import smach
-from .utility.vision import *
 from .utility.functions import *
-import math
 
 class NavigateLaneMarker(smach.State):
     def __init__(self, origin_class, control, state, mapping):
