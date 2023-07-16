@@ -32,7 +32,7 @@ class State:
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
         self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud', PointCloud2, self.updatePointCloud)
-        self.point_cloud_pub = rospy.Publisher('point_cloud_test', PointCloud2, queue_size=10)
+        self.point_cloud_pub = rospy.Publisher('point_cloud_test', PointCloud2, queue_size=1)
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -55,20 +55,9 @@ class State:
         if self.paused: return
         pc = point_cloud2.read_points_list(msg)
         pc = np.array(pc)
-        pc = pc[:,[2,0,1]]
-        pc[:,2] *= -1
-        pc[:,1] *= -1
-        
-
-        # for debug in rviz
-        msg = point_cloud2.create_cloud_xyz32(msg.header, pc)
-        msg.header.frame_id = "auv_base"
-        msg.header.stamp = rospy.Time.now()
-        self.point_cloud_pub.publish(msg)
-
-        pc = pc.reshape(msg.height, msg.width, 3)
-        self.point_cloud = pc
-        # print(pc)
+        self.point_cloud = pc[:,[0,1,2]]
+        self.point_cloud = self.point_cloud.reshape(msg.height, msg.width, 3)
+    
 
     def updatePose(self,msg):
         if self.paused: return

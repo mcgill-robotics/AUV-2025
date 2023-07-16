@@ -17,7 +17,7 @@ def setup():
     global auv_marker
     # Create a marker message
     auv_marker = Marker()
-    auv_marker.header.frame_id = "map"  # Set the frame ID according to your setup
+    auv_marker.header.frame_id = "world"  # Set the frame ID according to your setup
     auv_marker.ns = "visualization"
     auv_marker.id = marker_id
     auv_marker.type = Marker.SPHERE
@@ -81,7 +81,7 @@ def addSphere(x,y,z,scale,pub,color):
     global marker_id
     # Create a marker message
     detection_marker = Marker()
-    detection_marker.header.frame_id = "map"  # Set the frame ID according to your setup
+    detection_marker.header.frame_id = "world"  # Set the frame ID according to your setup
     detection_marker.ns = "visualization"
     marker_id += 1
     detection_marker.id = marker_id
@@ -105,7 +105,7 @@ def addCustomObject(marker_type,pos,rot,scale,pub,color):
     global marker_id
     # Create a marker message
     custom_marker = Marker()
-    custom_marker.header.frame_id = "map"  # Set the frame ID according to your setup
+    custom_marker.header.frame_id = "world"  # Set the frame ID according to your setup
     custom_marker.ns = "visualization"
     marker_id += 1
     custom_marker.id = marker_id
@@ -129,7 +129,7 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
     global marker_id
     # Create a marker message for first heading
     heading_marker = Marker()
-    heading_marker.header.frame_id = "map"  # Set the frame ID according to your setup
+    heading_marker.header.frame_id = "world"  # Set the frame ID according to your setup
     heading_marker.ns = "visualization"
     if override_id is None:
         marker_id += 1
@@ -185,7 +185,7 @@ def addLabel(x,y,z,text,pub,scale=0.25,override_id=None):
     global marker_id
     # Create a Marker message
     text_marker = Marker()
-    text_marker.header.frame_id = "map"
+    text_marker.header.frame_id = "world"
     text_marker.ns = "visualization"
     text_marker.type = Marker.TEXT_VIEW_FACING
     text_marker.action = Marker.ADD
