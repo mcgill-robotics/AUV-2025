@@ -195,7 +195,6 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     return x, y, z
 
 def cleanPointCloud(point_cloud):
-    return point_cloud
     #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
     median_blur_size = 10
     point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
@@ -217,8 +216,8 @@ def getObjectPositionFrontCam(bbox):
 def measureAngle(bbox, global_class_name):
     if global_class_name in ["Gate", "Buoy"]:
         cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))[:,:,0:2] # ignore z position of points
-        left_point_cloud = cropped_point_cloud[:, :cropped_point_cloud.shape[1]/2]
-        right_point_cloud = cropped_point_cloud[:, cropped_point_cloud.shape[1]/2:]
+        left_point_cloud = cropped_point_cloud[:, :int(cropped_point_cloud.shape[1]/2)]
+        right_point_cloud = cropped_point_cloud[:, int(cropped_point_cloud.shape[1]/2):]
         #sum left points together and right points together so we get two very large (x,y) points
         left_sum_point = np.nansum(left_point_cloud, axis=(0,1))
         right_sum_point = np.nansum(right_point_cloud, axis=(0,1))
