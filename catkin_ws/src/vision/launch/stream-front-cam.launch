@@ -43,11 +43,11 @@
   <arg name="enable_gyro"         default="false"/>
   <arg name="enable_accel"        default="false"/>
 
-  <arg name="enable_pointcloud"         default="false"/>
-  <arg name="pointcloud_texture_stream" default="RS2_STREAM_COLOR"/>
+  <arg name="enable_pointcloud"         default="true"/>
+  <arg name="pointcloud_texture_stream" default="RS2_STREAM_ANY"/>
   <arg name="pointcloud_texture_index"  default="0"/>
   <arg name="allow_no_texture_points"   default="false"/>
-  <arg name="ordered_pc"                default="false"/>
+  <arg name="ordered_pc"                default="true"/>
 
   <arg name="enable_sync"               default="true"/>
   <arg name="align_depth"               default="true"/>
@@ -58,7 +58,7 @@
   <arg name="filters"                   default=""/>
   <arg name="clip_distance"             default="-2"/>
   <arg name="linear_accel_cov"          default="0.01"/>
-  <arg name="initial_reset"             default="false"/>
+  <arg name="initial_reset"             default="true"/>
   <arg name="reconnect_timeout"         default="6.0"/>
   <arg name="wait_for_device_timeout"   default="-1.0"/>
   <arg name="unite_imu_method"          default=""/>

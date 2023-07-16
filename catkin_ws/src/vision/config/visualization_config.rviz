@@ -114,7 +114,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /vision/front_cam/point_cloud
+      Topic: /vision/front_cam/depth/color/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
