@@ -1,6 +1,6 @@
 #GAZEBO
-git clone git@github.com:mcgill-robotics/auv-ros-ign-bridge.git
-git clone git@github.com:mcgill-robotics/auv-sim.git
+git clone https://github.com/mcgill-robotics/auv-ros-ign-bridge.git
+git clone https://github.com/mcgill-robotics/auv-sim.git
 sudo apt-get update
 sudo apt-get install -y lsb-release wget gnupg
 sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
