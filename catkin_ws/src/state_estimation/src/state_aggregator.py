@@ -50,7 +50,7 @@ class State_Aggregator:
 
         '''IMU'''
         self.q_auv_global_imu = np.quaternion(1, 0, 0, 0) 
-        self.q_imu_mount_auv = np.quaternion(1, 0, 0, 0) 
+        self.q_imu_mount_auv = np.quaternion(0, 0, 0, 1) # imu is rotated 180 degrees about z axis relative to AUV frame
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
@@ -140,10 +140,12 @@ class State_Aggregator:
         is aproximately only yaw relative to global frame, 
         it may give unwanted results at other extreme orientations
         '''
-        # new world position is current AUV position in global frame
-        # TODO - should this not reset z?
-        self.pos_world_global = self.pos_auv_global
-        self.pos_auv_world = np.array([0.0, 0.0, 0.0])
+        # new world position is x, y - current AUV position, z - same as previous world frame, in global frame
+        self.pos_world_global[0:2] = self.pos_auv_global[0:2] # do not change z
+        # update AUV position relative to new world frame
+        # TODO - is this nececssary? pos_auv_world is always calculated before publishing
+        pos_auv = self.pos_auv_global - self.pos_world_global
+        self.pos_auv_world = quaternion.rotate_vectors(self.q_world_global.inverse(), pos_auv)
 
         # new world quaternion is yaw rotation of AUV in global frame
         q = self.q_auv_global
