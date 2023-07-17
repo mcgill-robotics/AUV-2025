@@ -12,7 +12,6 @@ from substates.utility.state import *
 from substates.utility.vision import *
 from substates.quali import *
 from substates.trick import *
-from substates.trick_effort import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
 from substates.quali_vision import *
@@ -51,6 +50,8 @@ def QualiVisionMission(isCompetition=False):
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
+        smach.StateMachine.add('find_quali_gate', LinearSearch(timeout=120, forward_speed=3, target_class="Quali Gate", min_objects=1, control=control, mapping=mapping), 
+                transitions={'success': 'quali', 'failure': 'failure'})
         smach.StateMachine.add('quali', QualiVision(control=control, mapping=mapping, state=state, quali_gate_width=quali_gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
@@ -88,15 +89,6 @@ def tricks(t):
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
-
-def tricks_effort(t):
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('trick', TrickEffort(control=control, trick_type=t, effort=10), 
-        transitions={'success': 'success', 'failure':'failure'})
-        res = sm.execute()
-    endMission("Finished trick. Result {}".format(res))
     
 def laneMarkerMission():
     global sm
@@ -121,7 +113,7 @@ def master_planner():
         smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
-        smach.StateMachine.add('tricks', Trick(control=control, trick_type="roll"), 
+        smach.StateMachine.add('tricks', Trick(control=control, trick_type="yaw", num_full_spins=2), 
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_class=global_class_ids["Gate"]), 
