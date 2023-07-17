@@ -315,6 +315,7 @@ states = (State(), State())
 min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
+# [COMP] change pool depth and object heights to actual comp values
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
 octagon_table_z = pool_depth + 1.2
@@ -322,6 +323,7 @@ octagon_table_z = pool_depth + 1.2
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
+# [COMP] ensure FOV is correct
 down_cam_hfov = 87 #set to 220 when not in sim!
 down_cam_vfov = 65 #set to 165.26 when not in sim!
 
@@ -343,6 +345,7 @@ for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
     else: print("WARN: CUDA is not available! Running on CPU")
 
+# [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
     ["Lane Marker", "Octagon Table"],
     ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
