@@ -78,8 +78,8 @@ class StateQuaternionServer(BaseServer):
         if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
         if self.previous_goal_y is None: self.previous_goal_y = self.pose.position.y
         if self.previous_goal_z is None: self.previous_goal_z = self.pose.position.z
-        goal_position = [self.previous_goal_x + self.goal.pose.position.x, self.previous_goal_y + self.goal.pose.position.y, self.previous_goal_z + self.goal.pose.position.z]
         if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
+        goal_position = [self.previous_goal_x + self.goal.pose.position.x, self.previous_goal_y + self.goal.pose.position.y, self.previous_goal_z + self.goal.pose.position.z]
         goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
         

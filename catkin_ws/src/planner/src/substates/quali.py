@@ -33,7 +33,8 @@ class Quali(smach.State):
 
         # Step 1: Submerge 2 meters
         print("Descending 2 meters")
-        self.control.move((None, None, -2.0), callback = lambda a,b: None)
+        self.control.move((None, None, -2.0), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
         rospy.sleep(2)
 

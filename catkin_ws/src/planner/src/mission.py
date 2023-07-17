@@ -163,30 +163,29 @@ if __name__ == '__main__':
 
         #rospy.sleep(60) # [COMP] UNCOMMENT
 
-        control.move((None,None,-1))
-        while True:
-            control.rotateEuler((0,0,0))
-            control.rotateEuler((0,0,90))
-            control.rotateEuler((0,90,90))
-            control.rotateEuler((-90,0,0))
+        control.move((None,None,-1), callback=lambda a,b: None)
+        control.moveDelta((0,0,0), callback=lambda a,b: None)
+        control.rotateEuler((0,0,None))
+
+
+        # while not rospy.is_shutdown():
+        #     control.rotateEuler((0,0,0))
+        #     control.rotateEuler((0,0,90))
+        #     control.rotateEuler((0,90,90))
+        #     control.rotateEuler((-90,0,0))
         #BuoysMission()  
 
-        # get mission to run from command line argument
-        # TODO - this is a bit hackish but probably fine
-        # mission = sys.argv[1] 
-        # if mission.startswith("__mission"):
-        #     mission = mission.replace("__mission:=", "")
-        # else:
-        #     mission = None
+        sm = smach.StateMachine(outcomes=['success', 'failure']) 
+        with sm:
+            smach.StateMachine.add('go_near_octagon', GoToOctagon(control=control, search_point=octagon_approximate_location),
+                    transitions={'success': 'find_octagon', 'failure':'failure'})
 
-
-        # print("mission", mission)
-        # if mission is None:
-        #     master_planner()
-        # elif mission == "quali":
-        #QualiMission()
-        # else:
-        #     raise Exception("invalid mission")
+            smach.StateMachine.add('find_octagon', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class=global_class_ids["Octagon"], min_objects=1, control=control, mapping=mapping), 
+                    transitions={'success': 'navigate_octagon', 'failure':'failure'})
+            
+            smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state, octagon_class=global_class_ids["Octagon"]), 
+                    transitions={'success': 'success', 'failure':'failure'})
+            res = sm.execute()
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #testRotationsMission()

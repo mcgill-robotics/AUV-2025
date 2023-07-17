@@ -75,7 +75,7 @@ class Controller:
         Performs a coordinate transformation from the auv body frame
         to the world frame.
         """
-        trans = self.tf_buffer.lookup_transform("world", "auv_base", self.header_time)
+        trans = self.tf_buffer.lookup_transform("world_rotation", "auv_rotation", self.header_time)
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
         offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
@@ -144,8 +144,10 @@ class Controller:
     #rotate to this rotation (quaternion)
     def rotate(self,ang,callback=None):
         #if callback = None make this a blocking call
-        w,x,y,z = ang
+        if any(x is None for x in ang) and any(x is not None for x in ang):
+            raise ValueError("Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
 
+        w,x,y,z = ang
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_not_displace)
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
@@ -186,6 +188,8 @@ class Controller:
     #rotate by this amount (quaternion)
     def rotateDelta(self,delta,callback=None):
         #if callback = None make this a blocking call
+        if any(x is None for x in delta) and any(x is not None for x in delta):
+            raise ValueError("Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(delta))
         w,x,y,z = delta
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_displace)
         
@@ -196,14 +200,18 @@ class Controller:
 
     #rotate by this amount (euler)
     def rotateDeltaEuler(self,delta,callback=None):
+        if any(x is None for x in delta) and any(x is not None for x in delta):
+            raise ValueError("Invalid rotateDeltaEuler goal: euler angles cannot have a combination of None and valid values. Goal received: {}".format(delta))
         x,y,z = delta
         self.rotateDelta(self.euler_to_quaternion(x,y,z), callback=callback)
 
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None):
         x,y,z = delta
+        if any(x is None for x in delta) and any(x is not None for x in delta):
+            raise ValueError("Invalid moveDeltaLocal goal: local displacement cannot have a combination of None and valid values. Goal received: {}".format(delta))
         gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
-        goal_state = self.get_state_goal([gx, gy, gz, None, None, None, None], do_not_displace)
+        goal_state = self.get_state_goal([gx, gy, gz, None, None, None, None], do_displace)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)

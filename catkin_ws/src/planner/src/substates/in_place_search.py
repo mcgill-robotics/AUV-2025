@@ -26,7 +26,7 @@ class InPlaceSearch(smach.State):
         num_turns = 0
         num_full_turns = 0
 
-        while True:
+        while not rospy.is_shutdown():
             if (num_turns >= 360/abs(turn_amt[2])):
                 num_turns = 0
                 num_full_turns += 1
@@ -45,7 +45,8 @@ class InPlaceSearch(smach.State):
     def execute(self, ud):
         print("Starting in-place search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         self.searchThread = threading.Thread(target=self.doRotation)

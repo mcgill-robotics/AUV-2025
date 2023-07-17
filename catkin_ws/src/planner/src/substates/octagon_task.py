@@ -12,7 +12,8 @@ class NavigateOctagon(smach.State):
     def execute(self, ud):
         print("Starting octagon navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         auv_current_position = (self.state.x, self.state.y)
@@ -42,5 +43,6 @@ class GoToOctagon(smach.State):
     def execute(self, ud):
         print("Moving up to avoid the buoy.")
         self.control.move((None, None, -1))
-        self.control.move((self.search_point[0], self.search_point[1], -1))
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
+        self.control.move((self.search_point[0], self.search_point[1], None))
         return 'success'

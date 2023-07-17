@@ -12,8 +12,8 @@ class Trick(smach.State):
         self.num_full_spins = int(num_full_spins)
 
     def execute(self,ud):
-        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, None))
+        #STAY IN SAME POSITION AND AT FLAT ORIENTATION
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         if self.trick_type == "roll":
