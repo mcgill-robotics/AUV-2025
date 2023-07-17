@@ -150,8 +150,9 @@ def master_planner():
     res = sm.execute()
     endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
-octagon_approximate_location = (5,5)
-quali_gate_width = 3 #meters
+octagon_approximate_location = (5,5) # [COMP] UPDATE WITH ACTUAL SEARCH POINT FOR OCTAGON
+quali_gate_width = 2 # [COMP] update with actual width in meters
+target_symbol = "Earth Symbol" # "Abydos Symbol"
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
@@ -161,17 +162,14 @@ if __name__ == '__main__':
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
-        target_symbol = "Earth Symbol" # "Abydos Symbol"
         sm = None
         
-        #SINCE I CANT TEST MYSELF UNTIL I HAVE TUNED CUSTOM PIDs FOR MY COMPUTER THIS IS WHAT NEEDS TESTING FOR REFERENCE (RECENT CHANGES):
-            # - rotate delta
-            # - tricks effort mission
-            # - tricks mission
-            # - quali mission
-            # - quali quaternion mission
-            # - in place search depth changes
-            # - navigate lane marker
+        # [COMP] MAKE SURE AUV IS IN COORDINATE FRAME WHERE OCTAGON LOCATION WAS MEASURED
+        pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
+        pub_DVL.publish(Empty())
+
+        #rospy.sleep(60) # [COMP] UNCOMMENT
+
         control.move((None,None,-1))
         while True:
             control.rotateEuler((0,0,0))
