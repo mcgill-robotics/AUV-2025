@@ -3,6 +3,8 @@
 	<include file="$(find controls)/launch/controls.launch" />
 	<include file="$(find propulsion)/launch/propulsion.launch" />
 	<include file="$(find state_estimation)/launch/state_estimation.launch" />
+  	<node name="sensor_status" pkg="bringup" type="sensor_status.py" output="screen"/>
+
 	<!-- <include file="$(find vision)/launch/object_detection.launch" /> -->
 	<!-- <include file="$(find planner)/launch/mission.launch" /> -->
 </launch>
