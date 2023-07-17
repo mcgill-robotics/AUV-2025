@@ -9,11 +9,17 @@ from std_msgs.msg import Float64
 
 class SensorCheck:
     def __init__(self):
-        self.depth_last_update = 0
-        self.dvl_last_update = 0
-        self.imu_last_update = 0
-        self.down_cam_last_update = 0
-        self.front_cam_last_update = 0
+        self.depth_last_update = rospy.get_time()
+        self.dvl_last_update = rospy.get_time()
+        self.imu_last_update = rospy.get_time()
+        self.down_cam_last_update = rospy.get_time()
+        self.front_cam_last_update = rospy.get_time()
+        
+        self.depth_last_value = [None, None, None, None, None]
+        self.dvl_last_value = [None, None, None, None, None]
+        self.imu_last_value = [None, None, None, None, None]
+        self.down_cam_last_value = [None, None, None, None, None]
+        self.front_cam_last_value = [None, None, None, None, None]
         
         self.sub_depth = rospy.Subscriber('depth', Float64, self.callback_depth)
         self.sub_dvl = rospy.Subscriber('dead_reckon_report', DeadReckonReport, self.callback_dvl)
@@ -21,45 +27,73 @@ class SensorCheck:
         self.sub_down_cam = rospy.Subscriber('vision/down_cam/image_raw', Image, self.callback_down_cam) 
         self.sub_front_cam = rospy.Subscriber('vision/front_cam/image_rgb', Image, self.callback_front_cam)
 
-    def callback_depth(self, _):
+    def callback_depth(self, msg):
         self.depth_last_update = rospy.get_time()
+        (self.depth_last_value.append(msg.data)).pop(0)
 
-    def callback_dvl(self, _):
+    def callback_dvl(self, msg):
         self.dvl_last_update = rospy.get_time()
+        (self.dvl_last_value.append(msg.data)).pop(0)
 
-    def callback_imu(self, _):
+    def callback_imu(self, msg):
         self.imu_last_update = rospy.get_time()
+        (self.imu_last_value.append(msg.data)).pop(0)
 
-    def callback_down_cam(self, _):
+    def callback_down_cam(self, msg):
         self.down_cam_last_update = rospy.get_time()
+        (self.down_cam_last_value.append(msg.data)).pop(0)
 
-    def callback_front_cam(self, _):
+    def callback_front_cam(self, msg):
         self.front_cam_last_update = rospy.get_time()
+        (self.front_cam_last_value.append(msg.data)).pop(0)
     
     def execute(self):
-        current_time = rospy.get_time()
+        """ Check if the sensors are working properly:
+            - if sensor is not updated for more than 1 second, print error
+            - if sensor sends the same value 5 times, print warning """
         while not rospy.is_shutdown():
-            if current_time - self.depth_last_update > 1:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("!!! Depth sensor not working !!!")
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            if current_time - self.dvl_last_update > 1:
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
-                print("!!! DVL not working !!!")
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
-            if current_time - self.imu_last_update > 1:
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
-                print("!!! IMU not working !!!")
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
-            if current_time - self.down_cam_last_update > 1:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("!!! Down camera not working !!!")
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            if current_time - self.front_cam_last_update > 1:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("!!! Front camera not working !!!")
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             current_time = rospy.get_time()
+            
+            if current_time - self.depth_last_update > 1:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! ERROR: Depth sensor not working !!!")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            elif same_values(self.depth_last_value):
+                print("\n##### WARNING: Depth sensor is sending the same value #####\n") 
+                
+            if current_time - self.dvl_last_update > 1:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! ERROR: DVL not working !!!")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            elif same_values(self.dvl_last_value):
+                print("\n##### WARNING: DVL is sending the same value #####\n")
+                
+            if current_time - self.imu_last_update > 1:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! ERROR: IMU not working !!!")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            elif same_values(self.imu_last_value):
+                print("\n##### WARNING: IMU is sending the same value #####\n")
+                
+            if current_time - self.down_cam_last_update > 1:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! ERROR: Down camera not working !!!")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            elif same_values(self.down_cam_last_value):
+                print("\n##### WARNING: Down camera is sending the same value #####\n")
+            
+            if current_time - self.front_cam_last_update > 1:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! ERROR: Front camera not working !!!")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            elif same_values(self.front_cam_last_value):
+                print("\n##### WARNING: Front camera is sending the same value #####\n")
+            
+            current_time = rospy.get_time()
+            
+            
+def same_values(arr):
+    return all(element == arr[0] for element in arr)
             
 
 if __name__ == '__main__':
