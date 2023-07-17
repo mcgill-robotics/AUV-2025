@@ -29,23 +29,28 @@ class SensorCheck:
 
     def callback_depth(self, msg):
         self.depth_last_update = rospy.get_time()
-        (self.depth_last_value.append(msg.data)).pop(0)
+        self.depth_last_value.append(msg) # make sure that the msg doesn't include some unique id or timestamp
+        self.depth_last_value = self.depth_last_value[1:]
 
     def callback_dvl(self, msg):
         self.dvl_last_update = rospy.get_time()
-        (self.dvl_last_value.append(msg.data)).pop(0)
+        self.dvl_last_value.append(msg.data)
+        self.dvl_last_value = self.dvl_last_value[1:]
 
     def callback_imu(self, msg):
         self.imu_last_update = rospy.get_time()
-        (self.imu_last_value.append(msg.data)).pop(0)
+        self.imu_last_value.append(msg.quaternion)
+        self.imu_last_value = self.imu_last_value[1:]
 
     def callback_down_cam(self, msg):
         self.down_cam_last_update = rospy.get_time()
-        (self.down_cam_last_value.append(msg.data)).pop(0)
+        self.down_cam_last_value.append(msg.data)
+        self.down_cam_last_value = self.down_cam_last_value[1:]
 
     def callback_front_cam(self, msg):
         self.front_cam_last_update = rospy.get_time()
-        (self.front_cam_last_value.append(msg.data)).pop(0)
+        self.front_cam_last_value.append(msg.data)
+        self.front_cam_last_value = self.front_cam_last_value[1:]
     
     def execute(self):
         """ Check if the sensors are working properly:
