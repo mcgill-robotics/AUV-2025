@@ -31,7 +31,7 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/depth/color/points', PointCloud2, self.updatePointCloud)
+        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud', PointCloud2, self.updatePointCloud)
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -54,7 +54,8 @@ class State:
         if self.paused: return
         pc = point_cloud2.read_points_list(msg)
         pc = np.array(pc)
-        self.point_cloud = pc[:,[0,1,2]]
+        self.point_cloud = pc[:,[2,0,1]]
+        self.point_cloud[:,2] *= -1
         self.point_cloud = self.point_cloud.reshape(msg.height, msg.width, 3)
     def updatePose(self,msg):
         if self.paused: return
