@@ -26,7 +26,7 @@ class LinearSearch(smach.State):
 
         self.control.forceLocal((self.forward_speed, 0))
         startTime = time.time()
-        while startTime + self.timeout > time.time(): 
+        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.control.stop_in_place()

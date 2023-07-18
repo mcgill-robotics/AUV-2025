@@ -32,7 +32,7 @@ class NavigateLaneMarker(smach.State):
             return 'failure'
         
         attempts = 0
-        while lane_marker_obj[4] is None or lane_marker_obj[5] is None:
+        while lane_marker_obj[4] is None or lane_marker_obj[5] is None and not rospy.is_shutdown():
             attempts += 1
             if attempts > 5: 
                 print("Lane marker angle could not be measured! Failed.")

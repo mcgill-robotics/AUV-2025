@@ -38,7 +38,7 @@ class InPlaceSearch(smach.State):
             self.rotating = True
             self.control.rotateDeltaEuler(turn_amt, rotationComplete)
             #check for object detected while rotating
-            while self.rotating:
+            while self.rotating and not rospy.is_shutdown():
                 if self.detectedObject: return # stop grid search when object found
             num_turns += 1
 
@@ -53,7 +53,7 @@ class InPlaceSearch(smach.State):
         self.searchThread.start()
         print("Starting rotation.")
         startTime = time.time()
-        while startTime + self.timeout > time.time(): 
+        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.searchThread.join()

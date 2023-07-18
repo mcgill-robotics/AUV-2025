@@ -21,7 +21,7 @@ class QualiVision(smach.State):
         self.control.rotateEuler((0,0,None))
 
         gate_object = None
-        while gate_object is None:
+        while gate_object is None and not rospy.is_shutdown():
             gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(self.state.x, self.state.y))
     
         print("Waiting 5 seconds to improve measurement accuracy")

@@ -9,7 +9,7 @@ from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 import math
-from functions import *
+from .functions import *
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -164,7 +164,7 @@ class Controller:
         x,y,z = pos
             
         goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
-        
+
         x = 0 if x is None else x
         y = 0 if y is None else y
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
