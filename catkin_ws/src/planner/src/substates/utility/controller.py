@@ -209,16 +209,18 @@ class Controller:
 
     #rotate by this amount (euler)
     def rotateDeltaEuler(self,delta,callback=None):
-        if any(x is None for x in delta) and any(x is not None for x in delta):
-            raise ValueError("Invalid rotateDeltaEuler goal: euler angles cannot have a combination of None and valid values. Goal received: {}".format(delta))
         x,y,z = delta
+        if x is None: x = 0
+        if y is None: y = 0
+        if z is None: z = 0
         self.rotateDelta(euler_to_quaternion(x,y,z), callback=callback)
 
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None,face_destination=False):
         x,y,z = delta
-        if any(x is None for x in delta) and any(x is not None for x in delta):
-            raise ValueError("Invalid moveDeltaLocal goal: local displacement cannot have a combination of None and valid values. Goal received: {}".format(delta))
+        if x is None: x = 0
+        if y is None: y = 0
+        if z is None: z = 0
         gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
             
         goal_state = self.get_state_goal([gx,gy,gz,None,None,None,None], do_displace)
