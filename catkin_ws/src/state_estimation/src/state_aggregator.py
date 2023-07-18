@@ -55,6 +55,7 @@ class State_Aggregator:
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
         self.pub_world = rospy.Publisher('pose_world', Pose, queue_size=1)
+
         self.pub_x = rospy.Publisher('state_x', Float64, queue_size=1)
         self.pub_y = rospy.Publisher('state_y', Float64, queue_size=1)
         self.pub_z = rospy.Publisher('state_z', Float64, queue_size=1)
@@ -83,8 +84,8 @@ class State_Aggregator:
 
 
         # quaternion of AUV in global frame
-        q_dvl_global = q_dvl_ned*self.q_global_ned.inverse()
-        self.q_auv_global_dvl = self.q_dvl_mount_auv.inverse()*q_dvl_global
+        q_dvl_global = self.q_global_ned.inverse()*q_dvl_ned
+        self.q_auv_global_dvl = q_dvl_global*self.q_dvl_mount_auv.inverse()
 
         # position of DVL (and also AUV TODO) in NED frame
         pos_dvl = np.array([data.x, data.y, data.z]) 
@@ -100,8 +101,9 @@ class State_Aggregator:
 
         # quaternion of AUV in global frame
         # sensor is mounted, may be oriented differently from AUV axes
-        q_imu_global = q_imu_ned*self.q_global_ned.inverse()
-        self.q_auv_global_imu = self.q_imu_mount_auv.inverse()*q_imu_global
+        q_imu_global = self.q_global_ned.inverse()*q_imu_ned
+        self.q_auv_global_imu = q_imu_global*self.q_imu_mount_auv.inverse()
+
 
     def depth_sensor_cb(self, depth_msg):
         # TODO - check does the 0 depth coincide with NED frame?
@@ -169,7 +171,7 @@ class State_Aggregator:
         # note - the new AUV frame does not necessarily coincide with the 
         # new world frame since we are using only the yaw component of 
         # q_auv_global when determining the world frame
-        self.q_auv_world = self.q_auv_global*self.q_world_global.inverse()
+        self.q_auv_world = self.q_world_global.inverse()*self.q_auv_global
 
         # euler is reset to erase any windup, then is brought to
         # the actual euler angle of the AUV
@@ -184,7 +186,7 @@ class State_Aggregator:
         # available as getter method which calculates it from sensors
 
         # quaternion of AUV in world frame
-        self.q_auv_world = self.q_auv_global*self.q_world_global.inverse()
+        self.q_auv_world = self.q_world_global.inverse()*self.q_auv_global
     
 
     def update_pos_auv_world(self):
@@ -245,13 +247,15 @@ class State_Aggregator:
         self.update_euler()
 
         # publish AUV pose
-        position = Point(self.pos_auv_world[0], self.pos_auv_world[1], self.pos_auv_world[2]) # TODO - check nparray parsed - may put directly into Pose
-        pose = Pose(position, self.q_auv_world)
+        position = Point(x=self.pos_auv_world[0], y=self.pos_auv_world[1], z=self.pos_auv_world[2]) # TODO - check nparray parsed - may put directly into Pose
+        orientation = Quaternion(x=self.q_auv_world.x, y=self.q_auv_world.y, z=self.q_auv_world.z, w=self.q_auv_world.w)
+        pose = Pose(position, orientation)
         self.pub_auv.publish(pose)
 
         # publish world pose
-        position = Point(self.pos_world_global[0], self.pos_world_global[1], self.pos_world_global[2]) # TODO - check nparray parsed - may put directly into Pose
-        pose = Pose(position, self.q_world_global)
+        position = Point(x=self.pos_world_global[0], y=self.pos_world_global[1], z=self.pos_world_global[2]) # TODO - check nparray parsed - may put directly into Pose
+        orientation = Quaternion(x=self.q_world_global.x, y=self.q_world_global.y, z=self.q_world_global.z, w=self.q_world_global.w)
+        pose = Pose(position, orientation)
         self.pub_world.publish(pose)
 
         # publish individual degrees of freedom
