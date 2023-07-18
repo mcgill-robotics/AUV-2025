@@ -1,5 +1,4 @@
 <launch>
     <node name="render_visualization" pkg="vision" type="render_visualization.py" respawn="false" output="screen"/>
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vision)/config/visualization_config.rviz" />
-    <node name="point_cloud_republish" pkg="vision" type="republish_point_cloud.py" respawn="true"  output="screen"/>
 </launch>
