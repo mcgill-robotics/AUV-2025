@@ -162,11 +162,14 @@ class Controller:
     def move(self,pos,callback=None,face_destination=False):
         #if callback = None make this a blocking call
         x,y,z = pos
+            
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
+        
+        x = 0 if x is None else x
+        y = 0 if y is None else y
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
             yaw_towards_destination = vectorToYawDegrees(x - self.x, y - self.y)
             self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
-            
-        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
         
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
@@ -177,12 +180,14 @@ class Controller:
     def moveDelta(self,delta,callback=None,face_destination=False):
         #if callback = None make this a blocking call
         x,y,z = delta
+            
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_displace)
 
+        x = 0 if x is None else x
+        y = 0 if y is None else y
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
             yaw_towards_destination = vectorToYawDegrees(x,y)
             self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
-            
-        goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_displace)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
@@ -215,12 +220,12 @@ class Controller:
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError("Invalid moveDeltaLocal goal: local displacement cannot have a combination of None and valid values. Goal received: {}".format(delta))
         gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
-        
-        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
-            yaw_towards_destination = vectorToYawDegrees(gx,gy)
-            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
             
         goal_state = self.get_state_goal([gx,gy,gz,None,None,None,None], do_displace)
+
+        if face_destination and math.sqrt(gx**2 + gy**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(gx,gy)
+            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
