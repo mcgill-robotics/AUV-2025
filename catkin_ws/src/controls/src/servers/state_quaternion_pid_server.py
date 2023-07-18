@@ -2,6 +2,7 @@
 
 import rospy
 from servers.base_server import BaseServer
+from std_msgs.msg import Bool
 import actionlib
 from auv_msgs.msg import StateQuaternionAction
 from geometry_msgs.msg import Quaternion
@@ -34,26 +35,26 @@ class StateQuaternionServer(BaseServer):
 
             if(self.goal.do_x.data):
                 self.previous_goal_x = goal_position[0]
-                self.pub_x_enable.publish(True)
+                self.pub_x_enable.publish(Bool(True))
                 self.pub_x_pid.publish(goal_position[0])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
             if(self.goal.do_y.data):
                 self.previous_goal_y = goal_position[1]
-                self.pub_y_enable.publish(True)
+                self.pub_y_enable.publish(Bool(True))
                 self.pub_y_pid.publish(goal_position[1])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
-                self.pub_z_enable.publish(True)
+                self.pub_z_enable.publish(Bool(True))
                 safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
                 self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
             if (self.goal.do_quaternion.data):
                 self.previous_goal_quat = goal_quat
-                self.pub_quat_enable.publish(True)
+                self.pub_quat_enable.publish(Bool(True))
                 goal_msg = Quaternion()
                 goal_msg.w = goal_quat.w
                 goal_msg.x = goal_quat.x
