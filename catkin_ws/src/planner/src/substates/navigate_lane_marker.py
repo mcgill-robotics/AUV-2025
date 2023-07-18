@@ -32,7 +32,6 @@ class NavigateLaneMarker(smach.State):
             return 'failure'
         
         attempts = 0
-        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -1))
         while lane_marker_obj[4] is None or lane_marker_obj[5] is None:
             attempts += 1
             if attempts > 5: 

@@ -44,5 +44,5 @@ class GoToOctagon(smach.State):
         print("Moving up to avoid the buoy.")
         self.control.move((None, None, -1))
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
-        self.control.move((self.search_point[0], self.search_point[1], None))
+        self.control.move((self.search_point[0], self.search_point[1], None), face_destination=True)
         return 'success'

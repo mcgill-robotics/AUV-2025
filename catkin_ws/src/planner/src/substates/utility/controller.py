@@ -6,10 +6,10 @@ from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
 from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal
 from actionlib_msgs.msg import GoalStatus
-from tf import transformations
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 import math
+from functions import *
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -131,10 +131,6 @@ class Controller:
 
         return goal
 
-    def euler_to_quaternion(self, roll, pitch, yaw):
-        q = transformations.quaternion_from_euler(math.pi*roll/180, math.pi*pitch/180, math.pi*yaw/180, 'rxyz')
-        return [q[3], q[0], q[1], q[2]]
-
     #preempt the current action
     def preemptCurrentAction(self):
         for client in self.clients:
@@ -160,12 +156,16 @@ class Controller:
         if x is None: x = self.theta_x
         if y is None: y = self.theta_y
         if z is None: z = self.theta_z
-        self.rotate(self.euler_to_quaternion(x,y,z), callback=callback)
+        self.rotate(euler_to_quaternion(x,y,z), callback=callback)
 
     #move to setpoint
-    def move(self,pos,callback=None):
+    def move(self,pos,callback=None,face_destination=False):
         #if callback = None make this a blocking call
         x,y,z = pos
+        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(x - self.x, y - self.y)
+            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+            
         goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
         
         if(callback is not None):
@@ -174,10 +174,14 @@ class Controller:
             self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #move by this amount in world space
-    def moveDelta(self,delta,callback=None):
+    def moveDelta(self,delta,callback=None,face_destination=False):
         #if callback = None make this a blocking call
         x,y,z = delta
 
+        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(x,y)
+            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+            
         goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_displace)
 
         if(callback is not None):
@@ -203,15 +207,20 @@ class Controller:
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError("Invalid rotateDeltaEuler goal: euler angles cannot have a combination of None and valid values. Goal received: {}".format(delta))
         x,y,z = delta
-        self.rotateDelta(self.euler_to_quaternion(x,y,z), callback=callback)
+        self.rotateDelta(euler_to_quaternion(x,y,z), callback=callback)
 
     #move by this amount in local space (i.e. z is always heave)
-    def moveDeltaLocal(self,delta,callback=None):
+    def moveDeltaLocal(self,delta,callback=None,face_destination=False):
         x,y,z = delta
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError("Invalid moveDeltaLocal goal: local displacement cannot have a combination of None and valid values. Goal received: {}".format(delta))
         gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
-        goal_state = self.get_state_goal([gx, gy, gz, None, None, None, None], do_displace)
+        
+        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(gx,gy)
+            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+            
+        goal_state = self.get_state_goal([gx,gy,gz,None,None,None,None], do_displace)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
