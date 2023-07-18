@@ -1,5 +1,6 @@
 import math
 from tf import transformations
+import numpy as np
 
 def degreesToVector(yawDegrees):
         angleRadians = yawDegrees * math.pi / 180
@@ -8,7 +9,11 @@ def degreesToVector(yawDegrees):
         return [x, y]
 
 def vectorToYawDegrees(x,y):
-        
+    zero_angle_vector = np.array([1,0])
+    arg_vector = np.array([x,y])
+    magnitude_arg_vector = np.linalg.norm(arg_vector)
+    dot_product = np.dot(zero_angle_vector, arg_vector)
+    return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
 def normalize_vector(vector2D):
         magnitude = math.sqrt(vector2D[0] ** 2 + vector2D[1] ** 2)
