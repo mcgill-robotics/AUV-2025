@@ -93,13 +93,13 @@ class State_Aggregator:
 
     def pos_auv_global(self):
         pos_auv_global = np.zeros(3)
-        pos_auv_global[0:2] = pos_auv_global_dvl[0:2]
-        pos_auv_global[2] = pos_auv_global_ds[2]
+        pos_auv_global[0:2] = self.pos_auv_global_dvl[0:2]
+        pos_auv_global[2] = self.pos_auv_global_ds[2]
         return pos_auv_global 
 
 
     def q_auv_global(self):
-        return q_auv_global_imu 
+        return self.q_auv_global_imu 
 
 
     def pos_auv_world(self):
@@ -113,7 +113,7 @@ class State_Aggregator:
 
     def q_auv_world(self):
         q_auv_world = self.q_world_global.inverse()*self.q_auv_global()
-        return q_auv_global_imu 
+        return q_auv_world 
         
 
     def euler_auv_world(self):
@@ -250,8 +250,9 @@ class State_Aggregator:
 
 
     def update_state(self, _):
-        pos_auv_world = pos_auv_world()
-        q_auv_world = q_auv_world()
+        pos_auv_world = self.pos_auv_world()
+        q_auv_world = self.q_auv_world()
+        euler_auv_world = self.euler_auv_world()
 
         # publish AUV pose (relative to world)
         position = Point(x=pos_auv_world[0], y=pos_auv_world[1], z=pos_auv_world[2]) 
@@ -260,25 +261,23 @@ class State_Aggregator:
         self.pub_auv.publish(pose)
 
         # publish individual degrees of freedom
-        self.pub_x.publish(self.pos_auv_world[0])
-        self.pub_y.publish(self.pos_auv_world[1])
-        self.pub_z.publish(self.pos_auv_world[2])
-
+        self.pub_x.publish(pos_auv_world[0])
+        self.pub_y.publish(pos_auv_world[1])
+        self.pub_z.publish(pos_auv_world[2])
 
         # publish world pose (relative to global)
-        position = Point(x=pos_world_global[0], y=pos_world_global[1], z=pos_world_global[2]) 
-        orientation = Quaternion(x=q_world_global.x, y=q_world_global.y, z=q_world_global.z, w=q_world_global.w)
+        position = Point(x=self.pos_world_global[0], y=self.pos_world_global[1], z=self.pos_world_global[2]) 
+        orientation = Quaternion(x=self.q_world_global.x, y=self.q_world_global.y, z=self.q_world_global.z, w=self.q_world_global.w)
         pose = Pose(position, orientation)
         self.pub_world.publish(pose)
 
         # backwards compatibility
-        self.pub_theta_x.publish(self.euler_auv_world[0])
-        self.pub_theta_y.publish(self.euler_auv_world[1])
-        self.pub_theta_z.publish(self.euler_auv_world[2])
+        self.pub_theta_x.publish(euler_auv_world[0])
+        self.pub_theta_y.publish(euler_auv_world[1])
+        self.pub_theta_z.publish(euler_auv_world[2])
 
         angular_velocity = Vector3(self.angular_velocity[0], self.angular_velocity[1], self.angular_velocity[2])
         self.pub_angular_velocity.publish(angular_velocity)
-
 
 
 if __name__ == '__main__':
