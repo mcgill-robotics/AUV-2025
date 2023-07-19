@@ -161,6 +161,7 @@ class State_Aggregator:
         # position of DVL relative to initial DVL frame (dvlref)
         pos_dvl_dvlref = np.array([data.x, data.y, data.z]) 
 
+        # TODO - this does not work if DVL was on prior to state_aggregator running - should reset frame
         # if this is the first DVL message, take the current orientation as the DVL reference frame
         if self.q_dvlref_global is None:
             self.q_dvlref_global = self.q_auv_global()*self.q_dvl_mount_auv
@@ -241,7 +242,7 @@ class State_Aggregator:
         it may give unwanted results at other extreme orientations
         '''
         # new world position is x, y - current AUV position, z - same as previous world frame, in global frame
-        self.pos_world_global[0:2] = self.pos_auv_global[0:2] # do not change z
+        self.pos_world_global[0:2] = self.pos_auv_global()[0:2] # do not change z
 
         # new world quaternion is yaw rotation of AUV in global frame
         q = self.q_auv_global()
