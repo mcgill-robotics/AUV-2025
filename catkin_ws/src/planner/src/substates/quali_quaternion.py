@@ -32,7 +32,8 @@ class QualiQuaternion(smach.State):
 
         # Step 1: Submerge 2 meters
         print("Descending 2 meters")
-        self.control.move((None, None, -2.0), callback = lambda a,b: None)
+        self.control.move((None, None, -2.0), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotate((1, 0.0, 0.0, 0))
         rospy.sleep(2)
 

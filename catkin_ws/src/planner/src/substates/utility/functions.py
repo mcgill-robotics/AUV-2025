@@ -1,10 +1,19 @@
 import math
+from tf import transformations
+import numpy as np
 
 def degreesToVector(yawDegrees):
         angleRadians = yawDegrees * math.pi / 180
         x = math.cos(angleRadians)
         y = math.sin(angleRadians)
         return [x, y]
+
+def vectorToYawDegrees(x,y):
+    zero_angle_vector = np.array([1,0])
+    arg_vector = np.array([x,y])
+    magnitude_arg_vector = np.linalg.norm(arg_vector)
+    dot_product = np.dot(zero_angle_vector, arg_vector)
+    return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
 def normalize_vector(vector2D):
         magnitude = math.sqrt(vector2D[0] ** 2 + vector2D[1] ** 2)
@@ -16,3 +25,8 @@ def normalize_vector(vector2D):
 
 def dotProduct(v1, v2):
         return v1[0]*v2[0] + v1[1]*v2[1]
+
+
+def euler_to_quaternion(roll, pitch, yaw):
+        q = transformations.quaternion_from_euler(math.pi*roll/180, math.pi*pitch/180, math.pi*yaw/180, 'rxyz')
+        return [q[3], q[0], q[1], q[2]]

@@ -97,7 +97,7 @@ def main():
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
     print(conn.is_open)
-    while conn.is_open:
+    while conn.is_open and not rospy.is_shutdown():
         # raw_data = conn.read(1).decode("utf-8")
         # print(raw_data,"")
 

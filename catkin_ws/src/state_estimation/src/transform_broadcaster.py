@@ -75,7 +75,8 @@ def global_tf():
 
 if __name__ == '__main__':
     rospy.init_node('transform_broadcaster')
-    rospy.Subscriber('pose', Pose, auv_cb, queue_size=50)
-    rospy.Subscriber('pose_world', Pose, world_cb, queue_size=50)
-
+    rospy.Subscriber('pose', Pose, auv_cb, queue_size=1)
+    rospy.Subscriber('pose_world', Pose, world_cb, queue_size=1)
+    global_tf()
     rospy.spin()
+
