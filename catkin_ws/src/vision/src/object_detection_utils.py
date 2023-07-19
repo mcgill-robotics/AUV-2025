@@ -39,7 +39,6 @@ class State:
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
         self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
         self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updatePointCloud, queue_size=1)
-
     def updateCameraInfo(self, msg):
         fx = msg.K[0]
         fy = msg.K[4]
@@ -53,7 +52,6 @@ class State:
 
         self.x_over_z_map = (cx - u_map) / fx
         self.y_over_z_map = (cy - v_map) / fy
-
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -72,9 +70,10 @@ class State:
     def updateThetaZ(self, msg):
         if self.paused: return
         self.theta_z = float(msg.data)
-    def updatePointCloud(self, depth_map):
+    def updatePointCloud(self, msg):
         if self.paused or self.y_over_z_map: return
-        
+        depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
+        depth_map += np.random.normal(0, 0.1, depth_map.shape) # [COMP] uncomment no need to add noise!
         depth_map = np.nan_to_num(depth_map, nan=np.inf)
         x_map = self.x_over_z_map * depth_map
         y_map = self.y_over_z_map * depth_map
