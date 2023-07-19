@@ -4,4 +4,23 @@
 	<include file="$(find dvl)/launch/dvl.launch"/>
 	<include file="$(find state_estimation)/launch/transform_broadcaster.launch"/>
 	<include file="$(find state_estimation)/launch/state_aggregator.launch"/>
+
+	<node name="bag_record_bringup" pkg="rosbag" type="record" output="screen"i args="-o $(find bringup)/bag/rosbag 
+		/pose
+		/pose_world
+		/state_x
+		/state_y
+		/state_z
+		/state_theta_x
+		/state_theta_y
+		/state_theta_z
+		/angular_velocity
+
+		/dead_reckon_report
+		/sbg/imu_data
+		/sbg/ekf_quat
+		/depth
+
+		/reset_state_full
+		/reset_state_planar "/>
 </launch>
