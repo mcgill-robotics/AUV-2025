@@ -156,24 +156,26 @@ class State_Aggregator:
     def dvl_cb(self,data):
         # quaternion of DVL relative to the frame DVL was in when it last reset (dvlref)
         q_dvl_dvlref = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
-        q_dvl_dvlref = np.quaternion(q_dvl[3], q_dvl[0], q_dvl[1], q_dvl[2]) # transformations returns quaternion as nparray [w, x, y, z]
+        dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
 
         # position of DVL relative to initial DVL frame (dvlref)
         pos_dvl_dvlref = np.array([data.x, data.y, data.z]) 
 
         # if this is the first DVL message, take the current orientation as the DVL reference frame
         if self.q_dvlref_global is None:
-            self.q_dvlref_global = self.q_auv_global*q_dvl_mount_auv
+            self.q_dvlref_global = self.q_auv_global()*self.q_dvl_mount_auv
             # x,y are arbitrary choice since there is no way to locate dvl relative to global prior
-            self.pos_dvlref_global = np.array([0, 0, self.pos_auv_global[2]]) 
+            self.pos_dvlref_global = np.array([0, 0, self.pos_auv_global()[2]]) 
             # TODO - compensate for positional offset of dvl
 
         # quaternion of AUV in global frame
-        q_dvl_global = self.q_global_dvlref.inverse()*q_dvl_dvlref
+        q_dvl_global = self.q_dvlref_global*q_dvl_dvlref
         self.q_auv_global_dvl = q_dvl_global*self.q_dvl_mount_auv.inverse()
 
         # position of AUV in global frame
-        self.pos_auv_global_dvl = quaternion.rotate_vectors(self.q_global_ned.inverse(), pos_dvl)
+        # assumes global and dvlref at same origin 
+        # (this is a sensible arbitrary choice since we couldn't know if global was somewhere else)
+        self.pos_auv_global_dvl = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
 
 
     def imu_ang_vel_cb(self, data):
