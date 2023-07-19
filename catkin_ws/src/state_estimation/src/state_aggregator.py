@@ -121,8 +121,6 @@ class State_Aggregator:
         The use of euler angles is for backward compatibility
         to publish data to state_theta_* topics
         '''
-        euler_auv_world = np.array([0.0, 0.0, 0.0]) 
-
         # calculate euler angles based on self.q_auv_world
         # *note* the tf.transformations module is used instead of
         # quaternion package because it gives the euler angles
@@ -147,18 +145,7 @@ class State_Aggregator:
 
         # euler_from_quaternion returns 3-tuple of radians
         # convert to numpy array of degrees
-        angles = np.array([theta_x, theta_y, theta_z])*DEG_PER_RAD
-
-        # allow angles to wind up to preserve continuity
-        # TODO - this doesn't work without tracking previous state
-        for i in range(3):
-            if angles[i] - euler_auv_world[i] > ANGLE_CHANGE_TOL:
-                euler_auv_world[i] = angles[i] - 360
-            elif euler_auv_world[i] - angles[i] > ANGLE_CHANGE_TOL:
-                euler_auv_world[i] = angles[i] + 360
-            else:
-                euler_auv_world[i] = angles[i]
-
+        euler_auv_world = np.array([theta_x, theta_y, theta_z])*DEG_PER_RAD
         return euler_auv_world
 
 
@@ -284,12 +271,10 @@ class State_Aggregator:
         pose = Pose(position, orientation)
         self.pub_world.publish(pose)
 
-        '''
         # backwards compatibility
         self.pub_theta_x.publish(self.euler_auv_world[0])
         self.pub_theta_y.publish(self.euler_auv_world[1])
         self.pub_theta_z.publish(self.euler_auv_world[2])
-        '''
 
         angular_velocity = Vector3(self.angular_velocity[0], self.angular_velocity[1], self.angular_velocity[2])
         self.pub_angular_velocity.publish(angular_velocity)
