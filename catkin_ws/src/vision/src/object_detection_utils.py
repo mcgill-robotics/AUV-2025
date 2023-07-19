@@ -25,14 +25,10 @@ class State:
         self.paused = False
         self.q_auv = None
 
-        fx = None
-        fy = None
-        cx = None
-        cy = None
-        width = None
-        height = None
-        x_over_z_map = None
-        y_over_z_map = None
+        self.width = None
+        self.height = None
+        self.x_over_z_map = None
+        self.y_over_z_map = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -41,23 +37,22 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.camera_info_callback, queue_size=1)
-        self.point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=1)
+        self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
+        self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updatePointCloud, queue_size=1)
 
-    def camera_info_callback(self, msg):
-        self.fx = msg.K[0]
-        self.fy = msg.K[4]
-        self.cx = msg.K[2]
-        self.cy = msg.K[5]
+    def updateCameraInfo(self, msg):
+        fx = msg.K[0]
+        fy = msg.K[4]
+        cx = msg.K[2]
+        cy = msg.K[5]
         self.width = msg.width
         self.height = msg.height
 
         u_map = np.tile(np.arange(self.width),(self.height,1)) +1
         v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
 
-        self.x_over_z_map = (self.cx - u_map) / self.fx
-        self.y_over_z_map = (self.cy - v_map) / self.fy
-
+        self.x_over_z_map = (cx - u_map) / fx
+        self.y_over_z_map = (cy - v_map) / fy
 
     def updateX(self, msg):
         if self.paused: return
@@ -77,24 +72,16 @@ class State:
     def updateThetaZ(self, msg):
         if self.paused: return
         self.theta_z = float(msg.data)
-    def updatePointCloud(self, z_map, header=None):
-        if self.convert_map is None or self.paused: return
-        if header is None:
-            header = Header()
-            header.stamp = rospy.Time(0)
-            header.frame_id = "auv_base"
-        # replace nan with inf
-        z_map = np.nan_to_num(z_map, nan=np.inf)
-        # print amount of np.nan in x_over_z_map and y_over_z_map
-        x_map = self.x_over_z_map * z_map
-        y_map = self.y_over_z_map * z_map
+    def updatePointCloud(self, depth_map):
+        if self.paused or self.y_over_z_map: return
+        
+        depth_map = np.nan_to_num(depth_map, nan=np.inf)
+        x_map = self.x_over_z_map * depth_map
+        y_map = self.y_over_z_map * depth_map
 
-        combined = np.stack((z_map, x_map, y_map), axis=2)
+        combined = np.stack((depth_map, x_map, y_map), axis=2)
         combined = combined.reshape((self.width*self.height, 3))
         self.point_cloud = combined
-        combined = combined.astype(np.float32)
-        pub_msg = point_cloud2.create_cloud_xyz32(header, combined)
-        self.point_cloud_pub.publish(pub_msg)
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
