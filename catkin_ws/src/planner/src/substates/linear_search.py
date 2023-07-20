@@ -19,12 +19,13 @@ class LinearSearch(smach.State):
     def execute(self, ud):
         print("Starting linear search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         self.control.forceLocal((self.forward_speed, 0))
         startTime = time.time()
-        while startTime + self.timeout > time.time(): 
+        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.control.stop_in_place()

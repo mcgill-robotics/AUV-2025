@@ -3,7 +3,7 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, goThrough):
+    def __init__(self, control, state, mapping, target_symbol, goThrough, gate_width):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
@@ -12,11 +12,13 @@ class NavigateGate(smach.State):
             raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
         self.target_symbol = target_symbol
         self.goThrough = goThrough
+        self.gate_width = gate_width
 
     def execute(self, ud):
         print("Starting gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         gate_object = self.mapping.getClosestObject(cls="Gate", pos=(self.state.x, self.state.y))
@@ -57,17 +59,17 @@ class NavigateGate(smach.State):
         if self.target_symbol == "Earth Symbol": 
             if symbol >= 0.5:
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,0.75,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else : 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.75,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
         else: 
             if symbol <= 0.5:
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,0.75,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else: 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-0.75,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
 
         self.control.moveDeltaLocal((5.0,0.0,0.0))
 

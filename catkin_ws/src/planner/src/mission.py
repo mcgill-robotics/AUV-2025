@@ -12,7 +12,6 @@ from substates.utility.state import *
 from substates.utility.vision import *
 from substates.quali import *
 from substates.trick import *
-from substates.trick_effort import *
 from substates.navigate_gate import *
 from substates.quali_quaternion import *
 from substates.quali_vision import *
@@ -97,13 +96,13 @@ def masterPlanner():
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol), 
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_width=gate_width), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
-        smach.StateMachine.add('tricks', Trick(control=control, trick_type="roll"), 
+        smach.StateMachine.add('tricks', Trick(control=control, trick_type="yaw", num_full_spins=2), 
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=1, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
@@ -131,6 +130,7 @@ def masterPlanner():
 
 octagon_approximate_location = (5,5) # [COMP] UPDATE WITH ACTUAL SEARCH POINT FOR OCTAGON
 quali_gate_width = 2 # [COMP] update with actual width in meters
+gate_width = 3
 target_symbol = "Earth Symbol" # "Abydos Symbol"
 wait_time_for_comp = 120 # [COMP] make sure this is long enough
 
@@ -143,8 +143,9 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
         sm = None
-
-        control.move((None,None,-1))
+        control.move((None,None,-1), callback=lambda a,b: None)
+        control.moveDelta((0,0,0), callback=lambda a,b: None)
+        control.rotateEuler((0,0,None))
         while True:
             control.rotateEuler((0,0,0))
             control.rotateEuler((0,0,90))
