@@ -143,6 +143,8 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
         sm = None
+
+
         control.move((None,None,-1), callback=lambda a,b: None)
         control.moveDelta((0,0,0), callback=lambda a,b: None)
         control.rotateEuler((0,0,None))
@@ -151,6 +153,7 @@ if __name__ == '__main__':
             control.rotateEuler((0,0,90))
             control.rotateEuler((0,90,90))
             control.rotateEuler((-90,0,0))
+            
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         #gateMission()
