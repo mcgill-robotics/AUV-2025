@@ -3,7 +3,6 @@
 import rospy
 import smach
 from .utility.functions import *
-from std_msgs.msg import Empty
 
 class QualiVision(smach.State):
     def __init__(self, control, state, mapping, quali_gate_width):

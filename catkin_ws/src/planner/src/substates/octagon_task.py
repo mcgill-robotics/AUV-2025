@@ -29,8 +29,6 @@ class NavigateOctagon(smach.State):
 
         print("Successfully navigated the octagon.")
         return 'success'
-    
-
 
 class GoToOctagon(smach.State):
     def __init__(self,search_point, control):

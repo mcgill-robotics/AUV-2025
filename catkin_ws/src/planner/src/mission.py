@@ -18,6 +18,7 @@ from substates.quali_quaternion import *
 from substates.quali_vision import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
+from substates.initialize_for_comp import *
 
 
 def endMission(msg):
@@ -28,35 +29,20 @@ def endPlanner(msg="Shutting down mission planner."):
     print(msg)
     control.kill()
 
-def QualiMission():
+def qualiVisionMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('quali', Quali(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endMission("Finished quali mission. Result {}".format(res))
-    
-def QualiQuaternionMission():
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('quali', QualiQuaternion(control=control), 
-            transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endMission("Finished quali mission. Result {}".format(res))
-    
-def QualiVisionMission(isCompetition=False):
-    if isCompetition: rospy.sleep(60)
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
+        smach.StateMachine.add('initialization', InitializeForComp(wait_time=wait_time_for_comp), 
+                transitions={'success': 'find_quali'})
+        smach.StateMachine.add('find_quali', LinearSearch(timeout=120, forward_speed=5, target_class="Quali Gate", min_objects=1, control=control, mapping=mapping), 
+                transitions={'success': 'quali', 'failure': 'failure'})
         smach.StateMachine.add('quali', QualiVision(control=control, mapping=mapping, state=state, quali_gate_width=quali_gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished quali mission. Result {}".format(res))
 
-def GateMission():
+def gateMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -66,8 +52,8 @@ def GateMission():
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished gate mission. Result {}".format(res))
-    
-def BuoysMission():
+
+def buoyMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
@@ -89,15 +75,6 @@ def tricks(t):
         res = sm.execute()
     endMission("Finished trick. Result {}".format(res))
 
-def tricks_effort(t):
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('trick', TrickEffort(control=control, trick_type=t, effort=10), 
-        transitions={'success': 'success', 'failure':'failure'})
-        res = sm.execute()
-    endMission("Finished trick. Result {}".format(res))
-    
 def laneMarkerMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
@@ -109,12 +86,14 @@ def laneMarkerMission():
                 transitions={'success': 'success', 'failure': 'failure'})
         res = sm.execute()
     endMission("Finished lane marker. Result {}".format(res))
-        
 
-def master_planner():
+def masterPlanner():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
+        smach.StateMachine.add('initialization', InitializeForComp(wait_time=wait_time_for_comp), 
+                transitions={'success': 'find_gate'})
+        
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
@@ -153,6 +132,7 @@ def master_planner():
 octagon_approximate_location = (5,5) # [COMP] UPDATE WITH ACTUAL SEARCH POINT FOR OCTAGON
 quali_gate_width = 2 # [COMP] update with actual width in meters
 target_symbol = "Earth Symbol" # "Abydos Symbol"
+wait_time_for_comp = 120 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
@@ -163,12 +143,6 @@ if __name__ == '__main__':
         state = StateTracker()
         control = Controller(rospy.Time(0))
         sm = None
-        
-        # [COMP] MAKE SURE AUV IS IN COORDINATE FRAME WHERE OCTAGON LOCATION WAS MEASURED
-        pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
-        pub_DVL.publish(Empty())
-
-        #rospy.sleep(60) # [COMP] UNCOMMENT
 
         control.move((None,None,-1))
         while True:
@@ -176,30 +150,15 @@ if __name__ == '__main__':
             control.rotateEuler((0,0,90))
             control.rotateEuler((0,90,90))
             control.rotateEuler((-90,0,0))
-        #BuoysMission()  
-
-        # get mission to run from command line argument
-        # TODO - this is a bit hackish but probably fine
-        # mission = sys.argv[1] 
-        # if mission.startswith("__mission"):
-        #     mission = mission.replace("__mission:=", "")
-        # else:
-        #     mission = None
-
-
-        # print("mission", mission)
-        # if mission is None:
-        #     master_planner()
-        # elif mission == "quali":
-        #QualiMission()
-        # else:
-        #     raise Exception("invalid mission")
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        #testRotationsMission()
+        #gateMission()
+        #qualiVisionMission()
+        #buoyMission()  
+        #tricks()  
         #laneMarkerGridSearchMission()
     except KeyboardInterrupt:
-        #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME
+        #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
     finally:
         endPlanner()
