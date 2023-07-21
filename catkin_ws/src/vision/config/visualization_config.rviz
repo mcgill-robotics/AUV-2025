@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Grid1/Offset1
-        - /PointCloud21
       Splitter Ratio: 0.5029411911964417
     Tree Height: 270
   - Class: rviz/Selection
@@ -26,7 +25,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
   - Class: rviz/Displays
     Help Height: 138
     Name: Displays
@@ -39,6 +38,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
         - /PointCloud21
       Splitter Ratio: 0.5
     Tree Height: 1162
@@ -101,15 +101,15 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: ""
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
       Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 1
+      Position Transformer: ""
+      Queue Size: 10
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -147,7 +147,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.780444145202637
+      Distance: 6.588860988616943
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -163,9 +163,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.22479814291000366
+      Pitch: 0.504798173904419
       Target Frame: <Fixed Frame>
-      Yaw: 3.113112449645996
+      Yaw: 0.1881130188703537
     Saved: ~
 Window Geometry:
   Displays:
