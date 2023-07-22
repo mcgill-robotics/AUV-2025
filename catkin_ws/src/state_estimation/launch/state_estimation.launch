@@ -5,7 +5,7 @@
 	<include file="$(find state_estimation)/launch/transform_broadcaster.launch"/>
 	<include file="$(find state_estimation)/launch/state_aggregator.launch"/>
 
-	<node name="bag_record_bringup" pkg="rosbag" type="record" output="screen"i args="-o $(find bringup)/bag/rosbag 
+	<node name="bag_record_bringup" pkg="rosbag" type="record" output="screen" args="-o $(find state_estimation)/rosbag/  
 		/pose
 		/pose_world
 		/state_x
