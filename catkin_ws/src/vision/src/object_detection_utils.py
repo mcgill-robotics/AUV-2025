@@ -1,12 +1,12 @@
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image, PointCloud2
+from sensor_msgs.msg import Image, PointCloud2, CameraInfo
 from ultralytics import YOLO
 from auv_msgs.msg import ObjectDetectionFrame
 import numpy as np
 import math
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Header
 import lane_marker_measure
 import torch
 from geometry_msgs.msg import Pose
@@ -24,6 +24,12 @@ class State:
         self.point_cloud = None
         self.paused = False
         self.q_auv = None
+
+        self.width = None
+        self.height = None
+        self.x_over_z_map = None
+        self.y_over_z_map = None
+
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
@@ -31,7 +37,22 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/depth/color/points', PointCloud2, self.updatePointCloud)
+        self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
+        self.depth_sub = rospy.Subscriber('vision/front_cam/depth', Image, self.updatePointCloud, queue_size=1)
+    def updateCameraInfo(self, msg):
+        fx = msg.K[0]
+        fy = msg.K[4]
+        cy = msg.K[2]
+        cx = msg.K[5]
+  
+        self.width = msg.width
+        self.height = msg.height
+
+        u_map = np.tile(np.arange(self.width),(self.height,1)) +1
+        v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
+
+        self.x_over_z_map = (cx - u_map) / fx
+        self.y_over_z_map = (cy - v_map) / fy
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -51,11 +72,16 @@ class State:
         if self.paused: return
         self.theta_z = float(msg.data)
     def updatePointCloud(self, msg):
-        if self.paused: return
-        pc = point_cloud2.read_points_list(msg)
-        pc = np.array(pc)
-        self.point_cloud = pc[:,[0,1,2]]
-        self.point_cloud = self.point_cloud.reshape(msg.height, msg.width, 3)
+        if self.paused or self.y_over_z_map: return
+        depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
+        depth_map += np.random.normal(0, 0.1, depth_map.shape) # [COMP] uncomment no need to add noise!
+        depth_map = np.nan_to_num(depth_map, nan=np.inf)
+        x_map = self.x_over_z_map * depth_map
+        y_map = self.y_over_z_map * depth_map
+
+        combined = np.stack((depth_map, x_map, y_map), axis=2)
+        combined = combined.reshape((self.width*self.height, 3))
+        self.point_cloud = combined
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -315,6 +341,7 @@ states = (State(), State())
 min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
+# [COMP] change pool depth and object heights to actual comp values
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
 octagon_table_z = pool_depth + 1.2
@@ -322,6 +349,7 @@ octagon_table_z = pool_depth + 1.2
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
+# [COMP] ensure FOV is correct
 down_cam_hfov = 87 #set to 220 when not in sim!
 down_cam_vfov = 65 #set to 165.26 when not in sim!
 
@@ -343,6 +371,7 @@ for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
     else: print("WARN: CUDA is not available! Running on CPU")
 
+# [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
     ["Lane Marker", "Octagon Table"],
     ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],

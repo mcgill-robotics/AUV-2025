@@ -7,7 +7,6 @@ import threading
 
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class InPlaceSearch(smach.State):
-        ## NOTE: target classes should be an array of elements of the form (target_class, min_objs_required)
     def __init__(self, timeout, control, mapping, target_class, min_objects):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
@@ -26,7 +25,7 @@ class InPlaceSearch(smach.State):
         num_turns = 0
         num_full_turns = 0
 
-        while True:
+        while not rospy.is_shutdown():
             if (num_turns >= 360/abs(turn_amt[2])):
                 num_turns = 0
                 num_full_turns += 1
@@ -38,21 +37,22 @@ class InPlaceSearch(smach.State):
             self.rotating = True
             self.control.rotateDeltaEuler(turn_amt, rotationComplete)
             #check for object detected while rotating
-            while self.rotating:
+            while self.rotating and not rospy.is_shutdown():
                 if self.detectedObject: return # stop grid search when object found
             num_turns += 1
 
     def execute(self, ud):
         print("Starting in-place search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         self.searchThread = threading.Thread(target=self.doRotation)
         self.searchThread.start()
         print("Starting rotation.")
         startTime = time.time()
-        while startTime + self.timeout > time.time(): 
+        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.searchThread.join()

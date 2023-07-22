@@ -3,7 +3,6 @@
 import rospy
 import smach
 from .utility.functions import *
-from std_msgs.msg import Empty
 
 class QualiVision(smach.State):
     def __init__(self, control, state, mapping, quali_gate_width):
@@ -16,11 +15,12 @@ class QualiVision(smach.State):
     def execute(self, ud):
         print("Starting quali gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         gate_object = None
-        while gate_object is None:
+        while gate_object is None and not rospy.is_shutdown():
             gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(self.state.x, self.state.y))
     
         print("Waiting 5 seconds to improve measurement accuracy")
