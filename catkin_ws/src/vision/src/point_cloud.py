@@ -13,12 +13,12 @@ from geometry_msgs.msg import TransformStamped
 def rbg_callback(msg):
     global rgb
     temp = bridge.imgmsg_to_cv2(msg)
-    rgb = temp
+    rgb = temp/255
 
 def depth_callback(msg):
-    global depth
+    global depth, depth_scale_factor
     temp = bridge.imgmsg_to_cv2(msg)
-    depth = temp
+    depth = temp/depth_scale_factor
 
 def camera_info_callback(msg):
     global fx, fy, cx, cy, width, height, x_over_z_map, y_over_z_map
@@ -39,14 +39,17 @@ def camera_info_callback(msg):
 
 def convert_from_uvd(color, z_map):
     print("starting")
-    global ready, y_over_z_map, x_over_z_map, point_cloud_pub, width, height
+    global y_over_z_map, x_over_z_map, point_cloud_pub, width, height
     if y_over_z_map is not None:
         time = rospy.Time(0)
         xyz_rbg_img = np.zeros((height, width, 6))
         xyz_rbg_img[:, :, 3:6] = color
         
 
-        z_map = np.nan_to_num(z_map, np.inf)
+        # z_map = np.nan_to_num(z_map, 100)
+        # z_map[z_map == 0] = 100
+
+        
 
         start = rospy.get_time()
         x_map = x_over_z_map * z_map
@@ -71,11 +74,35 @@ def convert_from_uvd(color, z_map):
         pub_msg = point_cloud2.create_cloud(header=header, fields=fields, points=xyz_rbg_img)
         return pub_msg
         
+def pub_transform():
+    br = TransformBroadcaster()
+
+    t = TransformStamped()
+    t.header.stamp = rospy.Time.now()
+    t.header.frame_id = "world"
+    t.child_frame_id = "auv_base"
+
+    t.transform.translation.x = 0
+    t.transform.translation.y = 0
+    t.transform.translation.z = 0
+    t.transform.rotation.w = 1
+    t.transform.rotation.x = 0
+    t.transform.rotation.y = 0
+    t.transform.rotation.z = 0
+
+    br.sendTransform(t)
 
 if __name__ == "__main__":
     rospy.init_node('point_cloud_sim')
 
     bridge = CvBridge()
+
+    is_sim = rospy.get_param('/sim', False)
+    print("is_sim: ", is_sim)
+    if is_sim:
+        depth_scale_factor = 1
+    else:
+        depth_scale_factor = 1000
 
     camera_info_sub = rospy.Subscriber('/vision/front_cam/depth/camera_info', CameraInfo, camera_info_callback)
     depth_sub = rospy.Subscriber('/vision/front_cam/depth/image_rect_raw', Image, depth_callback)
@@ -97,24 +124,11 @@ if __name__ == "__main__":
     
 
     while not rospy.is_shutdown():
-        br = TransformBroadcaster()
-
-        t = TransformStamped()
-        t.header.stamp = rospy.Time.now()
-        t.header.frame_id = "world"
-        t.child_frame_id = "auv_base"
-
-        t.transform.translation.x = 0
-        t.transform.translation.y = 0
-        t.transform.translation.z = 0
-        t.transform.rotation.w = 1
-        t.transform.rotation.x = 0
-        t.transform.rotation.y = 0
-        t.transform.rotation.z = 0
-
-        br.sendTransform(t)
+        
+        if not is_sim:
+            pub_transform()
             
         if(rgb is not None and depth is not None):
-            msg = convert_from_uvd(rgb/255, depth/1000)
+            msg = convert_from_uvd(rgb, depth)
             if msg is not None:
               point_cloud_pub.publish(msg)
