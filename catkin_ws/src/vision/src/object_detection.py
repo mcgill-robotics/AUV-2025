@@ -17,12 +17,15 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     states[camera_id].pause()
     
-    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z, "point_cloud": states[camera_id].point_cloud}
+    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z}
     for v in current_states.values():
         if v is None:
             print("State information missing. Skipping detection.")
             print(current_states)
             return
+    if camera_id == 1 and states[camera_id].point_cloud is None:
+        print("Point cloud not yet published.")
+        return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
@@ -111,9 +114,6 @@ def detect_on_image(raw_img, camera_id):
                     obj_z.append(pred_obj_z) 
                     obj_theta_z.append(theta_z)
                     extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
-                    print("gate")
-                    print(pred_obj_x, pred_obj_y, pred_obj_z, theta_z)
-                    print("----")
                 elif global_class_name == "Buoy": # BUOY
                     label.append(global_class_name)
                     confidences.append(conf)
