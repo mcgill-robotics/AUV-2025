@@ -14,7 +14,7 @@ import quaternion
 import os
 from sensor_msgs import point_cloud2
 class State:
-    def __init__(self):
+    def __init__(self, isFrontCamState):
         self.x = None
         self.y = None
         self.z = None
@@ -37,8 +37,10 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.camera_info_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
-        self.depth_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updatePointCloud, queue_size=1)
+
+        if isFrontCamState:
+            self.camera_info_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
+            self.depth_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updatePointCloud, queue_size=1)
     def updateCameraInfo(self, msg):
         fx = msg.K[0]
         fy = msg.K[4]
@@ -72,16 +74,15 @@ class State:
         if self.paused: return
         self.theta_z = float(msg.data)
     def updatePointCloud(self, msg):
-        if self.paused or self.y_over_z_map: return
+        if self.paused or self.y_over_z_map is None: return
         depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
-        depth_map += np.random.normal(0, 0.1, depth_map.shape) # [COMP] uncomment no need to add noise!
+        depth_map += np.random.normal(0, 0.1, depth_map.shape) # [COMP] comment no need to add noise!
         depth_map = np.nan_to_num(depth_map, nan=np.inf)
         x_map = self.x_over_z_map * depth_map
         y_map = self.y_over_z_map * depth_map
 
         combined = np.stack((depth_map, x_map, y_map), axis=2)
-        combined = combined.reshape((self.width*self.height, 3))
-        self.point_cloud = combined
+        self.point_cloud = np.float32(combined)
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -208,7 +209,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 
 def cleanPointCloud(point_cloud):
     #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
-    median_blur_size = 10
+    median_blur_size = 5
     point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
     #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
     closest_x_point = np.nanmin(point_cloud[:, :, 0])
@@ -334,7 +335,7 @@ visualisation_pubs = [
 pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
 
 bridge = CvBridge()
-states = (State(), State())
+states = (State(False), State(True))
 
 
 ############## PARAMETERS ##############
