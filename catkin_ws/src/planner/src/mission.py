@@ -10,10 +10,8 @@ from substates.navigate_lane_marker import *
 from substates.utility.controller import *
 from substates.utility.state import *
 from substates.utility.vision import *
-from substates.quali import *
 from substates.trick import *
 from substates.navigate_gate import *
-from substates.quali_quaternion import *
 from substates.quali_vision import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
@@ -148,11 +146,11 @@ if __name__ == '__main__':
         control.move((None,None,-1), callback=lambda a,b: None)
         control.moveDelta((0,0,0), callback=lambda a,b: None)
         control.rotateEuler((0,0,None))
-        while True:
-            control.rotateEuler((0,0,0))
-            control.rotateEuler((0,0,90))
-            control.rotateEuler((0,90,90))
-            control.rotateEuler((-90,0,0))
+        # while True:
+        #     control.rotateEuler((0,0,0))
+        #     control.rotateEuler((0,0,90))
+        #     control.rotateEuler((0,90,90))
+        #     control.rotateEuler((-90,0,0))
             
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
