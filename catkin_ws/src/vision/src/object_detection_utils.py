@@ -37,8 +37,8 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.camera_info_sub = rospy.Subscriber('vision/front_cam/depth/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
-        self.depth_sub = rospy.Subscriber('vision/front_cam/depth/image_rect_raw', Image, self.updatePointCloud, queue_size=1)
+        self.camera_info_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
+        self.depth_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updatePointCloud, queue_size=1)
     def updateCameraInfo(self, msg):
         fx = msg.K[0]
         fy = msg.K[4]

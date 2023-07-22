@@ -9,6 +9,10 @@ from cv_bridge import CvBridge
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
 
+# def algined_cb(msg):
+#     global depth, depth_scale_factor
+#     temp = bridge.imgmsg_to_cv2(msg)
+#     print(temp.shape)
 
 def rbg_callback(msg):
     global rgb
@@ -104,10 +108,11 @@ if __name__ == "__main__":
     else:
         depth_scale_factor = 1000
 
-    camera_info_sub = rospy.Subscriber('/vision/front_cam/depth/camera_info', CameraInfo, camera_info_callback)
-    depth_sub = rospy.Subscriber('/vision/front_cam/depth/image_rect_raw', Image, depth_callback)
+    camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, camera_info_callback)
+    depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
     rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rbg_callback)
     point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=3)
+    # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     fx = None
     fy = None
@@ -124,7 +129,6 @@ if __name__ == "__main__":
     
 
     while not rospy.is_shutdown():
-        
         if not is_sim:
             pub_transform()
             
