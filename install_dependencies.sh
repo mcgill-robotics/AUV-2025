@@ -33,7 +33,7 @@ pip install scipy
 rosdep update
 #IntelRealSense driver
 sudo apt-get install -y ros-noetic-realsense2-camera
-sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
+sudo cp catkin_ws/src/vision/config/99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
 
 
 #IF YOU GET THIS ERROR:
