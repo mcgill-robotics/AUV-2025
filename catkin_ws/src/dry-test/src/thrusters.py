@@ -37,7 +37,7 @@ rospy.sleep(7)
 def forwards_test(t):
     print("----------T{}----------".format(t))
     print("expected output is on PWM {}".format(pins[t]))
-    while True:
+    while not rospy.is_shutdown():
         print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
 
         cmd = reset.copy()
@@ -57,7 +57,7 @@ def simultaneous_forwards_test():
     for t in range(8):
         print_str += " T{} - PWM {} |".format(t+1, pins[t+1])
     print(print_str)
-    while True:
+    while not rospy.is_shutdown():
         print("- spinning at " + str(100*force_amt) + "% max forwards force for 5s")
 
         cmd = [force_to_microseconds(force_amt*MAX_FWD_FORCE)] * 8
@@ -78,7 +78,7 @@ def reset_thrusters():
 rospy.init_node("thrusters_test")
 rospy.on_shutdown(reset_thrusters)
 
-while True:
+while not rospy.is_shutdown():
     print("========== Thrusters Test ==========")
     print("refer to images in dry-test/images for labelled diagrams of thrusters on the AUV")
     print("1. test thrusters one by one")

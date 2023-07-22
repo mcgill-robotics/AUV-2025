@@ -17,7 +17,8 @@ class NavigateGate(smach.State):
     def execute(self, ud):
         print("Starting gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
+        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
         gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(self.state.x, self.state.y))
