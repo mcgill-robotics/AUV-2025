@@ -6,5 +6,6 @@
 		<param name="pixel_format" value="yuyv" />
 		<param name="camera_frame_id" value="/vision/down_cam" />
 		<param name="io_method" value="mmap"/>
+		<remap from="/down_cam" to="/vision/down_cam"/>
 	</node>
 </launch>
