@@ -182,14 +182,14 @@ class State_Aggregator:
     def imu_ang_vel_cb(self, data):
         # TODO - what frame is this relative to (NED)?
         # angular velocity of imu frame relative to global frame
-        w_imu_ned = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
+        w_imu = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
         # anuglar velocity of imu frame relative to global frame  
-        w_imu_global = quaternion.rotate_vectors(self.q_global_ned.inverse(), w_imu_ned)
+        # w_imu_global = quaternion.rotate_vectors(self.q_global_ned.inverse(), w_imu_ned)
 
         # anuglar velocity of auv frame relative to global frame 
-        w_imu_global = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu_global)
-        self.angular_velocity = w_imu_global #TODO - check 
+        w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
+        self.angular_velocity = w_auv #TODO - check 
 
 
     def imu_cb(self, imu_msg):
