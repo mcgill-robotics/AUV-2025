@@ -17,7 +17,7 @@ byte sensor_address;
 MS5803::MS5803(byte address) {
   Wire.begin();
   sensor_address = address;
-  //sensorInit();
+  // sensorInit();
 }
 //Send i2c command
 void MS5803::sendCommand(byte command) {
@@ -45,8 +45,8 @@ void MS5803::readCoefficients() {
 //Initialization steps for sensor
 void MS5803::sensorInit() {
   sendCommand(resetCommand);
-  delay(50);
-  readCoefficients();
+  // delay(50);
+  // readCoefficients();
 }
 
 //Read raw temperature or pressure
