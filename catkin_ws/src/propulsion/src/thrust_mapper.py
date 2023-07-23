@@ -70,6 +70,9 @@ def wrench_to_thrust(w):
     tf.HEAVE_STERN_STAR = converted_w[6]
     tf.HEAVE_STERN_PORT = converted_w[7]
 
+    # this is used by the sim
+    pub_forces.publish(tf)
+
     #Convert forces to pwm signals and publish
     forces_to_pwm_publisher(tf)
 
@@ -100,12 +103,12 @@ def forces_to_pwm_publisher(forces_msg):
             print("INDIVIDUAL FUSE EXCEEDED: T", i+1)
 
     pwm_msg = ThrusterMicroseconds(pwm_arr)
-    pub.publish(pwm_msg)
+    pub_us.publish(pwm_msg)
 
 #turns off the thursters when the node dies
 def shutdown():
     msg = ThrusterMicroseconds([1500]*8)
-    pub.publish(msg)
+    pub_us.publish(msg)
 
 #sends the arming signal to the thursters upon startup
 def re_arm():
@@ -113,16 +116,17 @@ def re_arm():
     msg1  = ThrusterMicroseconds([1500]*8)
     msg2 = ThrusterMicroseconds([1540]*8)
 
-    pub.publish(msg1)
+    pub_us.publish(msg1)
     rospy.sleep(0.5)
-    pub.publish(msg2)
+    pub_us.publish(msg2)
     rospy.sleep(0.5)
-    pub.publish(msg1)
+    pub_us.publish(msg1)
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
-    pub = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
-    sub = rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
+    pub_us = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
+    pub_forces = rospy.Publisher('/propulsion/thruster_forces', ThrusterForces, queue_size=1)
+    rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
     rospy.on_shutdown(shutdown)
     re_arm()
     rospy.spin()
