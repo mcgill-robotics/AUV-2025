@@ -76,7 +76,12 @@ class State:
     def updatePointCloud(self, msg):
         if self.paused or self.y_over_z_map is None: return
         depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
-        depth_map += np.random.normal(0, 0.1, depth_map.shape) # [COMP] comment no need to add noise!
+        #ADD NOISE [COMP] during comp no need to add noise!
+        depth_map += np.random.normal(0, 0.1, depth_map.shape)
+        #SET 20% of point cloud pixels to infinity (imitating incomplete data)
+        pixels_to_remove = np.random.choice([True, False], size=depth_map.shape, replace=True, p=[0.2, 0.8])
+        depth_map[pixels_to_remove] = np.inf
+
         depth_map = np.nan_to_num(depth_map, nan=np.inf)
         x_map = self.x_over_z_map * depth_map
         y_map = self.y_over_z_map * depth_map
@@ -351,8 +356,8 @@ HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 # [COMP] ensure FOV is correct
-down_cam_hfov = 87 #set to 220 when not in sim!
-down_cam_vfov = 65 #set to 165.26 when not in sim!
+down_cam_hfov = 50 #set to 220 when not in sim!
+down_cam_vfov = 28 #set to 165.26 when not in sim!
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 #only report predictions with confidence at least 40%
@@ -360,13 +365,14 @@ detect_every = 5  #run the model every _ frames received (to not eat up too much
 
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
+# [COMP] make sure correct model is loaded
 # down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-# gate_model_filename = pwd + "/models/front_cam_model.pt"
+# front_cam_model_filename = pwd + "/models/front_cam_model.pt"
 down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-gate_model_filename = pwd + "/models/front_cam_sim.pt"
+front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
 model = [
     YOLO(down_cam_model_filename),
-    YOLO(gate_model_filename)
+    YOLO(front_cam_model_filename)
     ]
 for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
