@@ -5,13 +5,12 @@ import smach
 from .utility.functions import *
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, origin_class, control, state, mapping, lane_marker_class):
+    def __init__(self, origin_class, control, state, mapping):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.origin_class = origin_class
-        self.lane_marker_class = lane_marker_class
 
     def execute(self, ud):
         print("Starting lane marker navigation.") 
@@ -20,13 +19,13 @@ class NavigateLaneMarker(smach.State):
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
         
-        if self.origin_class == -1: # use auv current position as origin
+        if self.origin_class == "": # use auv current position as origin
             origin_position = (0,0)
         else:
             origin_obj = self.mapping.getClosestObject(cls=self.origin_class, pos=(self.state.x, self.state.y))
             origin_position = (origin_obj[1], origin_obj[2])
         
-        lane_marker_obj = self.mapping.getClosestObject(cls=self.lane_marker_class, pos=(origin_position[0], origin_position[1]))
+        lane_marker_obj = self.mapping.getClosestObject(cls="Lane Marker", pos=(origin_position[0], origin_position[1]))
         if lane_marker_obj is None:
             print("No lane marker in object map! Failed.")
             return 'failure'

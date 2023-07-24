@@ -59,7 +59,7 @@ def updateMap(obj_i, observation):
     new_y = (num_new_observations*observed_y + num_observations*current_y) / (num_observations + num_new_observations)
     new_z = (num_new_observations*observed_z + num_observations*current_z) / (num_observations + num_new_observations)
 
-    if label == 0: #LANE MARKER HAD TO DEALT WITH DIFFERENTLY FOR THETA Z AND EXTRA_FIELD
+    if label == "Lane Marker": #LANE MARKER HAD TO DEALT WITH DIFFERENTLY FOR THETA Z AND EXTRA_FIELD
         #if no theta z measurement keep current theta z
         if observed_theta_z == -1234.5 and observed_extra_field == -1234.5:
             new_theta_z = current_theta_z
@@ -114,7 +114,7 @@ def updateMap(obj_i, observation):
         elif current_extra_field == -1234.5:
             new_extra_field = observed_extra_field
         else:
-            if label == 1: #GATE, symbol on left (0 or 1) -> take weighted average
+            if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
                 new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
             else: new_extra_field = -1234.5
             #TODO: elif for symbols?

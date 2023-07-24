@@ -5,8 +5,6 @@ import smach
 import numpy as np
 import quaternion
 
-from std_msgs.msg import Float64
-
 class QuaternionTest(smach.StateMachine):
     def __init__(self, control):
         super().__init__(outcomes=['success', 'failure'])
