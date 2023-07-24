@@ -236,11 +236,11 @@ def measureAngle(bbox, global_class_name):
         cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))[:,:,0:2] # ignore z position of points
         left_point_cloud = cropped_point_cloud[:, :int(cropped_point_cloud.shape[1]/2)]
         right_point_cloud = cropped_point_cloud[:, int(cropped_point_cloud.shape[1]/2):]
-        #sum left points together and right points together so we get two very large (x,y) points
-        left_sum_point = np.nansum(left_point_cloud, axis=(0,1))
-        right_sum_point = np.nansum(right_point_cloud, axis=(0,1))
-        #measure angle of summed vector (effectively a weight average where the weight is the magnitude of the vector)
-        return measureYaw(left_sum_point, right_sum_point)
+        #avg left points together and right points together so we get two (x,y) points
+        left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
+        right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
+        #measure angle of vector defined by averaged left/right points
+        return measureYaw(left_avg_point, right_avg_point)
     else: return None
 
 # returns an angle between a horizontal vector (i.e. a vector on the negative y axis) and the vector between a left and right (x,y) point on a gate or buoy
