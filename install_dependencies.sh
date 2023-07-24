@@ -33,7 +33,7 @@ pip install scipy
 rosdep update
 #IntelRealSense driver
 sudo apt-get install -y ros-noetic-realsense2-camera
-sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
+sudo cp catkin_ws/src/vision/config/99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
 
 
 #IF YOU GET THIS ERROR:
@@ -55,3 +55,7 @@ sudo cp 99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules
 # version 2: navigate to /usr/bin, do `rm cmake`
 # open new terminal 
 # FINALLY: run `catkin clean` and build the packages again
+
+
+## INSTALL CUDA IF POSSIBLE:
+##     https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=aarch64-jetson&Compilation=Native&Distribution=Ubuntu&target_version=20.04&target_type=deb_network

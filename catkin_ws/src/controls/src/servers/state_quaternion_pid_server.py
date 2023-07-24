@@ -17,7 +17,7 @@ class StateQuaternionServer(BaseServer):
         self.previous_goal_x = None
         self.previous_goal_y = None
         self.previous_goal_z = None
-        self.min_safe_goal_depth = -3
+        self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
         self.max_safe_goal_depth = -1
         
         self.server.start()        
