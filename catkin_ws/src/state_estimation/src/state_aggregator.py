@@ -34,7 +34,7 @@ class State_Aggregator:
         '''DVL'''
         # mount - dvl frame relative to AUV frame
         self.pos_dvl_mount_auv = np.array([0.0, 0.0, 0.0]) 
-        self.q_dvl_mount_auv = np.quaternion(0, 1, 0, 0) 
+        self.q_dvl_mount_auv = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135)
 
         # measurements in global frame
         self.pos_auv_global_dvl = np.array([0.0, 0.0, 0.0]) 
@@ -156,40 +156,42 @@ class State_Aggregator:
     def dvl_cb(self,data):
         # quaternion of DVL relative to the frame DVL was in when it last reset (dvlref)
         q_dvl_dvlref = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
-        dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
+        q_dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
 
         # position of DVL relative to initial DVL frame (dvlref)
         pos_dvl_dvlref = np.array([data.x, data.y, data.z]) 
 
-        # TODO - this does not work if DVL was on prior to state_aggregator running - should reset frame
-        # if this is the first DVL message, take the current orientation as the DVL reference frame
+        # first dvl message - figure out the location of the dvlref frame
         if self.q_dvlref_global is None:
+            # TODO - uncomment to check frame consistency
+            # q_dvlref_auv = self.q_dvl_mount_auv*q_dvl_dvlref.inverse()
+            # print("q_dvref_auv", q_dvlref_auv)
             self.q_dvlref_global = self.q_auv_global()*self.q_dvl_mount_auv
-            # x,y are arbitrary choice since there is no way to locate dvl relative to global prior
-            self.pos_dvlref_global = np.array([0, 0, self.pos_auv_global()[2]]) 
-            # TODO - compensate for positional offset of dvl
+
+            # find pos_dvlref_global accounting for dvl mounting position - uses current auv_global position
+            # (without previous dvl readings for xy this might be <0, 0, -0.75>)
+            # x,y are arbitrary choice since there is no way to locate dvl relative to global prior to having xy
+            pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
+            pos_dvl_dvlref_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvl_ref)
+            self.pos_dvlref_global = self.pos_auv_global() + pos_dvl_auv_global - pos_dvl_dvlref_global
 
         # quaternion of AUV in global frame
         q_dvl_global = self.q_dvlref_global*q_dvl_dvlref
         self.q_auv_global_dvl = q_dvl_global*self.q_dvl_mount_auv.inverse()
 
         # position of AUV in global frame
-        # assumes global and dvlref at same origin 
-        # (this is a sensible arbitrary choice since we couldn't know if global was somewhere else)
-        self.pos_auv_global_dvl = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
+        pos_dvl_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
+        pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
+        self.pos_auv_global_dvl = pos_dvl_global - pos_dvl_auv_global 
 
 
     def imu_ang_vel_cb(self, data):
-        # TODO - what frame is this relative to (NED)?
-        # angular velocity of imu frame relative to global frame
+        # angular velocity vector relative to imu frame 
         w_imu = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
-        # anuglar velocity of imu frame relative to global frame  
-        # w_imu_global = quaternion.rotate_vectors(self.q_global_ned.inverse(), w_imu_ned)
-
-        # anuglar velocity of auv frame relative to global frame 
+        # anuglar velocity vector relative to AUV frame 
         w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
-        self.angular_velocity = w_auv #TODO - check 
+        self.angular_velocity = w_auv #TODO - rename
 
 
     def imu_cb(self, imu_msg):
