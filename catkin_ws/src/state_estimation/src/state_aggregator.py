@@ -13,6 +13,70 @@ from sbg_driver.msg import SbgImuData
 
 DEG_PER_RAD = 180/np.pi
 
+'''
+Note on variable naming conventions used in this file:
+
+Broadly speaking, a name indicates what frame is being measured
+as well as relative to what frame the measurement is done. 
+
+<type>_<target_frame>_<reference_frame>
+
+Rotations:
+    Ex: q_auv_global should be read as:
+        "a quaternion representing the AUV frame relative to the
+        global frame" 
+            or 
+        "a quaternion that takes the basis vectors of the global frame
+        into the basis vectors of the AUV frame"
+
+    the same rotation can be expressed in euler angles
+    or as a quaternion:
+
+    q_auv_global = np.quaternion(0.707, 0.707, 0, 0) # w, x, y, z
+    euler_auv_global = np.array([180, 0, 0]) # roll/pitch/yaw in degrees
+
+Positions:
+    Ex: pos_dvl_dvlref should be read as:
+        "the position of dvl frame according to the dvlref frame"
+            or
+        "a vector emanating from the origin of dvlref frame, pointing
+        to the origin of dvl frame, as seen in the dvlref frame"
+
+    If a vector is described as: pos_<frame1>_<frame2>_<frame3>
+    the (origins of) first two frames represent the endpoint and 
+    start-point of the vector, <frame3> represents the frame from which 
+    this vector is viewed
+
+    Ex: pos_dvl_dvlref_global should be read as:
+        "a vector emanating from the origin of dvlref frame, pointing
+        to the origin of dvl frame, as seen in the global frame"
+
+    *Notice, a variable described as pos_dvl_dvlref is implicitly 
+    viewed in dvlref frame. 
+
+Mounting positions/rotations are described similarly, to 
+highlight that these entities are static based on the mounting 
+of sensors on the auv the postfix '_mount' is used after
+<target_frame>
+
+    Ex: pos_dvl_mount_auv should be read as:
+    "The position vector from AUV frame to dvl frame
+    (viewed from AUV frame)"
+    here, 'mount' is not a reference frame
+
+We also keep track of q_auv_global/pos_auv_global
+according to several sensors, so the position
+according to the depth sensor data, and imu data are stored in:
+    pos_auv_global__fromds
+    pos_auv_global__fromimu
+
+This is done to disambiguate from pos_auv_global_dvl
+which could be taken to mean "vector from
+global to auv, as seen in dvl frame"
+
+'''
+
+
 class State_Aggregator:
     def __init__(self):
         # global frame relative to NED (North-East-Down)
@@ -98,10 +162,10 @@ class State_Aggregator:
 
     def pos_auv_world(self):
         # AUV position/offset from pos_world (vector as seen in global frame)
-        pos_auv = self.pos_auv_global() - self.pos_world_global
+        pos_auv_world_global = self.pos_auv_global() - self.pos_world_global
 
         # position in world frame
-        pos_auv_world = quaternion.rotate_vectors(self.q_world_global.inverse(), pos_auv)
+        pos_auv_world = quaternion.rotate_vectors(self.q_world_global.inverse(), pos_auv_world_global)
         return pos_auv_world
 
 
