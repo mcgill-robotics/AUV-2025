@@ -21,6 +21,7 @@ catkin_ws/.catkin_tools/
 # submodules
 auv-ign
 catkin_ws/src/auv-sim
+catkin_ws/src/ros_gz
 =========
 #recorded videos
 *.mp4
