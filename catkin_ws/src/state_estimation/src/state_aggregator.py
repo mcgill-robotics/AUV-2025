@@ -11,15 +11,9 @@ from std_msgs.msg import Empty, Float64
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgImuData
 
-
-# angles that change by more than 90 degrees between readings 
-# are assumed to wrap around
-ANGLE_CHANGE_TOL = 90 
-
 DEG_PER_RAD = 180/np.pi
 
 class State_Aggregator:
-
     def __init__(self):
         # global frame relative to NED (North-East-Down)
         self.q_global_ned = np.quaternion(0, 1, 0, 0) # inertial frame, will not change 
@@ -28,8 +22,8 @@ class State_Aggregator:
         self.pos_world_global = np.array([0.0, 0.0, 0.0])
         self.q_world_global = np.quaternion(1, 0, 0, 0)
 
-        # overall angular velocity # TODO - integrate
-        self.angular_velocity = np.array([0.0, 0.0, 0.0])
+        # angular velocity of AUV (AUV frame)
+        self.w_auv = np.array([0.0, 0.0, 0.0])
 
         '''DVL'''
         # mount - dvl frame relative to AUV frame
@@ -68,7 +62,7 @@ class State_Aggregator:
         self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
         self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
         self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
-        self.pub_angular_velocity = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
+        self.pub_w_auv = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
         # TODO - publishers for each sensor for debugging
 
         # subscribers
@@ -190,8 +184,7 @@ class State_Aggregator:
         w_imu = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
         # anuglar velocity vector relative to AUV frame 
-        w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
-        self.angular_velocity = w_auv #TODO - rename
+        self.w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
 
 
     def imu_cb(self, imu_msg):
@@ -289,8 +282,8 @@ class State_Aggregator:
         self.pub_theta_y.publish(euler_auv_world[1])
         self.pub_theta_z.publish(euler_auv_world[2])
 
-        angular_velocity = Vector3(self.angular_velocity[0], self.angular_velocity[1], self.angular_velocity[2])
-        self.pub_angular_velocity.publish(angular_velocity)
+        w_auv = Vector3(self.w_auv[0], self.w_auv[1], self.w_auv[2])
+        self.pub_w_auv.publish(w_auv)
 
 
 if __name__ == '__main__':
