@@ -152,7 +152,7 @@ class State_Aggregator:
     def pos_auv_global(self):
         pos_auv_global = np.zeros(3)
         pos_auv_global[0:2] = self.pos_auv_global__fromdvl[0:2]
-        pos_auv_global[2] = self.pos_auv_global__fromds[2]
+        pos_auv_global[2] = self.pos_auv_global__fromdvl[2] # TODO - use depth sensor when working
         return pos_auv_global 
 
 
@@ -269,6 +269,7 @@ class State_Aggregator:
         # vector from auv to depth sensor expressed in global frame
         pos_ds_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_ds_mount_auv)
 
+        # TODO - accordance between pos from dvl and pos from depth sensor (assume global z=0 at surface?)
         # position (z) of AUV in global frame 
         # Note: x, y may not be zero (due to positional diff. between sensor and AUV center of mass)
         # this is of little consequence as the x,y values from depth sensor are not used
