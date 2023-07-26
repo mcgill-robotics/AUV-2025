@@ -21,7 +21,7 @@ class QualiVision(smach.State):
 
         gate_object = None
         while gate_object is None and not rospy.is_shutdown():
-            gate_object = self.mapping.getClosestObject(cls=self.gate_class, pos=(self.state.x, self.state.y))
+            gate_object = self.mapping.getClosestObject(cls="Quali Gate", pos=(self.state.x, self.state.y))
     
         print("Waiting 5 seconds to improve measurement accuracy")
         rospy.sleep(5)

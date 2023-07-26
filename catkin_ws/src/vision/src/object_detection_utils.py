@@ -232,7 +232,7 @@ def getObjectPositionFrontCam(bbox):
         # TODO! SEPERATE CASE FOR GATE?
 
 def measureAngle(bbox, global_class_name):
-    if global_class_name in ["Gate", "Buoy"]:
+    if global_class_name in ["Gate", "Buoy", "Quali Gate"]:
         cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))[:,:,0:2] # ignore z position of points
         left_point_cloud = cropped_point_cloud[:, :int(cropped_point_cloud.shape[1]/2)]
         right_point_cloud = cropped_point_cloud[:, int(cropped_point_cloud.shape[1]/2):]
