@@ -267,6 +267,7 @@ class State_Aggregator:
 
         # position of AUV in global frame
         pos_dvl_dvlref_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
+        pos_dvl_global = self.pos_dvlref_global + pos_dvl_dvlref_global
         pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
         self.pos_auv_global__fromdvl = pos_dvl_global - pos_dvl_auv_global 
 
