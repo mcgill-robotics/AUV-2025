@@ -11,15 +11,73 @@ from std_msgs.msg import Empty, Float64
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgImuData
 
-
-# angles that change by more than 90 degrees between readings 
-# are assumed to wrap around
-ANGLE_CHANGE_TOL = 90 
-
 DEG_PER_RAD = 180/np.pi
 
-class State_Aggregator:
+'''
+Note on variable naming conventions used in this file:
 
+Broadly speaking, a name indicates what frame is being measured
+as well as relative to what frame the measurement is done. 
+
+<type>_<target_frame>_<reference_frame>
+
+Rotations:
+    Ex: q_auv_global should be read as:
+        "a quaternion representing the AUV frame relative to the
+        global frame" 
+            or 
+        "a quaternion that takes the basis vectors of the global frame
+        into the basis vectors of the AUV frame"
+
+    the same rotation can be expressed in euler angles
+    or as a quaternion:
+
+    q_auv_global = np.quaternion(0.707, 0.707, 0, 0) # w, x, y, z
+    euler_auv_global = np.array([180, 0, 0]) # roll/pitch/yaw in degrees
+
+Positions:
+    Ex: pos_dvl_dvlref should be read as:
+        "the position of dvl frame according to the dvlref frame"
+            or
+        "a vector emanating from the origin of dvlref frame, pointing
+        to the origin of dvl frame, as seen in the dvlref frame"
+
+    If a vector is described as: pos_<frame1>_<frame2>_<frame3>
+    the (origins of) first two frames represent the endpoint and 
+    start-point of the vector, <frame3> represents the frame from which 
+    this vector is viewed
+
+    Ex: pos_dvl_dvlref_global should be read as:
+        "a vector emanating from the origin of dvlref frame, pointing
+        to the origin of dvl frame, as seen in the global frame"
+
+    *Notice, a variable described as pos_dvl_dvlref is implicitly 
+    viewed in dvlref frame. 
+
+Mounting positions/rotations are described similarly, to 
+highlight that these entities are static based on the mounting 
+of sensors on the auv the postfix '_mount' is used after
+<target_frame>
+
+    Ex: pos_dvl_mount_auv should be read as:
+    "The position vector from AUV frame to dvl frame
+    (viewed from AUV frame)"
+    here, 'mount' is not a reference frame
+
+We also keep track of q_auv_global/pos_auv_global
+according to several sensors, so the position
+according to the depth sensor data, and imu data are stored in:
+    pos_auv_global__fromds
+    pos_auv_global__fromimu
+
+This is done to disambiguate from pos_auv_global_dvl
+which could be taken to mean "vector from
+global to auv, as seen in dvl frame"
+
+'''
+
+
+class State_Aggregator:
     def __init__(self):
         # global frame relative to NED (North-East-Down)
         self.q_global_ned = np.quaternion(0, 1, 0, 0) # inertial frame, will not change 
@@ -28,17 +86,17 @@ class State_Aggregator:
         self.pos_world_global = np.array([0.0, 0.0, 0.0])
         self.q_world_global = np.quaternion(1, 0, 0, 0)
 
-        # overall angular velocity # TODO - integrate
-        self.angular_velocity = np.array([0.0, 0.0, 0.0])
+        # angular velocity of AUV (AUV frame)
+        self.w_auv = np.array([0.0, 0.0, 0.0])
 
         '''DVL'''
         # mount - dvl frame relative to AUV frame
         self.pos_dvl_mount_auv = np.array([0.0, 0.0, 0.0]) 
-        self.q_dvl_mount_auv = np.quaternion(0, 1, 0, 0) 
+        self.q_dvl_mount_auv = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135)
 
         # measurements in global frame
-        self.pos_auv_global_dvl = np.array([0.0, 0.0, 0.0]) 
-        self.q_auv_global_dvl = np.quaternion(1, 0, 0, 0) # w, x, y, z 
+        self.pos_auv_global__fromdvl = np.array([0.0, 0.0, 0.0]) 
+        self.q_auv_global__fromdvl = np.quaternion(1, 0, 0, 0) # w, x, y, z 
 
         # DVL measurements are with reference to its initial frame, keep track of orientation of dvl reference wrt global 
         self.pos_dvlref_global = None 
@@ -49,14 +107,14 @@ class State_Aggregator:
         self.pos_ds_mount_auv = np.array([0.0, 0.0, 0.0])
 
         # auv estimates in global frame
-        self.pos_auv_global_ds = np.array([0.0, 0.0, 0.0])
+        self.pos_auv_global__fromds = np.array([0.0, 0.0, 0.0])
 
         '''IMU'''
         # mount - imu frame relative to AUV frame
         self.q_imu_mount_auv = np.quaternion(0, 0, 0, 1) # imu is rotated 180 degrees about z axis relative to AUV frame
 
         # auv estimates in global frame
-        self.q_auv_global_imu = np.quaternion(1, 0, 0, 0) 
+        self.q_auv_global__fromimu = np.quaternion(1, 0, 0, 0) 
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
@@ -68,7 +126,7 @@ class State_Aggregator:
         self.pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
         self.pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
         self.pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
-        self.pub_angular_velocity = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
+        self.pub_w_auv = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
         # TODO - publishers for each sensor for debugging
 
         # subscribers
@@ -93,21 +151,21 @@ class State_Aggregator:
 
     def pos_auv_global(self):
         pos_auv_global = np.zeros(3)
-        pos_auv_global[0:2] = self.pos_auv_global_dvl[0:2]
-        pos_auv_global[2] = self.pos_auv_global_ds[2]
+        pos_auv_global[0:2] = self.pos_auv_global__fromdvl[0:2]
+        pos_auv_global[2] = self.pos_auv_global__fromdvl[2] # TODO - use depth sensor when working
         return pos_auv_global 
 
 
     def q_auv_global(self):
-        return self.q_auv_global_imu 
+        return self.q_auv_global__fromimu 
 
 
     def pos_auv_world(self):
         # AUV position/offset from pos_world (vector as seen in global frame)
-        pos_auv = self.pos_auv_global() - self.pos_world_global
+        pos_auv_world_global = self.pos_auv_global() - self.pos_world_global
 
         # position in world frame
-        pos_auv_world = quaternion.rotate_vectors(self.q_world_global.inverse(), pos_auv)
+        pos_auv_world = quaternion.rotate_vectors(self.q_world_global.inverse(), pos_auv_world_global)
         return pos_auv_world
 
 
@@ -156,40 +214,41 @@ class State_Aggregator:
     def dvl_cb(self,data):
         # quaternion of DVL relative to the frame DVL was in when it last reset (dvlref)
         q_dvl_dvlref = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
-        dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
+        q_dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
 
         # position of DVL relative to initial DVL frame (dvlref)
         pos_dvl_dvlref = np.array([data.x, data.y, data.z]) 
 
-        # TODO - this does not work if DVL was on prior to state_aggregator running - should reset frame
-        # if this is the first DVL message, take the current orientation as the DVL reference frame
+        # first dvl message - figure out the location of the dvlref frame
         if self.q_dvlref_global is None:
+            # TODO - uncomment to check frame consistency
+            # q_dvlref_auv = self.q_dvl_mount_auv*q_dvl_dvlref.inverse()
+            # print("q_dvref_auv", q_dvlref_auv)
             self.q_dvlref_global = self.q_auv_global()*self.q_dvl_mount_auv
-            # x,y are arbitrary choice since there is no way to locate dvl relative to global prior
-            self.pos_dvlref_global = np.array([0, 0, self.pos_auv_global()[2]]) 
-            # TODO - compensate for positional offset of dvl
+
+            # find pos_dvlref_global accounting for dvl mounting position - uses current auv_global position
+            # (without previous dvl readings for xy this might be <0, 0, -0.75>)
+            # x,y are arbitrary choice since there is no way to locate dvl relative to global prior to having xy
+            pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
+            pos_dvl_dvlref_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvl_ref)
+            self.pos_dvlref_global = self.pos_auv_global() + pos_dvl_auv_global - pos_dvl_dvlref_global
 
         # quaternion of AUV in global frame
         q_dvl_global = self.q_dvlref_global*q_dvl_dvlref
-        self.q_auv_global_dvl = q_dvl_global*self.q_dvl_mount_auv.inverse()
+        self.q_auv_global__fromdvl = q_dvl_global*self.q_dvl_mount_auv.inverse()
 
         # position of AUV in global frame
-        # assumes global and dvlref at same origin 
-        # (this is a sensible arbitrary choice since we couldn't know if global was somewhere else)
-        self.pos_auv_global_dvl = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
+        pos_dvl_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
+        pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
+        self.pos_auv_global__fromdvl = pos_dvl_global - pos_dvl_auv_global 
 
 
     def imu_ang_vel_cb(self, data):
-        # TODO - what frame is this relative to (NED)?
-        # angular velocity of imu frame relative to global frame
+        # angular velocity vector relative to imu frame 
         w_imu = np.array([data.gyro.x, data.gyro.y, data.gyro.z])
 
-        # anuglar velocity of imu frame relative to global frame  
-        # w_imu_global = quaternion.rotate_vectors(self.q_global_ned.inverse(), w_imu_ned)
-
-        # anuglar velocity of auv frame relative to global frame 
-        w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
-        self.angular_velocity = w_auv #TODO - check 
+        # anuglar velocity vector relative to AUV frame 
+        self.w_auv = quaternion.rotate_vectors(self.q_imu_mount_auv, w_imu)
 
 
     def imu_cb(self, imu_msg):
@@ -200,7 +259,7 @@ class State_Aggregator:
         # quaternion of AUV in global frame
         # sensor is mounted, may be oriented differently from AUV axes
         q_imu_global = self.q_global_ned.inverse()*q_imu_ned
-        self.q_auv_global_imu = q_imu_global*self.q_imu_mount_auv.inverse()
+        self.q_auv_global__fromimu = q_imu_global*self.q_imu_mount_auv.inverse()
 
 
     def depth_sensor_cb(self, depth_msg):
@@ -210,10 +269,11 @@ class State_Aggregator:
         # vector from auv to depth sensor expressed in global frame
         pos_ds_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_ds_mount_auv)
 
+        # TODO - accordance between pos from dvl and pos from depth sensor (assume global z=0 at surface?)
         # position (z) of AUV in global frame 
         # Note: x, y may not be zero (due to positional diff. between sensor and AUV center of mass)
         # this is of little consequence as the x,y values from depth sensor are not used
-        self.pos_auv_global_ds = pos_ds_global - pos_ds_auv_global 
+        self.pos_auv_global__fromds = pos_ds_global - pos_ds_auv_global 
 
 
     '''
@@ -287,8 +347,8 @@ class State_Aggregator:
         self.pub_theta_y.publish(euler_auv_world[1])
         self.pub_theta_z.publish(euler_auv_world[2])
 
-        angular_velocity = Vector3(self.angular_velocity[0], self.angular_velocity[1], self.angular_velocity[2])
-        self.pub_angular_velocity.publish(angular_velocity)
+        w_auv = Vector3(self.w_auv[0], self.w_auv[1], self.w_auv[2])
+        self.pub_w_auv.publish(w_auv)
 
 
 if __name__ == '__main__':
