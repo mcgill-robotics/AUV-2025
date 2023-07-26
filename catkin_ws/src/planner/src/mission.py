@@ -45,7 +45,7 @@ def gateMission():
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished gate mission. Result {}".format(res))

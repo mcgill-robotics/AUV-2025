@@ -142,6 +142,16 @@ def detect_on_image(raw_img, camera_id):
                     obj_z.append(pred_obj_z) 
                     obj_theta_z.append(None)
                     extra_field.append(None)
+                elif global_class_name == "Quali Gate": # QUALI GATE
+                    label.append(global_class_name)
+                    confidences.append(conf)
+                    theta_z = measureAngle(bbox, global_class_name)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
+                    obj_x.append(pred_obj_x)
+                    obj_y.append(pred_obj_y)
+                    obj_z.append(pred_obj_z) 
+                    obj_theta_z.append(theta_z)
+                    extra_field.append(None)
 
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
     obj_theta_z = [x if not x is None else -1234.5 for x in obj_theta_z]
