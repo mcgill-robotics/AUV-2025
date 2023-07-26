@@ -192,6 +192,61 @@ def find_intersection(vector, plane_z_pos):
     if scaling_factor < 0: return None
     return np.array(vector) * scaling_factor
 
+def eulerToVectorFrontCam(x_deg, y_deg):
+    x_rad = math.radians(x_deg)
+    y_rad = math.radians(y_deg)
+    y = math.tan(x_rad)
+    z = -math.tan(y_rad)
+    # we want sqrt(x**2 + y**2 + z**2) == 1
+    #   x**2 == 1 - y**2 + z**2
+    #   x == sqrt(1 - y**2 + z**2)
+    try:
+        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([0,y,z])
+        vec = vec / np.linalg.norm(vec)
+    return vec
+
+def getObjectPosition(pixel_x, pixel_y, img_height, img_width, dist_from_camera=None, z_pos=None):
+    if dist_from_camera is not None: # ASSUMES FRONT CAMERA
+        #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+        x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
+        y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
+        #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+        #assuming FOV increases linearly with distance from center pixel
+        yaw_angle_offset = front_cam_hfov*x_center_offset
+        pitch_angle_offset = front_cam_vfov*y_center_offset
+        
+        direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
+        vector_to_object = direction_to_object * dist_from_camera
+        
+        #convert local offsets to global offsets using tf transform library
+        x,y,z = transformLocalToGlobal(vector_to_object[0], vector_to_object[1], vector_to_object[2], 1)
+        return x,y,z
+    elif z_pos is not None: # ASSUMES DOWN CAMERA
+        #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+        x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
+        y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
+        #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+        #assuming FOV increases linearly with distance from center pixel
+        roll_angle_offset = down_cam_hfov*x_center_offset
+        pitch_angle_offset = down_cam_vfov*y_center_offset
+
+        local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
+        global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
+
+        # solve for point that is defined by the intersection of the direction to the object and it's z position
+        obj_pos = find_intersection(global_direction_to_object, z_pos)
+        if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
+        x = obj_pos[0]
+        y = obj_pos[1]
+        z = z_pos
+        return x, y, z
+    else:
+        print("! ERROR: Not enough information to calculate a position! Require at least a known z position or a distance from the camera.")
+        return None, None, None
+
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
     x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
@@ -351,6 +406,18 @@ max_dist_to_measure = 10
 pool_depth = -4
 lane_marker_z = pool_depth + 0.3
 octagon_table_z = pool_depth + 1.2
+gate_middle_z = pool_depth + 2
+buoy_middle_z = pool_depth + 1.75
+quali_gate_middle_z = pool_depth + 1.75
+
+# [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
+quali_gate_height = 2
+quali_gate_width = 3
+gate_height = 1.5 
+gate_width = 3
+buoy_width = 1.2
+buoy_height = 1.2
+
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
@@ -358,6 +425,8 @@ TEXT_COLOR = (0, 0, 0) # Black
 # [COMP] ensure FOV is correct
 down_cam_hfov = 50 #set to 220 when not in sim!
 down_cam_vfov = 28 #set to 165.26 when not in sim!
+front_cam_hfov = 90
+front_cam_vfov = 60
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 #only report predictions with confidence at least 40%
