@@ -92,7 +92,7 @@ class State_Aggregator:
         '''DVL'''
         # mount - dvl frame relative to AUV frame
         self.pos_dvl_mount_auv = np.array([0.0, 0.0, 0.0]) 
-        self.q_dvl_mount_auv = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135)
+        self.q_dvl_mount_auv = np.quaternion(1, 0, 0, 0) # RPY [deg]: (180, 0, -135)
 
         # measurements in global frame
         self.pos_auv_global__fromdvl = np.array([0.0, 0.0, 0.0]) 
@@ -111,7 +111,7 @@ class State_Aggregator:
 
         '''IMU'''
         # mount - imu frame relative to AUV frame
-        self.q_imu_mount_auv = np.quaternion(0, 0, 0, 1) # imu is rotated 180 degrees about z axis relative to AUV frame
+        self.q_imu_mount_auv = np.quaternion(1, 0, 0, 0) # imu is rotated 180 degrees about z axis relative to AUV frame
 
         # auv estimates in global frame
         self.q_auv_global__fromimu = np.quaternion(1, 0, 0, 0) 
@@ -230,7 +230,7 @@ class State_Aggregator:
             # (without previous dvl readings for xy this might be <0, 0, -0.75>)
             # x,y are arbitrary choice since there is no way to locate dvl relative to global prior to having xy
             pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
-            pos_dvl_dvlref_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvl_ref)
+            pos_dvl_dvlref_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
             self.pos_dvlref_global = self.pos_auv_global() + pos_dvl_auv_global - pos_dvl_dvlref_global
 
         # quaternion of AUV in global frame
