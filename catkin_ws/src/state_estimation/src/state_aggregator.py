@@ -12,6 +12,7 @@ from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgImuData
 
 DEG_PER_RAD = 180/np.pi
+RAD_PER_DEG = np.pi/180
 
 '''
 Note on variable naming conventions used in this file:
@@ -92,11 +93,12 @@ class State_Aggregator:
         '''DVL'''
         # mount - dvl frame relative to AUV frame
         self.pos_dvl_mount_auv = np.array([0.0, 0.0, 0.0]) 
-        self.q_dvl_mount_auv = np.quaternion(1, 0, 0, 0) # RPY [deg]: (180, 0, -135)
+        # self.q_dvl_mount_auv = np.quaternion(1, 0, 0, 0) 
+        self.q_dvl_mount_auv = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135)
 
         # measurements in global frame
-        self.pos_auv_global__fromdvl = np.array([0.0, 0.0, 0.0]) 
-        self.q_auv_global__fromdvl = np.quaternion(1, 0, 0, 0) # w, x, y, z 
+        self.pos_auv_global__fromdvl = None # np.array([0.0, 0.0, 0.0]) 
+        self.q_auv_global__fromdvl = None # np.quaternion(1, 0, 0, 0) # w, x, y, z 
 
         # DVL measurements are with reference to its initial frame, keep track of orientation of dvl reference wrt global 
         self.pos_dvlref_global = None 
@@ -107,14 +109,14 @@ class State_Aggregator:
         self.pos_ds_mount_auv = np.array([0.0, 0.0, 0.0])
 
         # auv estimates in global frame
-        self.pos_auv_global__fromds = np.array([0.0, 0.0, 0.0])
+        self.pos_auv_global__fromds = None # np.array([0.0, 0.0, 0.0])
 
         '''IMU'''
         # mount - imu frame relative to AUV frame
         self.q_imu_mount_auv = np.quaternion(1, 0, 0, 0) # imu is rotated 180 degrees about z axis relative to AUV frame
 
         # auv estimates in global frame
-        self.q_auv_global__fromimu = np.quaternion(1, 0, 0, 0) 
+        self.q_auv_global__fromimu = None # np.quaternion(1, 0, 0, 0) 
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
@@ -150,6 +152,9 @@ class State_Aggregator:
         '''
 
     def pos_auv_global(self):
+        if self.pos_auv_global__fromdvl is None:
+            return None
+        
         pos_auv_global = np.zeros(3)
         pos_auv_global[0:2] = self.pos_auv_global__fromdvl[0:2]
         pos_auv_global[2] = self.pos_auv_global__fromdvl[2] # TODO - use depth sensor when working
@@ -161,6 +166,9 @@ class State_Aggregator:
 
 
     def pos_auv_world(self):
+        if self.pos_auv_global() is None or self.q_auv_global() is None:
+            return None
+
         # AUV position/offset from pos_world (vector as seen in global frame)
         pos_auv_world_global = self.pos_auv_global() - self.pos_world_global
 
@@ -170,6 +178,9 @@ class State_Aggregator:
 
 
     def q_auv_world(self):
+        if self.q_auv_global() is None:
+            return None
+
         q_auv_world = self.q_world_global.inverse()*self.q_auv_global()
         return q_auv_world 
         
@@ -179,6 +190,9 @@ class State_Aggregator:
         The use of euler angles is for backward compatibility
         to publish data to state_theta_* topics
         '''
+        if self.q_auv_world() is None:
+            return None
+
         # calculate euler angles based on self.q_auv_world
         # *note* the tf.transformations module is used instead of
         # quaternion package because it gives the euler angles
@@ -212,8 +226,12 @@ class State_Aggregator:
     '''
 
     def dvl_cb(self,data):
+        # TODO - we need this to get the first knowledge of dvlref
+        if self.q_auv_global() is None:
+            return 
+
         # quaternion of DVL relative to the frame DVL was in when it last reset (dvlref)
-        q_dvl_dvlref = transformations.quaternion_from_euler(data.roll, data.pitch, data.yaw)
+        q_dvl_dvlref = transformations.quaternion_from_euler(data.roll*RAD_PER_DEG, data.pitch*RAD_PER_DEG, data.yaw*RAD_PER_DEG)
         q_dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [w, x, y, z]
 
         # position of DVL relative to initial DVL frame (dvlref)
@@ -221,9 +239,7 @@ class State_Aggregator:
 
         # first dvl message - figure out the location of the dvlref frame
         if self.q_dvlref_global is None:
-            # TODO - uncomment to check frame consistency
-            # q_dvlref_auv = self.q_dvl_mount_auv*q_dvl_dvlref.inverse()
-            # print("q_dvref_auv", q_dvlref_auv)
+            print("reset dvlref_global")
             self.q_dvlref_global = self.q_auv_global()*self.q_dvl_mount_auv
 
             # find pos_dvlref_global accounting for dvl mounting position - uses current auv_global position
@@ -241,6 +257,15 @@ class State_Aggregator:
         pos_dvl_global = quaternion.rotate_vectors(self.q_dvlref_global, pos_dvl_dvlref)
         pos_dvl_auv_global = quaternion.rotate_vectors(self.q_auv_global(), self.pos_dvl_mount_auv)
         self.pos_auv_global__fromdvl = pos_dvl_global - pos_dvl_auv_global 
+
+        # TODO - uncomment to check frame consistency
+        q_dvlref_auv = self.q_dvl_mount_auv*q_dvl_dvlref.inverse()
+        print("euler_dvl_dvlref", data.roll, data.pitch, data.yaw)
+        print("q_dvl_dvlref", 2*np.arccos(q_dvl_dvlref.w)*DEG_PER_RAD)
+        print("q_dvlref_global", 2*np.arccos(self.q_dvlref_global.w)*DEG_PER_RAD)
+        print("q_dvl_global", 2*np.arccos(q_dvl_global.w)*DEG_PER_RAD)
+        print("q_auv_global", 2*np.arccos(self.q_auv_global().w)*DEG_PER_RAD)
+        print("----------------------")
 
 
     def imu_ang_vel_cb(self, data):
@@ -324,6 +349,10 @@ class State_Aggregator:
         pos_auv_world = self.pos_auv_world()
         q_auv_world = self.q_auv_world()
         euler_auv_world = self.euler_auv_world()
+
+        # TODO - more precise when missing data
+        if pos_auv_world is None or q_auv_world is None:
+            return
 
         # publish AUV pose (relative to world)
         position = Point(x=pos_auv_world[0], y=pos_auv_world[1], z=pos_auv_world[2]) 
