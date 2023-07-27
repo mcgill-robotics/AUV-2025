@@ -37,8 +37,8 @@ def camera_info_callback(msg):
     u_map = np.tile(np.arange(width),(height,1)) +1
     v_map = np.tile(np.arange(height),(width,1)).T +1
 
-    x_over_z_map = (cx - u_map) / fx
-    y_over_z_map = (cy - v_map) / fy
+    x_over_z_map = (u_map - cx) / fx
+    y_over_z_map = (v_map - cy) / fy
 
 
 def convert_from_uvd(color, z_map):
@@ -48,7 +48,7 @@ def convert_from_uvd(color, z_map):
         time = rospy.Time(0)
         xyz_rbg_img = np.zeros((height, width, 6))
         xyz_rbg_img[:, :, 3:6] = color
-        
+        # xyz_rbg_img[:,:,2] *= -1
 
         # z_map = np.nan_to_num(z_map, 100)
         # z_map[z_map == 0] = 100
