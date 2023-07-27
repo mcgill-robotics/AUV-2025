@@ -203,7 +203,7 @@ def estimateObjectPositionFrontCam(pixel_x, pixel_y, img_height, img_width, z_po
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = find_intersection(global_direction_to_object, z_pos)
-    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
+    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return np.inf, np.inf, np.inf
     x = obj_pos[0]
     y = obj_pos[1]
     z = z_pos
@@ -241,17 +241,11 @@ def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name):
     bottom_x, bottom_y, bottom_z = estimateObjectPositionFrontCam(bottom[0], bottom[1], img_height, img_width, obj_center_z - obj_height/2)
     bottom_z += obj_height/2
 
-    # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
-    center_dist = np.linalg.norm(np.array([center_x, center_y, center_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    top_dist = np.linalg.norm(np.array([top_x, top_y, top_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    bottom_dist = np.linalg.norm(np.array([bottom_x, bottom_y, bottom_z]) - np.array([states[1].x, states[1].y, states[1].z]))
+    median_x = np.median(np.array([center_x, top_x, bottom_x]))
+    median_y = np.median(np.array([center_y, top_y, bottom_y]))
+    median_z = np.median(np.array([center_z, top_z, bottom_z]))
 
-    max_dist = max(max(center_dist, top_dist), bottom_dist)
-    min_dist = min(min(center_dist, top_dist), bottom_dist)
-
-    if max_dist != top_dist and min_dist != top_dist: return top_x, top_y, top_z
-    elif max_dist != bottom_dist and min_dist != bottom_dist: return bottom_x, bottom_y, bottom_z
-    else: return center_x, center_y, center_z
+    return median_x, median_y, median_z
 
 
 def measureAngle(bbox, img_height, img_width, global_class_name):
@@ -276,7 +270,7 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     bottom_right = (int(bbox[0] + bbox[2]/2), int(bbox[1] + bbox[3]/2))
 
     # GET LEFT POINT
-    left_x, left_y, left_z = estimateObjectPositionFrontCam(left[0], left[1], img_height, img_width, obj_center_z)
+    left_x, left_y, _ = estimateObjectPositionFrontCam(left[0], left[1], img_height, img_width, obj_center_z)
 
     top_left_x, top_left_y, top_left_z = estimateObjectPositionFrontCam(top_left[0], top_left[1], img_height, img_width, obj_center_z + obj_height/2)
     top_left_z -= obj_height/2
@@ -285,19 +279,13 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     bottom_left_z += obj_height/2
 
     # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
-    left_dist = np.linalg.norm(np.array([left_x, left_y, left_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    top_dist = np.linalg.norm(np.array([top_left_x, top_left_y, top_left_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    bottom_dist = np.linalg.norm(np.array([bottom_left_x, bottom_left_y, bottom_left_z]) - np.array([states[1].x, states[1].y, states[1].z]))
+    median_left_x = np.median(np.array([left_x, top_left_x, bottom_left_x]))
+    median_left_y = np.median(np.array([left_y, top_left_y, bottom_left_y]))
 
-    max_dist = max(max(left_dist, top_dist), bottom_dist)
-    min_dist = min(min(left_dist, top_dist), bottom_dist)
-
-    if max_dist != top_dist and min_dist != top_dist: leftPoint = [top_left_x, top_left_y]
-    elif max_dist != bottom_dist and min_dist != bottom_dist: leftPoint = [bottom_left_x, bottom_left_y]
-    else: leftPoint = [left_x, left_y]
+    left_point = [median_left_x, median_left_y]
 
     # GET RIGHT POINT
-    right_x, right_y, right_z = estimateObjectPositionFrontCam(right[0], right[1], img_height, img_width, obj_center_z)
+    right_x, right_y, _ = estimateObjectPositionFrontCam(right[0], right[1], img_height, img_width, obj_center_z)
 
     top_right_x, top_right_y, top_right_z = estimateObjectPositionFrontCam(top_right[0], top_right[1], img_height, img_width, obj_center_z + obj_height/2)
     top_right_z -= obj_height/2
@@ -306,18 +294,12 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     bottom_right_z += obj_height/2
 
     # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
-    right_dist = np.linalg.norm(np.array([right_x, right_y, right_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    top_dist = np.linalg.norm(np.array([top_right_x, top_right_y, top_right_z]) - np.array([states[1].x, states[1].y, states[1].z]))
-    bottom_dist = np.linalg.norm(np.array([bottom_right_x, bottom_right_y, bottom_right_z]) - np.array([states[1].x, states[1].y, states[1].z]))
+    median_right_x = np.median(np.array([right_x, top_right_x, bottom_right_x]))
+    median_right_y = np.median(np.array([right_y, top_right_y, bottom_right_y]))
 
-    max_dist = max(max(right_dist, top_dist), bottom_dist)
-    min_dist = min(min(right_dist, top_dist), bottom_dist)
-
-    if max_dist != top_dist and min_dist != top_dist: rightPoint = [top_right_x, top_right_y]
-    elif max_dist != bottom_dist and min_dist != bottom_dist: rightPoint = [bottom_right_x, bottom_right_y]
-    else: rightPoint = [right_x, right_y]
+    right_point = [median_right_x, median_right_y]
     
-    return measureYaw(leftPoint, rightPoint)
+    return measureYaw(left_point, right_point)
 
 
 # returns an angle between a horizontal vector (i.e. a vector on the negative y axis) and the vector between a left and right (x,y) point on a gate or buoy
