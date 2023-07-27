@@ -1,12 +1,12 @@
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image, PointCloud2, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo
 from ultralytics import YOLO
 from auv_msgs.msg import ObjectDetectionFrame
 import numpy as np
 import math
-from std_msgs.msg import Float64, Header
+from std_msgs.msg import Float64
 import lane_marker_measure
 import torch
 from geometry_msgs.msg import Pose
@@ -22,6 +22,7 @@ class State:
         self.theta_z = None
         self.paused = False
         self.q_auv = None
+        self.pixelCoordinateToEulerFrontCam = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -30,7 +31,26 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-
+        self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
+    def updateCameraInfo(self, msg):
+        # fx = msg.K[0]
+        # fy = msg.K[4]
+        # cy = msg.K[2]
+        # cx = msg.K[5]
+        self.Ki = np.linalg.inv(np.array(msg.K))
+        def pixelCoordinateToEulerFrontCam(x, y, img_w, img_h):
+            #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+            # x_center_offset = ((img_w/2) - x) / img_w #-0.5 to 0.5
+            # y_center_offset = (y - (img_h/2)) / img_h #negated since y goes from top to bottom
+            #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+            #assuming FOV increases linearly with distance from center pixel
+            # yaw_angle_offset = front_cam_hfov*x_center_offset
+            # pitch_angle_offset = front_cam_vfov*y_center_offset
+            # TEST! NO IDEA IF THIS WORKS
+            return self.Ki.dot([x, y, 1.0])
+            
+        self.pixelCoordinateToEulerFrontCam = pixelCoordinateToEulerFrontCam
+        self.camera_info_sub.unregister()
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -190,20 +210,14 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     return x, y, z
 
 def estimateObjectPositionFrontCam(pixel_x, pixel_y, img_height, img_width, z_pos):
-    #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
-    x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
-    y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
-    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
-    #assuming FOV increases linearly with distance from center pixel
-    yaw_angle_offset = front_cam_hfov*x_center_offset
-    pitch_angle_offset = front_cam_vfov*y_center_offset
+    yaw_angle_offset, pitch_angle_offset = states[1].pixelCoordinateToEulerFrontCam(pixel_x, pixel_y, img_width, img_height)
 
     local_direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
     global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = find_intersection(global_direction_to_object, z_pos)
-    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return np.inf, np.inf, np.inf
+    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[1].x, states[1].y, states[1].z])) > max_dist_to_measure: return np.inf, np.inf, np.inf
     x = obj_pos[0]
     y = obj_pos[1]
     z = z_pos
