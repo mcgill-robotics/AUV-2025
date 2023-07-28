@@ -117,8 +117,8 @@ class State_Aggregator:
     def pos_auv_global(self):
         pos_auv_global = np.zeros(3)
 
-        pos_auv_global[0:2] = self.dvl.pos_auv_global()[0:2]        # xy
-        pos_auv_global[2] = self.depth_sensor.pos_auv_global()[2]   # z
+        pos_auv_global[0:2] = self.dvl.pos_auv_global(self.q_auv_global())[0:2]        # xy
+        pos_auv_global[2] = self.depth_sensor.pos_auv_global(self.q_auv_global())[2]   # z
 
         return pos_auv_global 
 
@@ -127,7 +127,7 @@ class State_Aggregator:
         return self.imu.q_auv_global()
 
 
-    def q_auv(self):
+    def w_auv(self):
         return self.imu.w_auv()
 
 
@@ -235,23 +235,33 @@ class State_Aggregator:
     '''
 
     def initialize(self):
+        # TODO - does this update state while blocked? could be issue using old q_auv_global
         # TODO - redundancy if sensors are not active
         # TODO - handle if sensor goes inactive 
         # wait for data from imu
         while self.imu.q_auv_global() is None or self.imu.w_auv() is None:
             pass
 
+        # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
-        while self.depth_sensor.pos_auv_global() is None:
+        while self.depth_sensor.pos_auv_global(self.q_auv_global()) is None:
             pass
 
         # set dvlref frame which is reference to dvl readings, 
         # xy are arbitrarily set to whatever depth_sensor thinks
         # (this may be something other than 0, 0 after accounting for mounting location)
-        self.dvl.set_dvlref_global(self.imu.q_auv_global, self.depth_sensor.pos_auv_global)
+        # wait for dvl data (without which we can't set dvlref)
+        dvl_active = False
+        while not dvl_active:
+            try:
+                self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
+                dvl_active = True
+            except:
+                rospy.sleep(1) # TODO - doesn't work with just pass (?)
 
-        # wait for data from dvl
-        while self.dvl.pos_auv_global() is None or self.dvl.q_auv_global() is None:
+
+        # wait for data from dvl TODO - redundant?
+        while self.dvl.pos_auv_global(self.q_auv_global()) is None or self.dvl.q_auv_global() is None:
             pass
 
 
