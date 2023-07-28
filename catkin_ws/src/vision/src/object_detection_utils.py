@@ -31,26 +31,26 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
-    def updateCameraInfo(self, msg):
-        # fx = msg.K[0]
-        # fy = msg.K[4]
-        # cy = msg.K[2]
-        # cx = msg.K[5]
-        self.Ki = np.linalg.inv(np.array(msg.K))
-        def pixelCoordinateToEulerFrontCam(x, y, img_w, img_h):
-            #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
-            # x_center_offset = ((img_w/2) - x) / img_w #-0.5 to 0.5
-            # y_center_offset = (y - (img_h/2)) / img_h #negated since y goes from top to bottom
-            #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
-            #assuming FOV increases linearly with distance from center pixel
-            # yaw_angle_offset = front_cam_hfov*x_center_offset
-            # pitch_angle_offset = front_cam_vfov*y_center_offset
-            # TEST! NO IDEA IF THIS WORKS
-            return self.Ki.dot([x, y, 1.0])
-            
-        self.pixelCoordinateToEulerFrontCam = pixelCoordinateToEulerFrontCam
-        self.camera_info_sub.unregister()
+        # self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
+    # def updateCameraInfo(self, msg):
+    #     # fx = msg.K[0]
+    #     # fy = msg.K[4]
+    #     # cy = msg.K[2]
+    #     # cx = msg.K[5]
+    #     self.Ki = np.linalg.inv(np.array(msg.K))
+    #     self.pixelCoordinateToEulerFrontCam = pixelCoordinateToEulerFrontCam
+    #     self.camera_info_sub.unregister()
+    # return self.Ki.dot([x, y, 1.0])
+    def pixelCoordinateToEulerFrontCam(self, x, y, img_w, img_h):
+        #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+        x_center_offset = ((img_w/2) - x) / img_w #-0.5 to 0.5
+        y_center_offset = (y - (img_h/2)) / img_h #negated since y goes from top to bottom
+        #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+        #assuming FOV increases linearly with distance from center pixel
+        yaw_angle_offset = front_cam_hfov*x_center_offset
+        pitch_angle_offset = front_cam_vfov*y_center_offset
+        # TEST! NO IDEA IF THIS WORKS
+        return yaw_angle_offset, pitch_angle_offset        
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -217,13 +217,13 @@ def estimateObjectPositionFrontCam(pixel_x, pixel_y, img_height, img_width, z_po
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = find_intersection(global_direction_to_object, z_pos)
-    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[1].x, states[1].y, states[1].z])) > max_dist_to_measure: return np.inf, np.inf, np.inf
+    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[1].x, states[1].y, states[1].z])) > max_dist_to_measure: return np.nan, np.nan, np.nan
     x = obj_pos[0]
     y = obj_pos[1]
     z = z_pos
     return x, y, z
     
-def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name):
+def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name, custom_z=None, custom_height=None):
     if global_class_name == "Gate":
         obj_center_z = gate_middle_z
         obj_height = gate_height
@@ -239,7 +239,9 @@ def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name):
     elif global_class_name == "Lane Marker": 
         obj_center_z = lane_marker_top_z - lane_marker_height/2
         obj_height = lane_marker_height 
-    else: return None
+    else:
+        obj_center_z = custom_z
+        obj_height = custom_height
 
     #TRY WITH DIFFERENT POINTS IN THE BBOX THAT WE KNOW THE Z POSITION OF:
     # NOTE: a later improvement could (maybe) be to use the corners as well (more complex, not sure if it will be more accurate or not)
@@ -250,14 +252,16 @@ def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name):
     center_x, center_y, center_z = estimateObjectPositionFrontCam(center[0], center[1], img_height, img_width, obj_center_z)
 
     top_x, top_y, top_z = estimateObjectPositionFrontCam(top[0], top[1], img_height, img_width, obj_center_z + obj_height/2)
-    top_z -= obj_height/2
+    if top_z is not np.nan: top_z -= obj_height/2
     
     bottom_x, bottom_y, bottom_z = estimateObjectPositionFrontCam(bottom[0], bottom[1], img_height, img_width, obj_center_z - obj_height/2)
-    bottom_z += obj_height/2
+    if bottom_x is not np.nan: bottom_z += obj_height/2
 
-    median_x = np.median(np.array([center_x, top_x, bottom_x]))
-    median_y = np.median(np.array([center_y, top_y, bottom_y]))
-    median_z = np.median(np.array([center_z, top_z, bottom_z]))
+    median_x = np.nanmedian(np.array([center_x, top_x, bottom_x]))
+    median_y = np.nanmedian(np.array([center_y, top_y, bottom_y]))
+    median_z = np.nanmedian(np.array([center_z, top_z, bottom_z]))
+
+    if np.nan in [median_x, median_y, median_z]: return None, None, None
 
     return median_x, median_y, median_z
 
@@ -287,14 +291,14 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     left_x, left_y, _ = estimateObjectPositionFrontCam(left[0], left[1], img_height, img_width, obj_center_z)
 
     top_left_x, top_left_y, top_left_z = estimateObjectPositionFrontCam(top_left[0], top_left[1], img_height, img_width, obj_center_z + obj_height/2)
-    top_left_z -= obj_height/2
+    if top_left_z is not np.nan: top_left_z -= obj_height/2
 
     bottom_left_x, bottom_left_y, bottom_left_z = estimateObjectPositionFrontCam(bottom_left[0], bottom_left[1], img_height, img_width, obj_center_z - obj_height/2)
-    bottom_left_z += obj_height/2
+    if bottom_left_z is not np.nan: bottom_left_z += obj_height/2
 
     # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
-    median_left_x = np.median(np.array([left_x, top_left_x, bottom_left_x]))
-    median_left_y = np.median(np.array([left_y, top_left_y, bottom_left_y]))
+    median_left_x = np.nanmedian(np.array([left_x, top_left_x, bottom_left_x]))
+    median_left_y = np.nanmedian(np.array([left_y, top_left_y, bottom_left_y]))
 
     left_point = [median_left_x, median_left_y]
 
@@ -302,16 +306,18 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     right_x, right_y, _ = estimateObjectPositionFrontCam(right[0], right[1], img_height, img_width, obj_center_z)
 
     top_right_x, top_right_y, top_right_z = estimateObjectPositionFrontCam(top_right[0], top_right[1], img_height, img_width, obj_center_z + obj_height/2)
-    top_right_z -= obj_height/2
+    if top_right_z is not np.nan: top_right_z -= obj_height/2
 
     bottom_right_x, bottom_right_y, bottom_right_z = estimateObjectPositionFrontCam(bottom_right[0], bottom_right[1], img_height, img_width, obj_center_z - obj_height/2)
-    bottom_right_z += obj_height/2
+    if bottom_right_z is not np.nan: bottom_right_z += obj_height/2
 
     # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
-    median_right_x = np.median(np.array([right_x, top_right_x, bottom_right_x]))
-    median_right_y = np.median(np.array([right_y, top_right_y, bottom_right_y]))
+    median_right_x = np.nanmedian(np.array([right_x, top_right_x, bottom_right_x]))
+    median_right_y = np.nanmedian(np.array([right_y, top_right_y, bottom_right_y]))
 
     right_point = [median_right_x, median_right_y]
+
+    if np.nan in right_point or np.nan in left_point: return None
     
     return measureYaw(left_point, right_point)
 
@@ -351,8 +357,8 @@ def analyzeGate(detections):
     else: return 0.0
 
 def analyzeBuoy(detections, img_height, img_width):
-    symbols = []
-    buoy_was_detected = False
+    symbol_info = []
+    buoy_bbox = None
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
         else: boxes = detection.boxes.numpy()
@@ -362,14 +368,19 @@ def analyzeBuoy(detections, img_height, img_width):
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
             if (global_class_name == "Buoy"):
-                buoy_was_detected = True
-                continue
+                buoy_bbox = bbox
             elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
-                x,y,z = getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name)
-                symbols.append([global_class_name, x, y, z, conf])
+                symbol_info.append((bbox, global_class_name))
+    
+    if buoy_bbox is None: return []
 
-    if buoy_was_detected: return symbols
-    else: return []
+    symbols = []
+    for bbox, symbol_class in symbol_info:
+        relative_z_diff = (buoy_bbox[1] - bbox[1]) / buoy_bbox[3]
+        symbol_z = buoy_middle_z + (relative_z_diff * buoy_height)
+        x,y,z = getObjectPositionFrontCam(bbox, img_height, img_width, symbol_class, custom_z=symbol_z, custom_height=symbol_height)
+        symbols.append([symbol_class, x, y, z, conf])
+
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences):
@@ -430,13 +441,11 @@ quali_gate_middle_z = pool_depth + 1.75
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
 quali_gate_height = 2
-quali_gate_width = 3
 gate_height = 1.5 
-gate_width = 3
-buoy_width = 1.2
 buoy_height = 1.2
 octagon_table_height = 1.2
 lane_marker_height = 0.3
+symbol_height = 0.5
 
 
 HEADING_COLOR = (255, 0, 0) # Blue
