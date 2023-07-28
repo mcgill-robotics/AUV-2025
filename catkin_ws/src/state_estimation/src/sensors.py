@@ -136,7 +136,6 @@ class DVLSensor(Sensor):
         pos_dvl_auv_global = quaternion.rotate_vectors(q_auv_global, self.mount_pos_dvl_auv)
         pos_dvlref_dvl_global = -quaternion.rotate_vectors(self.q_dvlref_global, self.pos_dvl_dvlref)
         self.pos_dvlref_global = pos_auv_global + pos_dvl_auv_global + pos_dvlref_dvl_global
-        print("set_dvlref_global: pos_dvlref_global", self.pos_dvlref_global)
 
 
     def q_auv_global(self):
