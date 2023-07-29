@@ -109,7 +109,7 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Name: PointCloud2
       Position Transformer: XYZ
-      Queue Size: 10
+      Queue Size: 1
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -147,7 +147,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.457061767578125
+      Distance: 30.831350326538086
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -163,9 +163,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.45979830622673035
+      Pitch: 0.059798289090394974
       Target Frame: <Fixed Frame>
-      Yaw: 3.2131285667419434
+      Yaw: 1.6931273937225342
     Saved: ~
 Window Geometry:
   Displays:
