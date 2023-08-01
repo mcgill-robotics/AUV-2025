@@ -53,8 +53,8 @@ class State:
         u_map = np.tile(np.arange(self.width),(self.height,1)) +1
         v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
 
-        self.x_over_z_map = (u_map - cx) / fx
-        self.y_over_z_map = (v_map - cy) / fy
+        self.x_over_z_map = (cx - u_map) / fx
+        self.y_over_z_map = (cy - v_map) / fy
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
