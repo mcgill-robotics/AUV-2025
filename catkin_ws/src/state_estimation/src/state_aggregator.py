@@ -103,6 +103,11 @@ class State_Aggregator:
         rospy.Subscriber("/reset_state_full", Empty, self.reset_state_full_cb)
         rospy.Subscriber("/reset_state_planar", Empty, self.reset_state_planar_cb)
 
+        # redundancy - without previous messages, assume default
+        self.last_pos_auv_global = np.zeros(3)
+        self.last_q_auv_global = np.quaternion(1, 0, 0, 0)
+        self.last_w_auv = np.zeros(3)
+
 
     '''
     The methods pos_auv_global, pos_auv_world, q_auv_global, q_auv_world, (and euler_auv_world)
@@ -115,20 +120,54 @@ class State_Aggregator:
     '''
 
     def pos_auv_global(self):
-        pos_auv_global = np.zeros(3)
+        pos_auv_global = self.last_pos_auv_global # latch last in case sensors are inactive
 
-        pos_auv_global[0:2] = self.dvl.pos_auv_global(self.q_auv_global())[0:2]        # xy
-        pos_auv_global[2] = self.depth_sensor.pos_auv_global(self.q_auv_global())[2]   # z
+        # determine xy
+        if self.dvl.is_active:
+            pos_auv_global[0:2] = self.dvl.pos_auv_global(self.q_auv_global())[0:2]
+        else:
+            rospy.logwarn("state_aggregator - dvl inactive, unable to fully resolve AUV pose (xy), /pose is unreliable")
 
+        # determine z
+        if self.depth_sensor.is_active:
+            pos_auv_global[2] = self.depth_sensor.pos_auv_global(self.q_auv_global())[2]
+        # TODO - check continuity
+        elif self.dvl.is_active:
+            pos_auv_global[2] = self.dvl.pos_auv_global(self.q_auv_global())[2]
+        else:
+            rospy.logwarn("state_aggregator - dvl/depth sensor inactive, unable to fully resolve AUV pose (z), /pose is unreliable")
+            # TODO - what to return when not possible to resolve state?
+
+        self.last_pos_auv_global = pos_auv_global
         return pos_auv_global 
 
 
     def q_auv_global(self):
-        return self.imu.q_auv_global()
+        q_auv_global = self.last_q_auv_global # latch last in case sensors are inactive
+
+        if self.imu.is_active:
+            q_auv_global =  self.imu.q_auv_global()
+        elif self.dvl.is_active:
+            q_auv_global =  self.dvl.q_auv_global()
+        else:
+            rospy.logwarn("state_aggregator - dvl/imu inactive, unable to fully resolve AUV pose (orientation), /pose is unreliable")
+
+        self.last_q_auv_global = q_auv_global
+        return q_auv_global
 
 
     def w_auv(self):
-        return self.imu.w_auv()
+        w_auv = self.last_w_auv
+        
+        if self.imu.is_active:
+            w_auv = self.imu.w_auv()
+        else:
+            # TODO - use dvl for w_auv readings
+            # TODO - return last w_auv or something else (ie [0, 0, 0]) for safety?
+            rospy.logwarn("state_aggregator - imu inactive, unable to resolve AUV angular velocity, /angular_velocity is unreliable")
+
+        return w_auv
+
 
 
     def pos_auv_world(self):
@@ -237,17 +276,16 @@ class State_Aggregator:
     def initialize(self):
         rospy.loginfo("state_aggregator initializing -- waiting on sensor data")
         # TODO - does this update state while blocked? could be issue using old q_auv_global
-        # TODO - redundancy if sensors are not active
-        # TODO - handle if sensor goes inactive 
+        # TODO - do not block if some sensors remain inactive 
         # wait for data from imu
-        while self.imu.q_auv_global() is None or self.imu.w_auv() is None:
+        while not self.imu.is_active:
             pass
 
         rospy.loginfo("state_aggregator initializing -- imu active, waiting on depth_sensor")
 
         # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
-        while self.depth_sensor.pos_auv_global(self.q_auv_global()) is None:
+        while not self.depth_sensor.is_active: 
             pass
 
         rospy.loginfo("state_aggregator initializing -- depth_sensor active, waiting on dvl")
@@ -256,20 +294,13 @@ class State_Aggregator:
         # xy are arbitrarily set to whatever depth_sensor thinks
         # (this may be something other than 0, 0 after accounting for mounting location)
         # wait for dvl data (without which we can't set dvlref)
-        dvl_active = False
-        while not dvl_active:
+        while not self.dvl.is_active:
             try:
                 self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
-                dvl_active = True
             except:
                 rospy.sleep(1) # TODO - doesn't work with just pass (?)
 
-
         rospy.loginfo("state_aggregator initializing -- dvlref set - pos:" + str(self.dvl.pos_dvlref_global) + ", q: " + str(self.dvl.q_dvlref_global))
-        # wait for data from dvl TODO - redundant?
-        while self.dvl.pos_auv_global(self.q_auv_global()) is None or self.dvl.q_auv_global() is None:
-            pass
-
         rospy.loginfo("state_aggregator initializing -- dvl active")
 
     def update_state(self, _):
