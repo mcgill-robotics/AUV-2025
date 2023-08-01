@@ -239,12 +239,12 @@ class State_Aggregator:
         # TODO - redundancy if sensors are not active
         # TODO - handle if sensor goes inactive 
         # wait for data from imu
-        while self.imu.q_auv_global() is None or self.imu.w_auv() is None:
+        while self.imu.q_auv_global() is None or self.imu.w_auv() is None and not rospy.is_shutdown():
             pass
 
         # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
-        while self.depth_sensor.pos_auv_global(self.q_auv_global()) is None:
+        while self.depth_sensor.pos_auv_global(self.q_auv_global()) is None and not rospy.is_shutdown():
             pass
 
         # set dvlref frame which is reference to dvl readings, 
@@ -252,7 +252,7 @@ class State_Aggregator:
         # (this may be something other than 0, 0 after accounting for mounting location)
         # wait for dvl data (without which we can't set dvlref)
         dvl_active = False
-        while not dvl_active:
+        while not dvl_active and not rospy.is_shutdown():
             try:
                 self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
                 dvl_active = True
@@ -261,7 +261,7 @@ class State_Aggregator:
 
 
         # wait for data from dvl TODO - redundant?
-        while self.dvl.pos_auv_global(self.q_auv_global()) is None or self.dvl.q_auv_global() is None:
+        while self.dvl.pos_auv_global(self.q_auv_global()) is None or self.dvl.q_auv_global() is None and not rospy.is_shutdown():
             pass
 
 
