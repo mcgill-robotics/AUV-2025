@@ -102,12 +102,12 @@ class QuaternionPID:
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665], 
         #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
         
-        # inertial_matrix = np.array([[0.1376267915,  0.                , 0.                ],
-        #                             [0.          ,  0.6490918050833332, 0.                ], 
-        #                             [0.          ,  0.                , 0.6490918050833332]])
+        inertial_matrix = np.array([[0.1376267915,  0.                , 0.                ],
+                                    [0.          ,  0.6490918050833332, 0.                ], 
+                                    [0.          ,  0.                , 0.6490918050833332]])
         
-        # torque = np.matmul(inertial_matrix, control_effort)
-        return control_effort
+        torque = np.matmul(inertial_matrix, control_effort)
+        return torque
     
 if __name__ == "__main__":
     rospy.init_node("quaternion_pid", log_level=rospy.DEBUG)
