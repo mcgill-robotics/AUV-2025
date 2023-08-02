@@ -1,11 +1,11 @@
 <launch>
 	<node name="z_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="55.0" />
-		<param name="Ki" value="1.6" />
-		<param name="Kd" value="25.0" />
-		<param name="upper_limit" value="2000" />
-		<param name="lower_limit" value="-2000" />
-		<param name="windup_limit" value="2000" />
+		<param name="Kp" value="10" />
+		<param name="Ki" value="0.1" />
+		<param name="Kd" value="0" />
+		<param name="upper_limit" value="30" />
+		<param name="lower_limit" value="-30" />
+		<param name="windup_limit" value="30" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -16,12 +16,12 @@
 	</node>
 	
 	<node name="y_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="30" /> 
-		<param name="Ki" value="0.5" />
-		<param name="Kd" value="5" />
-		<param name="upper_limit" value="50" />
-		<param name="lower_limit" value="-50" />
-		<param name="windup_limit" value="50" />
+		<param name="Kp" value="10" /> 
+		<param name="Ki" value="0.1" />
+		<param name="Kd" value="0" />
+		<param name="upper_limit" value="30" />
+		<param name="lower_limit" value="-30" />
+		<param name="windup_limit" value="30" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -32,12 +32,12 @@
 	</node>
 
 	<node name="x_pid" pkg="pid" type="controller" >
-		<param name="Kp" value="30" /> 
-		<param name="Ki" value="0.5" />
-		<param name="Kd" value="5" />
-		<param name="upper_limit" value="100" />
-		<param name="lower_limit" value="-100" />
-		<param name="windup_limit" value="2000" />
+		<param name="Kp" value="10" /> 
+		<param name="Ki" value="0.1" />
+		<param name="Kd" value="0" />
+		<param name="upper_limit" value="30" />
+		<param name="lower_limit" value="-30" />
+		<param name="windup_limit" value="30" />
 		<param name="max_loop_frequency" value="100.0" />
 		<param name="min_loop_frequency" value="100.0" />
 
@@ -51,6 +51,6 @@
 		<param name="Kp" value="10" />
 		<param name="Ki" value="0.5" />
 		<param name="Kd" value="3.0" />
-		<param name="windup_limit" value="100" />
+		<param name="windup_limit" value="30" />
 	</node>
 </launch>
