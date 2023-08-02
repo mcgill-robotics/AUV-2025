@@ -283,20 +283,24 @@ class State_Aggregator:
 
         rospy.loginfo("state_aggregator initializing -- imu active, waiting on depth_sensor")
 
+        '''
         # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
         while not self.depth_sensor.is_active: 
             pass
 
         rospy.loginfo("state_aggregator initializing -- depth_sensor active, waiting on dvl")
+        '''
 
         # set dvlref frame which is reference to dvl readings, 
         # xy are arbitrarily set to whatever depth_sensor thinks
         # (this may be something other than 0, 0 after accounting for mounting location)
         # wait for dvl data (without which we can't set dvlref)
+        pos_auv_global_init = np.array([0, 0, 0])
         while not self.dvl.is_active:
             try:
-                self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
+                self.dvl.set_dvlref_global(self.q_auv_global(), pos_auv_global_init)
+                # self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
             except:
                 rospy.sleep(1) # TODO - doesn't work with just pass (?)
 
