@@ -19,11 +19,14 @@ class StateQuaternionServer(BaseServer):
         self.previous_goal_z = None
         self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
         self.max_safe_goal_depth = -1
+        self.goal_id = 0
         
         self.server.start()        
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
+        self.goal_id += 1
+        my_goal = self.goal_id
         self.cancelled = False
         self.goal = goal
         if self.pose is not None:
@@ -36,24 +39,56 @@ class StateQuaternionServer(BaseServer):
             if(self.goal.do_x.data):
                 self.previous_goal_x = goal_position[0]
                 self.pub_x_enable.publish(Bool(True))
-                self.pub_x_pid.publish(goal_position[0])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
+                self.pub_x_pid.publish(goal_position[0])
+                
+            elif(self.previous_goal_x is not None):
+                goal_position[0] = self.previous_goal_x
+                self.pub_x_enable.publish(Bool(True))
+                self.pub_surge.publish(0)
+                self.pub_sway.publish(0)
+                self.pub_x_pid.publish(goal_position[0])
+                
+
             if(self.goal.do_y.data):
                 self.previous_goal_y = goal_position[1]
                 self.pub_y_enable.publish(Bool(True))
-                self.pub_y_pid.publish(goal_position[1])
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
+                self.pub_y_pid.publish(goal_position[1])
+                
+            elif(self.previous_goal_y is not None):
+                goal_position[1] = self.previous_goal_y
+                self.pub_y_enable.publish(Bool(True))
+                self.pub_surge.publish(0)
+                self.pub_sway.publish(0)
+                self.pub_y_pid.publish(goal_position[1])
+                
+
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
-                safe_goal = goal_position[2]#max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
-                if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
-                self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
+                self.pub_z_pid.publish(goal_position[2])
+                
+            elif (self.previous_goal_z is not None):
+                goal_position[2] = self.previous_goal_z
+                self.pub_z_enable.publish(Bool(True))
+                self.pub_heave.publish(0)
+                self.pub_z_pid.publish(goal_position[2])
+
             if (self.goal.do_quaternion.data):
                 self.previous_goal_quat = goal_quat
+                self.pub_quat_enable.publish(Bool(True))
+                goal_msg = Quaternion()
+                goal_msg.w = goal_quat.w
+                goal_msg.x = goal_quat.x
+                goal_msg.y = goal_quat.y
+                goal_msg.z = goal_quat.z
+                self.pub_quat_pid.publish(goal_msg)
+            elif (self.previous_goal_quat is not None):
+                goal_quat = self.previous_goal_quat
                 self.pub_quat_enable.publish(Bool(True))
                 goal_msg = Quaternion()
                 goal_msg.w = goal_quat.w
@@ -64,16 +99,17 @@ class StateQuaternionServer(BaseServer):
 
             time_to_settle = 4
             settled = False
-            while not settled and not self.cancelled and not rospy.is_shutdown():
+            while not settled and not self.cancelled and my_goal == self.goal_id and not rospy.is_shutdown():
                 start = rospy.get_time()
-                while not self.cancelled and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
+                while not self.cancelled and my_goal == self.goal_id and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
                     if(rospy.get_time() - start > time_to_settle):
                         settled = True
                         print("settled")
                         break
                     rospy.sleep(0.01)
 
-        self.server.set_succeeded()
+        if not self.cancelled and my_goal == self.goal_id:
+            self.server.set_succeeded()
 
     def get_goal_after_displace(self):
         if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
@@ -85,19 +121,23 @@ class StateQuaternionServer(BaseServer):
         return goal_position, goal_quat 
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
-        quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
-        pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
-        pos_y_error = self.calculatePosError(self.pose.position.y, goal_position[1])
-        pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.99
+        tolerance_quat_w = 0.999
 
-        if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
-        if abs(pos_x_error) > tolerance_position and do_x: return False
-        if abs(pos_y_error) > tolerance_position and do_y: return False
-        if abs(pos_z_error) > tolerance_position and do_z: return False
-
+        if goal_position[0] is not None:
+            pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
+            if abs(pos_x_error) > tolerance_position: return False
+        if goal_position[1] is not None:
+            pos_y_error = self.calculatePosError(self.pose.position.y, goal_position[1])
+            if abs(pos_y_error) > tolerance_position and do_y: return False
+        if goal_position[2] is not None:
+            pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
+            if abs(pos_z_error) > tolerance_position and do_z: return False
+        if goal_quaternion is not None:
+            quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
+            if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
+            
         return True
 
     def calculatePosError(self, pos1, pos2):
