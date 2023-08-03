@@ -1,4 +1,8 @@
 <launch>
 	<node pkg="planner" name="testMission" type="testMission.py" respawn="False" output="screen"/>
-	<include file="$(find planner)/launch/bag_everything.launch"/>
+
+	<arg name="bag" default="false"/>
+	<group if="$(arg bag)">
+		<include file="$(find planner)/launch/bag_everything.launch"/>
+	</group>
 </launch>
