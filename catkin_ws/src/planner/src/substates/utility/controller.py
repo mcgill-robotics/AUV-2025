@@ -2,9 +2,9 @@
 
 import rospy
 import actionlib
-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
 from std_msgs.msg import Float64, Bool, Header
-from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal
+from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal, ThrusterMicroseconds
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
@@ -47,6 +47,19 @@ class Controller:
         self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
         self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
         self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
+
+        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
+        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
+        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
+        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
+        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
+
+        self.pwn_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
 
         self.clients = []
 
@@ -142,7 +155,6 @@ class Controller:
         #if callback = None make this a blocking call
         if any(x is None for x in ang) and any(x is not None for x in ang):
             raise ValueError("Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
-
         w,x,y,z = ang
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_not_displace)
         if callback is not None:
@@ -157,6 +169,24 @@ class Controller:
         if y is None: y = self.theta_y
         if z is None: z = self.theta_z
         self.rotate(euler_to_quaternion(x,y,z), callback=callback)
+
+    def state(self,pos,ang,callback=None):
+        x,y,z = pos
+        w,x,y,z = ang
+        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_not_displace)
+        if callback is not None:
+            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+    
+    def stateDelta(self,pos,ang,callback=None):
+        x,y,z = pos
+        w,x,y,z = ang
+        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_displace)
+        if callback is not None:
+            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #move to setpoint
     def move(self,pos,callback=None,face_destination=False):
@@ -256,11 +286,42 @@ class Controller:
         self.pub_z_enable.publish(Bool(False))
         self.pub_quat_enable.publish(Bool(False))
 
+        start = rospy.get_time()
+        while rospy.get_time() - start < 5:
+            self.pub_surge.publish(0)
+            self.pub_sway.publish(0)
+            self.pub_heave.publish(0)
+            self.pub_roll.publish(0)
+            self.pub_pitch.publish(0)
+            self.pub_yaw.publish(0)
+            self.pub_global_x.publish(0)
+            self.pub_global_y.publish(0)
+            self.pub_global_z.publish(0)
+
+            zero_wrench = Wrench()
+            zero_wrench.force.x = 0
+            zero_wrench.force.y = 0
+            zero_wrench.force.z = 0
+            zero_wrench.torque.x = 0
+            zero_wrench.torque.y = 0
+            zero_wrench.torque.z = 0
+            self.pub_effort.publish(zero_wrench)
+
+            msg = ThrusterMicroseconds([1500]*8)
+            self.pwn_pub.publish(msg)
+
     #stay still in place
     def stop_in_place(self, callback=None):
         goal = self.get_superimposer_goal([0,0,0,0,0,0])
         self.SuperimposerClient.send_goal(goal)
         goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
+        if(callback is not None):
+            self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
+        else:
+            self.StateQuaternionStateClient.send_goal_and_wait(goal)
+
+    def fix_rotation(self, callback=None):
+        goal = self.get_state_goal([None,None,None,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
         else:
