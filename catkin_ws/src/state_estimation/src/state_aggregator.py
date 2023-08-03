@@ -82,11 +82,16 @@ class State_Aggregator:
         self.pos_world_global = np.array([0.0, 0.0, 0.0])
         self.q_world_global = np.quaternion(1, 0, 0, 0)
 
+        # redundancy - without previous messages, assume default
+        self.last_pos_auv_global = np.zeros(3)
+        self.last_q_auv_global = np.quaternion(1, 0, 0, 0)
+        self.last_w_auv = np.zeros(3)
+
         # sensors
         # TODO - pass in mount q/pos as contructor args
         self.depth_sensor = DepthSensor()
         self.imu = IMUSensor()
-        self.dvl = DVLSensor()
+        self.dvl = DVLSensor(self.set_dvlref)
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
@@ -103,10 +108,6 @@ class State_Aggregator:
         rospy.Subscriber("/reset_state_full", Empty, self.reset_state_full_cb)
         rospy.Subscriber("/reset_state_planar", Empty, self.reset_state_planar_cb)
 
-        # redundancy - without previous messages, assume default
-        self.last_pos_auv_global = np.zeros(3)
-        self.last_q_auv_global = np.quaternion(1, 0, 0, 0)
-        self.last_w_auv = np.zeros(3)
 
 
     '''
@@ -265,6 +266,16 @@ class State_Aggregator:
         self.q_world_global = np.quaternion(q_world_global[3], q_world_global[0], q_world_global[1], q_world_global[2])
 
 
+    def set_dvlref(self):
+        # TODO - check q_auv_global is available
+        if self.pos_auv_global() is None:
+            pos_auv_global_init = np.array([0, 0, 0])
+            self.dvl.set_dvlref_global(self.q_auv_global(), pos_auv_global_init)
+        else:
+            self.dvl.set_dvlref_global(self.q_auv_global(), self.pos_auv_global())
+
+        
+
     '''
     Initialization makes sure all the relevant reference frames are well defined
     before trying to do (potentially ambiguous) frame transformations
@@ -299,8 +310,7 @@ class State_Aggregator:
         pos_auv_global_init = np.array([0, 0, 0])
         while not self.dvl.is_active:
             try:
-                self.dvl.set_dvlref_global(self.q_auv_global(), pos_auv_global_init)
-                # self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
+                self.set_dvlref()
             except:
                 rospy.sleep(1) # TODO - doesn't work with just pass (?)
 

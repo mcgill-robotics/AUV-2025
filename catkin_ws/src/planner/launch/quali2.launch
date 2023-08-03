@@ -1,0 +1,4 @@
+<launch>
+	<include file="$(find bringup)/launch/bringup.launch" />
+	<node pkg="planner" name="quali" type="quali2.py" respawn="False" output="screen"/>
+</launch>

@@ -176,9 +176,10 @@ class IMUSensor(Sensor):
 
 
 class DVLSensor(Sensor):
-    def __init__(self):
+    def __init__(self, set_dvlref_cb):
         super().__init__() # TODO - check syntax
         self.id = "dvl"
+        self.set_dvlref_cb = set_dvlref_cb
 
         # static mount - dvl frame relative to AUV frame
         self.mount_pos_dvl_auv = np.array([0.0, 0.0, 0.0])
@@ -220,6 +221,13 @@ class DVLSensor(Sensor):
         pos_dvl_auv_global = quaternion.rotate_vectors(q_auv_global, self.mount_pos_dvl_auv)
         pos_dvlref_dvl_global = -quaternion.rotate_vectors(self.q_dvlref_global, self.pos_dvl_dvlref)
         self.pos_dvlref_global = pos_auv_global + pos_dvl_auv_global + pos_dvlref_dvl_global
+
+        # print (to check continuity)
+        '''
+        print("pos_dvlref_global", self.pos_dvlref_global)
+        print("q_dvlref_global", self.q_dvlref_global)
+        print("-----------------------------------------")
+        '''
 
         self.dvlref_set = True
 
@@ -265,6 +273,7 @@ class DVLSensor(Sensor):
         self.last_unique_msg_time = rospy.get_time()
         self.last_unique_msg = dr_msg
 
+
         # quaternion of dvl relative to dvlref 
         q_dvl_dvlref = transformations.quaternion_from_euler(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
         self.q_dvl_dvlref = np.quaternion(q_dvl_dvlref[3], q_dvl_dvlref[0], q_dvl_dvlref[1], q_dvl_dvlref[2]) # transformations returns quaternion as nparray [x, y, z, w]
@@ -272,7 +281,11 @@ class DVLSensor(Sensor):
         # position of DVL relative to dvlref 
         self.pos_dvl_dvlref = np.array([dr_msg.x, dr_msg.y, dr_msg.z])
 
+        # update dvlref
+        self.set_dvlref_cb()
+
         self.is_active_dr = True
+
 
     # overrides super to be active only after dvlref is set 
     def check_active(self, _): # TODO - what is second arg?
@@ -284,7 +297,10 @@ class DVLSensor(Sensor):
         # update is_active
         if not self.is_active:
             # previously inactive
-            if self.is_active_dr and self.dvlref_set:
+            if self.is_active_dr:
+                if not self.dvlref_set:
+                    # set dvlref
+                    self.set_dvlref_cb()
                 self.is_active = True
                 rospy.loginfo("state_estimation sensors - " + self.id + " has become active")
         else:
