@@ -2,7 +2,7 @@
 
 import rospy
 import actionlib
-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
 from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal, ThrusterMicroseconds
 from actionlib_msgs.msg import GoalStatus
@@ -16,6 +16,8 @@ from .functions import *
 
 do_displace = Bool(True)
 do_not_displace = Bool(False)
+is_local = Bool(True)
+is_not_local = Bool(False)
 
 """
 Helper class for the planner. Takes in simple commands, converts them to 
@@ -54,7 +56,7 @@ class Controller:
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        self.pub_effort = rospy.Publisher('effort', Float64, queue_size=1)
+        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
         self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
         self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
@@ -121,11 +123,12 @@ class Controller:
         return goal
     
     #method to easily get goal object
-    def get_state_goal(self,state,displace):
+    def get_state_goal(self,state,displace,local=is_not_local):
         x,y,z,tw,tx,ty,tz = state
         goal = StateQuaternionGoal()
 
         goal.displace = displace
+        goal.local = local
         
         goal.pose.position.x = 0 if x is None else x
         goal.do_x = Bool(False) if x is None else Bool(True)
@@ -247,17 +250,12 @@ class Controller:
 
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None,face_destination=False):
-        x,y,z = delta
-        if x is None: x = 0
-        if y is None: y = 0
-        if z is None: z = 0
-        gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
-            
-        goal_state = self.get_state_goal([gx,gy,gz,None,None,None,None], do_displace)
+        x,y,z = delta            
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None], do_displace, local=is_local)
 
-        if face_destination and math.sqrt(gx**2 + gy**2) > 0.5:
-            yaw_towards_destination = vectorToYawDegrees(gx,gy)
-            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(x,y)
+            self.rotateDeltaEuler((0,0,yaw_towards_destination),callback=callback)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
@@ -294,10 +292,18 @@ class Controller:
             self.pub_roll.publish(0)
             self.pub_pitch.publish(0)
             self.pub_yaw.publish(0)
-            self.pub_effort.publish(0)
             self.pub_global_x.publish(0)
             self.pub_global_y.publish(0)
             self.pub_global_z.publish(0)
+
+            zero_wrench = Wrench()
+            zero_wrench.force.x = 0
+            zero_wrench.force.y = 0
+            zero_wrench.force.z = 0
+            zero_wrench.torque.x = 0
+            zero_wrench.torque.y = 0
+            zero_wrench.torque.z = 0
+            self.pub_effort.publish(zero_wrench)
 
             msg = ThrusterMicroseconds([1500]*8)
             self.pwn_pub.publish(msg)

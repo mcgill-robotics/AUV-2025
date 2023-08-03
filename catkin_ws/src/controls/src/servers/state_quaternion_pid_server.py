@@ -30,6 +30,12 @@ class StateQuaternionServer(BaseServer):
         self.cancelled = False
         self.goal = goal
         if self.pose is not None:
+            if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
+            if self.previous_goal_y is None: self.previous_goal_y = self.pose.position.y
+            if self.previous_goal_z is None: self.previous_goal_z = self.pose.position.z
+            if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
+            if self.goal.local:
+                self.local_to_global()
             if(self.goal.displace.data):
                 goal_position, goal_quat = self.get_goal_after_displace()
             else:
@@ -107,15 +113,17 @@ class StateQuaternionServer(BaseServer):
                         print("settled")
                         break
                     rospy.sleep(0.01)
+        else:
+            print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
 
         if not self.cancelled and my_goal == self.goal_id:
             self.server.set_succeeded()
+    
+    def local_to_global(self):
+        global_goal = self.previous_goal_quat * np.quaternion(0, self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z) * self.previous_goal_quat.inverse()
+        self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z = global_goal.x, global_goal.y, global_goal.z
 
     def get_goal_after_displace(self):
-        if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
-        if self.previous_goal_y is None: self.previous_goal_y = self.pose.position.y
-        if self.previous_goal_z is None: self.previous_goal_z = self.pose.position.z
-        if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
         goal_position = [self.previous_goal_x + self.goal.pose.position.x, self.previous_goal_y + self.goal.pose.position.y, self.previous_goal_z + self.goal.pose.position.z]
         goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
         return goal_position, goal_quat 
