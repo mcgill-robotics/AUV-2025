@@ -437,7 +437,7 @@ octagon_table_height = 1.5 # 0.9m - 1.5m
 lane_marker_height = 0.4
 symbol_height = 0.3
 
-lane_marker_top_z = pool_depth + lane_marker_height
+lane_marker_top_z = 0 #pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 gate_middle_z = 0 - (gate_height / 2)
 buoy_middle_z = pool_depth + buoy_height/2 + 1.2 # 0.6m - 1.2m GUESS FROM QUALI -> hit it at -2
