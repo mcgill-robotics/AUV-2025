@@ -16,6 +16,8 @@ from .functions import *
 
 do_displace = Bool(True)
 do_not_displace = Bool(False)
+is_local = Bool(True)
+is_not_local = Bool(False)
 
 """
 Helper class for the planner. Takes in simple commands, converts them to 
@@ -121,11 +123,12 @@ class Controller:
         return goal
     
     #method to easily get goal object
-    def get_state_goal(self,state,displace):
+    def get_state_goal(self,state,displace,local=is_not_local):
         x,y,z,tw,tx,ty,tz = state
         goal = StateQuaternionGoal()
 
         goal.displace = displace
+        goal.local = local
         
         goal.pose.position.x = 0 if x is None else x
         goal.do_x = Bool(False) if x is None else Bool(True)
@@ -172,8 +175,8 @@ class Controller:
 
     def state(self,pos,ang,callback=None):
         x,y,z = pos
-        w,x,y,z = ang
-        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_not_displace)
+        w,wx,wy,wz = ang
+        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_not_displace)
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
         else:
@@ -181,8 +184,9 @@ class Controller:
     
     def stateDelta(self,pos,ang,callback=None):
         x,y,z = pos
-        w,x,y,z = ang
-        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_displace)
+        w,wx,wy,wz = ang
+        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
+
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
         else:
@@ -247,17 +251,12 @@ class Controller:
 
     #move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self,delta,callback=None,face_destination=False):
-        x,y,z = delta
-        if x is None: x = 0
-        if y is None: y = 0
-        if z is None: z = 0
-        gx, gy, gz  = self.transformLocalToGlobal(x, y, z)
-            
-        goal_state = self.get_state_goal([gx,gy,gz,None,None,None,None], do_displace)
+        x,y,z = delta            
+        goal_state = self.get_state_goal([x,y,z,None,None,None,None], do_displace, local=is_local)
 
-        if face_destination and math.sqrt(gx**2 + gy**2) > 0.5:
-            yaw_towards_destination = vectorToYawDegrees(gx,gy)
-            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+        if face_destination and math.sqrt(x**2 + y**2) > 0.5:
+            yaw_towards_destination = vectorToYawDegrees(x,y)
+            self.rotateDeltaEuler((0,0,yaw_towards_destination),callback=callback)
 
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)

@@ -5,6 +5,7 @@ std_msgs/Bool do_y
 std_msgs/Bool do_z
 std_msgs/Bool do_quaternion
 std_msgs/Bool displace
+std_msgs/Bool local
 ---
 # result
 std_msgs/Bool status
