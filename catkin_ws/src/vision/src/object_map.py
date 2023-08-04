@@ -116,7 +116,15 @@ def updateMap(obj_i, observation):
         else:
             if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
                 new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
-            else: new_extra_field = -1234.5
+            elif label == "Buoy":
+                observed_first_buoy_symbol_location = math.floor(observed_extra_field / 10)
+                observed_second_buoy_symbol_location = observed_extra_field - 10 * math.floor(observed_extra_field / 10)
+                current_first_buoy_symbol_location = math.floor(current_extra_field / 10)
+                current_observed_second_buoy_symbol_location = current_extra_field - 10 * math.floor(current_extra_field / 10)
+                #TODO!!!! fix this somehow
+                new_extra_field = observed_extra_field
+            else:
+                new_extra_field = -1234.5
             #TODO: elif for symbols?
 
     object_map[obj_i][1] = new_x
