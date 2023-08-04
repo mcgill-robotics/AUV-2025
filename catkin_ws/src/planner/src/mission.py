@@ -130,7 +130,7 @@ octagon_approximate_location = (5,5) # [COMP] UPDATE WITH ACTUAL SEARCH POINT FO
 quali_gate_width = 2 # [COMP] update with actual width in meters
 gate_width = 3
 target_symbol = "Earth Symbol" # "Abydos Symbol"
-wait_time_for_comp = 120 # [COMP] make sure this is long enough
+wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
