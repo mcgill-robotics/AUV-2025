@@ -6,7 +6,7 @@ import time
 from std_msgs.msg import Empty
 
 class InitializeForComp(smach.State):
-    def __init__(self, wait_time=120):
+    def __init__(self, wait_time=30):
         super().__init__(outcomes=['success'])
         self.wait_time = wait_time
 
