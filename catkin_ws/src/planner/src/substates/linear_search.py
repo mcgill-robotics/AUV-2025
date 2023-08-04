@@ -19,6 +19,7 @@ class LinearSearch(smach.State):
     def execute(self, ud):
         print("Starting linear search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        #[COMP] set to appropriate search depth
         self.control.move((None, None, -0.5), callback=lambda a,b: None)
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))

@@ -146,8 +146,8 @@ if __name__ == '__main__':
         sm = None
 
 
-        control.move((None,None,-1), callback=lambda a,b: None)
-        control.moveDelta((0,0,0), callback=lambda a,b: None)
+        # control.move((None,None,-1), callback=lambda a,b: None)
+        # control.moveDelta((0,0,0), callback=lambda a,b: None)
         control.rotateEuler((0,0,None))
         # while True:
         #     control.rotateEuler((0,0,0))
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        #laneMarkerGridSearchMission()
+        laneMarkerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()

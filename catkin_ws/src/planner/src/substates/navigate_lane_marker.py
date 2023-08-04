@@ -15,6 +15,7 @@ class NavigateLaneMarker(smach.State):
     def execute(self, ud):
         print("Starting lane marker navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        #[COMP] make sure depth is appropriate here
         self.control.move((None, None, -0.5), callback=lambda a,b: None)
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
