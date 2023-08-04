@@ -17,7 +17,7 @@ class NavigateGate(smach.State):
     def execute(self, ud):
         print("Starting gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.move((None, None, -1), callback=lambda a,b: None)
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 
@@ -28,11 +28,12 @@ class NavigateGate(smach.State):
     
         print("Centering and rotating in front of gate.")
         offset_distance = -3
-        dtv = degreesToVector(gate_object[4])
+        gate_rot = 180 if gate_object[4] is None else gate_object[4]
+        dtv = degreesToVector(gate_rot)
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
+        self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         # wait and repeat just to be safe
@@ -41,11 +42,12 @@ class NavigateGate(smach.State):
 
         print("Re-centering and rotating in front of gate.")
         self.mapping.updateObject(gate_object)
-        dtv = degreesToVector(gate_object[4])
+        gate_rot = 180 if gate_object[4] is None else gate_object[4]
+        dtv = degreesToVector(gate_rot)
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.control.rotateEuler((None,None,gate_object[4])) # bring to exact angle 
+        self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         print("Successfully centered in front of gate")
@@ -54,13 +56,13 @@ class NavigateGate(smach.State):
             return 'success'
 
         self.mapping.updateObject(gate_object)
-        symbol = gate_object[5] #1 if earth on left, 0 if abydos left
+        symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
         if self.target_symbol == "Earth Symbol": 
             if symbol >= 0.5:
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
-            else : 
+            else: 
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
         else: 
