@@ -15,6 +15,7 @@ class InitializeForComp(smach.State):
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         # [COMP] MAKE SURE AUV IS IN COORDINATE FRAME WHERE OCTAGON LOCATION WAS MEASURED
         pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
+        rospy.sleep(5)
         pub_DVL.publish(Empty())
         print("Waiting {} seconds.".format(self.wait_time))
         rospy.sleep(self.wait_time)
