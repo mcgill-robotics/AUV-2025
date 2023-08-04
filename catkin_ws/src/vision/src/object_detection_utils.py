@@ -133,7 +133,7 @@ def measureLaneMarker(img, bbox, debug_img):
 def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
-    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
+    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
 def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
