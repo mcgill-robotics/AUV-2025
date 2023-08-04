@@ -147,9 +147,9 @@ class StateQuaternionServer(BaseServer):
         return [global_goal.x, global_goal.y, global_goal.z]
 
     def get_goal_after_displace(self, goal_position_delta, goal_quat_delta):
-        pivot_x = self.previous_goal_x if self.previous_goal_x is not None else self.pose.x
-        pivot_y = self.previous_goal_y if self.previous_goal_y is not None else self.pose.y
-        pivot_z = self.previous_goal_z if self.previous_goal_z is not None else self.pose.z
+        pivot_x = self.previous_goal_x if self.previous_goal_x is not None else self.pose.position.x
+        pivot_y = self.previous_goal_y if self.previous_goal_y is not None else self.pose.position.y
+        pivot_z = self.previous_goal_z if self.previous_goal_z is not None else self.pose.position.z
         pivot_quat  = self.previous_goal_quat if self.previous_goal_quat is not None else self.body_quat
 
         goal_position = [pivot_x + goal_position_delta[0], pivot_y + goal_position_delta[1], pivot_z + goal_position_delta[2]]
