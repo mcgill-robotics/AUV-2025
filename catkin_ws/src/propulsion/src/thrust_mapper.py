@@ -20,14 +20,37 @@ dx_2 = 0.395 # T7 -> T8, T5 -> T6
 dy_1 = 0.514 # T6 -> T7, T5 -> T8
 dy_2 = 0.779 # perpendicular T3 -> T4
 
+Dx = 0.67
+d_A3_x = 0.055
+d_og_x = 23/49*Dx
+d_g3_x = (Dx - d_og_x) + d_A3_x # perpendicular COM -> T3
+d_g4_x = d_og_x + d_A3_x # perpendicular COM -> T4
 
+d_47_x = 0.15
+d_g3_x = 0.46
+d_g4_x = 0.32
+
+d_g7_x = d_g4_x - d_47_x
+d_g5_x = d_g3_x - d_47_x
+
+'''
 T = np.matrix(
         [[    -1.,     -1.,   0.,   0.,      0.,     0.,     0.,       0.],
         [      0.,      0.,   1.,  -1.,      0.,     0.,     0.,       0.],
         [      0.,      0.,   0.,   0.,     -1.,    -1.,    -1.,      -1.],
         [      0.,      0.,   0.,   0., -dx_2/2, dx_2/2,  dx_2/2, -dx_2/2],
         [      0.,      0.,   0.,   0.,  dy_1/2, dy_1/2, -dy_1/2, -dy_1/2],
-        [  dx_1/2, -dx_1/2, dy_2, dy_2,      0.,     0.,      0.,      0.]]
+        [  dx_1/2, -dx_1/2, dy_2/2, dy_2/2,      0.,     0.,      0.,      0.]]
+        )
+'''
+
+T = np.matrix(
+        [[    -1.,     -1.,   0.,   0.,      0.,     0.,     0.,       0.],
+        [      0.,      0.,   1.,  -1.,      0.,     0.,     0.,       0.],
+        [      0.,      0.,   0.,   0.,     -1.,    -1.,    -1.,      -1.],
+        [      0.,      0.,   0.,   0., -dx_2/2, dx_2/2,  dx_2/2, -dx_2/2],
+        [      0.,      0.,   0.,   0.,  d_g5_x, d_g5_x, -d_g7_x, d_g7_x],
+        [  dx_1/2, -dx_1/2, d_g3_x, d_g4_x,      0.,     0.,      0.,      0.]]
         )
 
 # forces produced by T200 thruster at 14V (N)
@@ -92,7 +115,7 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
     
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
-    # so as not to trip individual fuse, thruster current draw is limited to < 9.5 A
+    # so as not to trip individual fuse, thruster current draw is limited to < 4.3 A
     # 1228 <= PWM <= 1768 
     for i in range(len(pwm_arr)):
         if pwm_arr[i] > 1768:

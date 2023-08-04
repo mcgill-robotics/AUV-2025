@@ -48,7 +48,7 @@ def convert_from_uvd(color, z_map):
         time = rospy.Time(0)
         xyz_rbg_img = np.zeros((height, width, 6))
         xyz_rbg_img[:, :, 3:6] = color
-        
+        # xyz_rbg_img[:,:,2] *= -1
 
         # z_map = np.nan_to_num(z_map, 100)
         # z_map[z_map == 0] = 100

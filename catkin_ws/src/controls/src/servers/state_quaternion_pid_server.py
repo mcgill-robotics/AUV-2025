@@ -48,7 +48,7 @@ class StateQuaternionServer(BaseServer):
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
-                safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
+                safe_goal = goal_position[2]#max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
                 self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
@@ -91,7 +91,7 @@ class StateQuaternionServer(BaseServer):
         pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.99
+        tolerance_quat_w = 0.999
 
         if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
         if abs(pos_x_error) > tolerance_position and do_x: return False
