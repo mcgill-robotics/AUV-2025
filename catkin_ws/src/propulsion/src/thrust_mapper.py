@@ -58,15 +58,6 @@ THRUST_LIMIT = 1.0  # Limit thruster speed while dry-testing
 MAX_FWD_FORCE = 4.52*9.81*THRUST_LIMIT
 MAX_BKWD_FORCE = -3.52*9.81*THRUST_LIMIT
 
-# TODO - these are temporary precautionary measures and may result in unwanted dynamics
-# so as not to trip individual fuse, thruster current draw is limited to < 4.3 A
-# 1228 <= PWM <= 1768 
-MAX_PWM = 1768
-MIN_PWM = 1228
-# max rate of change of PWM per thruster
-MAX_PWM_PER_SECOND = 250
-PWM_UPDATE_RATE = 5
-
 #Matrix representation of the system of equations representing the thrust to wrench conversion
 #Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
 
@@ -113,7 +104,6 @@ def forces_to_pwm_publisher(forces_msg):
     """
     Publish pwm signals
     """
-    global target_pwm
     pwm_arr = [None]*8
     pwm_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_pwm(forces_msg.SURGE_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
     pwm_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_pwm(forces_msg.SURGE_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
@@ -124,28 +114,18 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(forces_msg.HEAVE_STERN_STAR,MAX_FWD_FORCE,MAX_BKWD_FORCE) 
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
     
+    # TODO - these are temporary precautionary measures and may result in unwanted dynamics
+    # so as not to trip individual fuse, thruster current draw is limited to < 4.3 A
+    # 1228 <= PWM <= 1768 
     for i in range(len(pwm_arr)):
-        if pwm_arr[i] > MAX_PWM:
-            pwm_arr[i] = MAX_PWM
+        if pwm_arr[i] > 1768:
+            pwm_arr[i] = 1768
             print("INDIVIDUAL FUSE EXCEEDED: T", i+1)
-        elif pwm_arr[i] < MIN_PWM:
-            pwm_arr[i] = MIN_PWM
+        elif pwm_arr[i] < 1228:
+            pwm_arr[i] = 1228
             print("INDIVIDUAL FUSE EXCEEDED: T", i+1)
-    target_pwm = pwm_arr
 
-def update_microseconds(_):
-    if rospy.is_shutdown():
-        shutdown()
-        return
-    #move towards 
-    max_pwm_change = MAX_PWM_PER_SECOND / PWM_UPDATE_RATE
-    new_pwm = [1500]*8
-    
-    for i in range(len(target_pwm)):
-        pwm_change = math.sign(target_pwm[i] - current_pwm[i]) * min(abs(target_pwm[i] - current_pwm[i]), max_pwm_change)
-        new_pwm[i] = current_pwm[i] + pwm_change
-
-    pwm_msg = ThrusterMicroseconds(new_pwm)
+    pwm_msg = ThrusterMicroseconds(pwm_arr)
     pub_us.publish(pwm_msg)
 
 #turns off the thursters when the node dies
@@ -165,9 +145,6 @@ def re_arm():
     rospy.sleep(0.5)
     pub_us.publish(msg1)
 
-target_pwm = [1500]*8
-current_pwm = [1500]*8
-
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
     pub_us = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
@@ -175,5 +152,4 @@ if __name__ == '__main__':
     rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
     rospy.on_shutdown(shutdown)
     re_arm()
-    timer = rospy.Timer(rospy.Duration(1.0/PWM_UPDATE_RATE), update_microseconds)
     rospy.spin()
