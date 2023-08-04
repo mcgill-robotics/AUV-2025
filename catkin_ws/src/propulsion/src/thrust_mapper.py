@@ -115,7 +115,7 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
     
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
-    # so as not to trip individual fuse, thruster current draw is limited to < 9.5 A
+    # so as not to trip individual fuse, thruster current draw is limited to < 4.3 A
     # 1228 <= PWM <= 1768 
     for i in range(len(pwm_arr)):
         if pwm_arr[i] > 1768:
