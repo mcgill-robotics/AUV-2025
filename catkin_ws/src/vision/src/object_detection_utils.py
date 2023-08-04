@@ -338,9 +338,12 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-def analyzeBuoy(detections, img_height, img_width):
+def analyzeBuoy(detections, img_height, img_width, target_symbol):
     symbol_info = []
     buoy_bbox = None
+    mid_x_buoy = 0
+    mid_y_buoy = 0
+    position = []
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
         else: boxes = detection.boxes.numpy()
@@ -351,17 +354,29 @@ def analyzeBuoy(detections, img_height, img_width):
             global_class_name = class_names[1][cls_id]
             if (global_class_name == "Buoy"):
                 buoy_bbox = bbox
-            elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
-                symbol_info.append((bbox, global_class_name))
-    
-    if buoy_bbox is None: return []
+                mid_w_buoy = buoy_bbox[0]
+                mid_h_buoy = buoy_bbox[1]
+            elif (((global_class_name == "Earth Symbol" and target_symbol == "Earth Symbol") or (global_class_name == "Abydos Symbol" and target_symbol == "Abydos Symbol")) and conf > min_prediction_confidence):
+                symbol_info.append(bbox)
 
-    symbols = []
-    for bbox, symbol_class in symbol_info:
-        relative_z_diff = (buoy_bbox[1] - bbox[1]) / buoy_bbox[3]
-        symbol_z = buoy_middle_z + (relative_z_diff * buoy_height)
-        x,y,z = getObjectPositionFrontCam(bbox, img_height, img_width, symbol_class, custom_z=symbol_z, custom_height=symbol_height)
-        symbols.append([symbol_class, x, y, z, conf])
+    for bbox in symbol_info:
+        if (box[0]<mid_x_buoy and box[1]<mid_y_buoy):
+            position.append(1)
+        elif (box[0]>mid_x_buoy and box[1]<mid_y_buoy):
+            position.append(2)
+        elif (box[0]<mid_x_buoy and box[1]>mid_y_buoy):
+            position.append(3)
+        elif (box[0]>mid_x_buoy and box[1]>mid_y_buoy):
+            position.append(4)
+
+    if buoy_bbox is None: return []
+    else:
+        position.sort()
+        string_positions = [str(current_integer) for current_integer in position]
+        string_value = "".join(string_positions)
+        number = int(string_value)
+        
+    return number
 
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
