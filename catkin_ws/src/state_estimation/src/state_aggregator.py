@@ -261,7 +261,7 @@ class State_Aggregator:
         # new world quaternion is yaw rotation of AUV in global frame
         q = self.q_auv_global()
         q_auv_global = np.array([q.x, q.y, q.z, q.w])
-        theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[0]
+        theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[2]
         q_world_global = transformations.quaternion_from_euler(0, 0, theta_z)
         self.q_world_global = np.quaternion(q_world_global[3], q_world_global[0], q_world_global[1], q_world_global[2])
 
