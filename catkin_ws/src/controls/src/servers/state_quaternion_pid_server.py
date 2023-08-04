@@ -20,8 +20,29 @@ class StateQuaternionServer(BaseServer):
         self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
         self.max_safe_goal_depth = -1
         self.goal_id = 0
+
+        self.enable_quat_sub = rospy.Subscriber("pid_quat_enable", Bool, self.quat_enable_cb)
+        self.enable_x_sub = rospy.Subscriber("pid_x_enable", Bool, self.x_enable_cb)
+        self.enable_y_sub = rospy.Subscriber("pid_y_enable", Bool, self.y_enable_cb)
+        self.enable_z_sub = rospy.Subscriber("pid_z_enable", Bool, self.z_enable_cb)
         
-        self.server.start()        
+        self.server.start()    
+
+    def x_enable_cb(self, data):
+        if data.data == False:
+            self.previous_goal_x = None
+
+    def y_enable_cb(self, data):
+        if data.data == False:
+            self.previous_goal_y = None  
+
+    def z_enable_cb(self, data):
+        if data.data == False:
+            self.previous_goal_z = None 
+
+    def quat_enable_cb(self,data):
+        if data.data == False:
+            self.previous_goal_quat = None      
 
     def callback(self, goal):
         print("\n\nQuaternion Server got goal:\n",goal)
@@ -30,31 +51,28 @@ class StateQuaternionServer(BaseServer):
         self.cancelled = False
         self.goal = goal
         if self.pose is not None:
-            if self.previous_goal_x is None: self.previous_goal_x = self.pose.position.x
-            if self.previous_goal_y is None: self.previous_goal_y = self.pose.position.y
-            if self.previous_goal_z is None: self.previous_goal_z = self.pose.position.z
-            if self.previous_goal_quat is None: self.previous_goal_quat = self.body_quat
-            if self.goal.local:
-                self.local_to_global()
+            goal_position = [self.goal.position.x, self.goal.position.y, self.goal.position.z]
+            goal_quat = goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+            if self.goal.local.data:
+                goal_position = self.local_to_global(goal_position)
             if(self.goal.displace.data):
-                goal_position, goal_quat = self.get_goal_after_displace()
-            else:
-                goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
-                goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+                goal_position, goal_quat = self.get_goal_after_displace(goal_position, goal_quat)
+
 
             if(self.goal.do_x.data):
                 self.previous_goal_x = goal_position[0]
                 self.pub_x_enable.publish(Bool(True))
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
-                self.pub_x_pid.publish(goal_position[0])
-                
+                self.pub_x_pid.publish(goal_position[0])    
             elif(self.previous_goal_x is not None):
                 goal_position[0] = self.previous_goal_x
                 self.pub_x_enable.publish(Bool(True))
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
                 self.pub_x_pid.publish(goal_position[0])
+            else:
+                goal_position[0] = None
                 
 
             if(self.goal.do_y.data):
@@ -63,26 +81,28 @@ class StateQuaternionServer(BaseServer):
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
                 self.pub_y_pid.publish(goal_position[1])
-                
             elif(self.previous_goal_y is not None):
                 goal_position[1] = self.previous_goal_y
                 self.pub_y_enable.publish(Bool(True))
                 self.pub_surge.publish(0)
                 self.pub_sway.publish(0)
                 self.pub_y_pid.publish(goal_position[1])
+            else:
+                goal_position[1] = None
                 
 
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
                 self.pub_heave.publish(0)
-                self.pub_z_pid.publish(goal_position[2])
-                
+                self.pub_z_pid.publish(goal_position[2]) 
             elif (self.previous_goal_z is not None):
                 goal_position[2] = self.previous_goal_z
                 self.pub_z_enable.publish(Bool(True))
                 self.pub_heave.publish(0)
                 self.pub_z_pid.publish(goal_position[2])
+            else:
+                goal_position[2] = None
 
             if (self.goal.do_quaternion.data):
                 self.previous_goal_quat = goal_quat
@@ -102,6 +122,8 @@ class StateQuaternionServer(BaseServer):
                 goal_msg.y = goal_quat.y
                 goal_msg.z = goal_quat.z
                 self.pub_quat_pid.publish(goal_msg)
+            else:
+                goal_quat = None
 
             time_to_settle = 4
             settled = False
@@ -119,32 +141,39 @@ class StateQuaternionServer(BaseServer):
         if not self.cancelled and my_goal == self.goal_id:
             self.server.set_succeeded()
     
-    def local_to_global(self):
-        global_goal = self.previous_goal_quat * np.quaternion(0, self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z) * self.previous_goal_quat.inverse()
-        self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z = global_goal.x, global_goal.y, global_goal.z
+    def local_to_global(self, goal_position):
+        pivot_quat = self.previous_goal_quat if self.previous_goal_quat is not None else self.body_quat
+        global_goal = pivot_quat * np.quaternion(0, goal_position[0], goal_position[1], goal_position[2]) * pivot_quat.inverse()
+        return [global_goal.x, global_goal.y, global_goal.z]
 
-    def get_goal_after_displace(self):
-        goal_position = [self.previous_goal_x + self.goal.pose.position.x, self.previous_goal_y + self.goal.pose.position.y, self.previous_goal_z + self.goal.pose.position.z]
-        goal_quat = self.previous_goal_quat * np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+    def get_goal_after_displace(self, goal_position_delta, goal_quat_delta):
+        pivot_x = self.previous_goal_x if self.previous_goal_x is not None else self.pose.x
+        pivot_y = self.previous_goal_y if self.previous_goal_y is not None else self.pose.y
+        pivot_z = self.previous_goal_z if self.previous_goal_z is not None else self.pose.z
+        pivot_quat  = self.previous_goal_quat if self.previous_goal_quat is not None else self.body_quat
+
+        goal_position = [pivot_x + goal_position_delta[0], pivot_y + goal_position_delta[1], pivot_z + goal_position_delta[2]]
+        goal_quat = pivot_quat * goal_quat_delta
         return goal_position, goal_quat 
+    
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.999
+        tolerance_quat_w = 0.99
 
         if goal_position[0] is not None:
             pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
             if abs(pos_x_error) > tolerance_position: return False
         if goal_position[1] is not None:
             pos_y_error = self.calculatePosError(self.pose.position.y, goal_position[1])
-            if abs(pos_y_error) > tolerance_position and do_y: return False
+            if abs(pos_y_error) > tolerance_position: return False
         if goal_position[2] is not None:
             pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
-            if abs(pos_z_error) > tolerance_position and do_z: return False
+            if abs(pos_z_error) > tolerance_position: return False
         if goal_quaternion is not None:
             quat_error = self.calculateQuatError(self.body_quat, goal_quaternion)
-            if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
+            if abs(quat_error.w) < tolerance_quat_w: return False
             
         return True
 
