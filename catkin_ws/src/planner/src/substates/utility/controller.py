@@ -186,6 +186,7 @@ class Controller:
         x,y,z = pos
         w,wx,wy,wz = ang
         goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
+
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
         else:

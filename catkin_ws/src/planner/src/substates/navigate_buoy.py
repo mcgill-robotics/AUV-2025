@@ -3,12 +3,14 @@ import smach
 from .utility.functions import *
 
 class NavigateBuoy(smach.State):
-    def __init__(self, control, state, mapping, target_symbol):
+    def __init__(self, control, state, mapping, target_symbol, buoy_width, buoy_height):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.target_symbol = target_symbol
+        self.buoy_width = buoy_width
+        self.buoy_height = buoy_height
 
     def execute(self, ud):
         print("Starting buoy navigation.") 
@@ -48,16 +50,21 @@ class NavigateBuoy(smach.State):
         self.control.move(homing_position) # move in front of buoy
         print("Successfully centered in front of gate")
 
-        buoy_symbols = self.mapping.getClass(cls=self.target_symbol)
-        if len(buoy_symbols) == 0:
-            print("No buoy symbol in object map! Failed.")
-            return 'failure'
+        buoy_symbol_locations = 12 if buoy_object[5] is None else buoy_object[5]
+        first_buoy_symbol_location = math.floor(buoy_symbol_locations / 10)
+        second_buoy_symbol_location = buoy_symbol_locations - 10 * math.floor(buoy_symbol_locations / 10)
 
-        for symbol in buoy_symbols:
-            print("Touching symbol.")
-            self.control.move(symbol[1:4]) # move to symbol
-            print("Returning to homing position.")
+        for symbol_location in [first_buoy_symbol_location, second_buoy_symbol_location]:
             self.control.move(homing_position) # move in front of buoy
+            if symbol_location == 1: # TOP LEFT
+                self.control.moveDeltaLocal(offset_distance, self.buoy_width/4, self.buoy_height/4)
+            elif symbol_location == 2: # TOP RIGHT
+                self.control.moveDeltaLocal(offset_distance, -self.buoy_width/4, self.buoy_height/4)
+            elif symbol_location == 3: # BOTTOM LEFT
+                self.control.moveDeltaLocal(offset_distance, self.buoy_width/4, -self.buoy_height/4)
+            elif symbol_location == 4: # BOTTOM RIGHT
+                self.control.moveDeltaLocal(offset_distance, -self.buoy_width/4, -self.buoy_height/4)
+
 
         print("Successfully completed buoy task!")
         

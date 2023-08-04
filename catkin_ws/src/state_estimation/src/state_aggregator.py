@@ -82,11 +82,16 @@ class State_Aggregator:
         self.pos_world_global = np.array([0.0, 0.0, 0.0])
         self.q_world_global = np.quaternion(1, 0, 0, 0)
 
+        # redundancy - without previous messages, assume default
+        self.last_pos_auv_global = np.zeros(3)
+        self.last_q_auv_global = np.quaternion(1, 0, 0, 0)
+        self.last_w_auv = np.zeros(3)
+
         # sensors
         # TODO - pass in mount q/pos as contructor args
         self.depth_sensor = DepthSensor()
         self.imu = IMUSensor()
-        self.dvl = DVLSensor()
+        self.dvl = DVLSensor(self.set_dvlref)
 
         # publishers
         self.pub_auv = rospy.Publisher('pose', Pose, queue_size=1)
@@ -103,10 +108,6 @@ class State_Aggregator:
         rospy.Subscriber("/reset_state_full", Empty, self.reset_state_full_cb)
         rospy.Subscriber("/reset_state_planar", Empty, self.reset_state_planar_cb)
 
-        # redundancy - without previous messages, assume default
-        self.last_pos_auv_global = np.zeros(3)
-        self.last_q_auv_global = np.quaternion(1, 0, 0, 0)
-        self.last_w_auv = np.zeros(3)
 
 
     '''
@@ -260,10 +261,21 @@ class State_Aggregator:
         # new world quaternion is yaw rotation of AUV in global frame
         q = self.q_auv_global()
         q_auv_global = np.array([q.x, q.y, q.z, q.w])
-        theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[0]
+        theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[2]
         q_world_global = transformations.quaternion_from_euler(0, 0, theta_z)
         self.q_world_global = np.quaternion(q_world_global[3], q_world_global[0], q_world_global[1], q_world_global[2])
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+
+    def set_dvlref(self):
+        # TODO - check q_auv_global is available
+        if self.pos_auv_global() is None:
+            pos_auv_global_init = np.array([0, 0, 0])
+            self.dvl.set_dvlref_global(self.q_auv_global(), pos_auv_global_init)
+        else:
+            self.dvl.set_dvlref_global(self.q_auv_global(), self.pos_auv_global())
+
+        
 
     '''
     Initialization makes sure all the relevant reference frames are well defined
@@ -278,25 +290,28 @@ class State_Aggregator:
         # TODO - does this update state while blocked? could be issue using old q_auv_global
         # TODO - do not block if some sensors remain inactive 
         # wait for data from imu
-        while not self.imu.is_active:
+        while not self.imu.is_active and not rospy.is_shutdown():
             pass
 
         rospy.loginfo("state_aggregator initializing -- imu active, waiting on depth_sensor")
 
+        '''
         # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
-        while not self.depth_sensor.is_active: 
+        while not self.depth_sensor.is_active and not rospy.is_shutdown():
             pass
 
         rospy.loginfo("state_aggregator initializing -- depth_sensor active, waiting on dvl")
+        '''
 
         # set dvlref frame which is reference to dvl readings, 
         # xy are arbitrarily set to whatever depth_sensor thinks
         # (this may be something other than 0, 0 after accounting for mounting location)
         # wait for dvl data (without which we can't set dvlref)
-        while not self.dvl.is_active:
+        pos_auv_global_init = np.array([0, 0, 0])
+        while not self.dvl.is_active and not rospy.is_shutdown():
             try:
-                self.dvl.set_dvlref_global(self.q_auv_global(), self.depth_sensor.pos_auv_global(self.q_auv_global()))
+                self.set_dvlref()
             except:
                 rospy.sleep(1) # TODO - doesn't work with just pass (?)
 

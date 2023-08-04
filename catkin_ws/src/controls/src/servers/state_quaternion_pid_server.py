@@ -18,7 +18,7 @@ class StateQuaternionServer(BaseServer):
         self.previous_goal_y = None
         self.previous_goal_z = None
         self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
-        self.max_safe_goal_depth = -1
+        self.max_safe_goal_depth = -0.5
         self.goal_id = 0
 
         self.enable_quat_sub = rospy.Subscriber("pid_quat_enable", Bool, self.quat_enable_cb)
@@ -93,6 +93,10 @@ class StateQuaternionServer(BaseServer):
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
+
+                safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
+                if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
+                self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
                 self.pub_z_pid.publish(goal_position[2]) 
             elif (self.previous_goal_z is not None):
@@ -128,7 +132,8 @@ class StateQuaternionServer(BaseServer):
             settled = False
             while not settled and not self.cancelled and my_goal == self.goal_id and not rospy.is_shutdown():
                 start = rospy.get_time()
-                while not self.cancelled and my_goal == self.goal_id and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
+                while not self.cancelled and my_goal == self.goal_id and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data) and not rospy.is_shutdown():
+
                     if(rospy.get_time() - start > time_to_settle):
                         settled = True
                         print("settled")

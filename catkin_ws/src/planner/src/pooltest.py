@@ -90,7 +90,7 @@ if __name__ == "__main__":
         elif menu_index == '8':
             smach.StateMachine.add('buoy', 
                 # TODO - add states to find buoy?
-                NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol),
+                NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=1.2, buoy_height=1.2),
                 transitions={'success': 'success', 'failure':'failure'})
 
         # octagon 

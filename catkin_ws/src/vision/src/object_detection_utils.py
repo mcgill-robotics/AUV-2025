@@ -1,18 +1,18 @@
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image, PointCloud2, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo
 from ultralytics import YOLO
 from auv_msgs.msg import ObjectDetectionFrame
 import numpy as np
 import math
-from std_msgs.msg import Float64, Header
+from std_msgs.msg import Float64
 import lane_marker_measure
 import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
-from sensor_msgs import point_cloud2
+from tf import transformations
 class State:
     def __init__(self, isFrontCamState):
         self.x = None
@@ -21,14 +21,8 @@ class State:
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
-        self.point_cloud = None
         self.paused = False
         self.q_auv = None
-
-        self.width = None
-        self.height = None
-        self.x_over_z_map = None
-        self.y_over_z_map = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -37,24 +31,6 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-
-        if isFrontCamState:
-            self.camera_info_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo, queue_size=1)
-            self.depth_sub = rospy.Subscriber('vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updatePointCloud, queue_size=1)
-    def updateCameraInfo(self, msg):
-        fx = msg.K[0]
-        fy = msg.K[4]
-        cy = msg.K[2]
-        cx = msg.K[5]
-  
-        self.width = msg.width
-        self.height = msg.height
-
-        u_map = np.tile(np.arange(self.width),(self.height,1)) +1
-        v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
-
-        self.x_over_z_map = (cx - u_map) / fx
-        self.y_over_z_map = (cy - v_map) / fy
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -73,21 +49,6 @@ class State:
     def updateThetaZ(self, msg):
         if self.paused: return
         self.theta_z = float(msg.data)
-    def updatePointCloud(self, msg):
-        if self.paused or self.y_over_z_map is None: return
-        depth_map = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
-        #ADD NOISE [COMP] during comp no need to add noise!
-        depth_map += np.random.normal(0, 0.1, depth_map.shape)
-        #SET 20% of point cloud pixels to infinity (imitating incomplete data)
-        pixels_to_remove = np.random.choice([True, False], size=depth_map.shape, replace=True, p=[0.2, 0.8])
-        depth_map[pixels_to_remove] = np.inf
-
-        depth_map = np.nan_to_num(depth_map, nan=np.inf)
-        x_map = self.x_over_z_map * depth_map
-        y_map = self.y_over_z_map * depth_map
-
-        combined = np.stack((depth_map, x_map, y_map), axis=2)
-        self.point_cloud = np.float32(combined)
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -169,8 +130,9 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-def transformLocalToGlobal(lx,ly,lz,camera_id):
-    rotation = states[camera_id].q_auv
+def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
+    rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
+    rotation = states[camera_id].q_auv * np.quaternion(rotation_offset.w, rotation_offset.x, rotation_offset.y, rotation_offset.z)
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -192,6 +154,22 @@ def find_intersection(vector, plane_z_pos):
     if scaling_factor < 0: return None
     return np.array(vector) * scaling_factor
 
+def eulerToVectorFrontCam(x_deg, y_deg):
+    x_rad = math.radians(x_deg)
+    y_rad = math.radians(y_deg)
+    y = math.tan(x_rad)
+    z = -math.tan(y_rad)
+    # we want sqrt(x**2 + y**2 + z**2) == 1
+    #   x**2 == 1 - y**2 + z**2
+    #   x == sqrt(1 - y**2 + z**2)
+    try:
+        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
+        vec = np.array([x,y,z])
+    except ValueError:
+        vec = np.array([0,y,z])
+        vec = vec / np.linalg.norm(vec)
+    return vec
+
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
     x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
@@ -202,7 +180,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     pitch_angle_offset = down_cam_vfov*y_center_offset
 
     local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
+    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], camera_id=0, yaw_offset=down_cam_yaw_offset)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = find_intersection(global_direction_to_object, z_pos)
@@ -212,36 +190,119 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     z = z_pos
     return x, y, z
 
-def cleanPointCloud(point_cloud):
-    #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
-    median_blur_size = 5
-    point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
-    #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
-    closest_x_point = np.nanmin(point_cloud[:, :, 0])
-    far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
-    point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
-    return point_cloud
+def estimateObjectPositionFrontCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 
-def getObjectPositionFrontCam(bbox):
-        cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))
-        lx = np.nanmean(cropped_point_cloud[:,:,0])
-        ly = np.nanmean(cropped_point_cloud[:,:,1])
-        lz = np.nanmean(cropped_point_cloud[:,:,2])
-        x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
-        return states[1].x + x, states[1].y + y, states[1].z + z
-        # TODO! SEPERATE CASE FOR GATE?
+    #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+    x_center_offset = ((img_height/2) - pixel_x) / img_width #-0.5 to 0.5
+    y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
+    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+    #assuming FOV increases linearly with distance from center pixel
+    yaw_angle_offset = front_cam_hfov*x_center_offset
+    pitch_angle_offset = front_cam_vfov*y_center_offset
+    # TEST! NO IDEA IF THIS WORKS
+    local_direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
+    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
-def measureAngle(bbox, global_class_name):
-    if global_class_name in ["Gate", "Buoy", "Quali Gate"]:
-        cropped_point_cloud = cleanPointCloud(cropToBbox(states[1].point_cloud, bbox, copy=True))[:,:,0:2] # ignore z position of points
-        left_point_cloud = cropped_point_cloud[:, :int(cropped_point_cloud.shape[1]/2)]
-        right_point_cloud = cropped_point_cloud[:, int(cropped_point_cloud.shape[1]/2):]
-        #avg left points together and right points together so we get two (x,y) points
-        left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
-        right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
-        #measure angle of vector defined by averaged left/right points
-        return measureYaw(left_avg_point, right_avg_point)
-    else: return None
+    # solve for point that is defined by the intersection of the direction to the object and it's z position
+    obj_pos = find_intersection(global_direction_to_object, z_pos)
+    if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[1].x, states[1].y, states[1].z])) > max_dist_to_measure: return np.nan, np.nan, np.nan
+    x = obj_pos[0]
+    y = obj_pos[1]
+    z = z_pos
+    return x, y, z
+    
+def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name, custom_z=None, custom_height=None):
+    if global_class_name == "Gate":
+        obj_center_z = gate_middle_z
+        obj_height = gate_height
+    elif global_class_name == "Buoy":
+        obj_center_z = buoy_middle_z
+        obj_height = buoy_height
+    elif global_class_name == "Octagon Table":
+        obj_center_z = octagon_table_top_z - octagon_table_height/2
+        obj_height = octagon_table_height
+    elif global_class_name == "Lane Marker": 
+        obj_center_z = lane_marker_top_z - lane_marker_height/2
+        obj_height = lane_marker_height 
+    else:
+        obj_center_z = custom_z
+        obj_height = custom_height
+
+    #TRY WITH DIFFERENT POINTS IN THE BBOX THAT WE KNOW THE Z POSITION OF:
+    # NOTE: a later improvement could (maybe) be to use the corners as well (more complex, not sure if it will be more accurate or not)
+    center = (bbox[0], bbox[1])
+    top = (bbox[0], int(bbox[1] - bbox[3]/2))
+    bottom = (bbox[0], int(bbox[1] + bbox[3]/2))
+
+    center_x, center_y, center_z = estimateObjectPositionFrontCam(center[0], center[1], img_height, img_width, obj_center_z)
+
+    top_x, top_y, top_z = estimateObjectPositionFrontCam(top[0], top[1], img_height, img_width, obj_center_z + obj_height/2)
+    if top_z is not np.nan: top_z -= obj_height/2
+    
+    bottom_x, bottom_y, bottom_z = estimateObjectPositionFrontCam(bottom[0], bottom[1], img_height, img_width, obj_center_z - obj_height/2)
+    if bottom_x is not np.nan: bottom_z += obj_height/2
+
+    median_x = np.nanmedian(np.array([center_x, top_x, bottom_x]))
+    median_y = np.nanmedian(np.array([center_y, top_y, bottom_y]))
+    median_z = np.nanmedian(np.array([center_z, top_z, bottom_z]))
+
+    if np.nan in [median_x, median_y, median_z]: return None, None, None
+
+    return median_x, median_y, median_z
+
+
+def measureAngle(bbox, img_height, img_width, global_class_name):
+    if global_class_name == "Gate":
+        obj_center_z = gate_middle_z
+        obj_height = gate_height
+    elif global_class_name == "Buoy":
+        obj_center_z = buoy_middle_z
+        obj_height = buoy_height
+    else: 
+        return None
+        
+    top_left = (int(bbox[0] - bbox[2]/2), int(bbox[1] - bbox[3]/2))
+    left = (int(bbox[0] - bbox[2]/2), bbox[1])
+    bottom_left = (int(bbox[0] - bbox[2]/2), int(bbox[1] + bbox[3]/2))
+
+    top_right = (int(bbox[0] + bbox[2]/2), int(bbox[1] - bbox[3]/2))
+    right = (int(bbox[0] + bbox[2]/2), bbox[1])
+    bottom_right = (int(bbox[0] + bbox[2]/2), int(bbox[1] + bbox[3]/2))
+
+    # GET LEFT POINT
+    left_x, left_y, _ = estimateObjectPositionFrontCam(left[0], left[1], img_height, img_width, obj_center_z)
+
+    top_left_x, top_left_y, top_left_z = estimateObjectPositionFrontCam(top_left[0], top_left[1], img_height, img_width, obj_center_z + obj_height/2)
+    if top_left_z is not np.nan: top_left_z -= obj_height/2
+
+    bottom_left_x, bottom_left_y, bottom_left_z = estimateObjectPositionFrontCam(bottom_left[0], bottom_left[1], img_height, img_width, obj_center_z - obj_height/2)
+    if bottom_left_z is not np.nan: bottom_left_z += obj_height/2
+
+    # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
+    median_left_x = np.nanmedian(np.array([left_x, top_left_x, bottom_left_x]))
+    median_left_y = np.nanmedian(np.array([left_y, top_left_y, bottom_left_y]))
+
+    left_point = [median_left_x, median_left_y]
+
+    # GET RIGHT POINT
+    right_x, right_y, _ = estimateObjectPositionFrontCam(right[0], right[1], img_height, img_width, obj_center_z)
+
+    top_right_x, top_right_y, top_right_z = estimateObjectPositionFrontCam(top_right[0], top_right[1], img_height, img_width, obj_center_z + obj_height/2)
+    if top_right_z is not np.nan: top_right_z -= obj_height/2
+
+    bottom_right_x, bottom_right_y, bottom_right_z = estimateObjectPositionFrontCam(bottom_right[0], bottom_right[1], img_height, img_width, obj_center_z - obj_height/2)
+    if bottom_right_z is not np.nan: bottom_right_z += obj_height/2
+
+    # TAKE THE MEASUREMENT WHICH IS IN THE MIDDLE OF THE OTHER TWO (TODO: FIND A BETTER WAY TO CHOOSE)
+    median_right_x = np.nanmedian(np.array([right_x, top_right_x, bottom_right_x]))
+    median_right_y = np.nanmedian(np.array([right_y, top_right_y, bottom_right_y]))
+
+    right_point = [median_right_x, median_right_y]
+
+    if np.nan in right_point or np.nan in left_point: return None
+    
+    return measureYaw(left_point, right_point)
+
 
 # returns an angle between a horizontal vector (i.e. a vector on the negative y axis) and the vector between a left and right (x,y) point on a gate or buoy
 def measureYaw(leftPoint, rightPoint):
@@ -277,9 +338,12 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-def analyzeBuoy(detections):
-    symbols = []
-    buoy_was_detected = False
+def analyzeBuoy(detections, img_height, img_width, target_symbol):
+    symbol_info = []
+    buoy_bbox = None
+    mid_x_buoy = 0
+    mid_y_buoy = 0
+    position = []
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
         else: boxes = detection.boxes.numpy()
@@ -289,14 +353,31 @@ def analyzeBuoy(detections):
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
             if (global_class_name == "Buoy"):
-                buoy_was_detected = True
-                continue
-            elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
-                x,y,z = getObjectPositionFrontCam(bbox)
-                symbols.append([global_class_name, x, y, z, conf])
+                buoy_bbox = bbox
+                mid_x_buoy = buoy_bbox[0]
+                mid_y_buoy = buoy_bbox[1]
+            elif (((global_class_name == "Earth Symbol" and target_symbol == "Earth Symbol") or (global_class_name == "Abydos Symbol" and target_symbol == "Abydos Symbol")) and conf > min_prediction_confidence):
+                symbol_info.append(bbox)
 
-    if buoy_was_detected: return symbols
-    else: return []
+    for bbox in symbol_info:
+        if (box[0]<mid_x_buoy and box[1]<mid_y_buoy):
+            position.append(1)
+        elif (box[0]>mid_x_buoy and box[1]<mid_y_buoy):
+            position.append(2)
+        elif (box[0]<mid_x_buoy and box[1]>mid_y_buoy):
+            position.append(3)
+        elif (box[0]>mid_x_buoy and box[1]>mid_y_buoy):
+            position.append(4)
+
+    if buoy_bbox is None: return []
+    else:
+        position.sort()
+        string_positions = [str(current_integer) for current_integer in position]
+        string_value = "".join(string_positions)
+        number = int(string_value)
+        
+    return number
+
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences):
@@ -347,10 +428,19 @@ states = (State(False), State(True))
 min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
-# [COMP] change pool depth and object heights to actual comp values
-pool_depth = -4
-lane_marker_z = pool_depth + 0.3
-octagon_table_z = pool_depth + 1.2
+# [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
+pool_depth = -4.9
+
+gate_height = 1.524
+buoy_height = 1.2
+octagon_table_height = 1.5 # 0.9m - 1.5m
+lane_marker_height = 0.4
+symbol_height = 0.3
+
+lane_marker_top_z = pool_depth + lane_marker_height
+octagon_table_top_z = pool_depth + octagon_table_height
+gate_middle_z = 0 - (gate_height / 2)
+buoy_middle_z = pool_depth + buoy_height/2 + 1.2 # 0.6m - 1.2m GUESS FROM QUALI -> hit it at -2
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
@@ -358,6 +448,9 @@ TEXT_COLOR = (0, 0, 0) # Black
 # [COMP] ensure FOV is correct
 down_cam_hfov = 50 #set to 220 when not in sim!
 down_cam_vfov = 28 #set to 165.26 when not in sim!
+down_cam_yaw_offset = 0
+front_cam_hfov = 78.44
+front_cam_vfov = 44.12
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 #only report predictions with confidence at least 40%

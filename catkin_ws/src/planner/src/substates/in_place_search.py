@@ -29,8 +29,8 @@ class InPlaceSearch(smach.State):
             if (num_turns >= 360/abs(turn_amt[2])):
                 num_turns = 0
                 num_full_turns += 1
-                if num_full_turns == 1: self.control.move((None,None,-3))
-                elif num_full_turns == 2: self.control.move((None,None,-1))
+                if num_full_turns == 1: self.control.move((None,None,-0.5))
+                elif num_full_turns == 2: self.control.move((None,None,-1.5))
                 else: return
             #move forward
             print("Rotating by {}.".format(turn_amt))
@@ -44,7 +44,7 @@ class InPlaceSearch(smach.State):
     def execute(self, ud):
         print("Starting in-place search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2), callback=lambda a,b: None)
+        self.control.move((None, None, -1), callback=lambda a,b: None)
         self.control.moveDelta((0,0,0), callback=lambda a,b: None)
         self.control.rotateEuler((0,0,None))
 

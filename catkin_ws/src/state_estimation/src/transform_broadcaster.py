@@ -15,7 +15,7 @@ def auv_cb(pose):
     br = TransformBroadcaster()
 
     t = TransformStamped()
-    t.header.stamp = rospy.Time(0)
+    t.header.stamp = rospy.Time.now()
     t.header.frame_id = "world"
     t.child_frame_id = "auv_base"
 
@@ -25,7 +25,7 @@ def auv_cb(pose):
     t.transform.rotation = pose.orientation
 
     t2 = TransformStamped()
-    t2.header.stamp = rospy.Time(0)
+    t2.header.stamp = rospy.Time.now()
     t2.header.frame_id = "world_rotation"
     t2.child_frame_id = "auv_rotation"
 
@@ -42,7 +42,7 @@ def world_cb(pose):
     br = TransformBroadcaster()
 
     t = TransformStamped()
-    t.header.stamp = rospy.Time(0)
+    t.header.stamp = rospy.Time.now()
     t.header.frame_id = "global"
     t.child_frame_id = "world"
 
@@ -58,7 +58,7 @@ def global_tf():
     br = StaticTransformBroadcaster()
 
     t = TransformStamped()
-    t.header.stamp = rospy.Time(0)
+    t.header.stamp = rospy.Time.now()
     t.header.frame_id = "NED"
     t.child_frame_id = "global"
 
