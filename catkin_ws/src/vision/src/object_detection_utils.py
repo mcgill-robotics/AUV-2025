@@ -230,9 +230,6 @@ def getObjectPositionFrontCam(bbox, img_height, img_width, global_class_name, cu
     elif global_class_name == "Buoy":
         obj_center_z = buoy_middle_z
         obj_height = buoy_height
-    elif global_class_name == "Quali Gate":
-        obj_center_z = quali_gate_middle_z
-        obj_height = quali_gate_height
     elif global_class_name == "Octagon Table":
         obj_center_z = octagon_table_top_z - octagon_table_height/2
         obj_height = octagon_table_height
@@ -273,9 +270,6 @@ def measureAngle(bbox, img_height, img_width, global_class_name):
     elif global_class_name == "Buoy":
         obj_center_z = buoy_middle_z
         obj_height = buoy_height
-    elif global_class_name == "Quali Gate":
-        obj_center_z = quali_gate_middle_z
-        obj_height = quali_gate_height
     else: 
         return None
         
@@ -437,10 +431,8 @@ lane_marker_top_z = pool_depth + 0.3
 octagon_table_top_z = pool_depth + 1.2
 gate_middle_z = pool_depth + 2
 buoy_middle_z = pool_depth + 1.75
-quali_gate_middle_z = pool_depth + 1.75
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
-quali_gate_height = 2
 gate_height = 1.5 
 buoy_height = 1.2
 octagon_table_height = 1.2
