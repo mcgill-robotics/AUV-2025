@@ -182,7 +182,7 @@ class DVLSensor(Sensor):
         self.set_dvlref_cb = set_dvlref_cb
 
         # static mount - dvl frame relative to AUV frame
-        self.mount_pos_dvl_auv = np.array([0.0, 0.0, 0.0])
+        self.mount_pos_dvl_auv = np.array([0.0, 0.0, -0.3])
         self.mount_q_dvl_auv = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
 
         # DVL measurements are with reference to its reset frame (dvlref) 
