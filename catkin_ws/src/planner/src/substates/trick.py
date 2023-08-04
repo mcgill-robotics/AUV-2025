@@ -26,18 +26,18 @@ class Trick(smach.State):
     
     def execute_roll(self):
         print("Starting roll trick")
-        for _ in range(self.num_full_spins*3): self.control.rotateEulerDelta((120.0, 0, 0))
+        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((120.0, 0, 0))
         print("Completed")
         return 'success'   
     
     def execute_pitch(self):
         print("Starting pitch trick")
-        for _ in range(self.num_full_spins*3): self.control.rotateEulerDelta((0,120.0,0))
+        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((0,120.0,0))
         print("Completed")
         return 'success'  
     
     def execute_yaw(self):
         print("Starting yaw trick")
-        for _ in range(self.num_full_spins*3): self.control.rotateEulerDelta((0,0,120.0))
+        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((0,0,120.0))
         print("Completed")
         return 'success'

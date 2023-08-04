@@ -132,7 +132,7 @@ def measureLaneMarker(img, bbox, debug_img):
 
 def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
-    rotation = states[camera_id].q_auv * np.quaternion(rotation_offset.w, rotation_offset.x, rotation_offset.y, rotation_offset.z)
+    rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -338,7 +338,7 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-def analyzeBuoy(detections, img_height, img_width, target_symbol):
+def analyzeBuoy(detections, target_symbol):
     symbol_info = []
     buoy_bbox = None
     mid_x_buoy = 0
