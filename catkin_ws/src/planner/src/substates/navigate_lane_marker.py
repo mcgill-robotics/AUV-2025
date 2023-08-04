@@ -62,8 +62,8 @@ class NavigateLaneMarker(smach.State):
         print("Rotating to lane marker target heading.")
 
         #   rotate to that heading
-        if heading1_dot < heading2_dot: self.control.rotateEuler((0,0,heading1))
-        else: self.control.rotateEuler((0,0,heading2))
+        if heading1_dot < heading2_dot: self.control.rotateEuler((0,0,heading2))
+        else: self.control.rotateEuler((0,0,heading1))
 
         print("Successfully rotated to lane marker!")
         return 'success'

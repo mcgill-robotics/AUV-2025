@@ -165,6 +165,6 @@ def detect_on_image(raw_img, camera_id):
 #the int argument is used to index debug publisher, model, class names, and i
 subs = [
     rospy.Subscriber('/vision/down_cam/image_raw', Image, detect_on_image, 0),
-    rospy.Subscriber('vision/front_cam/color/image_raw', Image, detect_on_image, 1)
+    # rospy.Subscriber('vision/front_cam/color/image_raw', Image, detect_on_image, 1)
     ]
 rospy.spin()
