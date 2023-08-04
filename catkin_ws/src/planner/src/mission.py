@@ -12,7 +12,6 @@ from substates.utility.state import *
 from substates.utility.vision import *
 from substates.trick import *
 from substates.navigate_gate import *
-from substates.quali_vision import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
 from substates.initialize_for_comp import *
@@ -129,51 +128,6 @@ def semiFinals():
     res = sm.execute()
     endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
-def semiFinalsDeadReckon():
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('initialization', InitializeForComp(wait_time=wait_time_for_comp), 
-                transitions={'success': 'find_gate'})
-        
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
-                transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
-        
-        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_width=gate_width), 
-                transitions={'success': 'tricks', 'failure': 'failure'})
-        
-        smach.StateMachine.add('tricks', Trick(control=control, trick_type="yaw", num_full_spins=2), 
-                transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
-                transitions={'success': 'find_lane_marker', 'failure': 'failure'})
-        
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
-                transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
-
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="Gate", control=control, mapping=mapping, state=state), 
-                transitions={'success': 'find_buoy', 'failure': 'failure'})
-
-        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=5, target_class="Buoy", min_objects=1, control=control, mapping=mapping), 
-                transitions={'success': 'navigate_buoy', 'failure': 'failure'})
-
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
-                transitions={'success': 'find_second_lane_marker', 'failure':'failure'})
-        
-        smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=2, control=control, mapping=mapping), 
-                transitions={'success': 'navigate_second_lane_marker', 'failure': 'failure'})
-
-        smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(origin_class="Buoy", control=control, mapping=mapping, state=state), 
-                transitions={'success': 'find_octagon', 'failure': 'failure'})
-        
-        smach.StateMachine.add('find_octagon', LinearSearch(timeout=120, forward_speed=5, target_class="Octagon Table", min_objects=1, control=control, mapping=mapping), 
-                transitions={'success': 'navigate_octagon', 'failure':'failure'})
-        
-        smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
-                transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
-
 buoy_width = 1.2
 buoy_height = 1.2
 gate_width = 3
@@ -191,8 +145,8 @@ if __name__ == '__main__':
         sm = None
 
 
-        control.move((None,None,-1), callback=lambda a,b: None)
-        control.moveDelta((0,0,0), callback=lambda a,b: None)
+        # control.move((None,None,-1))
+        # control.moveDelta((0,0,0))
         control.rotateEuler((0,0,None))
         # while True:
         #     control.rotateEuler((0,0,0))
@@ -206,7 +160,9 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        #laneMarkerGridSearchMission()
+        laneMarkerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
+    finally:
+        endPlanner()

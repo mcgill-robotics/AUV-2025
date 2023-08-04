@@ -27,6 +27,7 @@ class BreadthFirstSearch(smach.State):
             #move left
             print("Moving by {}.".format(movement))
             moving = True
+            # [TODO] FIX
             self.control.moveDeltaLocal(movement, callback=movementComplete, face_destination=True)
             #check for object detected while moving
             while moving and not rospy.is_shutdown():
@@ -44,8 +45,8 @@ class BreadthFirstSearch(smach.State):
     def execute(self, ud):
         print("Starting breadth-first search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -3), callback=lambda a,b: None)
-        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
+        # [COMP] make sure depth is appropriate here
+        self.control.move((None, None, -0.5))
         self.control.rotateEuler((0,0,None))
 
         self.searchThread = threading.Thread(target=self.doBreadthFirstSearch)

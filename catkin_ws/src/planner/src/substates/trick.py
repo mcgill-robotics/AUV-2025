@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-from std_msgs.msg import Float64
 
 class Trick(smach.State):
     def __init__(self, control, trick_type, num_full_spins=1):
@@ -13,7 +12,7 @@ class Trick(smach.State):
 
     def execute(self,ud):
         #STAY IN SAME POSITION AND AT FLAT ORIENTATION
-        self.control.moveDelta((0,0,0), callback=lambda a,b: None)
+        self.control.moveDelta((0,0,0))
         self.control.rotateEuler((0,0,None))
 
         if self.trick_type == "roll":
