@@ -159,7 +159,7 @@ class StateQuaternionServer(BaseServer):
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.99
+        tolerance_quat_w = 0.995
 
         if goal_position[0] is not None:
             pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
