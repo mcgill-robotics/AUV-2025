@@ -91,7 +91,7 @@ class StateQuaternionServer(BaseServer):
         pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.999
+        tolerance_quat_w = 0.995
 
         if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
         if abs(pos_x_error) > tolerance_position and do_x: return False

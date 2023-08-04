@@ -75,11 +75,11 @@ void setup() {
 }
 
 void loop() {
-	if(digitalRead(A0) == 0){
-		updateThrusters(microseconds);
-	}
-	else{
-		updateThrusters(offCommand);
-	}
+	//if(digitalRead(A0) == 0){
+	updateThrusters(microseconds);
+	//}
+	//else{
+	//	updateThrusters(offCommand);
+	//}
 	nh.spinOnce(); 
 }

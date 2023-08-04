@@ -264,6 +264,7 @@ class State_Aggregator:
         theta_z = transformations.euler_from_quaternion(q_auv_global, 'szyx')[2]
         q_world_global = transformations.quaternion_from_euler(0, 0, theta_z)
         self.q_world_global = np.quaternion(q_world_global[3], q_world_global[0], q_world_global[1], q_world_global[2])
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 
     def set_dvlref(self):
