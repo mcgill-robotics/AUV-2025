@@ -175,8 +175,8 @@ class Controller:
 
     def state(self,pos,ang,callback=None):
         x,y,z = pos
-        w,x,y,z = ang
-        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_not_displace)
+        w,wx,wy,wz = ang
+        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_not_displace)
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
         else:
@@ -184,8 +184,8 @@ class Controller:
     
     def stateDelta(self,pos,ang,callback=None):
         x,y,z = pos
-        w,x,y,z = ang
-        goal_state = self.get_state_goal([x,y,z,w,x,y,z],do_displace)
+        w,wx,wy,wz = ang
+        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
         if callback is not None:
             self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
         else:

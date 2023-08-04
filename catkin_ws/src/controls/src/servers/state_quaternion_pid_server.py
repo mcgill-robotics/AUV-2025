@@ -52,12 +52,11 @@ class StateQuaternionServer(BaseServer):
         self.goal = goal
         if self.pose is not None:
             goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
-            goal_quat = goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+            goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
             if self.goal.local.data:
                 goal_position = self.local_to_global(goal_position)
             if(self.goal.displace.data):
                 goal_position, goal_quat = self.get_goal_after_displace(goal_position, goal_quat)
-
 
             if(self.goal.do_x.data):
                 self.previous_goal_x = goal_position[0]
