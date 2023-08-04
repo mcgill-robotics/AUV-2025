@@ -16,7 +16,7 @@ class NavigateLaneMarker(smach.State):
         print("Starting lane marker navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         #[COMP] make sure depth is appropriate here
-        self.control.move((None, None, -0.5))
+        self.control.move((None, None, -2))
         self.control.rotateEuler((0,0,None))
         
         if self.origin_class == "": # use auv current position as origin
@@ -38,15 +38,15 @@ class NavigateLaneMarker(smach.State):
                 return 'failure'
             rospy.sleep(5.0)
             self.mapping.updateObject(lane_marker_obj)
-            self.control.move((lane_marker_obj[1], lane_marker_obj[2], -0.5))
+            self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2))
         
         #Waiting 10 seconds and repeating to make sure it's correct
         print("Waiting 10 seconds to ensure correct measurement of lane marker")
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -0.5))
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2))
         rospy.sleep(10)
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -0.5))
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2))
 
         heading1 = lane_marker_obj[4]
         heading2 = lane_marker_obj[5]

@@ -135,17 +135,13 @@ def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
-def eulerToVectorDownCam(x_deg, y_deg):
+def eulerToVectorDownCam(x_deg, y_deg, z_diff):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
     x = -math.tan(y_rad)
     y = math.tan(x_rad)
-    try:
-        z = -1 * abs(math.sqrt(1 - (x ** 2 + y ** 2)))
-        vec = np.array([x,y,z])
-    except ValueError:
-        vec = np.array([x,y,0])
-        vec = vec / np.linalg.norm(vec)
+    vec = np.array([x,y,-1])
+    vec = vec / np.linalg.norm(vec)
     return vec
 
 def find_intersection(vector, plane_z_pos):
@@ -154,20 +150,13 @@ def find_intersection(vector, plane_z_pos):
     if scaling_factor < 0: return None
     return np.array(vector) * scaling_factor
 
-def eulerToVectorFrontCam(x_deg, y_deg):
+def eulerToVectorFrontCam(x_deg, y_deg, z_diff):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
     y = math.tan(x_rad)
     z = -math.tan(y_rad)
-    # we want sqrt(x**2 + y**2 + z**2) == 1
-    #   x**2 == 1 - y**2 + z**2
-    #   x == sqrt(1 - y**2 + z**2)
-    try:
-        x = abs(math.sqrt(1 - (y ** 2 + z ** 2)))
-        vec = np.array([x,y,z])
-    except ValueError:
-        vec = np.array([0,y,z])
-        vec = vec / np.linalg.norm(vec)
+    vec = np.array([1,y,z])
+    vec = vec / np.linalg.norm(vec)
     return vec
 
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
@@ -179,7 +168,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     roll_angle_offset = down_cam_hfov*x_center_offset
     pitch_angle_offset = down_cam_vfov*y_center_offset
 
-    local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
+    local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset, z_pos - states[0].z)
     global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], camera_id=0, yaw_offset=down_cam_yaw_offset)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position

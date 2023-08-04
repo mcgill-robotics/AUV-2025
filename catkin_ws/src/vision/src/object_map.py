@@ -169,7 +169,7 @@ def publishMap():
 min_observations = 5
 object_map = []
 
-sameObjectRadius = 1.5 #in same units as state_x, y, z etc (meters i think)
+sameObjectRadius = 2 #in same units as state_x, y, z etc (meters i think)
 
 rospy.init_node('object_map')
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
