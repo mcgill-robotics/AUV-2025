@@ -22,7 +22,6 @@ class State:
         self.theta_z = None
         self.paused = False
         self.q_auv = None
-        self.pixelCoordinateToEulerFrontCam = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -31,26 +30,6 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        # self.camera_info_sub = rospy.Subscriber('vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
-    # def updateCameraInfo(self, msg):
-    #     # fx = msg.K[0]
-    #     # fy = msg.K[4]
-    #     # cy = msg.K[2]
-    #     # cx = msg.K[5]
-    #     self.Ki = np.linalg.inv(np.array(msg.K))
-    #     self.pixelCoordinateToEulerFrontCam = pixelCoordinateToEulerFrontCam
-    #     self.camera_info_sub.unregister()
-    # return self.Ki.dot([x, y, 1.0])
-    def pixelCoordinateToEulerFrontCam(self, x, y, img_w, img_h):
-        #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
-        x_center_offset = ((img_w/2) - x) / img_w #-0.5 to 0.5
-        y_center_offset = (y - (img_h/2)) / img_h #negated since y goes from top to bottom
-        #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
-        #assuming FOV increases linearly with distance from center pixel
-        yaw_angle_offset = front_cam_hfov*x_center_offset
-        pitch_angle_offset = front_cam_vfov*y_center_offset
-        # TEST! NO IDEA IF THIS WORKS
-        return yaw_angle_offset, pitch_angle_offset        
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -210,8 +189,15 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     return x, y, z
 
 def estimateObjectPositionFrontCam(pixel_x, pixel_y, img_height, img_width, z_pos):
-    yaw_angle_offset, pitch_angle_offset = states[1].pixelCoordinateToEulerFrontCam(pixel_x, pixel_y, img_width, img_height)
 
+    #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
+    x_center_offset = ((img_height/2) - pixel_x) / img_width #-0.5 to 0.5
+    y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
+    #use offset within image and total FOV of camera to find an angle offset from the angle the camera is facing
+    #assuming FOV increases linearly with distance from center pixel
+    yaw_angle_offset = front_cam_hfov*x_center_offset
+    pitch_angle_offset = front_cam_vfov*y_center_offset
+    # TEST! NO IDEA IF THIS WORKS
     local_direction_to_object = eulerToVectorFrontCam(yaw_angle_offset, pitch_angle_offset)
     global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
 
@@ -439,15 +425,14 @@ octagon_table_height = 1.2
 lane_marker_height = 0.3
 symbol_height = 0.5
 
-
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 # [COMP] ensure FOV is correct
 down_cam_hfov = 50 #set to 220 when not in sim!
 down_cam_vfov = 28 #set to 165.26 when not in sim!
-front_cam_hfov = 90
-front_cam_vfov = 60
+front_cam_hfov = 78.44
+front_cam_vfov = 44.12
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 #only report predictions with confidence at least 40%

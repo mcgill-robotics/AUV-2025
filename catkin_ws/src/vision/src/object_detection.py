@@ -23,9 +23,6 @@ def detect_on_image(raw_img, camera_id):
             print("State information missing. Skipping detection.")
             print(current_states)
             return
-    if camera_id == 1 and states[1].pixelCoordinateToEulerFrontCam is None:
-        print("Camera information missing. Skipping detection.")
-        return
         
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")

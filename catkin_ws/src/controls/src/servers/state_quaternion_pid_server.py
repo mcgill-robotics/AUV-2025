@@ -18,7 +18,7 @@ class StateQuaternionServer(BaseServer):
         self.previous_goal_y = None
         self.previous_goal_z = None
         self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
-        self.max_safe_goal_depth = -1
+        self.max_safe_goal_depth = -0.5
         
         self.server.start()        
 
@@ -48,7 +48,7 @@ class StateQuaternionServer(BaseServer):
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
-                safe_goal = goal_position[2]#max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
+                safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
                 self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
