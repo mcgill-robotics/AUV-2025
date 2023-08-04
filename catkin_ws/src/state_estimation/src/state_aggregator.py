@@ -290,7 +290,7 @@ class State_Aggregator:
         # TODO - does this update state while blocked? could be issue using old q_auv_global
         # TODO - do not block if some sensors remain inactive 
         # wait for data from imu
-        while not self.imu.is_active:
+        while not self.imu.is_active and not rospy.is_shutdown():
             pass
 
         rospy.loginfo("state_aggregator initializing -- imu active, waiting on depth_sensor")
@@ -298,7 +298,7 @@ class State_Aggregator:
         '''
         # TODO - if a_auv_global relies on other sensors, make sure they are also initialized
         # wait for data from depth sensor
-        while not self.depth_sensor.is_active: 
+        while not self.depth_sensor.is_active and not rospy.is_shutdown():
             pass
 
         rospy.loginfo("state_aggregator initializing -- depth_sensor active, waiting on dvl")
@@ -309,7 +309,7 @@ class State_Aggregator:
         # (this may be something other than 0, 0 after accounting for mounting location)
         # wait for dvl data (without which we can't set dvlref)
         pos_auv_global_init = np.array([0, 0, 0])
-        while not self.dvl.is_active:
+        while not self.dvl.is_active and not rospy.is_shutdown():
             try:
                 self.set_dvlref()
             except:
