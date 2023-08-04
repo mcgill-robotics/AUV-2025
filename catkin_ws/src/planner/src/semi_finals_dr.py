@@ -17,7 +17,7 @@ state = StateTracker()
 control = Controller(rospy.Time(0))
 
 #TODO!!!! [COMP] CHANGE DEPTHS to -2 IN NAV LM AND LINEAR SEARCH + DISTANCE OF MOVE DELTAS, 
-# rospy.sleep(30)
+rospy.sleep(30)
 control.moveDelta((0,0,-1))
 control.rotateEuler((0,0,None))
 control.moveDeltaLocal((4,0,0))
