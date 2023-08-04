@@ -354,8 +354,8 @@ def analyzeBuoy(detections, img_height, img_width, target_symbol):
             global_class_name = class_names[1][cls_id]
             if (global_class_name == "Buoy"):
                 buoy_bbox = bbox
-                mid_w_buoy = buoy_bbox[0]
-                mid_h_buoy = buoy_bbox[1]
+                mid_x_buoy = buoy_bbox[0]
+                mid_y_buoy = buoy_bbox[1]
             elif (((global_class_name == "Earth Symbol" and target_symbol == "Earth Symbol") or (global_class_name == "Abydos Symbol" and target_symbol == "Abydos Symbol")) and conf > min_prediction_confidence):
                 symbol_info.append(bbox)
 
