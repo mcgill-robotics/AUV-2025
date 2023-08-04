@@ -66,7 +66,7 @@ class StateQuaternionServer(BaseServer):
             settled = False
             while not settled and not self.cancelled and not rospy.is_shutdown():
                 start = rospy.get_time()
-                while not self.cancelled and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data):
+                while not self.cancelled and self.check_status(goal_position, goal_quat, self.goal.do_x.data, self.goal.do_y.data, self.goal.do_z.data, self.goal.do_quaternion.data) and not rospy.is_shutdown():
                     if(rospy.get_time() - start > time_to_settle):
                         settled = True
                         print("settled")
@@ -91,7 +91,7 @@ class StateQuaternionServer(BaseServer):
         pos_z_error = self.calculatePosError(self.pose.position.z, goal_position[2])
 
         tolerance_position = 0.3
-        tolerance_quat_w = 0.999
+        tolerance_quat_w = 0.995
 
         if abs(quat_error.w) < tolerance_quat_w and do_quat: return False
         if abs(pos_x_error) > tolerance_position and do_x: return False

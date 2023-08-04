@@ -162,5 +162,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
-    finally:
-        endPlanner()

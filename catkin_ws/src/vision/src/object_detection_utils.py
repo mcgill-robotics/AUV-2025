@@ -12,6 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
+from tf import transformations
 class State:
     def __init__(self, isFrontCamState):
         self.x = None
@@ -129,8 +130,9 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-def transformLocalToGlobal(lx,ly,lz,camera_id):
-    rotation = states[camera_id].q_auv
+def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
+    rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
+    rotation = states[camera_id].q_auv * np.quaternion(rotation_offset.w, rotation_offset.x, rotation_offset.y, rotation_offset.z)
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz]))
 
 def eulerToVectorDownCam(x_deg, y_deg):
@@ -178,7 +180,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     pitch_angle_offset = down_cam_vfov*y_center_offset
 
     local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0)
+    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], camera_id=0, yaw_offset=down_cam_yaw_offset)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = find_intersection(global_direction_to_object, z_pos)
@@ -431,6 +433,7 @@ TEXT_COLOR = (0, 0, 0) # Black
 # [COMP] ensure FOV is correct
 down_cam_hfov = 50 #set to 220 when not in sim!
 down_cam_vfov = 28 #set to 165.26 when not in sim!
+down_cam_yaw_offset = 0
 front_cam_hfov = 78.44
 front_cam_vfov = 44.12
 

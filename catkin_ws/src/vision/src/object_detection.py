@@ -68,16 +68,16 @@ def detect_on_image(raw_img, camera_id):
                         obj_theta_z.append(None)
                     else:
                         bbox = center
-                        if headings[0] < -90:
+                        if headings[0] + down_cam_yaw_offset < -90:
                             heading1 = states[camera_id].theta_z + (headings[0]+270)
                         else:
                             heading1 = states[camera_id].theta_z + (headings[0]-90)
-                        if headings[1] < -90:
+                        if headings[1] + down_cam_yaw_offset < -90:
                             heading2 = states[camera_id].theta_z + (headings[1]+270)
                         else:
                             heading2 = states[camera_id].theta_z + (headings[1]-90)
-                        obj_theta_z.append(heading1)
-                        extra_field.append(heading2)
+                        obj_theta_z.append(heading1 + down_cam_yaw_offset)
+                        extra_field.append(heading2 + down_cam_yaw_offset)
 
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionDownCam(bbox[0], bbox[1], img_h, img_w, lane_marker_top_z)
                     obj_x.append(pred_obj_x)
