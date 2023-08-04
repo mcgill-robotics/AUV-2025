@@ -12,7 +12,6 @@ from substates.utility.state import *
 from substates.utility.vision import *
 from substates.trick import *
 from substates.navigate_gate import *
-from substates.quali_vision import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
 from substates.initialize_for_comp import *
@@ -146,8 +145,8 @@ if __name__ == '__main__':
         sm = None
 
 
-        # control.move((None,None,-1), callback=lambda a,b: None)
-        # control.moveDelta((0,0,0), callback=lambda a,b: None)
+        # control.move((None,None,-1))
+        # control.moveDelta((0,0,0))
         control.rotateEuler((0,0,None))
         # while True:
         #     control.rotateEuler((0,0,0))
@@ -165,3 +164,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
+    finally:
+        endPlanner()
