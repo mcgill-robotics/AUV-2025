@@ -13,17 +13,19 @@ from std_msgs.msg import Empty
 
 rospy.init_node("semi_finals_dr")
 
-DIST_DOCK_TO_BEFORE_GATE = 5 #for tricks
-YAW_GATE_TO_OCTAGON = 15 # in all
-DIST_GATE_TO_OCTAGON = 15 # in all
-
 mapping = ObjectMapper()
 state = StateTracker()
 control = Controller(rospy.Time(0))
 
-#TODO!!!! [COMP] CHANGE DEPTHS to -2 IN NAV LM AND LINEAR SEARCH + DISTANCE OF MOVE DELTAS, 
+DEPTH = -1
+DIST_DOCK_TO_BEFORE_GATE = 2 #for tricks
+DIST_DOCK_TO_PIVOT_POINT = 3
+YAW_PIVOT_POINT_TO_OCTAGON = 90
+DIST_PIVOT_POINT_TO_OCTAGON = 2 # in all
+
 while control.orientation is None:
     pass
+    
 rospy.sleep(10)
 
 pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
@@ -31,14 +33,15 @@ rospy.sleep(5)
 pub_DVL.publish(Empty())
 rospy.sleep(5)
 
-control.rotateEuler((0,0,None))
-control.moveDelta((0,0,-3))
-rospy.sleep(10)
-control.moveDeltaLocal((5,0,0))
-control.rotate(orientation)
+yaw = control.theta_z
+
+control.moveDelta((0,0,DEPTH))
+control.rotateEuler((0,0,yaw))
+control.moveDeltaLocal((DIST_DOCK_TO_BEFORE_GATE,0,0))
 trick = Trick(control=control, trick_type="yaw", num_full_spins=2)
 trick.execute(None)
-control.rotate(orientation)
-rospy.sleep(5)
-control.moveDeltaLocal((13,0,0))
+control.rotateEuler((0,0,yaw))
+control.moveDeltaLocal(((DIST_DOCK_TO_PIVOT_POINT-DIST_DOCK_TO_BEFORE_GATE),0,0))
+control.rotateEulerDelta((0,0,YAW_PIVOT_POINT_TO_OCTAGON))
+control.moveDeltaLocal((DIST_PIVOT_POINT_TO_OCTAGON,0,0))
 control.kill()
