@@ -13,6 +13,10 @@ from std_msgs.msg import Empty
 
 rospy.init_node("semi_finals_dr")
 
+DIST_DOCK_TO_BEFORE_GATE = 5 #for tricks
+YAW_GATE_TO_OCTAGON = 15 # in all
+DIST_GATE_TO_OCTAGON = 15 # in all
+
 mapping = ObjectMapper()
 state = StateTracker()
 control = Controller(rospy.Time(0))
@@ -20,19 +24,14 @@ control = Controller(rospy.Time(0))
 #TODO!!!! [COMP] CHANGE DEPTHS to -2 IN NAV LM AND LINEAR SEARCH + DISTANCE OF MOVE DELTAS, 
 while control.orientation is None:
     pass
-rospy.sleep(0)
+rospy.sleep(10)
 
 pub_DVL = rospy.Publisher('/reset_state_planar', Empty, queue_size=1)
 rospy.sleep(5)
 pub_DVL.publish(Empty())
 rospy.sleep(5)
 
-orientation = np.array([control.orientation.w,control.orientation.x,control.orientation.y,control.orientation.z])
-if orientation[0] < 0:
-    orientation *= -1
-
-
-control.rotate(orientation)
+control.rotateEuler((0,0,None))
 control.moveDelta((0,0,-3))
 rospy.sleep(10)
 control.moveDeltaLocal((5,0,0))
