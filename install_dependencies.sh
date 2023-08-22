@@ -27,8 +27,6 @@ sudo apt-get install -y ros-noetic-rqt-gui-image-view
 sudo apt install -y python3-pip
 pip3 install numpy-quaternion
 pip3 install ultralytics
-#for vision visualization
-pip install scipy
 #DVL dependencies
 rosdep update
 #IntelRealSense driver
