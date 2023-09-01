@@ -108,8 +108,8 @@ def updateMap(obj_i, observation):
             #average both orientations
             new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
+        #CALCULATE EXTRA FIELD WHEN APPLICABLE
         if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
-            #CALCULATE EXTRA FIELD WHEN APPLICABLE
             if observed_extra_field == -1234.5:
                 new_extra_field = current_extra_field
             elif current_extra_field == -1234.5:
