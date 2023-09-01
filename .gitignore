@@ -19,10 +19,8 @@ catkin_ws/.catkin_tools/
 # vscode files
 **/*.vscode/*
 # submodules
-auv-ign
-catkin_ws/src/sim/auv-sim
-catkin_ws/src/sim/ros_gz
-catkin_ws/src/sim
+catkin_ws/src/auv-ign
+catkin_ws/src/auv-ros-ign-bridge
 catkin_ws/src/auv-sim
 =========
 #recorded videos
