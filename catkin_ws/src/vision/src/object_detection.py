@@ -23,7 +23,9 @@ def detect_on_image(raw_img, camera_id):
             print("State information missing. Skipping detection.")
             print(current_states)
             return
-        
+    if camera_id == 1 and states[camera_id].point_cloud is None:
+        print("Point cloud not yet published.")
+        return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
@@ -37,11 +39,11 @@ def detect_on_image(raw_img, camera_id):
     obj_z = []
     obj_theta_z = []
     extra_field = []
-    confidences = []
+    confidence = []
     img_h, img_w, _ = img.shape
     if camera_id == 1:
         #[COMP] change target symbol to match planner
-        buoy_symbols = analyzeBuoy(detections, "Earth Symbol")
+        buoy_symbols = analyzeBuoy(detections)
         leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
     for detection in detections:
@@ -62,7 +64,7 @@ def detect_on_image(raw_img, camera_id):
             if camera_id == 0: # DOWN CAM
                 if global_class_name == "Lane Marker":
                     label.append(global_class_name)
-                    confidences.append(conf)
+                    confidence.append(conf)
                     headings, center, debug_img = measureLaneMarker(img, bbox, debug_img)
                     if None in headings:
                         extra_field.append(None)
@@ -86,7 +88,7 @@ def detect_on_image(raw_img, camera_id):
                     obj_z.append(pred_obj_z) 
                 elif global_class_name == "Octagon Table": # OCTAGON TABLE
                     label.append(global_class_name)
-                    confidences.append(conf)
+                    confidence.append(conf)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionDownCam(bbox[0], bbox[1], img_h, img_w, octagon_table_top_z)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
@@ -96,8 +98,8 @@ def detect_on_image(raw_img, camera_id):
             else: # FORWARD CAM
                 if global_class_name == "Lane Marker": # LANE MARKER
                     label.append(global_class_name)
-                    confidences.append(conf)
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox, img_h, img_w, global_class_name)
+                    confidence.append(conf)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -105,9 +107,9 @@ def detect_on_image(raw_img, camera_id):
                     extra_field.append(None)
                 elif global_class_name == "Gate": # GATE
                     label.append(global_class_name)
-                    confidences.append(conf)
-                    theta_z = measureAngle(bbox, img_h, img_w, global_class_name)
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox, img_h, img_w, global_class_name)
+                    confidence.append(conf)
+                    theta_z = measureAngle(bbox)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -115,9 +117,9 @@ def detect_on_image(raw_img, camera_id):
                     extra_field.append(leftmost_gate_symbol) # 1 for earth, 0 for the other one
                 elif global_class_name == "Buoy": # BUOY
                     label.append(global_class_name)
-                    confidences.append(conf)
-                    theta_z = measureAngle(bbox, img_h, img_w, global_class_name)
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox, img_h, img_w, global_class_name)
+                    confidence.append(conf)
+                    theta_z = measureAngle(bbox)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -129,13 +131,13 @@ def detect_on_image(raw_img, camera_id):
                         obj_x.append(symbol_x)
                         obj_y.append(symbol_y)
                         obj_z.append(symbol_z) 
-                        confidences.append(confidence)
+                        confidence.append(confidence)
                         obj_theta_z.append(theta_z)
                         extra_field.append(None)
                 elif global_class_name == "Octagon Table": # OCTAGON TABLE
                     label.append(global_class_name)
-                    confidences.append(conf)
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox, img_h, img_w, global_class_name)
+                    confidence.append(conf)
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     obj_x.append(pred_obj_x)
                     obj_y.append(pred_obj_y)
                     obj_z.append(pred_obj_z) 
@@ -145,7 +147,7 @@ def detect_on_image(raw_img, camera_id):
     extra_field = [x if not x is None else -1234.5 for x in extra_field]
     obj_theta_z = [x if not x is None else -1234.5 for x in obj_theta_z]
 
-    label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidences)
+    label, obj_x, obj_y, obj_z, obj_theta_z, extra_field = cleanDetections(label, obj_x, obj_y, obj_z, obj_theta_z, extra_field, confidence)
 
     #create object detection frame message and publish it
     detectionFrame = ObjectDetectionFrame()
