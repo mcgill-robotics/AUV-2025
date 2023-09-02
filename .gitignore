@@ -28,3 +28,6 @@ catkin_ws/src/auv-sim
 #training images
 *.png
 *.jpg
+
+#testing files
+catkin_ws/src/planner/src/testMission.py
