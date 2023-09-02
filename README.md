@@ -43,12 +43,12 @@ We recommend using the catkin command line tools as opposed to whatever is bundl
 
 To get these project files onto your computer using git navigate to a desired folder and do:
 
-    git clone https://github.com/mcgill-robotics/AUV-2023.git
+    git clone https://github.com/mcgill-robotics/AUV-2024.git
   
 Alternatively, if you set up your SSH keys with your Github account you can save yourself having to type your user/pass every 
 time (**recommended**):
 
-    git clone git@github.com:mcgill-robotics/AUV-2023.git
+    git clone git@github.com:mcgill-robotics/AUV-2024.git
 
 
 ## Building ROS Packages
