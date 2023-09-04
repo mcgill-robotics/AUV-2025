@@ -29,8 +29,11 @@ class NavigateBuoy(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.control.rotateEuler((None,None,buoy_object[4])) # bring to exact angle 
-        self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of buoy
+        homing_rotation = (0,0,buoy_object[4])
+        homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
+
+        self.control.rotateEuler(homing_rotation) # bring to exact angle 
+        self.control.move(homing_position) # move in front of buoy
 
         # wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
@@ -42,7 +45,7 @@ class NavigateBuoy(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        homing_rotation = (None,None,buoy_object[4])
+        homing_rotation = (0,0,buoy_object[4])
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 
         self.control.rotateEuler(homing_rotation) # bring to exact angle 
