@@ -1,9 +1,11 @@
 <launch>
-	<node name="down_cam" pkg="vision" type="stream_down_cam.py" respawn="true"  output="screen">
-		<param name="sensor_id" value="0" />
-		<param name="outputImgWidth" value="1280" />
-		<param name="outputImgHeight" value="720" />
-		<param name="framerate" value="30" />
-		<param name="outputTopic" value="/down_cam" />
+	<node name="down_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+		<param name="video_device" value="/dev/video0" />
+		<param name="image_width" value="1280" />
+		<param name="image_height" value="720" />
+		<param name="pixel_format" value="yuyv" />
+		<param name="camera_frame_id" value="/vision/down_cam" />
+		<param name="io_method" value="mmap"/>
+		<remap from="/down_cam" to="/vision/down_cam"/>
 	</node>
 </launch>
