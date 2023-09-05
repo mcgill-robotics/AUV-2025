@@ -29,8 +29,11 @@ class NavigateBuoy(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.control.rotateEuler((None,None,buoy_object[4])) # bring to exact angle 
-        self.control.move((buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])) # move in front of buoy
+        homing_rotation = (0,0,buoy_object[4])
+        homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
+
+        self.control.rotateEuler(homing_rotation) # bring to exact angle 
+        self.control.move(homing_position) # move in front of buoy
 
         # wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
@@ -42,28 +45,19 @@ class NavigateBuoy(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        homing_rotation = (None,None,buoy_object[4])
+        homing_rotation = (0,0,buoy_object[4])
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 
         self.control.rotateEuler(homing_rotation) # bring to exact angle 
         self.control.move(homing_position) # move in front of buoy
-        print("Successfully centered in front of gate")
+        print("Successfully centered in front of buoy")      
 
-        buoy_symbol_locations = 12 if buoy_object[5] is None else buoy_object[5]
-        first_buoy_symbol_location = math.floor(buoy_symbol_locations / 10)
-        second_buoy_symbol_location = buoy_symbol_locations - 10 * math.floor(buoy_symbol_locations / 10)
-
-        for symbol_location in [first_buoy_symbol_location, second_buoy_symbol_location]:
+        symbol_objects = self.mapping.getClass(cls=self.target_symbol)
+        
+        for symbol in symbol_objects:
+            self.control.move((symbol[1], symbol[2], symbol[3])) # move to symbol
             self.control.move(homing_position) # move in front of buoy
-            if symbol_location == 1: # TOP LEFT
-                self.control.moveDeltaLocal(offset_distance, self.buoy_width/4, self.buoy_height/4)
-            elif symbol_location == 2: # TOP RIGHT
-                self.control.moveDeltaLocal(offset_distance, -self.buoy_width/4, self.buoy_height/4)
-            elif symbol_location == 3: # BOTTOM LEFT
-                self.control.moveDeltaLocal(offset_distance, self.buoy_width/4, -self.buoy_height/4)
-            elif symbol_location == 4: # BOTTOM RIGHT
-                self.control.moveDeltaLocal(offset_distance, -self.buoy_width/4, -self.buoy_height/4)
-
+            self.control.rotateEuler(homing_rotation) # bring to exact angle 
 
         print("Successfully completed buoy task!")
         

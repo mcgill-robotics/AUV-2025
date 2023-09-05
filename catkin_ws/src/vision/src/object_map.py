@@ -36,7 +36,7 @@ def findClosestObject(observation, indexToIgnore=-1):
         #find distance between object in map and observation
         #ignore Z position when reducing map
         objs_distance_apart = dist((obj_x, obj_y, obj_z), (observed_x, observed_y, observed_z)) if indexToIgnore == -1 else dist((obj_x, obj_y, 0), (observed_x, observed_y, 0))
-        if objs_distance_apart < sameObjectRadius:
+        if objs_distance_apart < sameObjectRadiusPerLabel.get(observed_label, 1000):
             close_objs.append(obj_i)
     #if there is only one object within radius return that
     if len(close_objs) == 0: return -1
@@ -109,23 +109,13 @@ def updateMap(obj_i, observation):
             new_theta_z = (num_new_observations*observed_theta_z + num_observations*current_theta_z) / (num_observations + num_new_observations)
 
         #CALCULATE EXTRA FIELD WHEN APPLICABLE
-        if observed_extra_field == -1234.5:
-            new_extra_field = current_extra_field
-        elif current_extra_field == -1234.5:
-            new_extra_field = observed_extra_field
-        else:
-            if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
-                new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
-            elif label == "Buoy":
-                observed_first_buoy_symbol_location = math.floor(observed_extra_field / 10)
-                observed_second_buoy_symbol_location = observed_extra_field - 10 * math.floor(observed_extra_field / 10)
-                current_first_buoy_symbol_location = math.floor(current_extra_field / 10)
-                current_observed_second_buoy_symbol_location = current_extra_field - 10 * math.floor(current_extra_field / 10)
-                #TODO!!!! fix this somehow
+        if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
+            if observed_extra_field == -1234.5:
+                new_extra_field = current_extra_field
+            elif current_extra_field == -1234.5:
                 new_extra_field = observed_extra_field
             else:
-                new_extra_field = -1234.5
-            #TODO: elif for symbols?
+                new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
 
     object_map[obj_i][1] = new_x
     object_map[obj_i][2] = new_y
@@ -169,7 +159,7 @@ def publishMap():
 min_observations = 5
 object_map = []
 
-sameObjectRadius = 3 #in same units as state_x, y, z etc (meters i think)
+sameObjectRadiusPerLabel = { "Lane Marker": 3, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
 
 rospy.init_node('object_map')
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)

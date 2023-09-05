@@ -43,7 +43,6 @@ def camera_info_callback(msg):
 
 def convert_from_uvd(color, z_map):
     print("starting")
-    global y_over_z_map, x_over_z_map, point_cloud_pub, width, height
     if y_over_z_map is not None:
         time = rospy.Time(0)
         xyz_rbg_img = np.zeros((height, width, 6))
@@ -63,6 +62,8 @@ def convert_from_uvd(color, z_map):
         xyz_rbg_img[:, :, 0] = z_map
         xyz_rbg_img[:, :, 1] = x_map
         xyz_rbg_img[:, :, 2] = y_map
+        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
+        point_cloud_img_pub.publish(point_cloud_img)
         xyz_rbg_img = xyz_rbg_img.reshape((width*height, 6))
         xyz_rbg_img = xyz_rbg_img.astype(np.float32)
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
@@ -112,6 +113,7 @@ if __name__ == "__main__":
     depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
     rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rbg_callback)
     point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=3)
+    point_cloud_img_pub = rospy.Publisher('vision/front_cam/point_cloud_raw', Image, queue_size=3)
     # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     fx = None
