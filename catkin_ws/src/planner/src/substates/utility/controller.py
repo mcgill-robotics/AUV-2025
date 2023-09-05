@@ -61,7 +61,7 @@ class Controller:
         self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
 
-        self.pwn_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
+        self.pwm_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
 
         self.clients = []
 
@@ -192,6 +192,20 @@ class Controller:
         else:
             self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
+    def stateEuler(self,pos,ang,callback=None):
+        wx,wy,wz = ang
+        if wx is None: wx = self.theta_x
+        if wy is None: wy = self.theta_y
+        if wz is None: wz = self.theta_z
+        self.state(pos, euler_to_quaternion(wx,wy,wz), callback)
+    
+    def stateDeltaEuler(self,pos,ang,callback=None):
+        wx,wy,wz = ang
+        if wx is None: wx = 0
+        if wy is None: wy = 0
+        if wz is None: wz = 0
+        self.stateDelta(pos, euler_to_quaternion(wx,wy,wz), callback)
+
     #move to setpoint
     def move(self,pos,callback=None,face_destination=False):
         #if callback = None make this a blocking call
@@ -263,13 +277,13 @@ class Controller:
         else:
             self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    #set angular velocity
+    #set torque
     def torque(self,vel):
         x,y,z = vel
         goal = self.get_superimposer_goal([None,None,None,x,y,z])
         self.SuperimposerClient.send_goal(goal)
 
-    #set thruster velocity in local space (i.e. z is always heave)
+    #set positional effort in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
         goal = self.get_superimposer_goal([x,y,None,None,None,None])
@@ -307,7 +321,7 @@ class Controller:
             self.pub_effort.publish(zero_wrench)
 
             msg = ThrusterMicroseconds([1500]*8)
-            self.pwn_pub.publish(msg)
+            self.pwm_pub.publish(msg)
 
     #stay still in place
     def stop_in_place(self, callback=None):
