@@ -302,7 +302,7 @@ visualisation_pubs = [
 pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
 
 bridge = CvBridge()
-states = (State(False), State(True))
+states = (State(), State())
 
 
 ############## PARAMETERS ##############
