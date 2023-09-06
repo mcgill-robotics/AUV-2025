@@ -23,5 +23,8 @@ Attach a screen recording of test run(s) (if applicable).
 ## Required Wiki Changes (if any)
 - List any changes that need to be made to the project's wiki (if applicable).
 
+## Required install_dependencies.sh Changes (if any)
+- List any new dependencies that need to be installed by the install_dependencies.sh script
+
 ## Related Branches (other than one that will be merged)
 - List any related branches (if applicable).
