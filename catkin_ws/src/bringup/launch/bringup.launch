@@ -13,6 +13,10 @@
 		<arg name="sim" value="$(arg sim)" />
 	</include>
 
+    <group unless="$(arg sim)">
+		<node name="server_status" pkg="bringup" type="sensor_status.py" respawn="true" output="screen"></node>
+    </group>
+
     <group if="$(arg vision)">
 		<include file="$(find vision)/launch/vision.launch">
 			<arg name="sim" value="$(arg sim)" />
