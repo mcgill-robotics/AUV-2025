@@ -21,7 +21,7 @@ catkin_ws/.catkin_tools/
 # submodules
 catkin_ws/src/auv-ign
 catkin_ws/src/auv-ros-ign-bridge
-catkin_ws/src/auv-sim
+catkin_ws/src/auv-sim-gazebo
 =========
 #recorded videos
 *.mp4
