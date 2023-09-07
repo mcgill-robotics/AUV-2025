@@ -4,9 +4,7 @@
 		<include file="$(find imu)/launch/imu.launch"/>
 		<include file="$(find dvl)/launch/dvl.launch"/>
     </group>
-	<node name="transform_broadcaster" pkg="state_estimation" type="transform_broadcaster.py" respawn="false" output="screen"/>
-	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
-	<param name="theta_x_offset" type="double" value="0.0"/>
-	<param name="theta_y_offset" type="double" value="0.0"/>
-	<param name="theta_z_offset" type="double" value="0.0" />
+	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
+		<param name="update_rate" value="20" />
+	</node>
 </launch>

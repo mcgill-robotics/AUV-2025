@@ -19,7 +19,6 @@
 			<arg name="sim" value="$(arg sim)" />
 		</include>
 		<!-- ^^^^^^^^^^^ REMOVE THIS WHEN SIM DOESNT BYPASS ANYMORE -->
-		<node name="server_status" pkg="bringup" type="sensor_status.py" respawn="true" output="screen"></node>
     </group>
 
     <group if="$(arg vision)">
