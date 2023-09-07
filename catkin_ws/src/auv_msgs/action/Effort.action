@@ -1,0 +1,14 @@
+# goal
+geometry_msgs/Wrench effort
+std_msgs/Bool do_surge
+std_msgs/Bool do_sway
+std_msgs/Bool do_heave
+std_msgs/Bool do_roll
+std_msgs/Bool do_pitch
+std_msgs/Bool do_yaw
+---
+# result
+std_msgs/Bool stopped
+---
+# feedback 
+std_msgs/Bool moving
