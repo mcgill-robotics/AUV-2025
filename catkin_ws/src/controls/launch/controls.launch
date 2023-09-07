@@ -1,15 +1,8 @@
 <launch>
     <arg name="sim" default="false" />
-    <group unless="$(arg sim)">
-        <include file="$(find controls)/launch/pid.launch">
-            <arg name="sim" value="$(arg sim)" />
-        </include>
-    </group>
-    <group if="$(arg sim)">
-        <include file="$(find controls)/launch/pid-sim.launch">
-            <arg name="sim" value="$(arg sim)" />
-        </include>
-    </group>
+    <include file="$(find controls)/launch/pid.launch">
+        <arg name="sim" value="$(arg sim)" />
+    </include>
     
 	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"></node>
 	<node name="servers" pkg="controls" type="init_servers.py" respawn="false" output="screen"></node>
