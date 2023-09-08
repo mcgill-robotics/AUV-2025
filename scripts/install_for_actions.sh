@@ -1,6 +1,5 @@
 #NOTE: to avoid errors, make sure you install Ubuntu with the "Minimal installation" option selected and without third-party software enabled.
 
-
 # INSTALL ROS NOETIC
 echo "source /opt/ros/noetic/setup.bash" >> /home/$user_name/.bashrc
 source /home/$user_name/.bashrc
@@ -26,37 +25,28 @@ sudo apt-get install -y ros-noetic-cv-bridge
 sudo apt-get install -y ros-noetic-image-view
 sudo apt-get install -y ros-noetic-rqt-gui
 sudo apt-get install -y ros-noetic-rqt-gui-image-view
+sudo apt-get install -y ros-noetic-ros-ign-gazebo
 #python dependencies
 sudo apt install -y python3-pip
 pip3 install numpy-quaternion
 pip3 install ultralytics
-#DVL dependencies
+
 rosdep update
 rm /usr/local/bin/cmake
-which cmake
-cmake --version
 
 
-#IF YOU GET THIS ERROR:
-#   CMake Error: CMake was unable to find a build program corresponding to "Unix Makefiles".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
-#   make[2]: *** [CMakeFiles/depth_sensor_embedded.dir/build.make:70: CMakeFiles/depth_sensor_embedded] Error 1
-#   make[1]: *** [CMakeFiles/Makefile2:1378: CMakeFiles/depth_sensor_embedded.dir/all] Error 2
-#   make: *** [Makefile:146: all] Error 2
+# sudo apt-get update
+# sudo apt-get install git
+# sudo apt-get install -y lsb-release wget gnupg
+# sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+# echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+# sudo apt-get update
+# sudo apt-get install -y ignition-fortress
+# rosdep install -r --from-paths src -i -y --rosdistro noetic
 
-# THEN RUN:
-# which cmake
-# cmake --version -> version 1
-# cd /usr/bin/
-# ./cmake --version -> version 2
-
-
-# IF ONE OF THESE CATKIN VERSIONS IS NOT 3.16.3, THEN DELETE THAT VERSION
-# TO DO SO:
-# version 1: navigate to the folder that was returned by `which cmake`, do `rm cmake`
-# version 2: navigate to /usr/bin, do `rm cmake`
-# open new terminal 
-# FINALLY: run `catkin clean` and build the packages again
-
-
-## INSTALL CUDA IF POSSIBLE:
-##     https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=aarch64-jetson&Compilation=Native&Distribution=Ubuntu&target_version=20.04&target_type=deb_network
+# sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+# sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+# sudo apt-get update
+sudo apt install -y ros-noetic-ros-ign
+sudo apt install -y ros-noetic-ros-ign-bridge
+# git clone https://github.com/mcgill-robotics/auv-ros-ign-bridge catkin_ws/src/sim/auv-ros-ign-bridge
