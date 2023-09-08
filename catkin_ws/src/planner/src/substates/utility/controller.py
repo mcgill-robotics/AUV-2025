@@ -4,7 +4,7 @@ import rospy
 import actionlib
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
 from std_msgs.msg import Float64, Bool, Header
-from auv_msgs.msg import SuperimposerAction, SuperimposerGoal, StateQuaternionAction, StateQuaternionGoal, ThrusterMicroseconds
+from auv_msgs.msg import EffortAction, EffortGoal, StateQuaternionAction, StateQuaternionGoal, ThrusterMicroseconds
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
@@ -65,9 +65,9 @@ class Controller:
 
         self.clients = []
 
-        self.SuperimposerClient = actionlib.SimpleActionClient('superimposer_server', SuperimposerAction)
-        self.clients.append(self.SuperimposerClient)
-        self.SuperimposerClient.wait_for_server()
+        self.EffortClient = actionlib.SimpleActionClient('effort_server', EffortAction)
+        self.clients.append(self.EffortClient)
+        self.EffortClient.wait_for_server()
 
         self.StateQuaternionStateClient = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
         self.clients.append(self.StateQuaternionStateClient)
@@ -98,10 +98,10 @@ class Controller:
         return float(offset_global.vector.x), float(offset_global.vector.y), float(offset_global.vector.z)
 
     #method to easily get goal object
-    def get_superimposer_goal(self,dofs):
+    def get_effort_goal(self,dofs):
         surge,sway,heave,roll,pitch,yaw = dofs
         
-        goal = SuperimposerGoal()
+        goal = EffortGoal()
         goal.effort.force.x = 0 if surge is None else surge
         goal.do_surge = Bool(False) if surge is None else Bool(True)
 
@@ -280,20 +280,20 @@ class Controller:
     #set torque
     def torque(self,vel):
         x,y,z = vel
-        goal = self.get_superimposer_goal([None,None,None,x,y,z])
-        self.SuperimposerClient.send_goal(goal)
+        goal = self.get_effort_goal([None,None,None,x,y,z])
+        self.EffortClient.send_goal(goal)
 
     #set positional effort in local space (i.e. z is always heave)
     def forceLocal(self,vel):
         x,y = vel
-        goal = self.get_superimposer_goal([x,y,None,None,None,None])
-        self.SuperimposerClient.send_goal(goal)
+        goal = self.get_effort_goal([x,y,None,None,None,None])
+        self.EffortClient.send_goal(goal)
     
     #stop all thrusters
     def kill(self):
         self.preemptCurrentAction()
-        goal = self.get_superimposer_goal([0,0,0,0,0,0])
-        self.SuperimposerClient.send_goal(goal)
+        goal = self.get_effort_goal([0,0,0,0,0,0])
+        self.EffortClient.send_goal(goal)
         self.pub_x_enable.publish(Bool(False))
         self.pub_y_enable.publish(Bool(False))
         self.pub_z_enable.publish(Bool(False))
@@ -325,8 +325,8 @@ class Controller:
 
     #stay still in place
     def stop_in_place(self, callback=None):
-        # goal = self.get_superimposer_goal([0,0,0,0,0,0])
-        # self.SuperimposerClient.send_goal(goal)
+        # goal = self.get_effort_goal([0,0,0,0,0,0])
+        # self.EffortClient.send_goal(goal)
         goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
         if(callback is not None):
             self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)

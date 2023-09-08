@@ -26,7 +26,7 @@ add_message_files(FILES
 
 add_action_files(FILES
 	StateQuaternion.action
-	Superimposer.action
+	Effort.action
 )
 
 generate_messages(DEPENDENCIES
