@@ -32,7 +32,9 @@ pip3 install numpy-quaternion
 pip3 install ultralytics
 #DVL dependencies
 rosdep update
-rm $HOME/.local.bin/cmake
+rm /usr/local/bin/cmake
+which cmake
+cmake --version
 
 
 #IF YOU GET THIS ERROR:
