@@ -58,6 +58,7 @@ class QuaternionPID:
                 self.Kp = rospy.get_param("~Kp")
                 self.Ki = rospy.get_param("~Ki")
                 self.Kd = rospy.get_param("~Kd")
+                self.windup_limit = rospy.get_param("~windup_limit")
                 roll_effort, pitch_effort, yaw_effort = self.controlEffort()
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)
