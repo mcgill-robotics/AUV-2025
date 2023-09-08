@@ -55,10 +55,6 @@ class BaseServer():
         self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
         self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
         self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
-        self.imu_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
-
-    def set_ang_vel(self, data):
-        self.angular_velocity = np.array([data.x, data.y, data.z])
 
     #callback for subscriber
     def set_pose(self,data):

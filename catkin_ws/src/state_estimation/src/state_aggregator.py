@@ -11,43 +11,43 @@ from sensors import DepthSensor, IMU, DVL
 from std_msgs.msg import Float64
 
 def update_state():    
-    # X
+    x = None
+    y = None
+    z = None
+    quaternion = None
+
     for sensor in sensor_priorities["x"]:
         if sensor.isActive():
             x = sensor.x
             break
-    # Y
     for sensor in sensor_priorities["y"]:
         if sensor.isActive():
             y = sensor.y
             break
-    # Z
     for sensor in sensor_priorities["z"]:
         if sensor.isActive():
             z = sensor.z
             break
-    # ORIENTATION
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
-            quaternion = sensor.quaternion
+            quaternion = Quaternion(x = sensor.quaternion.x, y = sensor.quaternion.y, z = sensor.quaternion.z, w = sensor.quaternion.w)
             roll, pitch, yaw = sensor.roll, sensor.pitch, sensor.yaw
-            angular_velocity = sensor.angular_velocity
+            angular_velocity = Vector3(sensor.angular_velocity)
             break
-    # POSE
-    pose = Pose(Point(x=x, y=y, z=z), orientation)
-    # PUBLISH/BROADCAST STATE
-    pub_pose.publish(pose)
-    broadcast_auv_pose(pose)
-    pub_x.publish(x)
-    pub_y.publish(y)
-    pub_z.publish(z)
-    pub_theta_x.publish(roll)
-    pub_theta_y.publish(pitch)
-    pub_theta_z.publish(yaw)
-    pub_ang_vel.publish(angular_velocity)
-    # UPDATE SENSORS WITH MOST ACCURATE POSE ESTIMATE
-    dvl.updateXYZ(x if dvl.x != x else None, y if dvl.y != y else None, z if dvl.z != z else None)
-    imu.updateXYZ(x if imu.x != x else None, y if imu.y != y else None, z if imu.z != z else None)
+
+    if x is not None and y is not None and z is not None and quaternion is not None:
+        pub_x.publish(x)
+        pub_y.publish(y)
+        pub_z.publish(z)
+        pub_theta_x.publish(roll)
+        pub_theta_y.publish(pitch)
+        pub_theta_z.publish(yaw)
+        pub_ang_vel.publish(angular_velocity)
+        pose = Pose(Point(x=x, y=y, z=z), quaternion)
+        pub_pose.publish(pose)
+        broadcast_auv_pose(pose)
+    else:
+        rospy.logerr("Missing sensor data for proper state estimation! Available states: [ X: {} Y: {} Z: {} Q: {} ]".format(x is not None, y is not None, z is not None, quaternion is not None))
 
 def broadcast_auv_pose(pose):
     t = TransformStamped()
@@ -83,15 +83,15 @@ if __name__ == '__main__':
     pub_ang_vel = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
     tf_broadcaster = TransformBroadcaster()
     
-    dvl = DVL()
     depth_sensor = DepthSensor()
     imu = IMU()
+    dvl = DVL(imu)
     
     #by axis, then in order of priority
     sensor_priorities = {
-        "x" : [dvl, imu],
-        "y" : [dvl, imu],
-        "z" : [depth_sensor, dvl, imu],
+        "x" : [dvl],
+        "y" : [dvl],
+        "z" : [depth_sensor, dvl],
         "orientation" : [imu, dvl],
     }
 
