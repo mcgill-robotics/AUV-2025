@@ -23,7 +23,7 @@ class NavigateOctagon(smach.State):
             return 'failure'
         
         print("Moving to the center of the octagon.")
-        self.control.move((octagon_obj[1], octagon_obj[2], -2))
+        self.control.move((octagon_obj[1], octagon_obj[2], -2), face_destination=True)
         print("Surfacing.")
         self.control.kill()
 
