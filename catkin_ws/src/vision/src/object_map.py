@@ -3,6 +3,7 @@ import rospy
 from auv_msgs.msg import VisionObject, VisionObjectArray
 import math
 
+#Test
 #callback when a new object detection frame is published
 def objectDetectCb(msg):
     try:
