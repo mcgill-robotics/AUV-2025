@@ -21,10 +21,7 @@ class Sensor():
         self.x = 0
         self.y = 0
         self.z = 0
-        self.roll = 0
-        self.pitch = 0
-        self.yaw = 0
-        self.quaternion = np.quaternion(1, 0, 0, 0)
+        self.q_nwu_auv = np.quaternion(1, 0, 0, 0)
         self.angular_velocity = np.array([0,0,0])
 
         # initialize a sensor as "inactive"
@@ -127,10 +124,14 @@ class DVL(Sensor):
 
         if self.q_dvlref_nwu is None: return
 
-        self.pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu, pos_dvlref)
-        self.dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv.inverse(), self.auv_dvl_offset)
-        self.pos_auv += self.dvl_auv_offset_rotated
+        pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu, pos_dvlref)
+        dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv.inverse(), self.auv_dvl_offset)
+        pos_auv += dvl_auv_offset_rotated
+        self.x = pos_auv[0]
+        self.y = pos_auv[1]
+        self.z = pos_auv[2]
 
+        self.q_nwu_auv = self.q_dvlref_nwu.inverse() * q_dvlref_auv
         # if self.dvl_ref_frame is None: return
 
         # # quaternion of AUV from DVL
