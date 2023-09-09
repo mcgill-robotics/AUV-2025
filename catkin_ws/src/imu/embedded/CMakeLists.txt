@@ -6,7 +6,7 @@ include_directories(${ROS_LIB_DIR})
 
 set(CMAKE_CXX_STANDARD 11)
 
-generate_arduino_firmware(${PROJECT_NAME}
+#[[generate_arduino_firmware(${PROJECT_NAME}
 	SKETCH imu
 	BOARD mega2560
 
@@ -14,4 +14,4 @@ generate_arduino_firmware(${PROJECT_NAME}
 	SRCS ${ROS_LIB_DIR}/time.cpp ${CMAKE_SOURCE_DIR}/imu/Quaternion.cpp ${CMAKE_SOURCE_DIR}/imu/XimuReceiver.cpp 
 	HDRS ${CMAKE_SOURCE_DIR}/imu/Quaternion.h ${CMAKE_SOURCE_DIR}/imu/XimuReceiver.h
 	PORT /dev/ttyACM1
-)
+)]]
