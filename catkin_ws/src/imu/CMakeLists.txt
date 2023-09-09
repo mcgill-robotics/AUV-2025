@@ -20,7 +20,7 @@ catkin_package( CATKIN_DEPENDS
 	rosserial_client
     sbg_driver
 )
-
+#[[
 rosserial_generate_ros_lib(
 	PACKAGE rosserial_arduino
 	SCRIPT make_libraries.py
@@ -41,4 +41,4 @@ rosserial_add_client_target(
 rosserial_add_client_target(
 	embedded
 	imu-upload
-)
+)]]
