@@ -81,11 +81,6 @@ class IMU(Sensor):
         q_nwu_imu = Q_NWU_NED * q_ned_imu
         self.q_nwu_auv = q_nwu_imu * self.q_imu_auv
 
-        # we should move away from this
-        np_quaternion = np.array([self.quaternion.x, self.quaternion.y, self.quaternion.z, self.quaternion.w])
-        self.roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
-        self.pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
-        self.yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
         self.updateLastState()
 
 class DVL(Sensor):
@@ -132,6 +127,7 @@ class DVL(Sensor):
         self.z = pos_auv[2]
 
         self.q_nwu_auv = self.q_dvlref_nwu.inverse() * q_dvlref_auv
+        self.updateLastState()
         # if self.dvl_ref_frame is None: return
 
         # # quaternion of AUV from DVL
