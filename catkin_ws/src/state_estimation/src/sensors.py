@@ -112,9 +112,6 @@ class DVL(Sensor):
         # self.quaternion = (self.dvl_ref_frame * q_dvl_dvlref) * self.quat_mount_offset.inverse()
         # # get roll, pitch, yaw
         # np_quaternion = np.array([self.quaternion.x, self.quaternion.y, self.quaternion.z, self.quaternion.w])
-        # roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
-        # pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
-        # yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
         # # calculate angular velocity (not super precise but will only be used when IMU is inactive)
         # dt = (rospy.get_time() - self.last_unique_state_time)
         # ang_vel_x = (roll - self.roll) * RAD_PER_DEG / dt
@@ -131,3 +128,25 @@ class DVL(Sensor):
         # self.x, self.y, self.z = position
 
         # self.updateLastState()
+
+def updateAngularVelocity(self):
+    # # calculate angular velocity (not super precise but will only be used when IMU is inactive)
+    roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
+    pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
+    yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
+
+    dt = (rospy.get_time() - self.last_unique_state_time)
+    rate_of_change_euler_x = (roll - self.roll) * RAD_PER_DEG / dt
+    rate_of_change_euler_y = (pitch - self.pitch) * RAD_PER_DEG / dt
+    rate_of_change_euler_z = (yaw - self.yaw) * RAD_PER_DEG / dt
+
+    wx = rate_of_change_euler_y * sin(roll) * sin(yaw) + rate_of_change_euler_x * cos(yaw)
+    wy = rate_of_change_euler_y * sin(roll) * cos(yaw) - rate_of_change_euler_x * sin(yaw)
+    wz = rate_of_change_euler_y * cos(roll) + rate_of_change_euler_z
+
+    self.angular_velocity = np.array([wx, wy, wz])
+
+    self.roll = roll
+    self.pitch = pitch
+    self.yaw = yaw
+
