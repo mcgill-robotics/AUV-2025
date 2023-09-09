@@ -2,7 +2,7 @@ name: Catkin Build
 
 on:
   pull_request:
-    branches: [ $default-branch ]
+    branches: [noetic]
 
 jobs:
   build:
