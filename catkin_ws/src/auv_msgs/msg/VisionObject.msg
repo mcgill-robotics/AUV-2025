@@ -1,4 +1,4 @@
-#Object Map class
+# Vision Object class
 string label
 #pose info
 float64 x

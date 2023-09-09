@@ -2,7 +2,7 @@
 
 import numpy as np
 import rospy
-from auv_msgs.msg import ObjectDetectionFrame, ObjectDetectionFrameArray
+from auv_msgs.msg import VisionObject, VisionObjectArray
 from object_detection_utils import *
 import object_detection_utils
 import torch
@@ -65,7 +65,7 @@ def detect_on_image(raw_img, camera_id):
             debug_img = visualizeBbox(debug_img, bbox, global_class_name + " " + str(conf*100) + "%")
 
             #Create a new detection frame object
-            detectionFrame = ObjectDetectionFrame()
+            detectionFrame = VisionObject()
             if camera_id == 0: # DOWN CAM
                 if global_class_name == "Lane Marker":
                     detectionFrame.label = global_class_name
@@ -147,7 +147,7 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrameArray.append(detectionFrame)
 
                     for symbol_class_name, symbol_x, symbol_y, symbol_z, confidence in buoy_symbols:
-                        detectionFrame = ObjectDetectionFrame()
+                        detectionFrame = VisionObject()
                         detectionFrame.label = symbol_class_name
                         detectionFrame.x = symbol_x
                         detectionFrame.y = symbol_y
@@ -168,8 +168,8 @@ def detect_on_image(raw_img, camera_id):
     detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
 
     #create object detection frame message and publish it
-    detectionFrameArrayMsg = ObjectDetectionFrameArray()
-    detectionFrameArrayMsg.detectionObjects = detectionFrameArray
+    detectionFrameArrayMsg = VisionObjectArray()
+    detectionFrameArrayMsg.array = detectionFrameArray
     pub.publish(detectionFrameArrayMsg)
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     debug_img = bridge.cv2_to_imgmsg(debug_img, "bgr8")

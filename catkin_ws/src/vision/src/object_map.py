@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import rospy
-from auv_msgs.msg import ObjectDetectionFrameArray, ObjectMap, ObjectMapArray
+from auv_msgs.msg import VisionObject, VisionObjectArray
 import math
 
 #callback when a new object detection frame is published
@@ -155,10 +155,10 @@ def publishMap():
     confirmedMap = [obj for obj in object_map if obj[6] > min_observations]
 
     #Create an array of ObjectMap 
-    map_msg_array = ObjectMapArray()
+    map_msg_array = VisionObjectArray()
     for obj in confirmedMap:
 
-        map_msg = ObjectMap()
+        map_msg = VisionObject()
         map_msg.label = obj[0]
         map_msg.x = obj[1] 
         map_msg.y = obj[2] 
@@ -166,7 +166,7 @@ def publishMap():
         map_msg.theta_z = obj[4]
         map_msg.extra_field = obj[5]
 
-        map_msg_array.detectionObjects.append(map_msg)
+        map_msg_array.array.append(map_msg)
 
 
     obj_pub.publish(map_msg_array)
@@ -178,6 +178,6 @@ object_map = []
 sameObjectRadiusPerLabel = { "Lane Marker": 3, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
 
 rospy.init_node('object_map')
-obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrameArray, objectDetectCb)
-obj_pub = rospy.Publisher('vision/object_map', ObjectMapArray, queue_size=1)
+obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
+obj_pub = rospy.Publisher('vision/object_map', VisionObjectArray, queue_size=1)
 rospy.spin()

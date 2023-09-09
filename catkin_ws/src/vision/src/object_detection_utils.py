@@ -3,7 +3,7 @@ import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from ultralytics import YOLO
-from auv_msgs.msg import ObjectDetectionFrameArray
+from auv_msgs.msg import VisionObjectArray
 import numpy as np
 import math
 from std_msgs.msg import Float64
@@ -294,7 +294,7 @@ visualisation_pubs = [
     rospy.Publisher('vision/down_cam/detection', Image, queue_size=1),
     rospy.Publisher('vision/front_cam/detection', Image, queue_size=1)
     ]
-pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrameArray, queue_size=1)
+pub = rospy.Publisher('vision/viewframe_detection', VisionObjectArray, queue_size=1)
 
 bridge = CvBridge()
 states = (State(), State())
