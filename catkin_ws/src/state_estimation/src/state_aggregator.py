@@ -10,6 +10,8 @@ from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped
 from sensors import DepthSensor, IMU, DVL
 from std_msgs.msg import Float64
 
+DEG_PER_RAD = 180 / np.pi
+
 def update_state():    
     x = None
     y = None
@@ -30,8 +32,11 @@ def update_state():
             break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
+            np_quaternion = np.array([sensor.quaternion.x, sensor.quaternion.y, sensor.quaternion.z, sensor.quaternion.w])
             quaternion = Quaternion(x = sensor.quaternion.x, y = sensor.quaternion.y, z = sensor.quaternion.z, w = sensor.quaternion.w)
-            roll, pitch, yaw = sensor.roll, sensor.pitch, sensor.yaw
+            roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
+            pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
+            yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
             angular_velocity = Vector3(sensor.angular_velocity)
             break
 
