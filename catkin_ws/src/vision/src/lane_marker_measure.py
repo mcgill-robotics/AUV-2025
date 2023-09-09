@@ -117,7 +117,7 @@ def getParameters():
     global blur2_amt
     # Read the values for downscaling, bluring and color tolerance from a text file
     values = []
-    with open(pwd + '/camera_calibrations/thresholding_values.txt', 'r') as file:
+    with open(pwd + '/config/thresholding_values.txt', 'r') as file:
         # Read the file line by line
         for line in file:
             # Ignore lines that start with "#"

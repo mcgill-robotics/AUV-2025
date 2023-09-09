@@ -19,14 +19,13 @@ add_message_files(FILES
 	ThrusterForces.msg
 	ObjectDetectionFrame.msg
 	ObjectMap.msg
-	ImuData.msg
 	DeadReckonReport.msg
 	VelocityReport.msg
 )
 
 add_action_files(FILES
 	StateQuaternion.action
-	Superimposer.action
+	Effort.action
 )
 
 generate_messages(DEPENDENCIES
