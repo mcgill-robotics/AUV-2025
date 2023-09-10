@@ -7,10 +7,11 @@ import json
 
 # arg parse issue assignees
 parser = argparse.ArgumentParser()
-parser.add_argument("assignees")
+parser.add_argument("issue")
 args = parser.parse_args()
-assignees = args.assignees
-
+issue = args.issue
+print(issue)
+'''
 assignees = json.loads(assignees)
 
 names = [assignee['login'] for assignee in assignees["assignees"]]
@@ -37,4 +38,4 @@ async def send_message():
 
 
 
-client.run(TOKEN)
+client.run(TOKEN)'''
