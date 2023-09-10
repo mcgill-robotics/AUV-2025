@@ -4,15 +4,15 @@ on:
     issues:
         types: [closed]
 env:
-    SUPER_SECRET: ${{ secrets.DISCORD_TOKEN }}
+    DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+    ISSUE: ${{ github.event.issue }}
 
 jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-        - shell: bash
         - uses: actions/checkout@v3
         - run: |
             pip install -U discord.py
-            python .github/discord_bot.py "$SUPER_SECRET"
+            python .github/discord_bot.py "$ISSUE"
             
