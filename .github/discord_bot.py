@@ -10,9 +10,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("assignees",type=list)
 args = parser.parse_args()
 assignees = args.assignees
-assignees = json.loads("{ \"assignees\":" + assignees + "}")
+print(assignees)
 
-
+'''
 names = [assignee['login'] for assignee in assignees["assignees"]]
 
 
@@ -37,4 +37,4 @@ async def send_message():
 
 
 
-client.run(TOKEN)
+client.run(TOKEN)'''
