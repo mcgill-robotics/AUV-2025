@@ -49,4 +49,4 @@ async def send_message():
 
 
 
-client.run("MTE1MDE2MjAwMDc3MzY1MjU0MA.GOmtM7.bvwnfETCD7ZhIHQa0SH579h0opKQH6S_hypp6A")
+client.run(TOKEN)
