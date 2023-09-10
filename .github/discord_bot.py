@@ -7,14 +7,13 @@ import json
 
 # arg parse issue assignees
 parser = argparse.ArgumentParser()
-parser.add_argument("issue")
+parser.add_argument("num")
 args = parser.parse_args()
-issue = args.issue
-print(issue)
-'''
-assignees = json.loads(assignees)
+num = args.num
 
-names = [assignee['login'] for assignee in assignees["assignees"]]
+num = str(num)
+
+# names = [assignee['login'] for assignee in assignees["assignees"]]
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -34,8 +33,8 @@ async def send_message():
         if guild.name == "McGill Robotics":
             for channel in guild.channels:
                 if channel.name == "discord-support":
-                    await channel.send("Test, an issue has been closed, assingees data is " + str(assignees))
+                    await channel.send("Test, an issue has been closed, issue number: " + num)
 
 
 
-client.run(TOKEN)'''
+client.run(TOKEN)
