@@ -9,9 +9,9 @@ import json
 parser = argparse.ArgumentParser()
 parser.add_argument("issue")
 args = parser.parse_args()
-assignees = json.loads(args.issue)
+issue = json.loads(args.issue)
 
-names = [assignee['login'] for assignee in assignees]
+names = [assignee['login'] for assignee in issue["assignees"]]
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
