@@ -7,7 +7,7 @@ import json
 
 # arg parse issue assignees
 parser = argparse.ArgumentParser()
-parser.add_argument("assignees")
+parser.add_argument("assignees",type=list)
 args = parser.parse_args()
 assignees = args.assignees
 assignees = json.loads("{ \"assignees\":" + assignees + "}")
