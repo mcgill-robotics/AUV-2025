@@ -1,19 +1,30 @@
 # bot.py
 import os
+import sys
 
 import discord
 import argparse
-import json
+import requests
 
-# arg parse issue assignees
 parser = argparse.ArgumentParser()
-parser.add_argument("num")
+parser.add_argument("issue_number")
 args = parser.parse_args()
-num = args.num
+num = int(args.issue_number)
 
-num = str(num)
+response = requests.get(f"https://api.github.com/repos/mcgill-robotics/AUV-2024/issues/{num}")
+json = response.json()
+title = json["title"]
+names = [assignee['login'] for assignee in json["assignees"]]
 
-# names = [assignee['login'] for assignee in assignees["assignees"]]
+names_string = names[0]
+for name in names[1:-1]:
+    names_string += ", " + name
+if len(names) > 1:
+    names_string += " and " + names[-1]
+
+
+message = "Hey Clarke here. Big thanks to " + names_string \
+    + " for closing issue " + str(json["number"]) + " - " + title + ". I really appreciate your hard work!"
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -32,9 +43,10 @@ async def send_message():
     for guild in client.guilds:
         if guild.name == "McGill Robotics":
             for channel in guild.channels:
-                if channel.name == "discord-support":
-                    await channel.send("Test, an issue has been closed, issue number: " + num)
+                if channel.name == "auv-general":
+                    await channel.send(message)
+                    sys.exit(0)
 
 
 
-client.run(TOKEN)
+client.run("MTE1MDE2MjAwMDc3MzY1MjU0MA.GOmtM7.bvwnfETCD7ZhIHQa0SH579h0opKQH6S_hypp6A")
