@@ -7,7 +7,7 @@ import json
 
 # arg parse issue assignees
 parser = argparse.ArgumentParser()
-parser.add_argument("--issue")
+parser.add_argument("issue")
 args = parser.parse_args()
 assignees = json.loads(args.issue)
 
