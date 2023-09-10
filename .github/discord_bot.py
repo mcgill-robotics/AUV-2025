@@ -31,7 +31,7 @@ async def send_message():
         if guild.name == "McGill Robotics":
             for channel in guild.channels:
                 if channel.name == "discord-support":
-                    await channel.send("Test, an issue has been closed. The assignees are: " + ", ".join(names))
+                    await channel.send("Test, an issue has been closed, assingees data is " + str(assignees))
 
 
 
