@@ -2,7 +2,6 @@
 import os
 
 import discord
-from dotenv import load_dotenv
 import argparse
 import json
 
@@ -15,7 +14,6 @@ assignees = json.loads(args.issue)
 names = [assignee['login'] for assignee in assignees]
 
 
-load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
