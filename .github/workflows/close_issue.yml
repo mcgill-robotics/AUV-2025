@@ -3,16 +3,16 @@ name: Close issue
 on:
     issues:
         types: [closed]
-
 env:
-    DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+    SUPER_SECRET: ${{ secrets.DISCORD_TOKEN }}
 
 jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
+        - shell: bash
         - uses: actions/checkout@v3
         - run: |
             pip install -U discord.py
-            python .github/discord_bot.py ${{ github.event.issue}}
-      
+            python .github/discord_bot.py "$SUPER_SECRET"
+            
