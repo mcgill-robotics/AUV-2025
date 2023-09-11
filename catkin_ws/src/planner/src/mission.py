@@ -19,30 +19,17 @@ from substates.initialize_for_comp import *
 
 def endMission(msg):
     print(msg)
-    control.stop_in_place()
+    control.freeze_pose()
 
 def endPlanner(msg="Shutting down mission planner."):
     print(msg)
     control.kill()
 
-def qualiVisionMission():
-    global sm
-    sm = smach.StateMachine(outcomes=['success', 'failure']) 
-    with sm:
-        smach.StateMachine.add('initialization', InitializeForComp(wait_time=wait_time_for_comp), 
-                transitions={'success': 'find_quali'})
-        smach.StateMachine.add('find_quali', LinearSearch(timeout=120, forward_speed=5, target_class="Quali Gate", min_objects=1, control=control, mapping=mapping), 
-                transitions={'success': 'quali', 'failure': 'failure'})
-        smach.StateMachine.add('quali', QualiVision(control=control, mapping=mapping, state=state, quali_gate_width=quali_gate_width), 
-            transitions={'success': 'success', 'failure':'failure'})
-    res = sm.execute()
-    endMission("Finished quali mission. Result {}".format(res))
-
 def gateMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
@@ -53,7 +40,7 @@ def buoyMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class="Buoy", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class="Buoy", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
@@ -75,7 +62,7 @@ def laneMarkerMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping, search_depth=-1), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="", control=control, mapping=mapping, state=state), 
@@ -87,10 +74,7 @@ def semiFinals():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('initialization', InitializeForComp(wait_time=wait_time_for_comp), 
-                transitions={'success': 'find_gate'})
-        
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
         smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_width=gate_width), 
@@ -102,25 +86,25 @@ def semiFinals():
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping, search_depth=-1), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="Gate", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=5, target_class="Buoy", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=5, target_class="Buoy", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
                 transitions={'success': 'find_second_lane_marker', 'failure':'failure'})
         
-        smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=2, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=2, control=control, mapping=mapping, search_depth=-1), 
                 transitions={'success': 'navigate_second_lane_marker', 'failure': 'failure'})
 
         smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(origin_class="Buoy", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'find_octagon', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_octagon', LinearSearch(timeout=120, forward_speed=5, target_class="Octagon Table", min_objects=1, control=control, mapping=mapping), 
+        smach.StateMachine.add('find_octagon', LinearSearch(timeout=120, forward_speed=5, target_class="Octagon Table", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
@@ -146,7 +130,7 @@ if __name__ == '__main__':
 
 
         # control.move((None,None,-1))
-        # control.moveDelta((0,0,0))
+        # control.freeze_position()
         control.rotateEuler((0,0,None))
         # while True:
         #     control.rotateEuler((0,0,0))
