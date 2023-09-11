@@ -4,10 +4,6 @@
 		<include file="$(find imu)/launch/imu.launch"/>
 		<include file="$(find dvl)/launch/dvl.launch"/>
     </group>
-	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
-		<param name="update_rate" value="20" />
-	</node>
-
 
 	<arg name="q_imu_auv_w" default="0.0" />
 	<arg name="q_imu_auv_x" default="0.0" />
@@ -19,11 +15,12 @@
 	<arg name="q_dvl_auv_y" default="0.0" />
 	<arg name="q_dvl_auv_z" default="1.0" />
 
-	<arg name="dvl_auv_offset_x" default="0.0" />
-	<arg name="dvl_auv_offset_y" default="0.0" />
-	<arg name="dvl_auv_offset_z" default="0.0" />
+	<arg name="auv_dvl_offset_x" default="0.0" />
+	<arg name="auv_dvl_offset_y" default="0.0" />
+	<arg name="auv_dvl_offset_z" default="-0.3" />
 
-	<node name="sensors" pkg="state_estimation" type="sensors.py" respawn="true" output="screen">
+	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
+		<param name="update_rate" value="1" />
 		<param name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
 		<param name="q_imu_auv_x" value="$(arg q_imu_auv_x)" />
 		<param name="q_imu_auv_y" value="$(arg q_imu_auv_y)" />
@@ -38,5 +35,8 @@
 		<param name="auv_dvl_offset_y" value="$(arg auv_dvl_offset_y)" />
 		<param name="auv_dvl_offset_z" value="$(arg auv_dvl_offset_z)" />
 	</node>
+
+
+	
 
 </launch>

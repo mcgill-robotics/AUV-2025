@@ -6,13 +6,13 @@ import quaternion
 from tf import transformations
 from tf2_ros import TransformBroadcaster
 
-from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped
+from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
 from std_msgs.msg import Float64
 
 DEG_PER_RAD = 180 / np.pi
 
-def update_state():    
+def update_state(_):    
     x = None
     y = None
     z = None
@@ -32,12 +32,12 @@ def update_state():
             break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
-            np_quaternion = np.array([sensor.quaternion.x, sensor.quaternion.y, sensor.quaternion.z, sensor.quaternion.w])
-            quaternion = Quaternion(x = sensor.quaternion.x, y = sensor.quaternion.y, z = sensor.quaternion.z, w = sensor.quaternion.w)
+            np_quaternion = np.array([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
+            quaternion = Quaternion(x = sensor.q_nwu_auv.x, y = sensor.q_nwu_auv.y, z = sensor.q_nwu_auv.z, w = sensor.q_nwu_auv.w)
             roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
             pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
             yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
-            angular_velocity = Vector3(sensor.angular_velocity)
+            angular_velocity = Vector3(sensor.angular_velocity[0], sensor.angular_velocity[1], sensor.angular_velocity[2])
             break
 
     if x is not None and y is not None and z is not None and quaternion is not None:
@@ -102,3 +102,5 @@ if __name__ == '__main__':
 
     timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("~update_rate")), update_state)
     rospy.on_shutdown(timer.shutdown)
+    
+    rospy.spin()

@@ -9,17 +9,9 @@
 	<include file="$(find propulsion)/launch/propulsion.launch">
 		<arg name="sim" value="$(arg sim)" />
 	</include>
-	<!-- <include file="$(find state_estimation)/launch/state_estimation.launch">
+	<include file="$(find state_estimation)/launch/state_estimation.launch">
 		<arg name="sim" value="$(arg sim)" />
-	</include> -->
-
-    <group unless="$(arg sim)">
-		<!-- REMOVE THIS WHEN SIM DOESNT BYPASS ANYMORE -->
-		<include file="$(find state_estimation)/launch/state_estimation.launch">
-			<arg name="sim" value="$(arg sim)" />
-		</include>
-		<!-- ^^^^^^^^^^^ REMOVE THIS WHEN SIM DOESNT BYPASS ANYMORE -->
-    </group>
+	</include>
 
     <group if="$(arg vision)">
 		<include file="$(find vision)/launch/vision.launch">

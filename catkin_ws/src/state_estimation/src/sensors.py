@@ -3,6 +3,8 @@
 import rospy
 import numpy as np
 import quaternion
+import math
+from collections.abc import Iterable
 
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
@@ -13,6 +15,7 @@ Q_NWU_NED = np.quaternion(0, 1, 0, 0)
 DEG_PER_RAD = 180 / np.pi
 RAD_PER_DEG = 1 / DEG_PER_RAD
 
+
 class Sensor():
     def __init__(self, sensor_name):
         self.time_before_considered_inactive = 1 #seconds
@@ -21,24 +24,34 @@ class Sensor():
         self.x = 0
         self.y = 0
         self.z = 0
+        self.roll = 0
+        self.pitch = 0
+        self.yaw = 0
+        
         self.q_nwu_auv = np.quaternion(1, 0, 0, 0)
         self.angular_velocity = np.array([0,0,0])
 
         # initialize a sensor as "inactive"
         self.last_unique_state_time = 0
-        self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.quaternion,self.angular_velocity]
+        self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
     
     def updateLastState(self):
-        current_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.quaternion,self.angular_velocity]
-        if current_state != self.last_state:
-            if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
-                rospy.loginfo("{} has become active.".format(sensor_name))
-            self.last_unique_state_time = rospy.get_time() 
+        current_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
+        for i in range(len(current_state)):
+            if isinstance(current_state[i], Iterable): 
+                different = any([vc != vl for vc, vl in zip(current_state[i], self.last_state[i])])
+            else:
+                different = current_state[i] != self.last_state[i]
+            if different:
+                if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+                    rospy.loginfo("{} has become active.".format(self.sensor_name))
+                    self.last_unique_state_time = rospy.get_time() 
+                    break
         self.last_state = current_state
         
     def isActive(self):
         if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
-            rospy.logwarn("{} has been inactive for {} seconds.".format(sensor_name, time_before_considered_inactive))
+            rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
             return False
         else:
             return True        
@@ -151,3 +164,5 @@ class DVL(Sensor):
         self.yaw = yaw
 
         self.updateLastState()
+        
+        
