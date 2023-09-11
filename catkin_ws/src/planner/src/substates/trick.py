@@ -12,7 +12,7 @@ class Trick(smach.State):
 
     def execute(self,ud):
         #STAY IN SAME POSITION AND AT FLAT ORIENTATION
-        self.control.moveDelta((0,0,0))
+        self.control.freeze_position()
         self.control.rotateEuler((0,0,None))
 
         if self.trick_type == "roll":
