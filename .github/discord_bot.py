@@ -65,7 +65,7 @@ async def send_message():
     for guild in client.guilds:
         if guild.name == "McGill Robotics":
             for channel in guild.channels:
-                if channel.name == "discord-support":
+                if channel.name == "auv-general":
                     await channel.send(message)
                     sys.exit(0)
 
