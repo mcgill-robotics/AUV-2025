@@ -314,3 +314,12 @@ class Controller:
     def freeze_rotation(self):
         goal = self.get_state_goal([None,None,None,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+
+    def flatten(self):
+        orientation = self.orientation
+        orientation.x = 0
+        orientation.y = 0
+        sign = 1 if orientation.z > 0 else -1
+        orientation.z = sign*math.sqrt(1 - orientation.w**2)
+        goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)
