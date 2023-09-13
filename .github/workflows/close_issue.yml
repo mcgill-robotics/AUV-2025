@@ -5,7 +5,7 @@ on:
         types: [closed]
 env:
     DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-    CHAPT_GPT_TOKEN: ${{ secrets.CHAT_GPT_TOKEN }}
+    CHAT_GPT_TOKEN: ${{ secrets.CHAT_GPT_TOKEN }}
 
 jobs:
   build:
