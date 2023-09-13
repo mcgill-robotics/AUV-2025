@@ -5,6 +5,7 @@ on:
         types: [closed]
 env:
     DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+    CHAPT_GPT_TOKEN: ${{ secrets.CHAPT_GPT_TOKEN }}
 
 jobs:
   build:
@@ -13,5 +14,6 @@ jobs:
         - uses: actions/checkout@v3
         - run: |
             pip install -U discord.py
+            pip install openai
             python .github/discord_bot.py ${{ github.event.issue.number }}         
             
