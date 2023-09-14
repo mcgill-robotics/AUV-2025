@@ -3,7 +3,7 @@ import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from ultralytics import YOLO
-from auv_msgs.msg import ObjectDetectionFrame
+from auv_msgs.msg import VisionObjectArray
 import numpy as np
 import math
 from std_msgs.msg import Float64
@@ -261,30 +261,25 @@ def analyzeBuoy(detections):
 
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
-def cleanDetections(labels, objs_x, objs_y, objs_z, objs_theta_z, extra_fields, confidences):
+def cleanDetections(detectionFrameArray, confidences):
     label_counts = {}
     selected_detections = []
 
-    for i in range(len(labels)):
-        if None in [objs_x[i], objs_y[i], objs_z[i]]: continue
-        if label_counts.get(labels[i], 0) >= max_counts_per_label[labels[i]]:
+    for i in range(len(detectionFrameArray)):
+        obj = detectionFrameArray[i]
+        if None in [obj.x, obj.y, obj.z]: continue
+        if label_counts.get(obj.label, 0) >= max_counts_per_label[obj.label]:
             candidate_obj_conf = confidences[i]
             min_conf_i = min(selected_detections, key=lambda x : confidences[x])
             if confidences[min_conf_i] < candidate_obj_conf:
                 selected_detections.remove(min_conf_i)
                 selected_detections.append(i)
         else:
-            label_counts[labels[i]] = label_counts.get(labels[i], 0) + 1
+            label_counts[obj.label] = label_counts.get(obj.label, 0) + 1
             selected_detections.append(i)
 
-    selected_labels = [labels[si] for si in selected_detections]
-    selected_objs_x = [objs_x[si] for si in selected_detections]
-    selected_objs_y = [objs_y[si] for si in selected_detections]
-    selected_objs_z = [objs_z[si] for si in selected_detections]
-    selected_objs_theta_z = [objs_theta_z[si] for si in selected_detections]
-    selected_extra_fields = [extra_fields[si] for si in selected_detections]
 
-    return selected_labels, selected_objs_x, selected_objs_y, selected_objs_z, selected_objs_theta_z, selected_extra_fields
+    return [detectionFrameArray[i] for i in selected_detections]
 
 
 
@@ -299,7 +294,7 @@ visualisation_pubs = [
     rospy.Publisher('vision/down_cam/detection', Image, queue_size=1),
     rospy.Publisher('vision/front_cam/detection', Image, queue_size=1)
     ]
-pub = rospy.Publisher('vision/viewframe_detection', ObjectDetectionFrame, queue_size=1)
+pub = rospy.Publisher('vision/viewframe_detection', VisionObjectArray, queue_size=1)
 
 bridge = CvBridge()
 states = (State(), State())

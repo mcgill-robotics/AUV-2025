@@ -6,7 +6,7 @@ from geometry_msgs.msg import Point, Quaternion
 import tf
 from std_msgs.msg import Float64
 from auv_msgs.msg import ObjectDetectionFrame
-from auv_msgs.msg import ObjectMap
+from auv_msgs.msg import VisionObjectArray
 from auv_msgs.msg import DeadReckonReport
 from geometry_msgs.msg import Wrench, Quaternion
 import numpy as np
@@ -56,9 +56,9 @@ def setup():
 
 def objectDetectCb(msg):
     #spawn blue spheres object detections
-    for i in range(len(msg.label)):
+    for obj in msg:
         #NOTE: if performance becomes an issue, publish a marker array with all markers at once
-        add_detection_marker(msg.x[i], msg.y[i], msg.z[i])
+        add_detection_marker(obj.x, obj.y, obj.z)
 
 def objectMapCb(msg):
     global updates
@@ -74,8 +74,8 @@ def objectMapCb(msg):
         map_pub.publish(map_marker)
         rospy.sleep(0.01)
     object_map_markers = []
-    for i in range(len(msg.label)):
-        addMapMarkers(msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i])
+    for obj in msg:
+        addMapMarkers(obj.label, obj.x, obj.y, obj.z, obj.theta_z, obj.extra_field)
     
 def addSphere(x,y,z,scale,pub,color):
     global marker_id
@@ -429,7 +429,7 @@ theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateAUVThetaX)
 theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
 theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
-map_sub = rospy.Subscriber('vision/object_map', ObjectMap, objectMapCb)
+map_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, objectMapCb)
 sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
 dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)
 
