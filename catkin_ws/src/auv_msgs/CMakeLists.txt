@@ -17,8 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(FILES
 	ThrusterMicroseconds.msg
 	ThrusterForces.msg
-	ObjectDetectionFrame.msg
-	ObjectMap.msg
+	VisionObject.msg
+	VisionObjectArray.msg
 	DeadReckonReport.msg
 	VelocityReport.msg
 )
