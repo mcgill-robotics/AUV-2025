@@ -30,18 +30,18 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main"
 
 # Install ROS packages and dependencies
 RUN apt-get install -y 
-RUN apt-get ros-noetic-rosserial-arduino 
-RUN apt-get ros-noetic-pid
-RUN apt-get ros-noetic-joy 
-RUN apt-get ros-noetic-joy-teleop 
-RUN apt-get ros-noetic-sbg-driver
-RUN apt-get ros-noetic-cv-bridge
-RUN apt-get ros-noetic-image-view
-RUN apt-get ros-noetic-rqt-gui
-RUN apt-get ros-noetic-ros-ign-gazebo
-RUN apt-get ros-noetic-ros-ign
-RUN apt-get ros-noetic-ros-ign-bridge
-RUN apt-get ros-noetic-smach-ros
+RUN apt-get install ros-noetic-rosserial-arduino 
+RUN apt-get install ros-noetic-pid
+RUN apt-get install ros-noetic-joy 
+RUN apt-get install ros-noetic-joy-teleop 
+RUN apt-get install ros-noetic-sbg-driver
+RUN apt-get install ros-noetic-cv-bridge
+RUN apt-get install ros-noetic-image-view
+RUN apt-get install ros-noetic-rqt-gui
+RUN apt-get install ros-noetic-ros-ign-gazebo
+RUN apt-get install ros-noetic-ros-ign
+RUN apt-get install ros-noetic-ros-ign-bridge
+RUN apt-get install ros-noetic-smach-ros
 
 # Install Python dependencies
 RUN pip3 install numpy-quaternion ultralytics
