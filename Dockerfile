@@ -1,9 +1,6 @@
 # Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
 
-# Set the user name (update with your desired user name)
-ARG user_name=user
-
 # Update package lists and install necessary tools
 RUN apt-get update && apt-get install -y \
     python3-rosdep \
@@ -54,8 +51,8 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Replace 'user' with the desired user name
-ENV HOME /home/$user_name
-USER $user_name
+# ENV HOME /home/$user_name
+# USER $user_name
 
 # Set the default command to start a shell
 CMD ["/bin/bash"]
