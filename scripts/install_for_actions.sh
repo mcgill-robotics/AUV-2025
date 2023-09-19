@@ -22,7 +22,7 @@ sudo apt-get install -y ros-noetic-joy
 sudo apt-get install -y ros-noetic-joy-teleop
 sudo apt-get install -y ros-noetic-sbg-driver
 sudo apt-get install -y ros-noetic-cv-bridge
-# sudo apt-get install -y ros-noetic-image-view
+sudo apt-get install -y ros-noetic-image-view
 sudo apt-get install -y ros-noetic-rqt-gui
 sudo apt-get install -y ros-noetic-rqt-gui-image-view
 sudo apt-get install -y ros-noetic-ros-ign-gazebo
