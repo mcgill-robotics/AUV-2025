@@ -170,39 +170,34 @@ class Controller:
         self.rotate(euler_to_quaternion(x,y,z))
 
 
-    def state(self, pos, ang, isEuler=False):
+    def state(self, pos, ang, isEuler=False, isDelta=False):
         if isEuler:
             wx,wy,wz = ang
-            if wx is None: wx = self.theta_x
-            if wy is None: wy = self.theta_y
-            if wz is None: wz = self.theta_z
+
+            if not isDelta:
+                if wx is None: wx = self.theta_x
+                if wy is None: wy = self.theta_y
+                if wz is None: wz = self.theta_z
+
+            else:
+                if wx is None: wx = 0
+                if wy is None: wy = 0
+                if wz is None: wz = 0
 
             ang = euler_to_quaternion(wx,wy,wz)
+
+        x,y,z = pos
+        if any(x is None for x in ang) and any(x is not None for x in ang):
+            raise ValueError("Invalid state{} goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format("Delta" if isDelta else "" ,ang))
+        w,wx,wy,wz = ang
+
+        if isDelta: goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
+        else: goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_not_displace)
 
         
-        x,y,z = pos
-        if any(x is None for x in ang) and any(x is not None for x in ang):
-            raise ValueError("Invalid state goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
-        w,wx,wy,wz = ang
-        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    def stateDelta(self,pos,ang,isEuler=False):
-        if isEuler:
-            wx,wy,wz = ang
-            if wx is None: wx = self.theta_x
-            if wy is None: wy = self.theta_y
-            if wz is None: wz = self.theta_z
-
-            ang = euler_to_quaternion(wx,wy,wz)
-
-        x,y,z = pos
-        if any(x is None for x in ang) and any(x is not None for x in ang):
-            raise ValueError("Invalid stateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
-        w,wx,wy,wz = ang
-        goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
-        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
-
+    
 
     #move to setpoint
     def move(self,pos,face_destination=False):
