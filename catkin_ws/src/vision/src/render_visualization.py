@@ -5,7 +5,6 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Quaternion
 import tf
 from std_msgs.msg import Float64
-from auv_msgs.msg import ObjectDetectionFrame
 from auv_msgs.msg import VisionObjectArray
 from auv_msgs.msg import DeadReckonReport
 from geometry_msgs.msg import Wrench, Quaternion
@@ -56,7 +55,7 @@ def setup():
 
 def objectDetectCb(msg):
     #spawn blue spheres object detections
-    for obj in msg:
+    for obj in msg.array:
         #NOTE: if performance becomes an issue, publish a marker array with all markers at once
         add_detection_marker(obj.x, obj.y, obj.z)
 
@@ -74,7 +73,7 @@ def objectMapCb(msg):
         map_pub.publish(map_marker)
         rospy.sleep(0.01)
     object_map_markers = []
-    for obj in msg:
+    for obj in msg.array:
         addMapMarkers(obj.label, obj.x, obj.y, obj.z, obj.theta_z, obj.extra_field)
     
 def addSphere(x,y,z,scale,pub,color):
@@ -428,7 +427,7 @@ z_pos_sub = rospy.Subscriber('state_z', Float64, updateAUVZ)
 theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateAUVThetaX)
 theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
 theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
-obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
+obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, objectMapCb)
 sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
 dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)

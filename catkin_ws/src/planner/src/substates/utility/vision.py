@@ -12,7 +12,7 @@ class ObjectMapper:
 
     def mapUpdateCb(self,msg):
         self.map = []
-        for obj in msg:
+        for obj in msg.array:
             new_map_obj = []
             new_map_obj.append(obj.label)
             new_map_obj.append(obj.x)
