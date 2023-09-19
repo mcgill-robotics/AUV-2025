@@ -11,10 +11,9 @@ jobs:
         image: tonybob/auv_2024:main
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
+      - name: catkin build
         shell: bash
         run: |
-            scripts/install_for_actions.sh
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
