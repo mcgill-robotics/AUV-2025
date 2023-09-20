@@ -16,7 +16,8 @@ def objectDetectCb(msg):
 def addObservation(msg):
 
     # Loop over every object in the DetectionFrame array
-    for detectionFrame in msg.detectionObjects:
+
+    for detectionFrame in msg.array:
         #find which object this detection pertains to
         obj_i = findClosestObject([detectionFrame.label, detectionFrame.x, detectionFrame.y, detectionFrame.z])
         #if it does not pertain to any preexisting object add it to the map
