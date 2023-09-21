@@ -20,7 +20,7 @@
 	<arg name="auv_dvl_offset_z" default="-0.3" />
 
 	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
-		<param name="update_rate" value="1" />
+		<param name="update_rate" value="30" />
 		<param name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
 		<param name="q_imu_auv_x" value="$(arg q_imu_auv_x)" />
 		<param name="q_imu_auv_y" value="$(arg q_imu_auv_y)" />
