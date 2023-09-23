@@ -19,6 +19,7 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 class Sensor():
     def __init__(self, sensor_name):
         self.time_before_considered_inactive = 1 #seconds
+        self.last_error_message_time = rospy.get_time()
         self.sensor_name = sensor_name
 
         self.x = 0
@@ -51,7 +52,9 @@ class Sensor():
         
     def isActive(self):
         if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
-            rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
+            if rospy.get_time() - self.last_error_message_time > 1:
+                self.last_error_message_time = rospy.get_time()
+                rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
             return False
         else:
             return True        
