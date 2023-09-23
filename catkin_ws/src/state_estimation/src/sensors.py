@@ -42,12 +42,12 @@ class Sensor():
             if isinstance(current_state[i], Iterable): 
                 different = any([vc != vl for vc, vl in zip(current_state[i], self.last_state[i])])
             else:
-                different = current_state[i] != self.last_state[i]
+                different = current_state[i] is None or current_state[i] is not self.last_state[i]
             if different:
                 if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
                     rospy.loginfo("{} has become active.".format(self.sensor_name))
-                    self.last_unique_state_time = rospy.get_time() 
-                    break
+                self.last_unique_state_time = rospy.get_time() 
+                break
         self.last_state = current_state
         
     def isActive(self):
