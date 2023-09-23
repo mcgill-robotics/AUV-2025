@@ -123,7 +123,9 @@ class DVL(Sensor):
     
     def dr_cb(self, dr_msg):
         # quaternion/position of dvl relative to dvlref 
-        q_dvlref_dvl = quaternion.from_euler_angles(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
+        # q_dvlref_dvl = #quaternion.from_euler_angles(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
+        q_dvlref_dvl = transformations.quaternion_from_euler(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
+        q_dvlref_dvl = np.quaternion(q_dvlref_dvl[3], q_dvlref_dvl[0], q_dvlref_dvl[1], q_dvlref_dvl[2])
         q_dvlref_auv = q_dvlref_dvl * self.q_dvl_auv
         pos_dvlref_dvl = np.array([dr_msg.x, dr_msg.y, dr_msg.z])
 
