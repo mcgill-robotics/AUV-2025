@@ -17,6 +17,7 @@ def update_state(_):
     y = None
     z = None
     quaternion = None
+    global last_error_message_time
 
     for sensor in sensor_priorities["x"]:
         if sensor.isActive():
@@ -39,7 +40,6 @@ def update_state(_):
             yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
             angular_velocity = Vector3(sensor.angular_velocity[0], sensor.angular_velocity[1], sensor.angular_velocity[2])
             break
-
     if x is not None and y is not None and z is not None and quaternion is not None:
         pub_x.publish(x)
         pub_y.publish(y)
@@ -51,7 +51,8 @@ def update_state(_):
         pose = Pose(Point(x=x, y=y, z=z), quaternion)
         pub_pose.publish(pose)
         broadcast_auv_pose(pose)
-    else:
+    elif rospy.get_time() - last_error_message_time > 1:
+        last_error_message_time = rospy.get_time()
         rospy.logerr("Missing sensor data for proper state estimation! Available states: [ X: {} Y: {} Z: {} Q: {} ]".format(x is not None, y is not None, z is not None, quaternion is not None))
 
 def broadcast_auv_pose(pose):
@@ -87,6 +88,8 @@ if __name__ == '__main__':
     pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
     pub_ang_vel = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
     tf_broadcaster = TransformBroadcaster()
+
+    last_error_message_time = rospy.get_time()
     
     depth_sensor = DepthSensor()
     imu = IMU()

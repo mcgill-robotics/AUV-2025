@@ -154,79 +154,67 @@ class Controller:
                 client.cancel_goal()
 
     #rotate to this rotation (quaternion)
-    def rotate(self,ang,callback=None):
-        #if callback = None make this a blocking call
+    def rotate(self,ang):
         if any(x is None for x in ang) and any(x is not None for x in ang):
             raise ValueError("Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
         w,x,y,z = ang
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_not_displace)
-        if callback is not None:
-            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
     
     #rotate to this rotation (euler)
-    def rotateEuler(self,ang,callback=None):
+    def rotateEuler(self,ang):
         x,y,z = ang
         if x is None: x = self.theta_x
         if y is None: y = self.theta_y
         if z is None: z = self.theta_z
-        self.rotate(euler_to_quaternion(x,y,z), callback=callback)
+        self.rotate(euler_to_quaternion(x,y,z))
 
-    def state(self,pos,ang,callback=None):
+    def state(self,pos,ang):
         x,y,z = pos
+        if any(x is None for x in ang) and any(x is not None for x in ang):
+            raise ValueError("Invalid state goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
         w,wx,wy,wz = ang
         goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_not_displace)
-        if callback is not None:
-            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
     
-    def stateDelta(self,pos,ang,callback=None):
+    def stateDelta(self,pos,ang):
         x,y,z = pos
+        if any(x is None for x in ang) and any(x is not None for x in ang):
+            raise ValueError("Invalid stateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(ang))
         w,wx,wy,wz = ang
         goal_state = self.get_state_goal([x,y,z,w,wx,wy,wz],do_displace)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-        if callback is not None:
-            self.StateQuaternionStateClient.send_goal(goal_state,done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
-
-    def stateEuler(self,pos,ang,callback=None):
+    def stateEuler(self,pos,ang):
         wx,wy,wz = ang
         if wx is None: wx = self.theta_x
         if wy is None: wy = self.theta_y
         if wz is None: wz = self.theta_z
-        self.state(pos, euler_to_quaternion(wx,wy,wz), callback)
+        self.state(pos, euler_to_quaternion(wx,wy,wz))
     
-    def stateDeltaEuler(self,pos,ang,callback=None):
+    def stateDeltaEuler(self,pos,ang):
         wx,wy,wz = ang
         if wx is None: wx = 0
         if wy is None: wy = 0
         if wz is None: wz = 0
-        self.stateDelta(pos, euler_to_quaternion(wx,wy,wz), callback)
+        self.stateDelta(pos, euler_to_quaternion(wx,wy,wz))
 
     #move to setpoint
-    def move(self,pos,callback=None,face_destination=False):
-        #if callback = None make this a blocking call
+    def move(self,pos,face_destination=False):
         x,y,z = pos
             
         goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_not_displace)
 
-        x = 0 if x is None else x
-        y = 0 if y is None else y
+        x = self.x if x is None else x
+        y = self.y if y is None else y
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
             yaw_towards_destination = vectorToYawDegrees(x - self.x, y - self.y)
-            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+            self.rotateEuler((0,0,yaw_towards_destination))
         
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #move by this amount in world space
-    def moveDelta(self,delta,callback=None,face_destination=False):
-        #if callback = None make this a blocking call
+    def moveDelta(self,delta,face_destination=False):
         x,y,z = delta
             
         goal_state = self.get_state_goal([x,y,z,None,None,None,None],do_displace)
@@ -235,47 +223,39 @@ class Controller:
         y = 0 if y is None else y
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
             yaw_towards_destination = vectorToYawDegrees(x,y)
-            self.rotateEuler((0,0,yaw_towards_destination),callback=callback)
+            self.rotateEuler((0,0,yaw_towards_destination))
 
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #rotate by this amount (quaternion)
-    def rotateDelta(self,delta,callback=None):
-        #if callback = None make this a blocking call
+    def rotateDelta(self,delta):
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError("Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(delta))
         w,x,y,z = delta
         goal_state = self.get_state_goal([None,None,None,w,x,y,z],do_displace)
         
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #rotate by this amount (euler)
-    def rotateDeltaEuler(self,delta,callback=None):
+    def rotateDeltaEuler(self,delta):
         x,y,z = delta
         if x is None: x = 0
         if y is None: y = 0
         if z is None: z = 0
-        self.rotateDelta(euler_to_quaternion(x,y,z), callback=callback)
+        self.rotateDelta(euler_to_quaternion(x,y,z))
 
     #move by this amount in local space (i.e. z is always heave)
-    def moveDeltaLocal(self,delta,callback=None,face_destination=False):
+    def moveDeltaLocal(self,delta,face_destination=False):
         x,y,z = delta            
         goal_state = self.get_state_goal([x,y,z,None,None,None,None], do_displace, local=is_local)
 
+        if x is None: x = 0
+        if y is None: y = 0
         if face_destination and math.sqrt(x**2 + y**2) > 0.5:
             yaw_towards_destination = vectorToYawDegrees(x,y)
-            self.rotateDeltaEuler((0,0,yaw_towards_destination),callback=callback)
+            self.rotateDeltaEuler((0,0,yaw_towards_destination))
 
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal_state, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     #set torque
     def torque(self,vel):
@@ -323,19 +303,23 @@ class Controller:
             msg = ThrusterMicroseconds([1500]*8)
             self.pwm_pub.publish(msg)
 
-    #stay still in place
-    def stop_in_place(self, callback=None):
-        # goal = self.get_effort_goal([0,0,0,0,0,0])
-        # self.EffortClient.send_goal(goal)
+    def freeze_pose(self):
         goal = self.get_state_goal([self.x,self.y,self.z,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
-    def fix_rotation(self, callback=None):
+    def freeze_position(self):
+        goal = self.get_state_goal([self.x,self.y,self.z,None,None,None,None],do_not_displace)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)
+
+    def freeze_rotation(self):
         goal = self.get_state_goal([None,None,None,self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z],do_not_displace)
-        if(callback is not None):
-            self.StateQuaternionStateClient.send_goal(goal, done_cb=callback)
-        else:
-            self.StateQuaternionStateClient.send_goal_and_wait(goal)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)
+
+    def flatten(self):
+        orientation = self.orientation
+        orientation.x = 0
+        orientation.y = 0
+        sign = 1 if orientation.z > 0 else -1
+        orientation.z = sign*math.sqrt(1 - orientation.w**2)
+        goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
+        self.StateQuaternionStateClient.send_goal_and_wait(goal)

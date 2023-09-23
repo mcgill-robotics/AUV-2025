@@ -19,6 +19,7 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 class Sensor():
     def __init__(self, sensor_name):
         self.time_before_considered_inactive = 1 #seconds
+        self.last_error_message_time = rospy.get_time()
         self.sensor_name = sensor_name
 
         self.x = 0
@@ -51,7 +52,9 @@ class Sensor():
         
     def isActive(self):
         if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
-            rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
+            if rospy.get_time() - self.last_error_message_time > 1:
+                self.last_error_message_time = rospy.get_time()
+                rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
             return False
         else:
             return True        
@@ -83,7 +86,7 @@ class IMU(Sensor):
         
     def ang_vel_cb(self, msg):
         # angular velocity vector relative to imu frame 
-        ang_vel_imu = np.array([msg.gyro.x, -msg.gyro.y, -msg.gyro.z])
+        ang_vel_imu = np.array([msg.gyro.x, msg.gyro.y, msg.gyro.z])
         # anuglar velocity vector relative to AUV frame 
         self.angular_velocity = quaternion.rotate_vectors(self.q_imu_auv, ang_vel_imu)
         self.updateLastState()
@@ -100,8 +103,8 @@ class DVL(Sensor):
     def __init__(self, imu):
         super().__init__("DVL")
         rospy.Subscriber("/dead_reckon_report", DeadReckonReport, self.dr_cb)
-        self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
-        self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
+        # self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
+        # self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
 
         q_dvl_auv_w = rospy.get_param("~q_dvl_auv_w")
         q_dvl_auv_x = rospy.get_param("~q_dvl_auv_x")
@@ -120,10 +123,11 @@ class DVL(Sensor):
     
     def dr_cb(self, dr_msg):
         # quaternion/position of dvl relative to dvlref 
+        # q_dvlref_dvl = #quaternion.from_euler_angles(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
         q_dvlref_dvl = transformations.quaternion_from_euler(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
-        q_dvlref_dvl = np.quaternion(q_dvlref_dvl[3], q_dvlref_dvl[0], q_dvlref_dvl[1], q_dvlref_dvl[2]) # transformations returns quaternion as nparray [x, y, z, w]
+        q_dvlref_dvl = np.quaternion(q_dvlref_dvl[3], q_dvlref_dvl[0], q_dvlref_dvl[1], q_dvlref_dvl[2])
         q_dvlref_auv = q_dvlref_dvl * self.q_dvl_auv
-        pos_dvlref = np.array([dr_msg.x, dr_msg.y, dr_msg.z])
+        pos_dvlref_dvl = np.array([dr_msg.x, dr_msg.y, dr_msg.z])
 
         #update dvl ref frame using imu
         if self.imu.isActive():
@@ -132,8 +136,8 @@ class DVL(Sensor):
 
         if self.q_dvlref_nwu is None: return
 
-        pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu, pos_dvlref)
-        dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv.inverse(), self.auv_dvl_offset)
+        pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu.inverse(), pos_dvlref_dvl)
+        dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv, self.auv_dvl_offset)
         pos_auv += dvl_auv_offset_rotated
         self.x = pos_auv[0]
         self.y = pos_auv[1]

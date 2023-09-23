@@ -42,6 +42,7 @@ def camera_info_callback(msg):
 
 
 def convert_from_uvd(color, z_map):
+    # print("starting")
     if y_over_z_map is not None:
         time = rospy.Time(0)
         xyz_rbg_img = np.zeros((height, width, 6))

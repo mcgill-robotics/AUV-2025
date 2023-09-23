@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import rospy
-from auv_msgs.msg import ObjectDetectionFrame, ObjectMap
+from auv_msgs.msg import VisionObject, VisionObjectArray
 import math
 
 #callback when a new object detection frame is published
@@ -14,15 +14,21 @@ def objectDetectCb(msg):
 
 #add an object detection frame to the object map
 def addObservation(msg):
-    for i in range(len(msg.label)):
+
+    # Loop over every object in the DetectionFrame array
+    for detectionFrame in msg.array:
         #find which object this detection pertains to
-        obj_i = findClosestObject([msg.label[i], msg.x[i], msg.y[i], msg.z[i]])
+        obj_i = findClosestObject([detectionFrame.label, detectionFrame.x, detectionFrame.y, detectionFrame.z])
         #if it does not pertain to any preexisting object add it to the map
         if obj_i == -1:
-            object_map.append([msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i], 1])
+            object_map.append([detectionFrame.label, detectionFrame.x, detectionFrame.y, detectionFrame.z, 
+                               detectionFrame.theta_z, detectionFrame.extra_field, 1])
         else:
             #otherwise update the object map with the new observation
-            updateMap(obj_i, [msg.label[i], msg.x[i], msg.y[i], msg.z[i], msg.theta_z[i], msg.extra_field[i], 1])
+            updateMap(obj_i, [detectionFrame.label, detectionFrame.x, detectionFrame.y, detectionFrame.z, 
+                               detectionFrame.theta_z, detectionFrame.extra_field, 1])
+
+    
 
 #given an observation, find the object to which it pertains to (object within a certain radius of same class)
 def findClosestObject(observation, indexToIgnore=-1):
@@ -145,15 +151,25 @@ def reduceMap():
 
 #publish a version of the map with only the objects with a certain number of observations
 def publishMap():
+
     confirmedMap = [obj for obj in object_map if obj[6] > min_observations]
-    map_msg = ObjectMap()
-    map_msg.label = [obj[0] for obj in confirmedMap]
-    map_msg.x = [obj[1] for obj in confirmedMap]
-    map_msg.y = [obj[2] for obj in confirmedMap]
-    map_msg.z = [obj[3] for obj in confirmedMap]
-    map_msg.theta_z = [obj[4] for obj in confirmedMap]
-    map_msg.extra_field = [obj[5] for obj in confirmedMap]
-    obj_pub.publish(map_msg)
+
+    #Create an array of ObjectMap 
+    map_msg_array = VisionObjectArray()
+    for obj in confirmedMap:
+
+        map_msg = VisionObject()
+        map_msg.label = obj[0]
+        map_msg.x = obj[1] 
+        map_msg.y = obj[2] 
+        map_msg.z = obj[3]
+        map_msg.theta_z = obj[4]
+        map_msg.extra_field = obj[5]
+
+        map_msg_array.array.append(map_msg)
+
+
+    obj_pub.publish(map_msg_array)
 
 
 min_observations = 5
@@ -162,6 +178,6 @@ object_map = []
 sameObjectRadiusPerLabel = { "Lane Marker": 3, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
 
 rospy.init_node('object_map')
-obj_sub = rospy.Subscriber('vision/viewframe_detection', ObjectDetectionFrame, objectDetectCb)
-obj_pub = rospy.Publisher('vision/object_map', ObjectMap, queue_size=1)
+obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
+obj_pub = rospy.Publisher('vision/object_map', VisionObjectArray, queue_size=1)
 rospy.spin()
