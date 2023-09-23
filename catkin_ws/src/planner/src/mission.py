@@ -14,7 +14,6 @@ from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
-from substates.initialize_for_comp import *
 
 
 def endMission(msg):
@@ -130,8 +129,8 @@ if __name__ == '__main__':
 
 
         # control.move((None,None,-1))
-        # control.freeze_position()
-        control.rotateEuler((0,0,None))
+        # control.moveDelta((0,0,0))
+        # control.rotateEuler((0,0,None))
         # while True:
         #     control.rotateEuler((0,0,0))
         #     control.rotateEuler((0,0,90))
@@ -144,7 +143,7 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        laneMarkerMission()
+        # laneMarkerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
