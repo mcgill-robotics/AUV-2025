@@ -56,7 +56,7 @@ def convert_from_uvd(color, z_map):
         start = rospy.get_time()
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
-        print("time to convert: ", rospy.get_time() - start)
+        # print("time to convert: ", rospy.get_time() - start)
 
         xyz_rbg_img[:, :, 0] = z_map
         xyz_rbg_img[:, :, 1] = x_map
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     bridge = CvBridge()
 
     is_sim = rospy.get_param('/sim', False)
-    print("is_sim: ", is_sim)
+    # print("is_sim: ", is_sim)
     if is_sim:
         depth_scale_factor = 1
     else:
