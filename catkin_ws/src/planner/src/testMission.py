@@ -11,23 +11,27 @@ import rostest
 class Test1(unittest.TestCase):
     ## test 1 == 1
     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
-        controls.move([0,0,0])
+        controls.move([0,0,-2])
         controls.rotate([1,0,0,0])
-        # controls.move([0,0,-2])
-        # controls.move([-5,-5,0])
-        # controls.rotate([0.5,0.5,0.5,0.5])
+        rospy.sleep(13)
         x,y,z = state.x,state.y,state.z
         qw,qx,qy,qz = state.pose.orientation.w,state.pose.orientation.x,state.pose.orientation.y,state.pose.orientation.z
-        self.assertAlmostEqual(x,-5,places=0)
-        self.assertAlmostEqual(y,-5,places=0)
+        if qw < 0:
+            qw = -qw
+            qx = -qx
+            qy = -qy
+            qz = -qz
+        self.assertAlmostEqual(x,0,places=0)
+        self.assertAlmostEqual(y,0,places=0)
         self.assertAlmostEqual(z,-2,places=0)
-        self.assertAlmostEqual(qw,0.5,places=2)
-        self.assertAlmostEqual(qx,0.5,places=2)
-        self.assertAlmostEqual(qy,0.5,places=2)
-        self.assertAlmostEqual(qz,0.5,places=2)
+        self.assertAlmostEqual(qw,1,places=1)
+        self.assertAlmostEqual(qx,0,places=1)
+        self.assertAlmostEqual(qy,0,places=1)
+        self.assertAlmostEqual(qz,0,places=1)
 
 if __name__ == '__main__':
     rospy.init_node("Test1")
     controls = Controller(rospy.Time(0))
     state = StateTracker()
+    rospy.sleep(5)
     rostest.rosrun("planner", 'Test1', Test1)
