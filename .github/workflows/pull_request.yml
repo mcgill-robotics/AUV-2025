@@ -14,6 +14,13 @@ jobs:
       - name: catkin build
         shell: bash
         run: |
+            git submodule update --init --recursive
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
+      - name: simple test
+        shell: bash
+        run: |
+            cd catkin_ws
+            source devel/setup.bash
+            rostest planner testMission.launch
