@@ -1,4 +1,4 @@
-name: Catkin Build
+name: Integration Test
 
 on:
   pull_request:
@@ -14,6 +14,7 @@ jobs:
       - name: catkin build
         shell: bash
         run: |
+            git config --global --add safe.directory /__w/AUV-2024/AUV-2024
             git submodule update --init --recursive
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
@@ -23,4 +24,4 @@ jobs:
         run: |
             cd catkin_ws
             source devel/setup.bash
-            rostest planner testMission.launch
+            rostest planner settle.test
