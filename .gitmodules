@@ -1,3 +1,7 @@
 [submodule "catkin_ws/src/auv-sim-gazebo"]
 	path = catkin_ws/src/auv-sim-gazebo
 	url = git@github.com:mcgillrobotics/auv-sim-gazebo.git
+
+[submodule "catkin_ws/src/auv-sim-unity"]
+	path = catkin_ws/src/auv-sim-unity
+	url = git@github.com:mcgillrobotics/auv-sim-unity.git
