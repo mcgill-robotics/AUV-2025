@@ -33,5 +33,5 @@ if __name__ == '__main__':
     rospy.init_node("Test1")
     controls = Controller(rospy.Time(0))
     state = StateTracker()
-    rospy.sleep(5)
+    rospy.sleep(15)
     rostest.rosrun("planner", 'settle_test', Test1)
