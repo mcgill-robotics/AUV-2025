@@ -37,6 +37,8 @@ RUN sudo apt install -y ros-noetic-ros-ign
 RUN sudo apt-get install -y ros-noetic-ros-ign-bridge
 RUN sudo apt-get install -y ros-noetic-ros-ign-gazebo
 RUN sudo apt-get install -y ros-noetic-gazebo-ros
+RUN sudo apt-get install -y git
+RUN pip3 install --no-cache-dir numpy==1.22.2
 
 RUN apt-get autoremove -y 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
