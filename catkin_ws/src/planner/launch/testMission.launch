@@ -1,4 +1,0 @@
-<launch>
-	<include file="$(find auv-sim-gazebo)/launch/test.launch"/>
-	<test test-name="test1" pkg="planner" type="testMission.py"/>
-</launch>

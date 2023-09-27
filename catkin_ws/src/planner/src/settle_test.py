@@ -34,4 +34,4 @@ if __name__ == '__main__':
     controls = Controller(rospy.Time(0))
     state = StateTracker()
     rospy.sleep(5)
-    rostest.rosrun("planner", 'Test1', Test1)
+    rostest.rosrun("planner", 'settle_test', Test1)
