@@ -19,7 +19,7 @@ jobs:
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
-      - name: simple test
+      - name: settle test
         shell: bash
         run: |
             cd catkin_ws
