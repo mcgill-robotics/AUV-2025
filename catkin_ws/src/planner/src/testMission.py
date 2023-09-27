@@ -11,8 +11,7 @@ import rostest
 class Test1(unittest.TestCase):
     ## test 1 == 1
     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
-        print(state.z)
-        controls.move([0,0,-2.0])
+        controls.move([0,0,0])
         controls.rotate([1,0,0,0])
         # controls.move([0,0,-2])
         # controls.move([-5,-5,0])
@@ -28,9 +27,7 @@ class Test1(unittest.TestCase):
         self.assertAlmostEqual(qz,0.5,places=2)
 
 if __name__ == '__main__':
-    rospy.init_node("Test1", log_level=rospy.DEBUG)
-    rospy.sleep(10)
-    print("hello world")
+    rospy.init_node("Test1")
     controls = Controller(rospy.Time(0))
     state = StateTracker()
     rostest.rosrun("planner", 'Test1', Test1)
