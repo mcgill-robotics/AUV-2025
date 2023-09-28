@@ -153,19 +153,20 @@ class DVL(Sensor):
         yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
 
         dt = (rospy.get_time() - self.last_unique_state_time)
-        rate_of_change_euler_x = (roll - self.roll) * RAD_PER_DEG / dt
-        rate_of_change_euler_y = (pitch - self.pitch) * RAD_PER_DEG / dt
-        rate_of_change_euler_z = (yaw - self.yaw) * RAD_PER_DEG / dt
+        if dt != 0:
+            rate_of_change_euler_x = (roll - self.roll) * RAD_PER_DEG / dt
+            rate_of_change_euler_y = (pitch - self.pitch) * RAD_PER_DEG / dt
+            rate_of_change_euler_z = (yaw - self.yaw) * RAD_PER_DEG / dt
 
-        wx = rate_of_change_euler_y * math.sin(roll) * math.sin(yaw) + rate_of_change_euler_x * math.cos(yaw)
-        wy = rate_of_change_euler_y * math.sin(roll) * math.cos(yaw) - rate_of_change_euler_x * math.sin(yaw)
-        wz = rate_of_change_euler_y * math.cos(roll) + rate_of_change_euler_z
+            wx = rate_of_change_euler_y * math.sin(roll) * math.sin(yaw) + rate_of_change_euler_x * math.cos(yaw)
+            wy = rate_of_change_euler_y * math.sin(roll) * math.cos(yaw) - rate_of_change_euler_x * math.sin(yaw)
+            wz = rate_of_change_euler_y * math.cos(roll) + rate_of_change_euler_z
 
-        self.angular_velocity = np.array([wx, wy, wz])
+            self.angular_velocity = np.array([wx, wy, wz])
 
-        self.roll = roll
-        self.pitch = pitch
-        self.yaw = yaw
+            self.roll = roll
+            self.pitch = pitch
+            self.yaw = yaw
 
         self.updateLastState()
         
