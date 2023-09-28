@@ -163,6 +163,7 @@ def detect_on_image(raw_img, camera_id):
     for obj in detectionFrameArray:
         obj.x = obj.x if obj.x is not None else -1234.5 
         obj.theta_z = obj.theta_z if obj.theta_z is not None else -1234.5
+        obj.extra_field = obj.extra_field if obj.extra_field is not None else -1234.5
     
 
     detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
