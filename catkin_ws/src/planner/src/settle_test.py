@@ -13,7 +13,7 @@ class Test1(unittest.TestCase):
     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
         controls.move([0,0,-2])
         controls.rotate([1,0,0,0])
-        self.assertTrue(True())
+        self.assertTrue(True)
         # x,y,z = state.x,state.y,state.z
         # qw,qx,qy,qz = state.pose.orientation.w,state.pose.orientation.x,state.pose.orientation.y,state.pose.orientation.z
         # if qw < 0:
