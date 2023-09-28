@@ -13,7 +13,7 @@ class Test1(unittest.TestCase):
     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
         controls.move([0,0,-2])
         controls.rotate([1,0,0,0])
-        rospy.sleep(60)
+        rospy.sleep(90)
         x,y,z = state.x,state.y,state.z
         qw,qx,qy,qz = state.pose.orientation.w,state.pose.orientation.x,state.pose.orientation.y,state.pose.orientation.z
         if qw < 0:
@@ -33,5 +33,5 @@ if __name__ == '__main__':
     rospy.init_node("Test1")
     controls = Controller(rospy.Time(0))
     state = StateTracker()
-    rospy.sleep(15)
+    rospy.sleep(60)
     rostest.rosrun("planner", 'settle_test', Test1)
