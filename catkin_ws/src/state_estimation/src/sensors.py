@@ -51,6 +51,7 @@ class Sensor():
         self.last_state = current_state
         
     def isActive(self):
+        if rospy.get_time() == 0: return False
         if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
             if rospy.get_time() - self.last_error_message_time > 1:
                 self.last_error_message_time = rospy.get_time()
