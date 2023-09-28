@@ -5,7 +5,7 @@ on:
     branches: [noetic]
 
 jobs:
-  build:
+  CI:
     runs-on: ubuntu-20.04
     container:
         image: mcgillroboticsteam/auv_2024:main
