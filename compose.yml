@@ -1,6 +1,5 @@
 services:
   clarke:
-    build: .
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../AUV-2024:/AUV-2024
