@@ -7,4 +7,4 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
     image: "mcgillroboticsteam/auv_2024:mesa"
-    command: [bash -c "tail -f /dev/null",source /opt/ros/noetic/setup.bash]
+    command: bash -c "tail -f /dev/null"
