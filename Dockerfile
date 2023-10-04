@@ -1,6 +1,15 @@
 # Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
 ENV IGNITION_VERSION=fortress
+
+# Install all needed deps and compile the mesa llvmpipe driver from source.
+RUN sudo apt-get update \
+    && sudo apt-get install -y software-properties-common \
+    && sudo apt-get update \
+    && sudo add-apt-repository ppa:kisak/kisak-mesa \
+    && sudo apt-get update \
+    && sudo apt-get -y upgrade
+
 # Install catkin tools
 RUN apt-get update && apt-get install -y wget \
     && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
