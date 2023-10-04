@@ -3,9 +3,9 @@ services:
     build: .
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../AUV-2024:/AUV-2024
+      - ../AUV-2024:/root/AUV-2024
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
     image: "mcgillroboticsteam/auv_2024:mesa"
-    command: bash -c "tail -f /dev/null"
+    command: [bash -c "tail -f /dev/null",source /opt/ros/noetic/setup.bash]
