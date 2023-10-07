@@ -8,10 +8,8 @@ RUN sudo apt-get update \
     && sudo apt-get update \
     && sudo add-apt-repository ppa:kisak/kisak-mesa \
     && sudo apt-get update \
-    && sudo apt-get -y upgrade
-
-# Install catkin tools
-RUN apt-get update && apt-get install -y wget \
+    && sudo apt-get -y upgrade \
+    && apt-get update && apt-get install -y wget \
     && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
@@ -31,7 +29,7 @@ RUN apt-get update && apt-get install -y wget \
     ros-noetic-ros-ign-bridge \
     ros-noetic-smach-ros \
     && pip3 install --no-cache-dir numpy-quaternion ultralytics \
-    && rm /usr/local/bin/cmake  \
+    && rm -f /usr/local/bin/cmake  \
     && sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
     && sudo apt-get update \
@@ -48,4 +46,4 @@ RUN apt-get update && apt-get install -y wget \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
