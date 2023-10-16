@@ -25,8 +25,6 @@ generate_arduino_firmware(${PROJECT_NAME}
 
 # IMU 
 
-set(CMAKE_CXX_STANDARD 11)
-
 #[[generate_arduino_firmware(${PROJECT_NAME}
   SKETCH imu
   BOARD mega2560
