@@ -1,4 +1,11 @@
-# Teledyne Navigator ROS Package
+# Sensors Package
+This ROS package configures and communicates with various sensors (the Depth Sensor, IMU, and the Teledyne Navigator Doppler Velocity Log (DVL)).
+
+## Depth Sensor
+
+## IMU
+
+## Teledyne Navigator
 
 [status]: https://dev.mcgillrobotics.com/buildStatus/icon?job=ros-teledyne-navigator/master
 [url]: https://dev.mcgillrobotics.com/job/ros-teledyne-navigator/job/master
@@ -8,7 +15,7 @@ This ROS package configures and communicates with the Teledyne Navigator
 Doppler Velocity Log (DVL). **This has only been tested on ROS Kinetic and
 Melodic over RS232.**
 
-## Setting up
+### Setting up
 
 You must clone this repository as `teledyne_navigator` into your `catkin`
 workspace's `src` directory:
@@ -19,7 +26,7 @@ cd src
 git clone https://github.com/mcgill-robotics/ros-teledyne-navigator.git teledyne_navigator
 ```
 
-## Dependencies
+### Dependencies
 
 Before proceeding, make sure to install all the dependencies by running:
 
@@ -28,7 +35,7 @@ rosdep update
 rosdep install teledyne_navigator
 ```
 
-## Compiling
+### Compiling
 
 You **must** compile this package before being able to run it. You can do so
 by running:
@@ -39,7 +46,7 @@ catkin_make
 
 from the root of your workspace.
 
-## Running
+### Running
 
 To run, simply connect the DVL over RS232 and launch the package with:
 
@@ -60,13 +67,13 @@ The `teledyne_navigator` node will output to the following ROS topic:
 
 - `~ensemble`: DVL scan data as an `Ensemble` message.
 
-## Limitations
+### Limitations
 
 This driver is limited to the PD5 output format and the earth-coordinate frame
 (ENU). You may change other parameters as you please using TRDI Toolz and save
 them with `CK`, but the `PD` and `EX` commands will be overridden.
 
-## Contributing
+### Contributing
 
 Contributions are welcome. Simply open an issue or pull request on the matter,
 and it will be accepted as long as it does not complicate the code base too
@@ -91,7 +98,7 @@ specifics. You can lint your changes as follows:
 catkin lint --explain -W2 .
 ```
 
-## License
+### License
 
 See [LICENSE](LICENSE).
 
