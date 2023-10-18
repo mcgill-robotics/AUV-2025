@@ -3,7 +3,7 @@
   <arg name="baudrate" default="115200" doc="serial baud rate"/>
 
   <node name="waterlinked_driver"
-        pkg="dvl"
+        pkg="sensors"
         type="waterlinked_dvl.py"
         output="screen"
         respawn="true"
