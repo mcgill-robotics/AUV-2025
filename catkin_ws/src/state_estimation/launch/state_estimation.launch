@@ -1,6 +1,7 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
+        <include file="$(find sensors)/launch/depth_sensor.launch"/>
 		<include file="$(find sensors)/launch/imu.launch"/>
 		<include file="$(find sensors)/launch/dvl.launch"/>
     </group>
