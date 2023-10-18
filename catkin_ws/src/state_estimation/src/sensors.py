@@ -33,7 +33,7 @@ class Sensor():
         self.angular_velocity = np.array([0,0,0])
 
         # initialize a sensor as "inactive"
-        self.last_unique_state_time = 0
+        self.last_unique_state_time = -1 * self.time_before_considered_inactive
         self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
     
     def updateLastState(self):
