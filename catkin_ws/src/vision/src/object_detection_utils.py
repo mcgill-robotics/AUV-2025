@@ -328,6 +328,9 @@ pwd = os.path.realpath(os.path.dirname(__file__))
 
 sim = rospy.get_param("sim")
 
+down_cam_model_filename = ""
+front_cam_model_filename = ""
+
 # Select the proper models based on the sim argument
 if sim:
     down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
