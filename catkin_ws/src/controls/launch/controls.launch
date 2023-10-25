@@ -2,6 +2,12 @@
     <arg name="sim" default="false" />
     <include file="$(find controls)/launch/pid.launch">
         <arg name="sim" value="$(arg sim)" />
+    	<group unless="$(arg sim)"> 
+        	<rosparam param="buoyant_force">1</rosparam>
+        </group>
+        <group if="$(arg sim)">  
+        	<rosparam param="buoyant_force">-32000000</rosparam>
+        </group>
     </include>
     
 	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"></node>
