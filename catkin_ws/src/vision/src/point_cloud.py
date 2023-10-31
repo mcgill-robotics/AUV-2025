@@ -62,8 +62,8 @@ def convert_from_uvd(color, z_map):
         xyz_rbg_img[:, :, 0] = z_map
         xyz_rbg_img[:, :, 1] = x_map
         xyz_rbg_img[:, :, 2] = y_map
-        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
-        point_cloud_img_pub.publish(point_cloud_img)
+        # point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
+        # point_cloud_img_pub.publish(point_cloud_img)
         xyz_rbg_img = xyz_rbg_img.reshape((width*height, 6))
         xyz_rbg_img = xyz_rbg_img.astype(np.float32)
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
