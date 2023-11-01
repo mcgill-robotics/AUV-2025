@@ -74,9 +74,9 @@
 		</node>
 
 		<node name="y_pid" pkg="pid" type="controller" >
-			<param name="Kp" value="10" /> 
-			<param name="Ki" value="0" />
-			<param name="Kd" value="15" />
+			<param name="Kp" value="12" /> 
+			<param name="Ki" value="1" />
+			<param name="Kd" value="12" />
 			<param name="upper_limit" value="6" />
 			<param name="lower_limit" value="-6" />
 			<param name="windup_limit" value="6" />
@@ -91,7 +91,7 @@
 
 		<node name="x_pid" pkg="pid" type="controller" >
 			<param name="Kp" value="10" /> 
-			<param name="Ki" value="0" />
+			<param name="Ki" value="1" />
 			<param name="Kd" value="15" />
 			<param name="upper_limit" value="6" />
 			<param name="lower_limit" value="-6" />
