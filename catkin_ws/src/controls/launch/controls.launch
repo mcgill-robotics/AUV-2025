@@ -1,14 +1,19 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)"> 
-        <rosparam param="buoyant_force">1</rosparam>
+        <rosparam param="buoyant_force_offset">-1</rosparam>
+        <rosparam param="~enable_buoyant_force_offset">False</rosparam>
+        <rosparam param="buoyant_force_active_depth">1.5</rosparam>
     </group>
     <group if="$(arg sim)">  
-        <rosparam param="buoyant_force">-32000000</rosparam>
+        <rosparam param="buoyant_force_offset">15.54</rosparam>
+        <rosparam param="~enable_buoyant_force_offset">False</rosparam>
+        <rosparam param="buoyant_force_active_depth">1.5</rosparam>
     </group>
     <include file="$(find controls)/launch/pid.launch">
         <arg name="sim" value="$(arg sim)" />
     </include>
+    
     
 	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"></node>
 	<node name="servers" pkg="controls" type="init_servers.py" respawn="false" output="screen"></node>

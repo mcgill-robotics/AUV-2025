@@ -53,12 +53,12 @@ class Superimposer:
         pitch = self.pitch.val
         yaw = self.yaw.val
         
-        buoyant_force = rospy.get_param("buoyant_force")
-        rospy.loginfo("buoyant_force = {}".format(buoyant_force))
+	#Toggled in state_quaternion_pid_server.py
+        buoyant_force_offset = rospy.get_param("enable_buoyant_force_offset") ? rospy.get_param("buoyant_force_offset") : 0
 
 
         force_global = Vector3(
-                self.global_x.val, self.global_y.val, self.global_z.val - buoyant_force)
+                self.global_x.val, self.global_y.val, self.global_z.val + buoyant_force_offset)
         force_auv = Vector3(surge, sway, heave)
         torque_auv = Vector3(roll, pitch, yaw)
 
