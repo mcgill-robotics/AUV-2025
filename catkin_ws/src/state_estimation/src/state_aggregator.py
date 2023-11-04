@@ -17,6 +17,8 @@ def update_state(_):
     y = None
     z = None
     quaternion = None
+    ds_z = None
+    dvl_z = None
     global last_error_message_time
 
     for sensor in sensor_priorities["x"]:
@@ -29,8 +31,17 @@ def update_state(_):
             break
     for sensor in sensor_priorities["z"]:
         if sensor.isActive():
-            z = sensor.z
-            break
+        	if sensor.sensor_name == "depth_sensor":
+        		ds_z = sensor.z
+        		if dvl_z != None:
+        			ds_z -= dvl_z
+        		z = ds_z
+        	else:
+        		dvl_z = sensor.z
+        		if ds_z != None:
+        			dvl_z -= ds_z
+        		z = dvl_z
+        	break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
             np_quaternion = np.array([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
