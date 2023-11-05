@@ -85,4 +85,7 @@ RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrin
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
 
 COPY requirements.txt requirements.txt
-RUN pip install --no-deps -r requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-deps torchvision>=0.9.0 ultralytics==8.0.207 \
+    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt\
