@@ -2,7 +2,9 @@ services:
   clarke:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../../AUV-2024:/AUV-2024
+      - type: bind
+        source: ../../../AUV-2024
+        target: /AUV-2024
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
