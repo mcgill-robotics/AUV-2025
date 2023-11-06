@@ -94,4 +94,5 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     cp dist/torchvision*.whl /opt && \
     pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
     cd ../ && \
-    rm -rf torchvision
+    rm -rf torchvision \
+    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
