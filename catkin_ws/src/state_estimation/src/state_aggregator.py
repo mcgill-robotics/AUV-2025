@@ -5,7 +5,7 @@ import numpy as np
 import quaternion
 from tf import transformations
 from tf2_ros import TransformBroadcaster
-from math
+import math
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
@@ -36,14 +36,14 @@ def update_state(_):
         	if sensor.sensor_name == "depth_sensor":
         		ds_z = sensor.z
         		if dvl_z is not None:
-                    offset = math.abs(ds_z - dvl_z)
-                    i += 1
+                    		offset = math.abs(ds_z - dvl_z)
+                    		i += 1
         			ds_z -= math.exp(-i)*offset
         		z = ds_z
         	else:
         		dvl_z = sensor.z
         		if ds_z is not None:
-                    offset = math.abs(ds_z - dvl_z)
+                    		offset = math.abs(ds_z - dvl_z)
         			dvl_z -= offset
         		z = dvl_z
         	break
