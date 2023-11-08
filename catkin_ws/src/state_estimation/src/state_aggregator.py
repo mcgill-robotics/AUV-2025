@@ -33,20 +33,20 @@ def update_state(_):
             break
     for sensor in sensor_priorities["z"]:
         if sensor.isActive():
-        	if sensor.sensor_name == "depth_sensor":
-        		ds_z = sensor.z
-        		if dvl_z is not None:
+            if sensor.sensor_name == "depth_sensor":
+                ds_z = sensor.z
+                if dvl_z is not None:
                     offset = math.abs(ds_z - dvl_z)
                     i += 1
-        			ds_z -= math.exp(-i)*offset
-        		z = ds_z
-        	else:
-        		dvl_z = sensor.z
-        		if ds_z is not None:
+                    ds_z -= math.exp(-i)*offset
+                z = ds_z
+            else:
+                dvl_z = sensor.z
+                if ds_z is not None:
                     offset = math.abs(ds_z - dvl_z)
-        			dvl_z -= offset
-        		z = dvl_z
-        	break
+                    dvl_z -= offset
+                z = dvl_z
+                break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
             np_quaternion = np.array([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
