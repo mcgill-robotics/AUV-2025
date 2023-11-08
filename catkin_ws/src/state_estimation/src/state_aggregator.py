@@ -36,14 +36,14 @@ def update_state(_):
         	if sensor.sensor_name == "depth_sensor":
         		ds_z = sensor.z
         		if dvl_z is not None:
-                    		offset = math.abs(ds_z - dvl_z)
-                    		i += 1
+                    offset = math.abs(ds_z - dvl_z)
+                    i += 1
         			ds_z -= math.exp(-i)*offset
         		z = ds_z
         	else:
         		dvl_z = sensor.z
         		if ds_z is not None:
-                    		offset = math.abs(ds_z - dvl_z)
+                    offset = math.abs(ds_z - dvl_z)
         			dvl_z -= offset
         		z = dvl_z
         	break
