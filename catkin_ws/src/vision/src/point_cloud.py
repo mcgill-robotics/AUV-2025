@@ -14,7 +14,7 @@ from geometry_msgs.msg import TransformStamped
 #     temp = bridge.imgmsg_to_cv2(msg)
 #     print(temp.shape)
 
-def rbg_callback(msg):
+def rgb_callback(msg):
     global rgb
     temp = bridge.imgmsg_to_cv2(msg)
     rgb = temp/255
@@ -42,28 +42,13 @@ def camera_info_callback(msg):
 
 
 def convert_from_uvd(color, z_map):
-    # print("starting")
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rbg_img = np.zeros((height, width, 6))
-        xyz_rbg_img[:, :, 3:6] = color
-        # xyz_rbg_img[:,:,2] *= -1
+        xyz_rbg_img = get_xyz_image(color, z_map)
 
-        # z_map = np.nan_to_num(z_map, 100)
-        # z_map[z_map == 0] = 100
-
-        
-
-        start = rospy.get_time()
-        x_map = x_over_z_map * z_map
-        y_map = y_over_z_map * z_map
-        # print("time to convert: ", rospy.get_time() - start)
-
-        xyz_rbg_img[:, :, 0] = z_map
-        xyz_rbg_img[:, :, 1] = x_map
-        xyz_rbg_img[:, :, 2] = y_map
-        # point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
         # point_cloud_img_pub.publish(point_cloud_img)
+
+
         xyz_rbg_img = xyz_rbg_img.reshape((width*height, 6))
         xyz_rbg_img = xyz_rbg_img.astype(np.float32)
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
@@ -78,6 +63,27 @@ def convert_from_uvd(color, z_map):
         header.frame_id = "auv_base"
         pub_msg = point_cloud2.create_cloud(header=header, fields=fields, points=xyz_rbg_img)
         return pub_msg
+
+def get_point_cloud_image():
+    if y_over_z_map is not None:
+        xyz_rbg_img = get_xyz_image(rgb, depth)
+        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
+        return point_cloud_img
+
+def get_xyz_image(color, depth):
+    if y_over_z_map is not None:
+        xyz_rbg_img = np.zeros((height, width, 6))
+        xyz_rbg_img[:, :, 3:6] = color        
+
+        x_map = x_over_z_map * depth
+        y_map = y_over_z_map * depth
+
+        xyz_rbg_img[:, :, 0] = depth
+        xyz_rbg_img[:, :, 1] = x_map
+        xyz_rbg_img[:, :, 2] = y_map
+
+        return xyz_rbg_img
+
         
 def pub_transform():
     br = TransformBroadcaster()
@@ -111,9 +117,9 @@ if __name__ == "__main__":
 
     camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, camera_info_callback)
     depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
-    rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rbg_callback)
+    rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rgb_callback)
     point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=3)
-    point_cloud_img_pub = rospy.Publisher('vision/front_cam/point_cloud_raw', Image, queue_size=3)
+    # point_cloud_img_pub = rospy.Publisher('vision/front_cam/point_cloud_raw', Image, queue_size=3)
     # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     fx = None

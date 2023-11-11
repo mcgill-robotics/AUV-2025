@@ -393,7 +393,7 @@ detection_pub = rospy.Publisher('visualization/detection', Marker, queue_size=99
 map_pub = rospy.Publisher('visualization/map', Marker, queue_size=999)
 
 print("Waiting 10 seconds so RViz can launch...")
-rospy.sleep(10)
+# rospy.sleep(10)
 print("Starting visualization!")
 
 dvl_euler_angles = [0,0,0]

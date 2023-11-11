@@ -12,6 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
+from point_cloud import get_point_cloud_image
 from tf import transformations
 class State:
     def __init__(self):
@@ -23,6 +24,7 @@ class State:
         self.theta_z = None
         self.paused = False
         self.q_auv = None
+        self.point_cloud = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -31,7 +33,9 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
+
+        # self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
+
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -53,9 +57,9 @@ class State:
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
-    def updatePointCloud(self, msg):
+    def updatePointCloud(self):
         if self.paused: return
-        self.point_cloud = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
+        self.point_cloud = np.copy(bridge.imgmsg_to_cv2(get_point_cloud_image(), "passthrough"))
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
@@ -66,6 +70,7 @@ class State:
         point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
         return point_cloud
     def getPointCloud(self, bbox=None):
+        updatePointCloud()
         if bbox is None:
             return self.cleanPointCloud(self.point_cloud)
         else:
@@ -331,17 +336,19 @@ sim = rospy.get_param("sim")
 down_cam_model_filename = ""
 front_cam_model_filename = ""
 
-# Select the proper models based on the sim argument
+# Select the proper models & depth_scale_factor based on the sim argument
 if sim:
     down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
     front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+    depth_scale_factor = 1
 else:
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    depth_scale_factor = 1000
 
 model = [
     YOLO(down_cam_model_filename),
-    # YOLO(front_cam_model_filename)
+    YOLO(front_cam_model_filename)
     ]
 for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
@@ -361,3 +368,4 @@ i = [
     0,
     0
     ]
+    
