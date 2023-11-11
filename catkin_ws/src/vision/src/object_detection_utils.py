@@ -22,7 +22,7 @@ class State:
         self.theta_y = None
         self.theta_z = None
         self.paused = False
-        self.q_auv = None
+        self.q_auv = None # quaternion
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
