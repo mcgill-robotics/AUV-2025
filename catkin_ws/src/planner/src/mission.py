@@ -10,6 +10,7 @@ from substates.navigate_lane_marker import *
 from substates.utility.controller import *
 from substates.utility.state import *
 from substates.utility.vision import *
+from substates.utility.display_mission import *
 from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
@@ -21,10 +22,12 @@ def endMission(msg):
     control.freeze_pose()
 
 def endPlanner(msg="Shutting down mission planner."):
+    display_mission.updateMission("Ending Planner")
     print(msg)
     control.kill()
 
 def gateMission():
+    display_mission.updateMission("Gate Task")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -33,9 +36,11 @@ def gateMission():
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
+    # display_mission.updateMission("Gate Task {}".format(res))
     endMission("Finished gate mission. Result {}".format(res))
 
 def buoyMission():
+    display_mission.updateMission("Buoy Task")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
@@ -46,18 +51,22 @@ def buoyMission():
                 transitions={'success': 'success', 'failure':'failure'})
         
     res = sm.execute()
+    # display_mission.updateMission("Buoy Task {}".format(res))
     endMission("Finished buoy mission. Result {}".format(res))
 
 def tricks(t):
+    display_mission.updateMission("Tricks")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
+    # display_mission.updateMission("Tricks {}".format(res))
     endMission("Finished trick. Result {}".format(res))
 
 def laneMarkerMission():
+    display_mission.updateMission("Lane Marker")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
@@ -67,6 +76,7 @@ def laneMarkerMission():
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure': 'failure'})
         res = sm.execute()
+    # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
 
 def semiFinals():
@@ -125,6 +135,7 @@ if __name__ == '__main__':
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
+        display_mission = DisplayMission()
         sm = None
 
 

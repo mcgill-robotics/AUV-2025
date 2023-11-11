@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
@@ -35,6 +35,8 @@ class Sensor():
         # initialize a sensor as "inactive"
         self.last_unique_state_time = -1 * self.time_before_considered_inactive
         self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
+
+        self.pub_is_sensor_active = rospy.Publisher("/sensor/{}/is_active".format(sensor_name), Bool, queue_size=1)
     
     def updateLastState(self):
         current_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
@@ -49,6 +51,8 @@ class Sensor():
                 self.last_unique_state_time = rospy.get_time() 
                 break
         self.last_state = current_state
+        msg = Bool(self.isActive())
+        self.pub_is_sensor_active(msg)
         
     def isActive(self):
         if rospy.get_time() == 0: return False
