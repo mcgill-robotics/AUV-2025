@@ -74,10 +74,10 @@
 		</node>
 
 		<node name="y_pid" pkg="pid" type="controller" >
-			<param name="Kp" value="14" /> 
-			<param name="Ki" value="0.5" />
-			<param name="Kd" value="10" />
-			<param name="upper_limit" value="6" />
+			<param name="Kp" value="9" /> 
+			<param name="Ki" value="4" />
+			<param name="Kd" value="30" />
+			<param name="upper_limit" value="12" />
 			<param name="lower_limit" value="-6" />
 			<param name="windup_limit" value="6" />
 			<param name="max_loop_frequency" value="100.0" />
@@ -90,10 +90,10 @@
 		</node>
 
 		<node name="x_pid" pkg="pid" type="controller" >
-			<param name="Kp" value="10" /> 
-			<param name="Ki" value="1" />
-			<param name="Kd" value="14" />
-			<param name="upper_limit" value="6" />
+			<param name="Kp" value="16.6" /> 
+			<param name="Ki" value="0.15" />
+			<param name="Kd" value="18" />
+			<param name="upper_limit" value="14" />
 			<param name="lower_limit" value="-6" />
 			<param name="windup_limit" value="6" />
 			<param name="max_loop_frequency" value="100.0" />
