@@ -21,7 +21,7 @@ class State:
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
-        self.paused = False
+        self.paused = False 
         self.q_auv = None # quaternion
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
@@ -56,25 +56,31 @@ class State:
     def updatePointCloud(self, msg):
         if self.paused: return
         self.point_cloud = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
+
+        #TODO
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
         point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
         #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
-        closest_x_point = np.nanmin(point_cloud[:, :, 0])
+        closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
         far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
         point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
         return point_cloud
+
     def getPointCloud(self, bbox=None):
-        if bbox is None:
+        if bbox is None: 
+        # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
             return self.cleanPointCloud(self.point_cloud)
         else:
             return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
+
     def pause(self):
         self.paused = True
     def resume(self):
         self.paused = False
 
+# bbox is an array of 4 elements
 #given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     #get xmin, xmax, ymin, ymax from bbox 
@@ -82,7 +88,7 @@ def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     x_min = x_center - w/2
     y_min = y_center - h/2
     x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
-    #draw bounding box on image
+    # rectangle draws bounding box on image
     cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=BOX_COLOR, thickness=thickness)
     #get size of class name text
     ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, fontSize, 1)  
@@ -97,7 +103,7 @@ def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
         fontScale=fontSize, 
         color=TEXT_COLOR, 
         lineType=cv2.LINE_AA)
-    return img
+    return img # returns inputted image with label
 
 #given a bounding box and image, returns the image cropped to the bounding box (to isolate detected objects)
 def cropToBbox(img, bbox, copy=True):
@@ -108,6 +114,7 @@ def cropToBbox(img, bbox, copy=True):
     if copy: return np.copy(img[y_min:y_max, x_min:x_max])
     else: return img[y_min:y_max, x_min:x_max]
 
+# works for sure
 def measureLaneMarker(img, bbox, debug_img):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
@@ -148,11 +155,15 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
+# works for sure
+# given a vector relative to the auv, turns local measurements to global
 def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
+# CHECK
+# given euler angles (x and y in degrees), turns into vector relative to the AUV
 def eulerToVectorDownCam(x_deg, y_deg):
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
@@ -162,12 +173,18 @@ def eulerToVectorDownCam(x_deg, y_deg):
     vec = vec / np.linalg.norm(vec)
     return vec
 
+# CHECK
+# finds intersection if there is one
+# if they dont intersect, returns None
 def findIntersection(vector, plane_z_pos):
     if vector[2] == 0: return None
     scaling_factor = plane_z_pos / vector[2]
     if scaling_factor < 0: return None
     return np.array(vector) * scaling_factor
 
+# TODO: Vivek
+# pixel locations and height and width
+# returns actual x, y, z position in 3D space (not relative to the AUV)
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
     x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
@@ -188,6 +205,11 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     z = z_pos
     return x, y, z
 
+# TODO: Tarek
+# point cloud stuff
+# given a bounding box, tells you where it is in 3D space (not relative to the AUV)
+# gets mean of all values that are numerical
+# assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
     lx = np.nanmean(point_cloud[:,:,0])
@@ -196,6 +218,14 @@ def getObjectPositionFrontCam(bbox):
     x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
     return x, y, z
 
+# TODO
+# tells you how the object is oriented in space
+# only for front cam
+# dont need orientation for down cam, only ever sees octagon and lane marker
+# splits gate image in half
+# takes an avg point of all pixels on the left side and the right side 
+# finds angle between two points
+# this is to enter gate from the right or the left knowing where we can go through
 def measureAngle(bbox):
     point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
     left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
@@ -214,6 +244,10 @@ def measureAngle(bbox):
     dot_product = np.dot(zero_angle_vector, arg_vector)
     return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
+# CHECK
+# is there a gate?
+# if so did i see a symbol?
+# if so, which side did i see it on?
 def analyzeGate(detections):
     # Return the class_id of the symbol on the left of the gate
     # If no symbol return None
@@ -239,6 +273,12 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
+# TODO: Gulce
+# HIGH LEVEL IMPROVEMENTS
+# four symbols in buoy
+# hit them in correct order
+# right now the symbols are treated as objects
+# or we can do the same thing as the gate, seeing where they are
 def analyzeBuoy(detections):
     symbols = []
     buoy_was_detected = False
@@ -259,7 +299,8 @@ def analyzeBuoy(detections):
     if buoy_was_detected: return symbols
     else: return []
 
-
+# CHECK
+# lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(detectionFrameArray, confidences):
     label_counts = {}

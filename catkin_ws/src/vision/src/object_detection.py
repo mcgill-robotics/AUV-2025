@@ -7,6 +7,8 @@ from object_detection_utils import *
 import object_detection_utils
 import torch
 
+# structurally good
+# dont forget to change things here after modifying object_detection_utils.py
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
