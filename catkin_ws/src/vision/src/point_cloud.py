@@ -44,13 +44,13 @@ def camera_info_callback(msg):
 def convert_from_uvd(color, z_map):
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rbg_img = get_xyz_image(color, z_map)
+        xyz_rgb_img = get_xyz_image(color, z_map)
 
         # point_cloud_img_pub.publish(point_cloud_img)
 
 
-        xyz_rbg_img = xyz_rbg_img.reshape((width*height, 6))
-        xyz_rbg_img = xyz_rbg_img.astype(np.float32)
+        xyz_rgb_img = xyz_rgb_img.reshape((width*height, 6))
+        xyz_rgb_img = xyz_rgb_img.astype(np.float32)
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
                     PointField('y', 4, PointField.FLOAT32, 1),
                     PointField('z', 8, PointField.FLOAT32, 1),
@@ -61,28 +61,29 @@ def convert_from_uvd(color, z_map):
         header = Header()
         header.stamp = time
         header.frame_id = "auv_base"
-        pub_msg = point_cloud2.create_cloud(header=header, fields=fields, points=xyz_rbg_img)
+        pub_msg = point_cloud2.create_cloud(header=header, fields=fields, points=xyz_rgb_img)
         return pub_msg
 
 def get_point_cloud_image():
     if y_over_z_map is not None:
-        xyz_rbg_img = get_xyz_image(rgb, depth)
-        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rbg_img[:,:,:3]), "bgr8")
+        xyz_rgb_img = get_xyz_image(rgb, depth)
+        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:,:,:3]), "bgr8")
         return point_cloud_img
 
-def get_xyz_image(color, depth):
+def get_xyz_image(color):
     if y_over_z_map is not None:
-        xyz_rbg_img = np.zeros((height, width, 6))
-        xyz_rbg_img[:, :, 3:6] = color        
+        xyz_rgb_img = np.zeros((height, width, 6))
+        xyz_rgb_img[:, :, 3:6] = color        
 
+        # RuntimeWarning: invalid value encountered in multiply
         x_map = x_over_z_map * depth
         y_map = y_over_z_map * depth
 
-        xyz_rbg_img[:, :, 0] = depth
-        xyz_rbg_img[:, :, 1] = x_map
-        xyz_rbg_img[:, :, 2] = y_map
+        xyz_rgb_img[:, :, 0] = depth
+        xyz_rgb_img[:, :, 1] = x_map
+        xyz_rgb_img[:, :, 2] = y_map
 
-        return xyz_rbg_img
+        return xyz_rgb_img
 
         
 def pub_transform():
