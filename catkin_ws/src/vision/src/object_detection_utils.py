@@ -25,6 +25,12 @@ class State:
         self.paused = False
         self.q_auv = None
         self.point_cloud = None
+        self.depth = None
+        self.rgb = None
+        self.width = None
+        self.height = None
+        self.x_over_z_map = None
+        self.y_over_z_map = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -33,8 +39,10 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-
-        # self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
+        # Update the point cloud whenever the current image is updated
+        self.camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo)
+        self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
+        self.rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, self.updateRGB)
 
     def updateX(self, msg):
         if self.paused: return
@@ -57,9 +65,11 @@ class State:
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
-    def updatePointCloud(self):
+    def updatePointCloud(self, msg):
         if self.paused: return
-        self.point_cloud = np.copy(bridge.imgmsg_to_cv2(get_point_cloud_image(), "passthrough"))
+        point_cloud_image = get_point_cloud_image(self.rgb, self.depth, self.y_over_z_map)
+        if point_cloud_image is not None:
+            self.point_cloud = np.copy(bridge.imgmsg_to_cv2(point_cloud_image, "passthrough"))
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
@@ -70,11 +80,30 @@ class State:
         point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
         return point_cloud
     def getPointCloud(self, bbox=None):
-        updatePointCloud()
         if bbox is None:
             return self.cleanPointCloud(self.point_cloud)
         else:
             return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
+    def updateRGB(self, msg):
+        temp = bridge.imgmsg_to_cv2(msg)
+        self.rgb = temp/255
+    def updateDepth(self, msg):
+        temp = bridge.imgmsg_to_cv2(msg)
+        self.depth = temp/depth_scale_factor
+    def updateCameraInfo(self, msg):
+        if(self.y_over_z_map is not None): return
+        fx = msg.K[0]
+        fy = msg.K[4]
+        cy = msg.K[2]
+        cx = msg.K[5]
+        self.width = msg.width
+        self.height = msg.height
+
+        u_map = np.tile(np.arange(self.width),(self.height,1)) +1
+        v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
+
+        self.x_over_z_map = (cx - u_map) / fx
+        self.y_over_z_map = (cy - v_map) / fy
     def pause(self):
         self.paused = True
     def resume(self):
