@@ -9,11 +9,6 @@ from cv_bridge import CvBridge
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
 
-# def algined_cb(msg):
-#     global depth, depth_scale_factor
-#     temp = bridge.imgmsg_to_cv2(msg)
-#     print(temp.shape)
-
 def rgb_callback(msg):
     global rgb
     temp = bridge.imgmsg_to_cv2(msg)
@@ -41,10 +36,10 @@ def camera_info_callback(msg):
     y_over_z_map = (cy - v_map) / fy
 
 
-def convert_from_uvd(color, z_map):
+def convert_from_uvd():
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rgb_img = get_xyz_image(color, z_map)
+        xyz_rgb_img = get_xyz_image()
 
         # point_cloud_img_pub.publish(point_cloud_img)
 
@@ -70,12 +65,12 @@ def get_point_cloud_image():
         point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:,:,:3]), "bgr8")
         return point_cloud_img
 
-def get_xyz_image(color):
+def get_xyz_image():
     if y_over_z_map is not None:
         xyz_rgb_img = np.zeros((height, width, 6))
-        xyz_rgb_img[:, :, 3:6] = color        
+        xyz_rgb_img[:, :, 3:6] = rgb        
 
-        # RuntimeWarning: invalid value encountered in multiply
+        # TODO: Check RuntimeWarning (invalid value encountered in multiply)
         x_map = x_over_z_map * depth
         y_map = y_over_z_map * depth
 
@@ -110,7 +105,6 @@ if __name__ == "__main__":
     bridge = CvBridge()
 
     is_sim = rospy.get_param('/sim', False)
-    # print("is_sim: ", is_sim)
     if is_sim:
         depth_scale_factor = 1
     else:
@@ -142,6 +136,6 @@ if __name__ == "__main__":
             pub_transform()
             
         if(rgb is not None and depth is not None):
-            msg = convert_from_uvd(rgb, depth)
+            msg = convert_from_uvd()
             if msg is not None:
               point_cloud_pub.publish(msg)
