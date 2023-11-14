@@ -11,8 +11,9 @@ services:
     networks:
       - podman
     ports:
-      - 354:22
+      - 2222:22/tcp
     command: ["/usr/sbin/sshd","-D"]
+    restart: always
     # deploy:
     #   resources:
     #     reservations:
