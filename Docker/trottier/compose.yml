@@ -1,8 +1,8 @@
 services:
   clarke:
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../../AUV-2024:/root/AUV-2024
+      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../../../AUV-2024:/home/robotics/AUV-2024
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
