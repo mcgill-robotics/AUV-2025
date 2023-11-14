@@ -5,7 +5,6 @@ import numpy as np
 import quaternion
 from tf import transformations
 from tf2_ros import TransformBroadcaster
-import math
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
@@ -21,6 +20,7 @@ def update_state(_):
     ds_z = None
     dvl_z = None
     i = 0
+    offset = 0
     global last_error_message_time
 
     for sensor in sensor_priorities["x"]:
@@ -33,19 +33,33 @@ def update_state(_):
             break
     for sensor in sensor_priorities["z"]:
         if sensor.isActive():
-            if sensor.sensor_name == "depth_sensor":
-                ds_z = sensor.z
-                if dvl_z is not None:
-                    offset = math.abs(ds_z - dvl_z)
-                    i += 1
-                    ds_z -= math.exp(-i)*offset
-                z = ds_z
+            transition_ds_dvl = rospy.get_param("~transition_ds_dvl")
+            if transition_ds_dvl:
+                if sensor.sensor_name == "depth_sensor":
+                # reads z value from the sensor 
+                    ds_z = sensor.z
+                    # if switch has been done, the offset is ready, shift the ds value by the offset
+                    # the offset converges to 0 as long as ds works and doesn't switch to the dvl
+                    if dvl_z is not None: #if switch has occurred
+                        # when i increases, exp decreases and converges to 0
+                        i += 1
+                        ds_z -= math.exp(-i)*offset
+                    z = ds_z
+                    break
+                else: # dvl
+                    # re-calculate offset for each switch
+                    dvl_z = sensor.z
+                    if i != 0:
+                        #generates the offset
+                        offset = dvl_z - ds_z
+                    if ds_z is not None: # if ds functional from the start
+                        dvl_z -= offset
+                    z = dvl_z
+                    # reset i
+                    i = 0
+                    break
             else:
-                dvl_z = sensor.z
-                if ds_z is not None:
-                    offset = math.abs(ds_z - dvl_z)
-                    dvl_z -= offset
-                z = dvl_z
+                z = sensor.z
                 break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():

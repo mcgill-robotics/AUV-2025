@@ -35,6 +35,7 @@
 		<param name="auv_dvl_offset_x" value="$(arg auv_dvl_offset_x)" />
 		<param name="auv_dvl_offset_y" value="$(arg auv_dvl_offset_y)" />
 		<param name="auv_dvl_offset_z" value="$(arg auv_dvl_offset_z)" />
+		<param name="transition_ds_dvl" value="$(arg transition_ds_dvl)" />
 	</node>
 
 
