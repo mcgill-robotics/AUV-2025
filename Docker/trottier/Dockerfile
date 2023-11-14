@@ -44,14 +44,24 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /root/AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
-RUN apt update && apt install  openssh-server sudo -y
+# RUN apt update && apt install  openssh-server  xauth sudo -y \
+#     && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
+#     && echo 'robotics:clarke' | chpasswd \
+#     && echo "X11DisplayOffset 10" >> /etc/ssh/sshd_config \
+#     && echo "X11UseLocalhost yes" >> /etc/ssh/sshd_config \
+#     && service ssh start
 
-RUN useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics 
-
-RUN  echo 'robotics:clarke' | chpasswd
-
-RUN service ssh start
+RUN apt update \
+    && apt install -y openssh-server xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11Forwarding.*$/X11Forwarding yes/" /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11UseLocalhost.*$/X11UseLocalhost no/" /etc/ssh/sshd_config \
+    && grep "^X11UseLocalhost" /etc/ssh/sshd_config || echo "X11UseLocalhost no" >> /etc/ssh/sshd_config \
+    && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
+    && echo 'robotics:clarke' | chpasswd \
+    && echo "source /opt/ros/noetic/setup.bash" >> /home/robotics/.bashrc
 
 EXPOSE 22
-
-CMD ["/usr/sbin/sshd","-D"]

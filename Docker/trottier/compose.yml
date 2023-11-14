@@ -4,16 +4,15 @@ services:
       # - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../../../AUV-2024:/home/robotics/AUV-2024
     environment:
-      - DISPLAY
       - QT_X11_NO_MITSHM=1
-    build: .
+    # build: .
     image: "docker.io/mcgillroboticsteam/auv_2024:trottier"
     networks:
       - podman
     ports:
       - 2222:22/tcp
-    command: ["/usr/sbin/sshd","-D"]
-    restart: always
+    command: ["sh", "-c", "/usr/sbin/sshd && tail -f /dev/null"]
+    # restart: always
     # deploy:
     #   resources:
     #     reservations:
