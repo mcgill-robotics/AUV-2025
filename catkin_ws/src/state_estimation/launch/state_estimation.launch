@@ -19,7 +19,8 @@
 	<arg name="auv_dvl_offset_x" default="0.0" />
 	<arg name="auv_dvl_offset_y" default="0.0" />
 	<arg name="auv_dvl_offset_z" default="-0.3" />
-
+	<arg name="transition_ds_dvl" default="true" />
+	
 	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
 		<param name="update_rate" value="100" />
 		<param name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
@@ -35,7 +36,7 @@
 		<param name="auv_dvl_offset_x" value="$(arg auv_dvl_offset_x)" />
 		<param name="auv_dvl_offset_y" value="$(arg auv_dvl_offset_y)" />
 		<param name="auv_dvl_offset_z" value="$(arg auv_dvl_offset_z)" />
-		<param name="transition_ds_dvl" value="$(arg transition_ds_dvl)" default="true" />
+		<param name="transition_ds_dvl" value="$(arg transition_ds_dvl)" />
 	</node>
 
 
