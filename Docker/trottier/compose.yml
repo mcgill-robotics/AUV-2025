@@ -12,7 +12,7 @@ services:
     ports:
       - 2222:22/tcp
     command: ["sh", "-c", "/usr/sbin/sshd && tail -f /dev/null"]
-    # restart: always
+    restart: always
     # deploy:
     #   resources:
     #     reservations:
