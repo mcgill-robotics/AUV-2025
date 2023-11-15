@@ -50,7 +50,7 @@ class Controller:
         self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
         self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
 
-        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
+        self.pub_surge = rospy.Publisher('/controls/force/surge', Float64, queue_size=1)
         self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
         self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
         self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)

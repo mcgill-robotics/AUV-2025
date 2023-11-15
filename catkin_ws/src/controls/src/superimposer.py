@@ -11,7 +11,7 @@ from tf2_ros import Buffer, TransformListener
 class Superimposer:
     def __init__(self):
         # forces in robot reference frame
-        self.surge = Superimposer.Degree_Of_Freedom('surge')
+        self.surge = Superimposer.Degree_Of_Freedom('/controls/force/surge')
         self.sway = Superimposer.Degree_Of_Freedom('sway')
         self.heave = Superimposer.Degree_Of_Freedom('heave')
         self.roll = Superimposer.Degree_Of_Freedom('roll')
