@@ -57,9 +57,9 @@ class Controller:
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
         self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
-        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
-        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
-        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
+        self.pub_global_x = rospy.Publisher('/controls/force/global_x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('/controls/force/global_y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('/controls/force/global_z', Float64, queue_size=1)
 
         self.pwm_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
 
