@@ -24,7 +24,7 @@ class QuaternionPID:
         self.torque_integral = np.array([0.0,0.0,0.0])
 
         self.pose_sub = rospy.Subscriber("pose",Pose,self.set_pose)
-        self.angular_velocity_sub = rospy.Subscriber("angular_velocity", Vector3, self.set_ang_vel)
+        self.angular_velocity_sub = rospy.Subscriber("/state/angular_velocity", Vector3, self.set_ang_vel)
         self.goal_sub = rospy.Subscriber("quat_setpoint", Quaternion, self.set_goal)
         self.enable_sub = rospy.Subscriber("pid_quat_enable", Bool, self.set_enabled)
 
