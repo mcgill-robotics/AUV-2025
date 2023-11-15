@@ -429,7 +429,7 @@ theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
 theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, objectMapCb)
-sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
+sub_effort = rospy.Subscriber('/controls/effort', Wrench, effortCb)
 dvl_sub = rospy.Subscriber('/sensors/dvl/pose', DeadReckonReport, dvlDataCb)
 
 x_setpoint_sub = rospy.Subscriber('x_setpoint', Float64, setpointXCb)

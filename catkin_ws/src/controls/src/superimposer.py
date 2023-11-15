@@ -31,7 +31,7 @@ class Superimposer:
         # just update the time
         self.header = Header(frame_id="auv_rotation")
 
-        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
+        self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
 
 
     def update_effort(self, _):

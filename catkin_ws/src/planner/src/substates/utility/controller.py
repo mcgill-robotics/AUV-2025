@@ -56,7 +56,7 @@ class Controller:
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
+        self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
         self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
         self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
