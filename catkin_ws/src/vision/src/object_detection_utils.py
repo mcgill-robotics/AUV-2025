@@ -325,11 +325,20 @@ detect_every = 5  #run the model every _ frames received (to not eat up too much
 
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
-# [COMP] make sure correct model is loaded
-# down_cam_model_filename = pwd + "/models/down_cam_model.pt"
-# front_cam_model_filename = pwd + "/models/front_cam_model.pt"
-down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+
+sim = rospy.get_param("sim")
+
+down_cam_model_filename = ""
+front_cam_model_filename = ""
+
+# Select the proper models based on the sim argument
+if sim:
+    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
+    front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+else:
+    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
+
 model = [
     YOLO(down_cam_model_filename),
     # YOLO(front_cam_model_filename)

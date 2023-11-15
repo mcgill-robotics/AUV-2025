@@ -1,8 +1,9 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
-		<include file="$(find imu)/launch/imu.launch"/>
-		<include file="$(find dvl)/launch/dvl.launch"/>
+        <include file="$(find sensors)/launch/depth_sensor.launch"/>
+		<include file="$(find sensors)/launch/imu.launch"/>
+		<include file="$(find sensors)/launch/dvl.launch"/>
     </group>
 
 	<arg name="q_imu_auv_w" default="0.0" />
