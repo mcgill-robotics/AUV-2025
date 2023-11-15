@@ -109,8 +109,6 @@ class State:
         self.y_over_z_map = (cy - v_map) / fy
         if self.depth is not None:
             self.updatePointCloud()
-        else:
-            print("Yo")
     def pause(self):
         self.paused = True
     def resume(self):
