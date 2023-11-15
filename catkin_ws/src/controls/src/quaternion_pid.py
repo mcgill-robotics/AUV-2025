@@ -28,7 +28,7 @@ class QuaternionPID:
         self.goal_sub = rospy.Subscriber("quat_setpoint", Quaternion, self.set_goal)
         self.enable_sub = rospy.Subscriber("pid_quat_enable", Bool, self.set_enabled)
 
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
         self.pub_error_quat = rospy.Publisher('/controls/quaternion_pid/error_quat', Float64, queue_size=1)

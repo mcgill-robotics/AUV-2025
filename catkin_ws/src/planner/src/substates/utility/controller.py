@@ -53,7 +53,7 @@ class Controller:
         self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
         self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
         self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
         self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
