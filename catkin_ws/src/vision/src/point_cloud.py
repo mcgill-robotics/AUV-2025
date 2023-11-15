@@ -9,10 +9,36 @@ from cv_bridge import CvBridge
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
 
+def rbg_callback(msg):
+    global rgb
+    temp = bridge.imgmsg_to_cv2(msg)
+    rgb = temp/255
+
+def depth_callback(msg):
+    global depth, depth_scale_factor
+    temp = bridge.imgmsg_to_cv2(msg)
+    depth = temp/depth_scale_factor
+
+def camera_info_callback(msg):
+    global fx, fy, cx, cy, width, height, x_over_z_map, y_over_z_map
+    if(y_over_z_map is not None): return
+    fx = msg.K[0]
+    fy = msg.K[4]
+    cy = msg.K[2]
+    cx = msg.K[5]
+    width = msg.width
+    height = msg.height
+
+    u_map = np.tile(np.arange(width),(height,1)) +1
+    v_map = np.tile(np.arange(height),(width,1)).T +1
+
+    x_over_z_map = (cx - u_map) / fx
+    y_over_z_map = (cy - v_map) / fy
+
 def convert_from_uvd(width, height):
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rgb_img = get_xyz_image(width, height)
+        xyz_rgb_img = get_xyz_image(rgb, depth, width, height, x_over_z_map, y_over_z_map)
 
 
         xyz_rgb_img = xyz_rgb_img.reshape((width*height, 6))
@@ -30,22 +56,22 @@ def convert_from_uvd(width, height):
         pub_msg = point_cloud2.create_cloud(header=header, fields=fields, points=xyz_rgb_img)
         return pub_msg
 
-def get_point_cloud_image(color, z_map, y_over_z_map):
+def get_point_cloud_image(bridge, color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
-        xyz_rgb_img = get_xyz_image(color, z_map, y_over_z_map)
-        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:,:,:3]), "bgr8")
+        xyz_rgb_img = get_xyz_image(color, z_map, width, height, x_over_z_map, y_over_z_map)
+        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:,:,:3]))
         return point_cloud_img
 
-def get_xyz_image(width, height, y_over_z_map):
+def get_xyz_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
         xyz_rgb_img = np.zeros((height, width, 6))
-        xyz_rgb_img[:, :, 3:6] = rgb        
+        xyz_rgb_img[:, :, 3:6] = color        
 
         # TODO: Check RuntimeWarning (invalid value encountered in multiply)
-        x_map = x_over_z_map * depth
-        y_map = y_over_z_map * depth
+        x_map = x_over_z_map * z_map
+        y_map = y_over_z_map * z_map
 
-        xyz_rgb_img[:, :, 0] = depth
+        xyz_rgb_img[:, :, 0] = z_map
         xyz_rgb_img[:, :, 1] = x_map
         xyz_rgb_img[:, :, 2] = y_map
 
@@ -81,6 +107,9 @@ if __name__ == "__main__":
     else:
         depth_scale_factor = 1000
 
+    camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, camera_info_callback)
+    depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
+    rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rbg_callback)
     point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=3)
     # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 

@@ -65,9 +65,9 @@ class State:
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
-    def updatePointCloud(self, msg):
+    def updatePointCloud(self):
         if self.paused: return
-        point_cloud_image = get_point_cloud_image(self.rgb, self.depth, self.y_over_z_map)
+        point_cloud_image = get_point_cloud_image(bridge, self.rgb, self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map)
         if point_cloud_image is not None:
             self.point_cloud = np.copy(bridge.imgmsg_to_cv2(point_cloud_image, "passthrough"))
     def cleanPointCloud(self, point_cloud):
@@ -87,9 +87,12 @@ class State:
     def updateRGB(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
         self.rgb = temp/255
+        if self.depth is not None:
+            self.updatePointCloud()
     def updateDepth(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
         self.depth = temp/depth_scale_factor
+        self.updatePointCloud()
     def updateCameraInfo(self, msg):
         if(self.y_over_z_map is not None): return
         fx = msg.K[0]
@@ -104,6 +107,10 @@ class State:
 
         self.x_over_z_map = (cx - u_map) / fx
         self.y_over_z_map = (cy - v_map) / fy
+        if self.depth is not None:
+            self.updatePointCloud()
+        else:
+            print("Yo")
     def pause(self):
         self.paused = True
     def resume(self):
@@ -245,6 +252,7 @@ def measureAngle(bbox):
     zero_angle_vector = np.array([0,-1])
     arg_vector = right_avg_point - left_avg_point
     magnitude_arg_vector = np.linalg.norm(arg_vector)
+    # TODO: Check ValueError (dimensions don't match when doing dot product)
     dot_product = np.dot(zero_angle_vector, arg_vector)
     return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
