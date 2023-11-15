@@ -69,7 +69,7 @@ class Controller:
         self.clients.append(self.EffortClient)
         self.EffortClient.wait_for_server()
 
-        self.StateQuaternionStateClient = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
+        self.StateQuaternionStateClient = actionlib.SimpleActionClient('/controls/state_server', StateQuaternionAction)
         self.clients.append(self.StateQuaternionStateClient)
         self.StateQuaternionStateClient.wait_for_server()
 

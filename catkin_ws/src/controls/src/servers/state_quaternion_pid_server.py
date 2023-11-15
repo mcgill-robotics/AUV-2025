@@ -12,7 +12,7 @@ import quaternion
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
-        self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('/controls/state_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         self.previous_goal_quat = None
         self.previous_goal_x = None
         self.previous_goal_y = None
