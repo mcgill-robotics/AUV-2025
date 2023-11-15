@@ -79,7 +79,7 @@ def broadcast_auv_pose(pose):
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')
 
-    pub_pose = rospy.Publisher('pose', Pose, queue_size=1)
+    pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
     pub_x = rospy.Publisher('state_x', Float64, queue_size=1)
     pub_y = rospy.Publisher('state_y', Float64, queue_size=1)
     pub_z = rospy.Publisher('state_z', Float64, queue_size=1)

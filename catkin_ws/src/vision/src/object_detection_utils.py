@@ -27,7 +27,7 @@ class State:
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
-        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
+        self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
