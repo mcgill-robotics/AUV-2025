@@ -31,7 +31,7 @@ class QuaternionPID:
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        self.pub_error_quat = rospy.Publisher('error_quat', Float64, queue_size=1)
+        self.pub_error_quat = rospy.Publisher('/controls/quaternion_pid/error_quat', Float64, queue_size=1)
 
     def set_pose(self,data):
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
