@@ -103,7 +103,7 @@ class IMU(Sensor):
 class DVL(Sensor):
     def __init__(self, imu):
         super().__init__("DVL")
-        rospy.Subscriber("/dead_reckon_report", DeadReckonReport, self.dr_cb)
+        rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dr_cb)
         # self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
         # self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
 
