@@ -435,7 +435,7 @@ dvl_sub = rospy.Subscriber('/sensors/dvl/pose', DeadReckonReport, dvlDataCb)
 x_setpoint_sub = rospy.Subscriber('x_setpoint', Float64, setpointXCb)
 y_setpoint_sub = rospy.Subscriber('y_setpoint', Float64, setpointYCb)
 z_setpoint_sub = rospy.Subscriber('z_setpoint', Float64, setpointZCb)
-quat_setpoint_sub = rospy.Subscriber('quat_setpoint', Quaternion, setpointQuatCb)
+quat_setpoint_sub = rospy.Subscriber('/controls/quaternion_pid/setpoint', Quaternion, setpointQuatCb)
 
 
 rospy.spin()
