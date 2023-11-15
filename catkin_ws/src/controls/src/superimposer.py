@@ -12,7 +12,7 @@ class Superimposer:
     def __init__(self):
         # forces in robot reference frame
         self.surge = Superimposer.Degree_Of_Freedom('/controls/force/surge')
-        self.sway = Superimposer.Degree_Of_Freedom('sway')
+        self.sway = Superimposer.Degree_Of_Freedom('/controls/force/sway')
         self.heave = Superimposer.Degree_Of_Freedom('heave')
         self.roll = Superimposer.Degree_Of_Freedom('roll')
         self.pitch = Superimposer.Degree_Of_Freedom('pitch')
