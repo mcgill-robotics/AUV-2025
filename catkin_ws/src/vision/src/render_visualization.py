@@ -421,12 +421,12 @@ def publishToMap(marker):
 
 setup()
 
-x_pos_sub = rospy.Subscriber('state_x', Float64, updateAUVX)
-y_pos_sub = rospy.Subscriber('state_y', Float64, updateAUVY)
-z_pos_sub = rospy.Subscriber('state_z', Float64, updateAUVZ)
-theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateAUVThetaX)
-theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
-theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
+x_pos_sub = rospy.Subscriber('/state/x', Float64, updateAUVX)
+y_pos_sub = rospy.Subscriber('/state/y', Float64, updateAUVY)
+z_pos_sub = rospy.Subscriber('/state/z', Float64, updateAUVZ)
+theta_x_sub = rospy.Subscriber('/state/theta_x', Float64, updateAUVThetaX)
+theta_y_sub = rospy.Subscriber('/state/theta_y', Float64, updateAUVThetaY)
+theta_z_sub = rospy.Subscriber('/state/theta_z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, objectMapCb)
 sub_effort = rospy.Subscriber('/controls/effort', Wrench, effortCb)

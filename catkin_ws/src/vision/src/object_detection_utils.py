@@ -24,13 +24,13 @@ class State:
         self.paused = False
         self.q_auv = None
 
-        self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
-        self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
-        self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
+        self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
+        self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
+        self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
-        self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
-        self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
+        self.theta_x_sub = rospy.Subscriber('/state/theta_x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('/state/theta_y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('/state/theta_z', Float64, self.updateThetaZ)
         self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
     def updateX(self, msg):
         if self.paused: return
