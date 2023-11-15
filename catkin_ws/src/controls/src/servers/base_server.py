@@ -30,7 +30,7 @@ class BaseServer():
     def establish_effort_publishers(self):
         self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
         self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
-        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=1)
+        self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
         self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
