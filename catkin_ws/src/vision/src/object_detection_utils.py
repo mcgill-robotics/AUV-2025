@@ -163,8 +163,10 @@ def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
 # CHECK
-# given euler angles (x and y in degrees), turns into vector relative to the AUV
 def eulerToVectorDownCam(x_deg, y_deg):
+    """
+    Given the euler angles in degrees, returns a vector relative to the AUV
+    """
     x_rad = math.radians(x_deg)
     y_rad = math.radians(y_deg)
     x = -math.tan(y_rad)
@@ -174,18 +176,32 @@ def eulerToVectorDownCam(x_deg, y_deg):
     return vec
 
 # CHECK
-# finds intersection if there is one
-# if they dont intersect, returns None
 def findIntersection(vector, plane_z_pos):
+    """
+    Given a vector and a z position, returns the point 
+    where the vector intersects the plane defined by the z position
+    If they dont intersect, returns None
+    """
     if vector[2] == 0: return None
     scaling_factor = plane_z_pos / vector[2]
     if scaling_factor < 0: return None
     return np.array(vector) * scaling_factor
 
 # TODO: Vivek
-# pixel locations and height and width
-# returns actual x, y, z position in 3D space (not relative to the AUV)
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
+    """
+    Given the pixel locations and height and width
+
+    Parameters:
+        pixel_x: x coordinate of the object in the image
+        pixel_y: y coordinate of the object in the image
+        img_height: height of the image in pixels
+        img_width: width of the image in pixels
+        z_pos: z position of the object
+
+    Returns:
+        x, y, z position in 3D space (not relative to the AUV)
+    """
     #first calculate the relative offset of the object from the center of the image (i.e. map pixel coordinates to values from -0.5 to 0.5)
     x_center_offset = ((img_width/2) - pixel_x) / img_width #-0.5 to 0.5
     y_center_offset = (pixel_y - (img_height/2)) / img_height #negated since y goes from top to bottom
@@ -220,13 +236,16 @@ def getObjectPositionFrontCam(bbox):
 
 # TODO
 # tells you how the object is oriented in space
-# only for front cam
+# 
 # dont need orientation for down cam, only ever sees octagon and lane marker
 # splits gate image in half
 # takes an avg point of all pixels on the left side and the right side 
 # finds angle between two points
 # this is to enter gate from the right or the left knowing where we can go through
 def measureAngle(bbox):
+    """
+    Given a bounding box, returns the angle of the object in degrees (only for front cam)
+    """
     point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
     left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
     right_point_cloud = point_cloud[:, int(point_cloud.shape[1]/2):]
