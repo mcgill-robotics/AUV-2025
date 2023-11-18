@@ -10,6 +10,3 @@
 	ignore = all
 	branch = noetic
 
-[submodule "catkin_ws/src/ROS-TCP-Endpoint"]
-	path = catkin_ws/src/ROS-TCP-Endpoint
-	url = https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
