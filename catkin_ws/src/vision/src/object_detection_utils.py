@@ -12,6 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
+from point_cloud import get_point_cloud_image
 from tf import transformations
 class State:
     def __init__(self):
@@ -21,8 +22,15 @@ class State:
         self.theta_x = None
         self.theta_y = None
         self.theta_z = None
-        self.paused = False 
-        self.q_auv = None # quaternion
+        self.paused = False
+        self.q_auv = None
+        self.point_cloud = None
+        self.depth = None
+        self.rgb = None
+        self.width = None
+        self.height = None
+        self.x_over_z_map = None
+        self.y_over_z_map = None
 
         self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
@@ -31,7 +39,11 @@ class State:
         self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
+        # Update the point cloud whenever the current image is updated
+        self.camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo)
+        self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
+        self.rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, self.updateRGB)
+
     def updateX(self, msg):
         if self.paused: return
         self.x = float(msg.data)
@@ -53,11 +65,11 @@ class State:
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
-    def updatePointCloud(self, msg):
+    def updatePointCloud(self):
         if self.paused: return
-        self.point_cloud = np.copy(bridge.imgmsg_to_cv2(msg, "passthrough"))
-
-        #TODO
+        point_cloud_image = get_point_cloud_image(bridge, self.rgb, self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map)
+        if point_cloud_image is not None:
+            self.point_cloud = np.copy(bridge.imgmsg_to_cv2(point_cloud_image, "passthrough"))
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
@@ -74,7 +86,31 @@ class State:
             return self.cleanPointCloud(self.point_cloud)
         else:
             return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
+    def updateRGB(self, msg):
+        temp = bridge.imgmsg_to_cv2(msg)
+        self.rgb = temp/255
+        if self.depth is not None:
+            self.updatePointCloud()
+    def updateDepth(self, msg):
+        temp = bridge.imgmsg_to_cv2(msg)
+        self.depth = temp/depth_scale_factor
+        self.updatePointCloud()
+    def updateCameraInfo(self, msg):
+        if(self.y_over_z_map is not None): return
+        fx = msg.K[0]
+        fy = msg.K[4]
+        cy = msg.K[2]
+        cx = msg.K[5]
+        self.width = msg.width
+        self.height = msg.height
 
+        u_map = np.tile(np.arange(self.width),(self.height,1)) +1
+        v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
+
+        self.x_over_z_map = (cx - u_map) / fx
+        self.y_over_z_map = (cy - v_map) / fy
+        if self.depth is not None:
+            self.updatePointCloud()
     def pause(self):
         self.paused = True
     def resume(self):
@@ -260,6 +296,7 @@ def measureAngle(bbox):
     zero_angle_vector = np.array([0,-1])
     arg_vector = right_avg_point - left_avg_point
     magnitude_arg_vector = np.linalg.norm(arg_vector)
+    # TODO: Check ValueError (dimensions don't match when doing dot product)
     dot_product = np.dot(zero_angle_vector, arg_vector)
     return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
@@ -391,17 +428,19 @@ sim = rospy.get_param("sim")
 down_cam_model_filename = ""
 front_cam_model_filename = ""
 
-# Select the proper models based on the sim argument
+# Select the proper models & depth_scale_factor based on the sim argument
 if sim:
     down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
     front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+    depth_scale_factor = 1
 else:
     down_cam_model_filename = pwd + "/models/down_cam_model.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    depth_scale_factor = 1000
 
 model = [
     YOLO(down_cam_model_filename),
-    # YOLO(front_cam_model_filename)
+    YOLO(front_cam_model_filename)
     ]
 for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
@@ -421,3 +460,4 @@ i = [
     0,
     0
     ]
+    
