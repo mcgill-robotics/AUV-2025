@@ -1,14 +1,14 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)"> 
-        <rosparam param="buoyant_force_offset">-1</rosparam>
-        <rosparam param="~enable_buoyant_force_offset">False</rosparam>
-        <rosparam param="buoyant_force_active_depth">1.5</rosparam>
+        <param name="buoyant_force_offset" value="-1"/>
+        <param name="enable_buoyant_force_offset" value="false"/>
+	<param name="buoyant_force_active_depth" value="-1.5"/>
     </group>
     <group if="$(arg sim)">  
-        <rosparam param="buoyant_force_offset">15.54</rosparam>
-        <rosparam param="~enable_buoyant_force_offset">False</rosparam>
-        <rosparam param="buoyant_force_active_depth">1.5</rosparam>
+        <param name="buoyant_force_offset" value="15.54"/>
+        <param name="enable_buoyant_force_offset" value="false"/>
+	<param name="buoyant_force_active_depth" value="-1.5"/>
     </group>
     <include file="$(find controls)/launch/pid.launch">
         <arg name="sim" value="$(arg sim)" />
