@@ -4,7 +4,6 @@ from substates.utility.controller import Controller
 
 forward_distance = 15
 rospy.init_node("planner_tutorial")
-rospy.sleep(25)
 
 controller = Controller(rospy.Time(0))
 # controller.move([None, None, -2])

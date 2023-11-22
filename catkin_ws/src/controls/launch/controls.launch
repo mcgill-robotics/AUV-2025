@@ -7,7 +7,7 @@
     </group>
     <group if="$(arg sim)">  
         <param name="buoyant_force_offset" value="15.54"/>
-        <param name="enable_buoyant_force_offset" value="false"/>
+        <param name="enable_buoyant_force_offset" value="true"/>
 	<param name="buoyant_force_active_depth" value="-1.5"/>
     </group>
     <include file="$(find controls)/launch/pid.launch">
