@@ -1,0 +1,24 @@
+services:
+  clarke:
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - type: bind
+        source: ../../../AUV-2024
+        target: /AUV-2024
+    environment:
+      - DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+    # image: "mcgillroboticsteam/auv_2024:main"
+    command: bash -c "tail -f /dev/null"
+    network_mode: host
+    restart: always
+    runtime: nvidia
+    build: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

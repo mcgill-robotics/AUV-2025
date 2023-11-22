@@ -27,6 +27,7 @@ catkin_ws/src/auv-ros-ign-bridge
 #training images
 *.png
 *.jpg
+*.bag
 
 #testing files
 catkin_ws/src/planner/src/testMission.py
