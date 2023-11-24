@@ -60,8 +60,9 @@ RUN apt update \
     && sed -i "s/^.*X11Forwarding.*$/X11Forwarding yes/" /etc/ssh/sshd_config \
     && sed -i "s/^.*X11UseLocalhost.*$/X11UseLocalhost no/" /etc/ssh/sshd_config \
     && grep "^X11UseLocalhost" /etc/ssh/sshd_config || echo "X11UseLocalhost no" >> /etc/ssh/sshd_config \
-    && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
-    && echo 'robotics:clarke' | chpasswd \
-    && echo "source /opt/ros/noetic/setup.bash" >> /home/robotics/.bashrc
+    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    # && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
+    && echo 'root:clarke' | chpasswd \
+    && echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
 
 EXPOSE 22
