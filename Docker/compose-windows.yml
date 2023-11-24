@@ -4,5 +4,5 @@ services:
       - ../../AUV-2024:/AUV-2024
     environment:
       - QT_X11_NO_MITSHM=1
-    image: "mcgillroboticsteam/auv_2024:main"
+    image: "mcgillrobotics/auv_2024:main"
     command: bash -c "tail -f /dev/null"
