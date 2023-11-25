@@ -1,5 +1,7 @@
 #include <ros.h>
-#include <auv_msgs/DisplayScreen.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/String.h>
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
@@ -15,7 +17,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 
 #define ILI9341_BLACK       0x0000  ///<   0,   0,   0
 #define ILI9341_NAVY        0x000F  ///<   0,   0, 123
-#define ILI9341_DARKGREEN   0x03E0  ///<   0, 125,   0
+#define ILI9341_DARKGREEN   0x03E9  ///<   0, 125,   0
 #define ILI9341_DARKCYAN    0x03EF  ///<   0, 125, 123
 #define ILI9341_MAROON      0x7800  ///< 123,   0,   0
 #define ILI9341_PURPLE      0x780F  ///< 123,   0, 123
@@ -33,51 +35,113 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 #define ILI9341_GREENYELLOW 0xAFE5  ///< 173, 255,  41
 #define ILI9341_PINK        0xFC18  ///< 255, 130, 198
 
+const char* logo = "logo.jpg";
+const char* check_mark = "check_mark.jpg";
+const char* x_mark = "x_mark.jpg";
+
 ros::NodeHandle nh;
 
-String mission;
-float dvl;
-float imu;
-float depth;
+String mission = "Gate";
+bool isDvlActive = true;
+bool isImuActive;
+bool isDepthActive;
+int battery = 25;
 
 
-
-void displayScreenCallback(const auv_msgs::DisplayScreen& msg) {
-    mission = msg.mission;
-    dvl = msg.dvl;
-    imu = msg.imu;
-    depth = msg.depth;
+void dvl_status_cb(const std_msgs::Bool& msg) {
+  isDvlActive = msg.data;
+}
+void depth_status_cb(const std_msgs::Bool& msg) {
+  isImuActive = msg.data;
+}
+void imu_status_cb(const std_msgs::Bool& msg) {
+  isDepthActive = msg.data;
 }
 
-ros::Subscriber<auv_msgs::DisplayScreen> sub_display_screen("/display_screen", &displayScreenCallback);
+void mission_cb(const std_msgs::String& msg) {
+  mission = msg.data;
+}
+
+ros::Subscriber<std_msgs::Bool> sub_dvl_status("/sensors/dvl/status", &dvl_status_cb);
+ros::Subscriber<std_msgs::Bool> sub_depth_status("/sensors/depth/status", &depth_status_cb);
+ros::Subscriber<std_msgs::Bool> sub_imu_status("/sensors/imu/status", &imu_status_cb);
+ros::Subscriber<std_msgs::String> sub_mission("/mission_display", &mission_cb);
 
 
 void setup() {
   nh.initNode();
-  nh.subscribe(sub_display_screen);
-	
+  nh.subscribe(sub_dvl_status);
+  nh.subscribe(sub_depth_status);
+  nh.subscribe(sub_imu_status);
+  nh.subscribe(sub_mission);
 
 	Serial.begin(9600);
   tft.begin();
-}
+  
 
+}
+int i = 0;
 
 void loop() {
-    tft.fillScreen(ILI9341_NAVY);
+    tft.fillScreen(ILI9341_BLACK);
     tft.setCursor(0, 5);
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(3);
-    tft.print("Battery: ");
-    tft.println("10%");
-    tft.print("DVL: ");
-    tft.println(dvl);
-    tft.println();
-    tft.print("IMU: ");
-    tft.println(imu);
+
+    // Battery
+    if (battery > 50) {
+      tft.setTextColor(ILI9341_GREEN);
+      tft.print("Battery: ");
+      tft.print(battery);
+      tft.println("%\n");
+    } else if (battery > 15) {
+      tft.setTextColor(ILI9341_YELLOW);
+      tft.print("Battery: ");
+      tft.print(battery);
+      tft.println("%\n");
+    } else {
+      tft.setTextColor(ILI9341_RED);
+      tft.print("Battery: ");
+      tft.print(battery);
+      tft.println("%\n");
+    }
+    
+    // DVL
+    if (isDvlActive) {
+      tft.setTextColor(ILI9341_GREEN);
+      tft.print("DVL: ");
+      tft.println("O\n");
+    } else {
+      tft.setTextColor(ILI9341_RED);
+      tft.print("DVL: ");
+      tft.println("X\n");
+    } 
+
+    // IMU
+    if (isImuActive) {
+      tft.setTextColor(ILI9341_GREEN);
+      tft.print("IMU: ");
+      tft.println("O\n");
+    } else {
+      tft.setTextColor(ILI9341_RED);
+      tft.print("IMU: ");
+      tft.println("X\n");
+    } 
+    
+    // Depth Sensor
     tft.print("Depth: ");
-    tft.println(depth);
+    if (isDepthActive) {
+      tft.setTextColor(ILI9341_GREEN);
+      tft.println("O\n");
+    } else {
+      tft.setTextColor(ILI9341_RED);
+      tft.println("X\n");
+    } tft.setTextColor(ILI9341_WHITE);
+
     tft.print("Mission: ");
     tft.println(mission);
+    tft.println();
     nh.spinOnce();
-    delay(5000);
+    delay(1000);
 }
+

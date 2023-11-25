@@ -10,7 +10,6 @@ from substates.navigate_lane_marker import *
 from substates.utility.controller import *
 from substates.utility.state import *
 from substates.utility.vision import *
-from substates.utility.display_mission import *
 from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *

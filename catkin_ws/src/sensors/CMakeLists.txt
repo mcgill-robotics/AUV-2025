@@ -33,6 +33,12 @@ rosserial_configure_client(
   TOOLCHAIN_FILE ${ROSSERIAL_ARDUINO_TOOLCHAIN}
 )
 
+# Isn't this wrong? Shouldn't it be 
+# rosserial_add_client_target(
+#   embedded
+#   ALL
+#   ALL
+# )
 rosserial_add_client_target(
   embedded
   sensors

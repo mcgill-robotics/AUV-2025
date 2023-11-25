@@ -34,3 +34,13 @@ generate_arduino_firmware(${PROJECT_NAME}
   HDRS ${CMAKE_SOURCE_DIR}/imu/Quaternion.h ${CMAKE_SOURCE_DIR}/imu/XimuReceiver.h
   PORT /dev/ttyACM1
 )]]
+
+# DISPLAY
+
+generate_arduino_firmware(${PROJECT_NAME}
+  SKETCH display
+  BOARD mega2560
+
+  SRCS ${ROS_LIB_DIR}/time.cpp
+  PORT /dev/ttyACM0
+)

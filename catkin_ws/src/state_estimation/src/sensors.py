@@ -35,8 +35,6 @@ class Sensor():
         # initialize a sensor as "inactive"
         self.last_unique_state_time = -1 * self.time_before_considered_inactive
         self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
-
-        self.pub_is_sensor_active = rospy.Publisher("/sensor/{}/is_active".format(sensor_name), Bool, queue_size=1)
     
     def updateLastState(self):
         current_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
@@ -51,8 +49,7 @@ class Sensor():
                 self.last_unique_state_time = rospy.get_time() 
                 break
         self.last_state = current_state
-        msg = Bool(self.isActive())
-        self.pub_is_sensor_active(msg)
+        
         
     def isActive(self):
         if rospy.get_time() == 0: return False
@@ -69,16 +66,21 @@ class DepthSensor(Sensor):
         super().__init__("Depth Sensor")
         self.z_pos_mount_offset = 0
         rospy.Subscriber("/depth", Float64, self.depth_cb)
+        self.pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
 
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
         self.updateLastState()
+        msg = Bool(self.isActive())
+        self.pub_depth_sensor_status(msg)
 
 class IMU(Sensor):
     def __init__(self):
         super().__init__("IMU")
         rospy.Subscriber("/sbg/imu_data", SbgImuData, self.ang_vel_cb)
         rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.quat_cb)
+
+        self.pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
 
         q_imu_auv_w = rospy.get_param("~q_imu_auv_w")
         q_imu_auv_x = rospy.get_param("~q_imu_auv_x")
@@ -95,6 +97,8 @@ class IMU(Sensor):
         # anuglar velocity vector relative to AUV frame 
         self.angular_velocity = quaternion.rotate_vectors(self.q_imu_auv, ang_vel_imu)
         self.updateLastState()
+        msg = Bool(self.isActive())
+        self.pub_imu_sensor_status(msg)
 
     def quat_cb(self, msg):
         
@@ -110,6 +114,8 @@ class DVL(Sensor):
         rospy.Subscriber("/dead_reckon_report", DeadReckonReport, self.dr_cb)
         # self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
         # self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
+
+        self.pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
 
         q_dvl_auv_w = rospy.get_param("~q_dvl_auv_w")
         q_dvl_auv_x = rospy.get_param("~q_dvl_auv_x")
@@ -174,5 +180,7 @@ class DVL(Sensor):
             self.yaw = yaw
 
         self.updateLastState()
+        msg = Bool(self.isActive())
+        self.pub_dvl_sensor_status(msg)
         
         
