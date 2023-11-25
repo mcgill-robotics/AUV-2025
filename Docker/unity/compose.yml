@@ -2,7 +2,7 @@ services:
   clarke:
     volumes:
       - ../../../AUV-2024:/root/AUV-2024
-    image: "mcgillroboticsteam/auv_2024:main"
+    image: "mcgillrobotics/auv_2024:main"
     command: bash -c "tail -f /dev/null"
     network_mode: host
     # deploy:
