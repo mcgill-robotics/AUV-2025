@@ -37,10 +37,10 @@ generate_arduino_firmware(${PROJECT_NAME}
 
 # DISPLAY
 
-generate_arduino_firmware(${PROJECT_NAME}
-  SKETCH display
-  BOARD mega2560
+# generate_arduino_firmware(${PROJECT_NAME}
+#   SKETCH display
+#   BOARD mega2560
 
-  SRCS ${ROS_LIB_DIR}/time.cpp
-  PORT /dev/ttyACM0
-)
+#   SRCS ${ROS_LIB_DIR}/time.cpp
+#   PORT /dev/ttyACM0
+# )

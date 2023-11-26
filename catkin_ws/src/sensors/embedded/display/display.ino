@@ -42,9 +42,9 @@ const char* x_mark = "x_mark.jpg";
 ros::NodeHandle nh;
 
 String mission = "Gate";
-bool isDvlActive = true;
-bool isImuActive;
-bool isDepthActive;
+bool isDvlActive = false;
+bool isImuActive = false;
+bool isDepthActive = false;
 int battery = 25;
 
 
@@ -52,10 +52,10 @@ void dvl_status_cb(const std_msgs::Bool& msg) {
   isDvlActive = msg.data;
 }
 void depth_status_cb(const std_msgs::Bool& msg) {
-  isImuActive = msg.data;
+  isDepthActive = msg.data;
 }
 void imu_status_cb(const std_msgs::Bool& msg) {
-  isDepthActive = msg.data;
+  isImuActive = msg.data;
 }
 
 void mission_cb(const std_msgs::String& msg) {
@@ -129,12 +129,13 @@ void loop() {
     } 
     
     // Depth Sensor
-    tft.print("Depth: ");
     if (isDepthActive) {
       tft.setTextColor(ILI9341_GREEN);
+      tft.print("Depth: ");
       tft.println("O\n");
     } else {
       tft.setTextColor(ILI9341_RED);
+      tft.print("Depth: ");
       tft.println("X\n");
     } tft.setTextColor(ILI9341_WHITE);
 
