@@ -35,10 +35,6 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 #define ILI9341_GREENYELLOW 0xAFE5  ///< 173, 255,  41
 #define ILI9341_PINK        0xFC18  ///< 255, 130, 198
 
-const char* logo = "logo.jpg";
-const char* check_mark = "check_mark.jpg";
-const char* x_mark = "x_mark.jpg";
-
 ros::NodeHandle nh;
 
 String mission = "Gate";

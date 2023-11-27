@@ -70,7 +70,6 @@ class DepthSensor(Sensor):
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
         self.updateLastState()
-        msg = Bool(self.isActive())
 
 class IMU(Sensor):
     def __init__(self):
@@ -93,7 +92,6 @@ class IMU(Sensor):
         # anuglar velocity vector relative to AUV frame 
         self.angular_velocity = quaternion.rotate_vectors(self.q_imu_auv, ang_vel_imu)
         self.updateLastState()
-        msg = Bool(self.isActive())
 
     def quat_cb(self, msg):
         
@@ -173,5 +171,4 @@ class DVL(Sensor):
             self.yaw = yaw
 
         self.updateLastState()
-        msg = Bool(self.isActive())        
         
