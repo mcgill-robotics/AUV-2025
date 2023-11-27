@@ -1,10 +1,13 @@
 services:
   clarke:
     volumes:
-      - ../../../AUV-2024:/root/AUV-2024
+      - type: bind
+        source: ../../../AUV-2024
+        target: /root/AUV-2024
     image: "mcgillrobotics/auv_2024:main"
     command: bash -c "tail -f /dev/null"
-    network_mode: host
+    ports:
+      - "10000:10000"
     # deploy:
     #   resources:
     #     reservations:
