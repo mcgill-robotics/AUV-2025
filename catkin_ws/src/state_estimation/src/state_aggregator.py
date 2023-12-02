@@ -13,7 +13,6 @@ from std_msgs.msg import Float64, Bool
 DEG_PER_RAD = 180 / np.pi
 
 def update_state(_):    
-    print(depth_sensor.isActive())
     pub_dvl_sensor_status.publish(dvl.isActive())
     pub_imu_sensor_status.publish(imu.isActive())
     pub_depth_sensor_status.publish(depth_sensor.isActive())
