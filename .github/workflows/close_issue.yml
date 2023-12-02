@@ -8,12 +8,12 @@ env:
     CHAT_GPT_TOKEN: ${{ secrets.CHAT_GPT_TOKEN }}
 
 jobs:
-  build:
+  discord:
     runs-on: ubuntu-20.04
     steps:
         - uses: actions/checkout@v3
         - run: |
             pip install -U discord.py
-            pip install openai
+            pip install openai==1.1.1
             python .github/discord_bot.py ${{ github.event.issue.number }}         
             

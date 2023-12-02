@@ -8,11 +8,15 @@ from tf2_ros import TransformBroadcaster
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 DEG_PER_RAD = 180 / np.pi
 
 def update_state(_):    
+    print(depth_sensor.isActive())
+    pub_dvl_sensor_status.publish(dvl.isActive())
+    pub_imu_sensor_status.publish(imu.isActive())
+    pub_depth_sensor_status.publish(depth_sensor.isActive())
     x = None
     y = None
     z = None
@@ -80,6 +84,7 @@ if __name__ == '__main__':
     rospy.init_node('state_aggregator')
 
     pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
+    
     pub_x = rospy.Publisher('/state/x', Float64, queue_size=1)
     pub_y = rospy.Publisher('/state/y', Float64, queue_size=1)
     pub_z = rospy.Publisher('/state/z', Float64, queue_size=1)
@@ -87,6 +92,11 @@ if __name__ == '__main__':
     pub_theta_y = rospy.Publisher('/state/theta_y', Float64, queue_size=1)
     pub_theta_z = rospy.Publisher('/state/theta_z', Float64, queue_size=1)
     pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)
+
+    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
+    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
+    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+
     tf_broadcaster = TransformBroadcaster()
 
     last_error_message_time = rospy.get_time()
