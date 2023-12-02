@@ -65,7 +65,7 @@ class DepthSensor(Sensor):
     def __init__(self):
         super().__init__("Depth Sensor")
         self.z_pos_mount_offset = 0
-        rospy.Subscriber("sensors/depth_sensor/z", Float64, self.depth_cb)
+        rospy.Subscriber("sensors/depth/z", Float64, self.depth_cb)
 
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
