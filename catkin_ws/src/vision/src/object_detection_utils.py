@@ -12,7 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
-from point_cloud import get_point_cloud_image
+from point_cloud import get_point_cloud_image, get_xyz_image
 from tf import transformations
 class State:
     def __init__(self):
@@ -42,7 +42,6 @@ class State:
         # Update the point cloud whenever the current image is updated
         self.camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo)
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
-        self.rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, self.updateRGB)
 
     def updateX(self, msg):
         if self.paused: return
@@ -67,13 +66,13 @@ class State:
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def updatePointCloud(self):
         if self.paused: return
-        point_cloud_image = get_point_cloud_image(bridge, self.rgb, self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map)
-        if point_cloud_image is not None:
-            self.point_cloud = np.copy(bridge.imgmsg_to_cv2(point_cloud_image, "passthrough"))
+        self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
+        print("Point cloud", self.point_cloud.shape)
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
-        point_cloud = cv2.medianBlur(point_cloud, median_blur_size)
+        print("Attempting to median blur point cloud", point_cloud.shape)
+        point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
         #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
         closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
         far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
@@ -83,14 +82,11 @@ class State:
     def getPointCloud(self, bbox=None):
         if bbox is None: 
         # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
+            print("Calling cleanPointCloud with point cloud", self.point_cloud)
             return self.cleanPointCloud(self.point_cloud)
         else:
+            print("Calling cleanPointCloud with point cloud", self.point_cloud)
             return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
-    def updateRGB(self, msg):
-        temp = bridge.imgmsg_to_cv2(msg)
-        self.rgb = temp/255
-        if self.depth is not None:
-            self.updatePointCloud()
     def updateDepth(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
         self.depth = temp/depth_scale_factor
@@ -343,11 +339,13 @@ def analyzeGate(detections):
         else: boxes = detection.boxes.numpy()
         for box in boxes:
             bbox = list(box.xywh[0])
+            print(bbox)
             x_coord = bbox[0]
             conf = float(list(box.conf)[0])
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
             if (global_class_name in ["Earth Symbol", "Abydos Symbol", "Gate"]) and conf > min_prediction_confidence:
+                print(global_class_name, x_coord)
                 gate_elements_detected[cls_id] = 999999 if global_class_name == "Gate" else x_coord
 
     if "Earth Symbol" not in gate_elements_detected.keys(): return None
