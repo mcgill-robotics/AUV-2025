@@ -31,7 +31,7 @@ pins = {1:4, 2:5, 3:2, 4:6, 5:8, 6:3, 7:7, 8:1}
 reset = [1500,1500,1500,1500,1500,1500,1500,1500]
 
 reset_cmd = ThrusterMicroseconds(reset)
-pub = rospy.Publisher('propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
+pub = rospy.Publisher('/propulsion/microseconds', ThrusterMicroseconds, queue_size=1)
 rospy.sleep(7)
 
 def forwards_test(t):

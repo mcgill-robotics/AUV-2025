@@ -61,7 +61,7 @@ class Controller:
         self.pub_global_y = rospy.Publisher('/controls/force/global_y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('/controls/force/global_z', Float64, queue_size=1)
 
-        self.pwm_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
+        self.pwm_pub = rospy.Publisher("/propulsion/microseconds",ThrusterMicroseconds,queue_size=1)
 
         self.clients = []
 
