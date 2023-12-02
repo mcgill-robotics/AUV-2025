@@ -148,13 +148,13 @@ def detect_on_image(raw_img, camera_id):
 
                     detectionFrameArray.append(detectionFrame)
 
-                    for symbol_class_name, symbol_x, symbol_y, symbol_z, confidence in buoy_symbols:
+                    for symbol_class_name, symbol_x, symbol_y, symbol_z, symbol_confidence in buoy_symbols:
                         detectionFrame = VisionObject()
                         detectionFrame.label = symbol_class_name
                         detectionFrame.x = symbol_x
                         detectionFrame.y = symbol_y
                         detectionFrame.z = symbol_z
-                        confidence.append(confidence)
+                        confidence.append(symbol_confidence)
                         detectionFrame.theta_z = theta_z
                         detectionFrame.extra_field = None
 

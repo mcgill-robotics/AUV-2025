@@ -67,11 +67,9 @@ class State:
     def updatePointCloud(self):
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
-        print("Point cloud", self.point_cloud.shape)
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         median_blur_size = 5
-        print("Attempting to median blur point cloud", point_cloud.shape)
         point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
         #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
         closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
@@ -82,10 +80,8 @@ class State:
     def getPointCloud(self, bbox=None):
         if bbox is None: 
         # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
-            print("Calling cleanPointCloud with point cloud", self.point_cloud)
             return self.cleanPointCloud(self.point_cloud)
         else:
-            print("Calling cleanPointCloud with point cloud", self.point_cloud)
             return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
     def updateDepth(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
@@ -187,14 +183,12 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-# works for sure
 # given a vector relative to the auv, turns local measurements to global
 def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
-# CHECK
 def eulerToVectorDownCam(x_deg, y_deg):
     """
     Given the euler angles in degrees, returns a vector relative to the AUV
@@ -207,7 +201,6 @@ def eulerToVectorDownCam(x_deg, y_deg):
     vec = vec / np.linalg.norm(vec)
     return vec
 
-# CHECK
 def findIntersection(vector, plane_z_pos):
     """
     Given a vector and a z position, returns the point 
@@ -312,7 +305,7 @@ def measureAngle(bbox):
 
     angle = math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
     print("ANGLE HERE!!", angle)
-    return angle
+
     # Calculate the slope for the left points
     left_slope = np.nanmean(np.diff(left_point_cloud[1]) / np.diff(left_point_cloud[0]))
     print("LEFT SLOPE!!", left_slope)
@@ -339,13 +332,13 @@ def analyzeGate(detections):
         else: boxes = detection.boxes.numpy()
         for box in boxes:
             bbox = list(box.xywh[0])
-            print(bbox)
+            print("Bounding box", bbox)
             x_coord = bbox[0]
             conf = float(list(box.conf)[0])
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
             if (global_class_name in ["Earth Symbol", "Abydos Symbol", "Gate"]) and conf > min_prediction_confidence:
-                print(global_class_name, x_coord)
+                print("Global class name", global_class_name, x_coord)
                 gate_elements_detected[cls_id] = 999999 if global_class_name == "Gate" else x_coord
 
     if "Earth Symbol" not in gate_elements_detected.keys(): return None
