@@ -28,6 +28,7 @@ sudo apt-get install -y ros-noetic-rqt-gui-image-view
 sudo apt-get install -y ros-noetic-ros-ign-gazebo
 #python dependencies
 sudo apt install -y python3-pip
+sudo apt install -y python-is-python3
 pip3 install numpy-quaternion
 pip3 install ultralytics
 
