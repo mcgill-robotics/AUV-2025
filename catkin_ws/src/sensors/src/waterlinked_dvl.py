@@ -71,8 +71,8 @@ def parse_dead_reckon_report(line):
 def main():
     rospy.init_node("waterlinked_driver")
 
-    pub_dr = rospy.Publisher("/sensors/dvl/pose",DeadReckonReport,queue_size=1)
-    pub_vr = rospy.Publisher("velocity_report",VelocityReport,queue_size=1)
+    pub_dr = rospy.Publisher("/sensors/dvl/report/dead_reckon",DeadReckonReport,queue_size=1)
+    pub_vr = rospy.Publisher("/sensors/dvl/report/velocity",VelocityReport,queue_size=1)
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
