@@ -21,6 +21,7 @@ add_message_files(FILES
 	VisionObjectArray.msg
 	DeadReckonReport.msg
 	VelocityReport.msg
+	UnityState.msg
 )
 
 
