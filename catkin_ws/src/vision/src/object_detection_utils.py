@@ -270,7 +270,7 @@ def getObjectPositionFrontCam(bbox):
     x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
     return x, y, z
 
-# TODO
+# TODO: Gulce
 # tells you how the object is oriented in space
 # 
 # dont need orientation for down cam, only ever sees octagon and lane marker
@@ -278,6 +278,15 @@ def getObjectPositionFrontCam(bbox):
 # takes an avg point of all pixels on the left side and the right side 
 # finds angle between two points
 # this is to enter gate from the right or the left knowing where we can go through
+
+# detection bbox, so theres definitely smth
+# whats the rotation?
+# bbox allows me to crop the point cloud and flatten it into x-y cloud of bbox
+# find best fitting line
+#   getting averages and then finding line that goes through them instead of lin alg line fitting
+#   scikit-learn library can maybe do this? maybe pytorch?
+# find angle
+# assumes point cloud cleaning is good, not a safe assumption
 def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
@@ -285,20 +294,41 @@ def measureAngle(bbox):
     point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
     left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
     right_point_cloud = point_cloud[:, int(point_cloud.shape[1]/2):]
+
     #avg left points together and right points together so we get two (x,y) points
+    # local_(left/right)_avg_point is in the form [x, y, z]
     local_left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
     local_right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
+
     #measure angle of vector defined by averaged left/right points
     left_x,left_y,left_z = transformLocalToGlobal(local_left_avg_point[0], local_left_avg_point[1], local_left_avg_point[2], camera_id=1)
     right_x,right_y,right_z = transformLocalToGlobal(local_right_avg_point[0], local_right_avg_point[1], local_right_avg_point[2], camera_id=1)
     left_avg_point = np.array([left_x,left_y,left_z])
     right_avg_point = np.array([right_x,right_y,right_z])
-    zero_angle_vector = np.array([0,-1])
+    # zero_angle_vector causing errors bc hardcoded
+    # dimensions dont match
+    zero_angle_vector = np.array([0,-1, 0])
     arg_vector = right_avg_point - left_avg_point
     magnitude_arg_vector = np.linalg.norm(arg_vector)
     # TODO: Check ValueError (dimensions don't match when doing dot product)
     dot_product = np.dot(zero_angle_vector, arg_vector)
-    return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
+    print("DOT PRODUCT HERE!!", dot_product)
+
+    angle = math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
+    print("ANGLE HERE!!", angle)
+    return angle
+    # Calculate the slope for the left points
+    left_slope = np.nanmean(np.diff(left_point_cloud[1]) / np.diff(left_point_cloud[0]))
+    print("LEFT SLOPE!!", left_slope)
+
+    # Calculate the slope for the right points
+    right_slope = np.nanmean(np.diff(right_point_cloud[1]) / np.diff(right_point_cloud[0]))
+    print("RIGHT SLOPE!!", right_slope)
+    
+    # Calculate the angle as the difference in slopes
+    angle = math.degrees(math.atan(right_slope - left_slope))
+    print("ANGLE IS HERE!!!!!!!!", angle)
+    return angle
 
 # CHECK
 # is there a gate?
@@ -335,25 +365,54 @@ def analyzeGate(detections):
 # hit them in correct order
 # right now the symbols are treated as objects
 # or we can do the same thing as the gate, seeing where they are
+
+# whats detections? 
 def analyzeBuoy(detections):
+    """
+    Analyzes buoy to detect the four symbols.
+
+    Parameters:
+        detections (array?): 
+
+    Returns:
+        ...
+
+    Examples:
+        >>> analyzeBuoy()
+        output
+        >>>...
+        ...
+
+    """
     symbols = []
     buoy_was_detected = False
+
     for detection in detections:
-        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
-        else: boxes = detection.boxes.numpy()
+
+        if torch.cuda.is_available(): 
+            boxes = detection.boxes.cpu().numpy()
+        else: 
+            boxes = detection.boxes.numpy()
+
         for box in boxes:
             bbox = list(box.xywh[0])
             conf = float(list(box.conf)[0])
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
+
             if (global_class_name == "Buoy"):
                 buoy_was_detected = True
+
+                # what does this elif statement do?
             elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
                 x,y,z = getObjectPositionFrontCam(bbox)
                 symbols.append([global_class_name, x, y, z, conf])
 
-    if buoy_was_detected: return symbols
-    else: return []
+    if buoy_was_detected: 
+        return symbols
+
+    else: 
+        return []
 
 # CHECK
 # lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
