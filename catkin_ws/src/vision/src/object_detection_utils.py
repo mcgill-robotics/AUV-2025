@@ -261,61 +261,69 @@ def getObjectPositionFrontCam(bbox):
 
 # TODO: Gulce
 # tells you how the object is oriented in space
-# 
-# dont need orientation for down cam, only ever sees octagon and lane marker
+
 # splits gate image in half
 # takes an avg point of all pixels on the left side and the right side 
 # finds angle between two points
-# this is to enter gate from the right or the left knowing where we can go through
 
 # detection bbox, so theres definitely smth
-# whats the rotation?
 # bbox allows me to crop the point cloud and flatten it into x-y cloud of bbox
 # find best fitting line
-#   getting averages and then finding line that goes through them instead of lin alg line fitting
-#   scikit-learn library can maybe do this? maybe pytorch?
 # find angle
 # assumes point cloud cleaning is good, not a safe assumption
 def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
     """
+    print("MEASURING ANGLE")
     point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
     left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
+    print("LEFT POINT CLOUD", left_point_cloud)
     right_point_cloud = point_cloud[:, int(point_cloud.shape[1]/2):]
+    print("RIGHT POINT CLOUD", right_point_cloud)
 
-    #avg left points together and right points together so we get two (x,y) points
-    # local_(left/right)_avg_point is in the form [x, y, z]
-    local_left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
-    local_right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
+    # #avg left points together and right points together so we get two (x,y) points
+    # # local_(left/right)_avg_point is in the form [x, y, z]
+    # local_left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
+    # local_right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
 
-    #measure angle of vector defined by averaged left/right points
-    left_x,left_y,left_z = transformLocalToGlobal(local_left_avg_point[0], local_left_avg_point[1], local_left_avg_point[2], camera_id=1)
-    right_x,right_y,right_z = transformLocalToGlobal(local_right_avg_point[0], local_right_avg_point[1], local_right_avg_point[2], camera_id=1)
-    left_avg_point = np.array([left_x,left_y,left_z])
-    right_avg_point = np.array([right_x,right_y,right_z])
-    # zero_angle_vector causing errors bc hardcoded
-    # dimensions dont match
-    zero_angle_vector = np.array([0,-1, 0])
-    arg_vector = right_avg_point - left_avg_point
-    magnitude_arg_vector = np.linalg.norm(arg_vector)
-    # TODO: Check ValueError (dimensions don't match when doing dot product)
-    dot_product = np.dot(zero_angle_vector, arg_vector)
-    print("DOT PRODUCT HERE!!", dot_product)
+    # #measure angle of vector defined by averaged left/right points
+    # left_x,left_y,left_z = transformLocalToGlobal(local_left_avg_point[0], local_left_avg_point[1], local_left_avg_point[2], camera_id=1)
+    # right_x,right_y,right_z = transformLocalToGlobal(local_right_avg_point[0], local_right_avg_point[1], local_right_avg_point[2], camera_id=1)
+    # left_avg_point = np.array([left_x,left_y,left_z])
+    # right_avg_point = np.array([right_x,right_y,right_z])
+    # # zero_angle_vector causing errors bc hardcoded
+    # # dimensions dont match
+    # zero_angle_vector = np.array([0,-1, 0])
+    # arg_vector = right_avg_point - left_avg_point
+    # magnitude_arg_vector = np.linalg.norm(arg_vector)
+    # # TODO: Check ValueError (dimensions don't match when doing dot product)
+    # dot_product = np.dot(zero_angle_vector, arg_vector)
+    # print("DOT PRODUCT HERE!!", dot_product)
 
-    angle = math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
-    print("ANGLE HERE!!", angle)
+    # angle = math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
+    # print("ANGLE HERE!!", angle)
+    # return angle
+    # # Calculate the slope for the left points
+    # left_slope = np.nanmean(np.diff(left_point_cloud[1]) / np.diff(left_point_cloud[0]))
+    # print("LEFT SLOPE!!", left_slope)
 
-    # Calculate the slope for the left points
-    left_slope = np.nanmean(np.diff(left_point_cloud[1]) / np.diff(left_point_cloud[0]))
-    print("LEFT SLOPE!!", left_slope)
-
-    # Calculate the slope for the right points
-    right_slope = np.nanmean(np.diff(right_point_cloud[1]) / np.diff(right_point_cloud[0]))
-    print("RIGHT SLOPE!!", right_slope)
+    # # Calculate the slope for the right points
+    # right_slope = np.nanmean(np.diff(right_point_cloud[1]) / np.diff(right_point_cloud[0]))
+    # print("RIGHT SLOPE!!", right_slope)
     
-    # Calculate the angle as the difference in slopes
-    angle = math.degrees(math.atan(right_slope - left_slope))
+    # # Calculate the angle as the difference in slopes
+    # angle = math.degrees(math.atan(right_slope - left_slope))
+    # print("ANGLE IS HERE!!!!!!!!", angle)
+
+    # Fit a line to the left and right point clouds
+    left_slope, _ = np.polyfit(left_point_cloud[0], left_point_cloud[1], 1)
+    print("LEFT SLOPE!!", left_slope)
+    right_slope, _ = np.polyfit(right_point_cloud[0], right_point_cloud[1], 1)
+    print("RIGHT SLOPE!!", right_slope)
+
+    # Calculate the angle between the two lines
+    angle = math.degrees(math.atan((right_slope - left_slope) / (1 + right_slope * left_slope)))
     print("ANGLE IS HERE!!!!!!!!", angle)
     return angle
 

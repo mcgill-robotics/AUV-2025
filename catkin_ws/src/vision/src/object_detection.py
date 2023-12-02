@@ -47,6 +47,9 @@ def detect_on_image(raw_img, camera_id):
     img_h, img_w, _ = img.shape
     if camera_id == 1:
         #[COMP] change target symbol to match planner
+
+        print(detections)
+
         buoy_symbols = analyzeBuoy(detections)
         leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
