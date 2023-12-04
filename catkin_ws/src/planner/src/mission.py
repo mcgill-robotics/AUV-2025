@@ -2,6 +2,7 @@
 
 import rospy
 import smach
+from std_msgs.msg import String
 
 from substates.breadth_first_search import *
 from substates.in_place_search import *
@@ -21,10 +22,12 @@ def endMission(msg):
     control.freeze_pose()
 
 def endPlanner(msg="Shutting down mission planner."):
+    pub_mission_display.publish("Exit")
     print(msg)
     control.kill()
 
 def gateMission():
+    pub_mission_display.publish("Gate")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
@@ -33,9 +36,11 @@ def gateMission():
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
+    # display_mission.updateMission("Gate Task {}".format(res))
     endMission("Finished gate mission. Result {}".format(res))
 
 def buoyMission():
+    pub_mission_display.publish("Buoy")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
@@ -46,18 +51,22 @@ def buoyMission():
                 transitions={'success': 'success', 'failure':'failure'})
         
     res = sm.execute()
+    # display_mission.updateMission("Buoy Task {}".format(res))
     endMission("Finished buoy mission. Result {}".format(res))
 
 def tricks(t):
+    pub_mission_display.publish("Tricks")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
         smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
+    # display_mission.updateMission("Tricks {}".format(res))
     endMission("Finished trick. Result {}".format(res))
 
 def laneMarkerMission():
+    pub_mission_display.publish("Lane")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
@@ -67,6 +76,7 @@ def laneMarkerMission():
         smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="", control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure': 'failure'})
         res = sm.execute()
+    # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
 
 def semiFinals():
@@ -121,6 +131,8 @@ if __name__ == '__main__':
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
+    pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+
     try:
         mapping = ObjectMapper()
         state = StateTracker()
@@ -139,11 +151,11 @@ if __name__ == '__main__':
             
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        #gateMission()
+        # gateMission()
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        # laneMarkerMission()
+        laneMarkerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
