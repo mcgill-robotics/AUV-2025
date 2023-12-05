@@ -10,7 +10,7 @@ int32_t basePressure, currentPressure;
 byte sensor_address1;
 ros::NodeHandle nh;
 std_msgs::Float64 depthmsg;
-ros::Publisher depth("/sensors/dvl/pose", &depthmsg);
+ros::Publisher depth("sensors/depth/z", &depthmsg);
 
 float getDepth() {
   currentPressure = pressureSensor.getPressure();

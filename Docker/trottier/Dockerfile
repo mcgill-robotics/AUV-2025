@@ -13,7 +13,7 @@ RUN sudo apt-get update \
     && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip \
+    && apt-get install -y python3-catkin-tools python3-pip python-is-python3\
     && apt-get install -y \
     ros-noetic-rosserial-arduino \
     ros-noetic-pid \
@@ -43,3 +43,26 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
     && rm -rf /root/.cache/pip \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /root/AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc
+
+# RUN apt update && apt install  openssh-server  xauth sudo -y \
+#     && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
+#     && echo 'robotics:clarke' | chpasswd \
+#     && echo "X11DisplayOffset 10" >> /etc/ssh/sshd_config \
+#     && echo "X11UseLocalhost yes" >> /etc/ssh/sshd_config \
+#     && service ssh start
+
+RUN apt update \
+    && apt install -y openssh-server xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11Forwarding.*$/X11Forwarding yes/" /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11UseLocalhost.*$/X11UseLocalhost no/" /etc/ssh/sshd_config \
+    && grep "^X11UseLocalhost" /etc/ssh/sshd_config || echo "X11UseLocalhost no" >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    # && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
+    && echo 'root:clarke' | chpasswd \
+    && echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
+
+EXPOSE 22

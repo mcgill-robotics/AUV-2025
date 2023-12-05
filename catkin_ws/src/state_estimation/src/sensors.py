@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
@@ -49,6 +49,7 @@ class Sensor():
                 self.last_unique_state_time = rospy.get_time() 
                 break
         self.last_state = current_state
+        
         
     def isActive(self):
         if rospy.get_time() == 0: return False
@@ -170,5 +171,4 @@ class DVL(Sensor):
             self.yaw = yaw
 
         self.updateLastState()
-        
         

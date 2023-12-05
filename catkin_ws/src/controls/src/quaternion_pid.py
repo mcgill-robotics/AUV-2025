@@ -23,15 +23,14 @@ class QuaternionPID:
         self.previous_time = rospy.get_time()
         self.torque_integral = np.array([0.0,0.0,0.0])
 
-        self.pose_sub = rospy.Subscriber("pose",Pose,self.set_pose)
+        self.pose_sub = rospy.Subscriber("/state/pose",Pose,self.set_pose)
         self.angular_velocity_sub = rospy.Subscriber("/state/angular_velocity", Vector3, self.set_ang_vel)
-        self.goal_sub = rospy.Subscriber("quat_setpoint", Quaternion, self.set_goal)
-        self.enable_sub = rospy.Subscriber("pid_quat_enable", Bool, self.set_enabled)
+        self.goal_sub = rospy.Subscriber("/controls/pid/quat/setpoint", Quaternion, self.set_goal)
+        self.enable_sub = rospy.Subscriber("/controls/pid/quat/enable", Bool, self.set_enabled)
 
         self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
-        self.pub_error_quat = rospy.Publisher('/controls/quaternion_pid/error_quat', Float64, queue_size=1)
 
     def set_pose(self,data):
         self.body_quat = np.quaternion(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
