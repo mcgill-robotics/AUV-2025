@@ -45,5 +45,5 @@ if __name__ == '__main__':
     controls = Controller(rospy.Time(0))
     state = StateTracker()
     while state.pose is None:
-        rospy.sleep(1)
+        rospy.sleep(0.5)
     rostest.rosrun("planner", 'move_test', move_test)
