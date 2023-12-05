@@ -19,9 +19,21 @@ jobs:
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
-      - name: settle test
+      - name: state test
         shell: bash
         run: |
             cd catkin_ws
             source devel/setup.bash
-            rostest planner settle.test
+            rostest planner state.test
+      - name: rotate test
+        shell: bash
+        run: |
+            cd catkin_ws
+            source devel/setup.bash
+            rostest planner rotate.test
+      - name: move test
+        shell: bash
+        run: |
+            cd catkin_ws
+            source devel/setup.bash
+            rostest planner move.test
