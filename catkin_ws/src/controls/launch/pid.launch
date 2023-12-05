@@ -29,7 +29,7 @@
 
 			<param name="topic_from_controller" value="/controls/force/global/y" />
 			<param name="topic_from_plant" value="/state/y" />
-			<param name="setpoint_topic" value="controls/pid/y/setpoint" />
+			<param name="setpoint_topic" value="/controls/pid/y/setpoint" />
 			<param name="pid_enable_topic" value="/controls/pid/y/enable" />
 		</node>
 
@@ -85,7 +85,7 @@
 
 			<param name="topic_from_controller" value="/controls/force/global/y" />
 			<param name="topic_from_plant" value="/state/y" />
-			<param name="setpoint_topic" value="controls/pid/y/setpoint" />
+			<param name="setpoint_topic" value="/controls/pid/y/setpoint" />
 			<param name="pid_enable_topic" value="/controls/pid/y/enable" />
 		</node>
 

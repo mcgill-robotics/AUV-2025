@@ -16,7 +16,7 @@ which sets the pids to the current position.
 class EffortServer(BaseServer):
     def __init__(self):
         super().__init__()
-        self.server = actionlib.SimpleActionServer('/controls/servers/effort', EffortAction, execute_cb= self.callback, auto_start = False)
+        self.server = actionlib.SimpleActionServer('/controls/server/effort', EffortAction, execute_cb= self.callback, auto_start = False)
         self.server.start()
     
     def callback(self, goal):

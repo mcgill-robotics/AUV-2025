@@ -66,7 +66,7 @@ class Controller:
 
         self.clients = []
 
-        self.EffortClient = actionlib.SimpleActionClient('/controls/servers/effort', EffortAction)
+        self.EffortClient = actionlib.SimpleActionClient('/controls/server/effort', EffortAction)
         self.clients.append(self.EffortClient)
         self.EffortClient.wait_for_server()
 

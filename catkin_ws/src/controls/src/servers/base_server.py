@@ -29,14 +29,14 @@ class BaseServer():
 
     def establish_effort_publishers(self):
         self.pub_surge = rospy.Publisher('/controls/force/surge', Float64, queue_size=1)
-        self.pub_sway = rospy.Publisher('/control/force/sway', Float64, queue_size=1)
+        self.pub_sway = rospy.Publisher('/controls/force/sway', Float64, queue_size=1)
         self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
         self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
         self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
-        self.pub_global_x = rospy.Publisher('/controls/force/global_x', Float64, queue_size=1)
-        self.pub_global_y = rospy.Publisher('/controls/force/global_y', Float64, queue_size=1)
-        self.pub_global_z = rospy.Publisher('/controls/force/global_z', Float64, queue_size=1)
+        self.pub_global_x = rospy.Publisher('/controls/force/global/x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('/controls/force/global/y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('/controls/force/global/z', Float64, queue_size=1)
 
     def establish_pid_publishers(self):
         self.pub_z_pid = rospy.Publisher('/controls/pid/z/setpoint', Float64, queue_size=1)
