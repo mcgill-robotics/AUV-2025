@@ -52,9 +52,9 @@ class BaseServer():
 
     def establish_state_subscribers(self):
         self.sub = rospy.Subscriber("/state/pose",Pose,self.set_pose)
-        self.sub = rospy.Subscriber("/state/theta/x",Float64,self.set_theta_x)
-        self.sub = rospy.Subscriber("/state/theta/y",Float64,self.set_theta_y)
-        self.sub = rospy.Subscriber("/state/theta/z",Float64,self.set_theta_z)
+        self.sub = rospy.Subscriber("/state/theta_x",Float64,self.set_theta_x)
+        self.sub = rospy.Subscriber("/state/theta_y",Float64,self.set_theta_y)
+        self.sub = rospy.Subscriber("/state/theta_z",Float64,self.set_theta_z)
 
     #callback for subscriber
     def set_pose(self,data):
