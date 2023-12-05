@@ -74,8 +74,8 @@ class DepthSensor(Sensor):
 class IMU(Sensor):
     def __init__(self):
         super().__init__("IMU")
-        rospy.Subscriber("/sbg/imu_data", SbgImuData, self.ang_vel_cb)
-        rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.quat_cb)
+        rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
+        rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
 
         q_imu_auv_w = rospy.get_param("~q_imu_auv_w")
         q_imu_auv_x = rospy.get_param("~q_imu_auv_x")

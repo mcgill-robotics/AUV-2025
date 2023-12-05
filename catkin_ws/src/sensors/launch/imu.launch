@@ -1,5 +1,7 @@
 <launch>
 	<node name="sbg_device" pkg="sbg_driver" type="sbg_device" output="screen" respawn="true">
 		<rosparam command="load" file="$(find sensors)/config/sbg_imu.yaml"/>
+		<remap from="/sbg/ekf_quat" to="/sensors/imu/quaternion"/>
+		<remap from="/sbg/imu_data" to="/sensors/imu/angular_velocity"/>
 	</node>
 </launch>
