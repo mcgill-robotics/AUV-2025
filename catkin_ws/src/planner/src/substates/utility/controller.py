@@ -41,9 +41,9 @@ class Controller:
         self.tf_header = Header(frame_id="world_rotation")
 
         self.sub = rospy.Subscriber("/state/pose",Pose,self.set_position)
-        self.sub_theta_x = rospy.Subscriber("/state/theta_x",Float64, self.set_theta_x)
-        self.sub_theta_y = rospy.Subscriber("/state/theta_y",Float64, self.set_theta_y)
-        self.sub_theta_z = rospy.Subscriber("/state/theta_z",Float64, self.set_theta_z)
+        self.sub_theta_x = rospy.Subscriber("/state/theta/x",Float64, self.set_theta_x)
+        self.sub_theta_y = rospy.Subscriber("/state/theta/y",Float64, self.set_theta_y)
+        self.sub_theta_z = rospy.Subscriber("/state/theta/z",Float64, self.set_theta_z)
         
         self.pub_x_enable = rospy.Publisher('/controls/pid/x/enable', Bool, queue_size=1)
         self.pub_y_enable = rospy.Publisher('/controls/pid/y/enable', Bool, queue_size=1)

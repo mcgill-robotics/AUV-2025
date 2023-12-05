@@ -36,9 +36,9 @@ class State:
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
-        self.theta_x_sub = rospy.Subscriber('/state/theta_x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('/state/theta_y', Float64, self.updateThetaY)
-        self.theta_z_sub = rospy.Subscriber('/state/theta_z', Float64, self.updateThetaZ)
+        self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
         self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
         # Update the point cloud whenever the current image is updated
         self.camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo)
