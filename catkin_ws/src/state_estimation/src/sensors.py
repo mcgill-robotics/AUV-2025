@@ -65,7 +65,7 @@ class DepthSensor(Sensor):
     def __init__(self):
         super().__init__("Depth Sensor")
         self.z_pos_mount_offset = 0
-        rospy.Subscriber("/depth", Float64, self.depth_cb)
+        rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
 
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
@@ -74,8 +74,8 @@ class DepthSensor(Sensor):
 class IMU(Sensor):
     def __init__(self):
         super().__init__("IMU")
-        rospy.Subscriber("/sbg/imu_data", SbgImuData, self.ang_vel_cb)
-        rospy.Subscriber("/sbg/ekf_quat", SbgEkfQuat, self.quat_cb)
+        rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
+        rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
 
         q_imu_auv_w = rospy.get_param("~q_imu_auv_w")
         q_imu_auv_x = rospy.get_param("~q_imu_auv_x")
@@ -104,7 +104,7 @@ class IMU(Sensor):
 class DVL(Sensor):
     def __init__(self, imu):
         super().__init__("DVL")
-        rospy.Subscriber("/dead_reckon_report", DeadReckonReport, self.dr_cb)
+        rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dr_cb)
         # self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
         # self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
 

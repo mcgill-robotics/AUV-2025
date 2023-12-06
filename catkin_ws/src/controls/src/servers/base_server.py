@@ -28,33 +28,33 @@ class BaseServer():
         self.establish_state_subscribers()
 
     def establish_effort_publishers(self):
-        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
-        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
-        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=1)
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
-        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
-        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
+        self.pub_surge = rospy.Publisher('/controls/force/surge', Float64, queue_size=1)
+        self.pub_sway = rospy.Publisher('/controls/force/sway', Float64, queue_size=1)
+        self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
+        self.pub_global_x = rospy.Publisher('/controls/force/global/x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('/controls/force/global/y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('/controls/force/global/z', Float64, queue_size=1)
 
     def establish_pid_publishers(self):
-        self.pub_z_pid = rospy.Publisher('z_setpoint', Float64, queue_size=1)
-        self.pub_y_pid = rospy.Publisher('y_setpoint', Float64, queue_size=1)
-        self.pub_x_pid = rospy.Publisher('x_setpoint', Float64, queue_size=1)
-        self.pub_quat_pid = rospy.Publisher('quat_setpoint', Quaternion, queue_size=1)
+        self.pub_z_pid = rospy.Publisher('/controls/pid/z/setpoint', Float64, queue_size=1)
+        self.pub_y_pid = rospy.Publisher('/controls/pid/y/setpoint', Float64, queue_size=1)
+        self.pub_x_pid = rospy.Publisher('/controls/pid/x/setpoint', Float64, queue_size=1)
+        self.pub_quat_pid = rospy.Publisher('/controls/pid/quat/setpoint', Quaternion, queue_size=1)
         
     def establish_pid_enable_publishers(self):
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
-        self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
+        self.pub_x_enable = rospy.Publisher('/controls/pid/x/enable', Bool, queue_size=1)
+        self.pub_y_enable = rospy.Publisher('/controls/pid/y/enable', Bool, queue_size=1)
+        self.pub_z_enable = rospy.Publisher('/controls/pid/z/enable', Bool, queue_size=1)
+        self.pub_quat_enable = rospy.Publisher('/controls/pid/quat/enable', Bool, queue_size=1)
 
     def establish_state_subscribers(self):
-        self.sub = rospy.Subscriber("pose",Pose,self.set_pose)
-        self.sub = rospy.Subscriber("state_theta_x",Float64,self.set_theta_x)
-        self.sub = rospy.Subscriber("state_theta_y",Float64,self.set_theta_y)
-        self.sub = rospy.Subscriber("state_theta_z",Float64,self.set_theta_z)
+        self.sub = rospy.Subscriber("/state/pose",Pose,self.set_pose)
+        self.sub = rospy.Subscriber("/state/theta/x",Float64,self.set_theta_x)
+        self.sub = rospy.Subscriber("/state/theta/y",Float64,self.set_theta_y)
+        self.sub = rospy.Subscriber("/state/theta/z",Float64,self.set_theta_z)
 
     #callback for subscriber
     def set_pose(self,data):
