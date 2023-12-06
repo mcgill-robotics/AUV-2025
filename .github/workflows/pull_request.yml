@@ -24,16 +24,19 @@ jobs:
         run: |
             cd catkin_ws
             source devel/setup.bash
+            chmod +x src/planner/src/*_test.py
             rostest planner state.test
       - name: rotate test
         shell: bash
         run: |
             cd catkin_ws
             source devel/setup.bash
+            chmod +x src/planner/src/*_test.py
             rostest planner rotate.test
       - name: move test
         shell: bash
         run: |
             cd catkin_ws
             source devel/setup.bash
+            chmod +x src/planner/src/*_test.py
             rostest planner move.test
