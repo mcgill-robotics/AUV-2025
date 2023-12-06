@@ -19,7 +19,6 @@ class state_test(unittest.TestCase):
         controls.stateDelta([1,1,None], [0,1,0,0])
         controls.stateDeltaEuler([None,0,-1], [None,45,0])
         controls.stateDeltaEuler([2,None,None], [90, None, None])
-        controls.kill()
         self.assertTrue(True)
 
 if __name__ == '__main__':

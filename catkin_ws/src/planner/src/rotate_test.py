@@ -26,7 +26,6 @@ class rotate_test(unittest.TestCase):
         controls.torque([10,10,0])
         rospy.sleep(1)
         controls.rotate([1,0,0,0])
-        controls.kill()
         self.assertTrue(True)
         
 if __name__ == '__main__':
