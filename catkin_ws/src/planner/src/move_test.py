@@ -31,7 +31,7 @@ class move_test(unittest.TestCase):
     def test__force(self):
         controls.move([0,0,-2])
         controls.rotate([1,0,0,0])
-        controls.forceLocal([-10, 10, 0])
+        controls.forceLocal([-10, 10])
         rospy.sleep(1)
         controls.move([0, 0, 0])
         controls.kill()

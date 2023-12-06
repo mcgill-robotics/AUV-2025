@@ -1,4 +1,4 @@
 <launch>
 	<include file="$(find auv-sim-gazebo)/launch/test/qualifying-test.launch"/>
-	<test test-name="rotate" pkg="planner" type="rotate_test.py" time-limit="50000000.0"/>
+	<test test-name="rotate" pkg="planner" type="rotate_test.py" time-limit="1100.0"/>
 </launch>
