@@ -34,7 +34,6 @@ class move_test(unittest.TestCase):
         controls.forceLocal([-10, 10])
         rospy.sleep(1)
         controls.move([0, 0, 0])
-        controls.kill()
         self.assertTrue(True)
 
 if __name__ == '__main__':
