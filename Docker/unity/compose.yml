@@ -4,7 +4,7 @@ services:
       - type: bind
         source: ../../../AUV-2024
         target: /root/AUV-2024
-    image: "mcgillrobotics/auv_2024:main"
+    image: "mcgillrobotics/auv_2024:unity"
     command: bash -c "tail -f /dev/null"
     ports:
       - "10000:10000"

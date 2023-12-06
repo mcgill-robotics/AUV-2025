@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import rospy
-from substates.utility.controller import Controller
-from substates.utility.state import StateTracker
+from .substates.utility.controller import Controller
+from .substates.utility.state import StateTracker
 import unittest
 import rostest
 
