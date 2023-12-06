@@ -40,36 +40,37 @@ class Controller:
         TransformListener(self.tf_buffer)
         self.tf_header = Header(frame_id="world_rotation")
 
-        self.sub = rospy.Subscriber("pose",Pose,self.set_position)
-        self.sub_theta_x = rospy.Subscriber("state_theta_x",Float64, self.set_theta_x)
-        self.sub_theta_y = rospy.Subscriber("state_theta_y",Float64, self.set_theta_y)
-        self.sub_theta_z = rospy.Subscriber("state_theta_z",Float64, self.set_theta_z)
+        self.sub = rospy.Subscriber("/state/pose",Pose,self.set_position)
+        self.sub_theta_x = rospy.Subscriber("/state/theta/x",Float64, self.set_theta_x)
+        self.sub_theta_y = rospy.Subscriber("/state/theta/y",Float64, self.set_theta_y)
+        self.sub_theta_z = rospy.Subscriber("/state/theta/z",Float64, self.set_theta_z)
         
-        self.pub_x_enable = rospy.Publisher('pid_x_enable', Bool, queue_size=1)
-        self.pub_y_enable = rospy.Publisher('pid_y_enable', Bool, queue_size=1)
-        self.pub_z_enable = rospy.Publisher('pid_z_enable', Bool, queue_size=1)
-        self.pub_quat_enable = rospy.Publisher('pid_quat_enable', Bool, queue_size=1)
+        self.pub_x_enable = rospy.Publisher('/controls/pid/x/enable', Bool, queue_size=1)
+        self.pub_y_enable = rospy.Publisher('/controls/pid/y/enable', Bool, queue_size=1)
+        self.pub_z_enable = rospy.Publisher('/controls/pid/z/enable', Bool, queue_size=1)
+        self.pub_quat_enable = rospy.Publisher('/controls/pid/quat/enable', Bool, queue_size=1)
 
-        self.pub_surge = rospy.Publisher('surge', Float64, queue_size=1)
-        self.pub_sway = rospy.Publisher('sway', Float64, queue_size=1)
-        self.pub_heave = rospy.Publisher('heave', Float64, queue_size=1)
-        self.pub_roll = rospy.Publisher('roll', Float64, queue_size=1)
-        self.pub_pitch = rospy.Publisher('pitch', Float64, queue_size=1)
-        self.pub_yaw = rospy.Publisher('yaw', Float64, queue_size=1)
-        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
-        self.pub_global_x = rospy.Publisher('global_x', Float64, queue_size=1)
-        self.pub_global_y = rospy.Publisher('global_y', Float64, queue_size=1)
-        self.pub_global_z = rospy.Publisher('global_z', Float64, queue_size=1)
+        # for killing
+        self.pub_surge = rospy.Publisher('/controls/force/surge', Float64, queue_size=1)
+        self.pub_sway = rospy.Publisher('/controls/force/sway', Float64, queue_size=1)
+        self.pub_heave = rospy.Publisher('/controls/force/heave', Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher('/controls/torque/roll', Float64, queue_size=1)
+        self.pub_pitch = rospy.Publisher('/controls/torque/pitch', Float64, queue_size=1)
+        self.pub_yaw = rospy.Publisher('/controls/torque/yaw', Float64, queue_size=1)
+        self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
+        self.pub_global_x = rospy.Publisher('/controls/force/global/x', Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher('/controls/force/global/y', Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher('/controls/force/global/z', Float64, queue_size=1)
 
-        self.pwm_pub = rospy.Publisher("/propulsion/thruster_microseconds",ThrusterMicroseconds,queue_size=1)
+        self.pwm_pub = rospy.Publisher("/propulsion/microseconds",ThrusterMicroseconds,queue_size=1)
 
         self.clients = []
 
-        self.EffortClient = actionlib.SimpleActionClient('effort_server', EffortAction)
+        self.EffortClient = actionlib.SimpleActionClient('/controls/server/effort', EffortAction)
         self.clients.append(self.EffortClient)
         self.EffortClient.wait_for_server()
 
-        self.StateQuaternionStateClient = actionlib.SimpleActionClient('state_quaternion_server', StateQuaternionAction)
+        self.StateQuaternionStateClient = actionlib.SimpleActionClient('/controls/server/state', StateQuaternionAction)
         self.clients.append(self.StateQuaternionStateClient)
         self.StateQuaternionStateClient.wait_for_server()
 

@@ -12,7 +12,7 @@ import quaternion
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
-        self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('/controls/server/state', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         self.previous_goal_quat = None
         self.previous_goal_x = None
         self.previous_goal_y = None
@@ -21,10 +21,10 @@ class StateQuaternionServer(BaseServer):
         self.max_safe_goal_depth = -0.5
         self.goal_id = 0
 
-        self.enable_quat_sub = rospy.Subscriber("pid_quat_enable", Bool, self.quat_enable_cb)
-        self.enable_x_sub = rospy.Subscriber("pid_x_enable", Bool, self.x_enable_cb)
-        self.enable_y_sub = rospy.Subscriber("pid_y_enable", Bool, self.y_enable_cb)
-        self.enable_z_sub = rospy.Subscriber("pid_z_enable", Bool, self.z_enable_cb)
+        self.enable_quat_sub = rospy.Subscriber("/controls/pid/quat/enable", Bool, self.quat_enable_cb)
+        self.enable_x_sub = rospy.Subscriber("/controls/pid/x/enable", Bool, self.x_enable_cb)
+        self.enable_y_sub = rospy.Subscriber("/controls/pid/y/enable", Bool, self.y_enable_cb)
+        self.enable_z_sub = rospy.Subscriber("/controls/pid/z/enable", Bool, self.z_enable_cb)
         
         self.server.start()    
 
