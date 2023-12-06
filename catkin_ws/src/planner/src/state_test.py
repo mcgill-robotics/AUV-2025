@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import rospy
-from .substates.utility.controller import Controller
-from .substates.utility.state import StateTracker
+from substates.utility.controller import Controller
+from substates.utility.state import StateTracker
 import unittest
 import rostest
 
@@ -12,7 +12,6 @@ class state_test(unittest.TestCase):
         controls.state([None,None,None], [1,0,0,0])
         controls.stateEuler([None,0,-1], [None,0,0])
         controls.stateEuler([2,None,None], [90, None, None])
-        controls.kill()
         self.assertTrue(True)
     
     def test__stateDelta(self): # only functions with 'test_'-prefix will be run!

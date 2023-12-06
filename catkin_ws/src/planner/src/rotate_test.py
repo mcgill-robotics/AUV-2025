@@ -12,7 +12,6 @@ class rotate_test(unittest.TestCase):
         controls.rotateDelta([0,1,0,0])
         controls.rotateDeltaEuler([None,0,180])
         controls.rotateDeltaEuler([90,None,None])
-        controls.kill()
         self.assertTrue(True)
         
     def test__rotate(self):
@@ -20,7 +19,6 @@ class rotate_test(unittest.TestCase):
         controls.rotate([0,1,0,0])
         controls.rotateEuler([0,None,180])
         controls.rotateEuler([None,90,None])
-        controls.kill()
         self.assertTrue(True)
 
     def test__torque(self):

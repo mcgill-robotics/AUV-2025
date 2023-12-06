@@ -12,7 +12,6 @@ class move_test(unittest.TestCase):
         controls.rotate([1,0,0,0])
         controls.move([-4, -4, -1])
         controls.move([0, 0, 0])
-        controls.kill()
         self.assertTrue(True)
         
     def test__moveDelta(self):
@@ -20,7 +19,6 @@ class move_test(unittest.TestCase):
         controls.rotate([1,0,0,0])
         controls.moveDelta([-4, -4, -1])
         controls.moveDelta([0, 2, 1])
-        controls.kill()
         self.assertTrue(True)
         
     def test__moveDeltaLocal(self):
@@ -28,7 +26,6 @@ class move_test(unittest.TestCase):
         controls.rotate([0,0,0,1])
         controls.moveDeltaLocal([-4, -4, -1])
         controls.moveDeltaLocal([1, 0, 0])
-        controls.kill()
         self.assertTrue(True)
         
     def test__force(self):
