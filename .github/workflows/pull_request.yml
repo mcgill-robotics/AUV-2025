@@ -7,36 +7,13 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-20.04
-    container:
-        image: mcgillrobotics/auv_2024:main
     steps:
       - uses: actions/checkout@v3
-      - name: catkin build
+        with:
+          fetch-depth: 0
+
+      - name: Test certificate verification
         shell: bash
         run: |
-            git config --global --add safe.directory /__w/AUV-2024/AUV-2024
-            git submodule update --init --recursive
-            source /opt/ros/noetic/setup.bash
-            cd catkin_ws
-            catkin build
-      - name: state test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            chmod +x src/planner/src/*_test.py
-            rostest planner state.test
-      - name: rotate test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            chmod +x src/planner/src/*_test.py
-            rostest planner rotate.test
-      - name: move test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            chmod +x src/planner/src/*_test.py
-            rostest planner move.test
+          chmod +x .github/scripts/check_test_cert 
+          ./.github/scripts/check_test_cert
