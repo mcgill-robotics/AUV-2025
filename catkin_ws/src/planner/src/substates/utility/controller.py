@@ -73,6 +73,13 @@ class Controller:
         self.StateQuaternionStateClient = actionlib.SimpleActionClient('/controls/server/state', StateQuaternionAction)
         self.clients.append(self.StateQuaternionStateClient)
         self.StateQuaternionStateClient.wait_for_server()
+        
+        print("Controller waiting to receive state information...")
+        
+        while None in [self.x, self.y, self.z, self.theta_x, self.theta_y, self.theta_z, self.orientation]:
+            continue
+        
+        print("State information received, controller is active.")
 
     def set_position(self,data):
         self.x = data.position.x
