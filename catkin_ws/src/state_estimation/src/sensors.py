@@ -37,7 +37,7 @@ class Sensor():
         if not self.hasValidData(): return
 
         current_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
-        different = self.isDataDifferent(current_state)
+        different = self.isDataDifferent()
         if different:
             if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
                 rospy.loginfo("{} has become active.".format(self.sensor_name))
@@ -111,7 +111,7 @@ class IMU(Sensor):
     def hasValidData(self):
         return self.q_nwu_auv is not None and self.angular_velocity is not None
     
-    def isDataDifferent(self, new_data):
+    def isDataDifferent(self):
         last_quaternion, last_angular_velocity = self.last_state[3], self.last_state[4]
         quaternion_different = last_quaternion is not None and (self.q_nwu_auv.x != last_quaternion.x or self.q_nwu_auv.y != last_quaternion.y or self.q_nwu_auv.z != last_quaternion.z or self.q_nwu_auv.w != last_quaternion.w)
         angular_velocity_different = last_angular_velocity is not None and (self.angular_velocity[0] != last_angular_velocity[0] or self.angular_velocity[1] != last_angular_velocity[1] or self.angular_velocity[2] != last_angular_velocity[2])
