@@ -1,0 +1,2 @@
+# imu
+SUBSYSTEM=="usb", ATTR{idProduct}=="6001", ATTR{idVendor}=="0403", SYMLINK+="auv_imu"
