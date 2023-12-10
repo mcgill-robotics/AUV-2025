@@ -16,24 +16,24 @@ def update_state(_):
     pub_dvl_sensor_status.publish(dvl.isActive())
     pub_imu_sensor_status.publish(imu.isActive())
     pub_depth_sensor_status.publish(depth_sensor.isActive())
-    x = None
-    y = None
-    z = None
+    x = 0
+    y = 0
+    z = 0
     quaternion = None
     global last_error_message_time
 
-    for sensor in sensor_priorities["x"]:
-        if sensor.isActive():
-            x = sensor.x
-            break
-    for sensor in sensor_priorities["y"]:
-        if sensor.isActive():
-            y = sensor.y
-            break
-    for sensor in sensor_priorities["z"]:
-        if sensor.isActive():
-            z = sensor.z
-            break
+    # for sensor in sensor_priorities["x"]:
+    #     if sensor.isActive():
+    #         x = sensor.x
+    #         break
+    # for sensor in sensor_priorities["y"]:
+    #     if sensor.isActive():
+    #         y = sensor.y
+    #         break
+    # for sensor in sensor_priorities["z"]:
+    #     if sensor.isActive():
+    #         z = sensor.z
+    #         break
     for sensor in sensor_priorities["orientation"]:
         if sensor.isActive():
             np_quaternion = np.array([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         "x" : [dvl],
         "y" : [dvl],
         "z" : [depth_sensor, dvl],
-        "orientation" : [imu, dvl],
+        "orientation" : [imu],
     }
 
     timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("~update_rate")), update_state)
