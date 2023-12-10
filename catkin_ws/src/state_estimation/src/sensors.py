@@ -31,15 +31,18 @@ class Sensor():
 
         # initialize a sensor as "inactive"
         self.last_unique_state_time = -1 * self.time_before_considered_inactive
+        self.last_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
     
     def updateLastState(self):
+        if not self.hasValidData(): return
+
         current_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
-        valid = self.hasValidData()
         different = self.isDataDifferent(current_state)
-        if valid and different:
+        if different:
             if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
                 rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_state_time = rospy.get_time()
+            self.last_state = current_state
         
         
     def isActive(self):
@@ -55,7 +58,7 @@ class Sensor():
     def hasValidData(self):
         raise NotImplementedError
 
-    def isDataDifferent(self, new_data):
+    def isDataDifferent(self):
         raise NotImplementedError        
 
 class DepthSensor(Sensor):
@@ -71,9 +74,9 @@ class DepthSensor(Sensor):
     def hasValidData(self):
         return self.z is not None
 
-    def isDataDifferent(self, new_data):
-        x,y,z,quaternion,angular_velocity = new_data
-        return self.z != z
+    def isDataDifferent(self):
+        last_z = self.last_state[2]
+        return self.z != last_z
 
 class IMU(Sensor):
     def __init__(self):
@@ -103,15 +106,16 @@ class IMU(Sensor):
         # print(q_ned_imu)
         q_nwu_imu = Q_NWU_NED * q_ned_imu
         self.q_nwu_auv = q_nwu_imu * self.q_imu_auv
-        print(self.q_nwu_auv)
         self.updateLastState()
 
     def hasValidData(self):
         return self.q_nwu_auv is not None and self.angular_velocity is not None
     
     def isDataDifferent(self, new_data):
-        x,y,z,quaternion,angular_velocity = new_data
-        return self.q_nwu_auv != quaternion or self.angular_velocity != angular_velocity
+        last_quaternion, last_angular_velocity = self.last_state[3], self.last_state[4]
+        quaternion_different = last_quaternion is not None and (self.q_nwu_auv.x != last_quaternion.x or self.q_nwu_auv.y != last_quaternion.y or self.q_nwu_auv.z != last_quaternion.z or self.q_nwu_auv.w != last_quaternion.w)
+        angular_velocity_different = last_angular_velocity is not None and (self.angular_velocity[0] != last_angular_velocity[0] or self.angular_velocity[1] != last_angular_velocity[1] or self.angular_velocity[2] != last_angular_velocity[2])
+        return quaternion_different or angular_velocity_different
         
 
 class DVL(Sensor):
@@ -189,7 +193,7 @@ class DVL(Sensor):
     def hasValidData(self):
         return self.x is not None and self.y is not None and self.z is not None
     
-    def isDataDifferent(self, new_data):
-        x,y,z,quaternion,angular_velocity = new_data
-        return self.x != x or self.y != y or self.z != z
+    def isDataDifferent(self):
+        last_x, last_y, last_z = self.last_state[0], self.last_state[1], self.last_state[2]
+        return self.x != last_x or self.y != last_y or self.z != last_z
         
