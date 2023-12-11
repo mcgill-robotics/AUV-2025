@@ -1,9 +1,7 @@
 services:
   clarke:
     volumes:
-      - type: bind
-        source: ../../../AUV-2024
-        target: /root/AUV-2024
+      - ../../../AUV-2024:/root/AUV-2024
     image: "mcgillrobotics/auv_2024:unity"
     command: bash -c "tail -f /dev/null"
     ports:
