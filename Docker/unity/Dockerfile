@@ -27,4 +27,8 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
-    && echo "source /root/AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc
+    && echo "source /root/AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
+    && rm -rf /root/AUV-2024/catkin_ws/.catkin_tools \
+    && rm -rf /root/AUV-2024/catkin_ws/build \
+    && rm -rf /root/AUV-2024/catkin_ws/logs \
+    && rm -rf /root/AUV-2024/catkin_ws/devel

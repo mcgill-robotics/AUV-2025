@@ -22,9 +22,11 @@ def detect_on_image(raw_img, camera_id):
         if v is None:
             print("State information missing. Skipping detection.")
             print(current_states)
+            states[camera_id].resume()
             return
     if camera_id == 1 and states[camera_id].point_cloud is None:
         print("Point cloud not yet published.")
+        states[camera_id].resume()
         return
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
@@ -168,13 +170,15 @@ def detect_on_image(raw_img, camera_id):
 
     detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
 
-    #create object detection frame message and publish it
-    detectionFrameArrayMsg = VisionObjectArray()
-    detectionFrameArrayMsg.array = detectionFrameArray
-    pub.publish(detectionFrameArrayMsg)
+    if len(detectionFrameArray) > 0:
+        #create object detection frame message and publish it
+        detectionFrameArrayMsg = VisionObjectArray()
+        detectionFrameArrayMsg.array = detectionFrameArray
+        pub.publish(detectionFrameArrayMsg)
+        
     #convert visualization image to sensor_msg image and publish it to corresponding cameras visualization topic
     debug_img = bridge.cv2_to_imgmsg(debug_img, "bgr8")
-    visualisation_pubs[camera_id].publish(debug_img)
+    visualisation_pubs[camera_id].publish(debug_img)   
     states[camera_id].resume()
 
 

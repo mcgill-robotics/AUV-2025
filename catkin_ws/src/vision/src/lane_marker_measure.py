@@ -32,7 +32,7 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
         downscaled_size = (img.shape[1], img.shape[0])
     downscaled = cv2.resize(img, dsize=downscaled_size, interpolation=cv2.INTER_AREA)
 
-    if blur1_amt > 0: blurred = cv2.blur(downscaled, (int(blur1_amt*downscaled.shape[0]),int(blur1_amt*downscaled.shape[1])))
+    if blur1_amt > 0: blurred = cv2.blur(downscaled, (max(2,int(blur1_amt*downscaled.shape[0])),max(2,int(blur1_amt*downscaled.shape[1]))))
     else: blurred = downscaled
     img_b, img_g, img_r = cv2.split(blurred)
     #normalize colors so that the max color channel in every pixel is 255
@@ -66,7 +66,7 @@ def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publis
     if tol_publisher != None: tol_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
 
     thresh_img = cv2.resize(thresh_img, dsize=(int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_AREA)
-    if blur2_amt > 0: thresh_img = cv2.blur(thresh_img, (int(blur2_amt*thresh_img.shape[0]),int(blur2_amt*thresh_img.shape[1])))     
+    if blur2_amt > 0: thresh_img = cv2.blur(thresh_img, (max(2,int(blur2_amt*thresh_img.shape[0])),max(2,int(blur2_amt*thresh_img.shape[1]))))     
     if blur2_publisher != None: blur2_publisher.publish(bridge.cv2_to_imgmsg(thresh_img, "bgr8")) #FOR ADJUSTING VALUES
     
     thresh_img = cv2.cvtColor(thresh_img, cv2.COLOR_BGR2GRAY) #convert image to grayscale
