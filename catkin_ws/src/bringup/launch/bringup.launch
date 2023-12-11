@@ -1,6 +1,5 @@
 <launch>
     <arg name="sim" default="false" />
-    <arg name="unity" default="false" />
     <arg name="bag" default="false" />
     <arg name="vision" default="true" />
 
@@ -20,7 +19,6 @@
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
-		<arg name="unity" value="$(arg unity)" />
 	</include>
 	<include file="$(find propulsion)/launch/propulsion.launch">
 		<arg name="sim" value="$(arg sim)" />
