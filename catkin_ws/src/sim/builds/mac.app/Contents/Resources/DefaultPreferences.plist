@@ -1,8 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>Screenmanager Is Fullscreen mode</key>
-<string>False</string>
-</dict>
-</plist>
+version https://git-lfs.github.com/spec/v1
+oid sha256:8209cedc0c58aef6ff98299a41ee742e4bdb043180c7ddf23ca63e031bb65e63
+size 263
