@@ -1,3 +1,0 @@
-[submodule "catkin_ws/src/unity-connection"]
-	path = catkin_ws/src/unity-connection
-	url = https://github.com/mcgill-robotics/ROS-TCP-Endpoint.git
