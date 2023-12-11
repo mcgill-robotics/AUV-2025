@@ -19,7 +19,6 @@
 
     <include file="$(find bringup)/launch/bringup.launch">
         <arg name="sim" value="true" />
-        <arg name="unity" value="true" />
         <arg name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
         <arg name="q_imu_auv_x" value="$(arg q_imu_auv_x)" />
         <arg name="q_imu_auv_y" value="$(arg q_imu_auv_y)" />
