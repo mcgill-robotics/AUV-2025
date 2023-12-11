@@ -3,3 +3,4 @@
 *.pt binary
 sim_builds/** binary
 sim_builds/ filter=lfs diff=lfs merge=lfs -text
+sim_builds/* filter=lfs diff=lfs merge=lfs -text
