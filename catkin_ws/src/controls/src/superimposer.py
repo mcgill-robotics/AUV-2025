@@ -86,7 +86,7 @@ class Superimposer:
                     force_auv.y + self.global_y.val, 
                     force_auv.z + self.global_z.val)
 
-            print("exception ---", type(e), e)
+            # print("exception ---", type(e), e)
 
         # publish superimposed effort
         effort = Wrench(force=force_auv, torque=torque_auv) 

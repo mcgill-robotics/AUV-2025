@@ -13,7 +13,7 @@
 	<arg name="auv_dvl_offset_y" default="0.0" />
 	<arg name="auv_dvl_offset_z" default="-0." />
 
-    <arg name="vision" default="true" />
+    <arg name="vision" default="false" />
 
     <param name="sim" value="true" />
 

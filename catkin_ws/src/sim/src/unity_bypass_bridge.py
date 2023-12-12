@@ -26,12 +26,16 @@ def cb_unity_state(msg):
     pub_theta_y.publish(euler_NWU_auv[1] * DEG_PER_RAD)
     pub_theta_z.publish(euler_NWU_auv[2] * DEG_PER_RAD)
 
+
     twist_linear_x = msg.velocity.z
     twist_linear_y = -msg.velocity.x
     twist_linear_z = msg.velocity.y
-    twist_angular_x = -msg.angular_velocity.x
-    twist_angular_y = -msg.angular_velocity.z
+    twist_angular_x = -msg.angular_velocity.z
+    twist_angular_y = msg.angular_velocity.x
     twist_angular_z = -msg.angular_velocity.y
+
+    twist_angular_x, twist_angular_y, twist_angular_z = quaternion.rotate_vectors(q_NWU_auv.inverse(), [twist_angular_x, twist_angular_y, twist_angular_z])
+
     
     pub_x.publish(pose_x)
     pub_y.publish(pose_y)
