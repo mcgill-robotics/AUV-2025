@@ -1,14 +1,11 @@
 services:
   clarke:
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../../AUV-2024:/root/AUV-2024
-    environment:
-      - DISPLAY
-      - QT_X11_NO_MITSHM=1
-    image: "mcgillrobotics/auv_2024:main"
+      - ../../../AUV-2024:/root/AUV-2024
+    image: "mcgillrobotics/auv_2024:unity"
     command: bash -c "tail -f /dev/null"
-    network_mode: host
+    ports:
+      - "10000:10000"
     # deploy:
     #   resources:
     #     reservations:

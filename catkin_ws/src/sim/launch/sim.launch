@@ -38,7 +38,7 @@
     <include file="$(find sim)/launch/endpoint.launch"></include>
 
     <!-- COMMENT BELOW TO NOT BYPASS STATE ESTIMATION -->
-    <node name="unity_bypass_bridge" pkg="sim" type="unity_bypass_bridge.py" output="screen"/>
+    <node name="unity_bypass_bridge" pkg="sim" type="unity_bypass_bridge.py" respawn="True" output="screen"/>
 
     <!-- UNCOMMENT BELOW TO NOT BYPASS STATE ESTIMATION -->
     <!-- <node name="unity_bridge" pkg="sim" type="unity_bridge.py" output="screen">
