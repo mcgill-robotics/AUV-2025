@@ -1,4 +1,6 @@
 <launch>
+    <param name="/use_sim_time" value="true" />
+
     <arg name="q_imu_auv_w" default="0.0" />
 	<arg name="q_imu_auv_x" default="1.0" />
 	<arg name="q_imu_auv_y" default="0.0" />
