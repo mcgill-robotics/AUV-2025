@@ -20,12 +20,12 @@ import sys
 import threading
 import importlib
 
-from .tcp_sender import UnityTcpSender
-from .client import ClientThread
-from .subscriber import RosSubscriber
-from .publisher import RosPublisher
-from .service import RosService
-from .unity_service import UnityService
+from tcp_sender import UnityTcpSender
+from client import ClientThread
+from subscriber import RosSubscriber
+from publisher import RosPublisher
+from service import RosService
+from unity_service import UnityService
 
 
 class TcpServer:

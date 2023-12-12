@@ -16,8 +16,8 @@ import rospy
 import socket
 import re
 
-from .communication import RosReceiver
-from .client import ClientThread
+from communication import RosReceiver
+from client import ClientThread
 
 
 class RosSubscriber(RosReceiver):

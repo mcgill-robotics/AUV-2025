@@ -20,7 +20,7 @@ from io import BytesIO
 import threading
 import json
 
-from .exceptions import TopicOrServiceNameDoesNotExistError
+from exceptions import TopicOrServiceNameDoesNotExistError
 
 
 class ClientThread(threading.Thread):

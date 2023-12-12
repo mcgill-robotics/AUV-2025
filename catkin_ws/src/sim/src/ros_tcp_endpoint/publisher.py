@@ -14,7 +14,7 @@
 
 import rospy
 import re
-from .communication import RosSender
+from communication import RosSender
 
 
 class RosPublisher(RosSender):

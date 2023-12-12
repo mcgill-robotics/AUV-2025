@@ -2,7 +2,7 @@
 
 import rospy
 
-from ros_tcp_endpoint import TcpServer
+from server import TcpServer
 
 
 def main(args=None):

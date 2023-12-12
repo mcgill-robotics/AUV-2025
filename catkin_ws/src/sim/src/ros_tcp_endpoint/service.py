@@ -16,7 +16,7 @@ import rospy
 from rospy.service import ServiceException
 import re
 
-from .communication import RosSender
+from communication import RosSender
 
 
 class RosService(RosSender):

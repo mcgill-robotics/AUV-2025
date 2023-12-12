@@ -19,8 +19,8 @@ import threading
 import struct
 import json
 
-from .client import ClientThread
-from .thread_pauser import ThreadPauser
+from client import ClientThread
+from thread_pauser import ThreadPauser
 from io import BytesIO
 
 # queue module was renamed between python 2 and 3
