@@ -128,7 +128,7 @@ class StateQuaternionServer(BaseServer):
             else:
                 goal_quat = None
 
-            time_to_settle = 4
+            time_to_settle = 8
             settled = False
             while not settled and not self.cancelled and my_goal == self.goal_id and not rospy.is_shutdown():
                 start = rospy.get_time()
@@ -163,8 +163,8 @@ class StateQuaternionServer(BaseServer):
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
 
-        tolerance_position = 0.3
-        tolerance_quat_w = 0.995
+        tolerance_position = 0.2
+        tolerance_quat_w = 0.997
 
         if goal_position[0] is not None:
             pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
