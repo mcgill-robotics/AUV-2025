@@ -8,6 +8,8 @@ from tf2_ros import TransformBroadcaster
 from auv_msgs.msg import UnityState
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 DEG_PER_RAD = 180 / np.pi
 q_NED_NWU = np.quaternion(0, 1, 0, 0)
@@ -53,8 +55,12 @@ def cb_unity_state(msg):
     pub_dvl_sensor_status.publish(Bool(True))
 
 def broadcast_auv_pose(pose):
+    global last_broadcasted_timestamp
+    current_timestamp = rospy.Time.now()
+    if last_broadcasted_timestamp == current_timestamp: return
+    last_broadcasted_timestamp = current_timestamp
     t = TransformStamped()
-    t.header.stamp = rospy.Time.now()
+    t.header.stamp = current_timestamp
     t.header.frame_id = "world"
     t.child_frame_id = "auv_base"
     t.transform.translation.x = pose.position.x
@@ -64,7 +70,7 @@ def broadcast_auv_pose(pose):
     tf_broadcaster.sendTransform(t)
 
     t_rot = TransformStamped()
-    t_rot.header.stamp = rospy.Time.now()
+    t_rot.header.stamp = current_timestamp
     t_rot.header.frame_id = "world_rotation"
     t_rot.child_frame_id = "auv_rotation"
     t_rot.transform.translation.x = 0
@@ -73,8 +79,14 @@ def broadcast_auv_pose(pose):
     t_rot.transform.rotation = pose.orientation
     tf_broadcaster.sendTransform(t_rot)
 
-
-
+def cb_depth_image(msg):
+    depth_img = np.copy(bridge.imgmsg_to_cv2(msg, "32FC1"))
+    depth_img -= np.min(depth_img)
+    depth_img /= np.max(depth_img)
+    depth_img *= 255
+    norm_depth_img_pub.publish(bridge.cv2_to_imgmsg(depth_img, "32FC1"))
+    
+    
 if __name__ == '__main__':
     rospy.init_node('unity_bypass_bridge')
 
@@ -93,7 +105,12 @@ if __name__ == '__main__':
     pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)
     pub_lin_vel = rospy.Publisher('/state/linear_velocity', Vector3, queue_size=1)
     tf_broadcaster = TransformBroadcaster()
- 
+    last_broadcasted_timestamp = rospy.Time.now()
+    
     rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
+    
+    bridge = CvBridge()
+    rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, cb_depth_image)
+    norm_depth_img_pub = rospy.Publisher('/vision/front_cam/aligned_depth_to_color/normalized_image', Image, queue_size=1)
     
     rospy.spin()
