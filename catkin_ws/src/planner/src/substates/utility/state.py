@@ -13,13 +13,13 @@ class StateTracker:
         self.theta_y = None
         self.theta_z = None
         self.pose = None
-        self.x_pos_sub = rospy.Subscriber('state_x', Float64, self.updateX)
-        self.y_pos_sub = rospy.Subscriber('state_y', Float64, self.updateY)
-        self.z_pos_sub = rospy.Subscriber('state_z', Float64, self.updateZ)
-        self.theta_x_sub = rospy.Subscriber('state_theta_x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('state_theta_y', Float64, self.updateThetaY)
-        self.theta_z_sub = rospy.Subscriber('state_theta_z', Float64, self.updateThetaZ)
-        self.pose_sub = rospy.Subscriber('pose', Pose, self.updatePose)
+        self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
+        self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
+        self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
+        self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
+        self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
     def updatePose(self,msg):
         self.pose = msg
     def updateX(self, msg):

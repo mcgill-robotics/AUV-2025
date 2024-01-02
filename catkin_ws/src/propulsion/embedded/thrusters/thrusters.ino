@@ -65,7 +65,7 @@ void initThrusters(){
 }
 
 ros::NodeHandle nh;
-ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("propulsion/thruster_microseconds", &commandCb);
+ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
 
 void setup() {
 	initThrusters();

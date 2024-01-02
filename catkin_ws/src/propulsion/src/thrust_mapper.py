@@ -147,9 +147,9 @@ def re_arm():
 
 if __name__ == '__main__':
     rospy.init_node('thrust_mapper')
-    pub_us = rospy.Publisher('/propulsion/thruster_microseconds', ThrusterMicroseconds, queue_size=1)
-    pub_forces = rospy.Publisher('/propulsion/thruster_forces', ThrusterForces, queue_size=1)
-    rospy.Subscriber('/effort', Wrench, wrench_to_thrust)
+    pub_us = rospy.Publisher('/propulsion/microseconds', ThrusterMicroseconds, queue_size=1)
+    pub_forces = rospy.Publisher('/propulsion/forces', ThrusterForces, queue_size=1)
+    rospy.Subscriber('/controls/effort', Wrench, wrench_to_thrust)
     rospy.on_shutdown(shutdown)
     re_arm()
     rospy.spin()

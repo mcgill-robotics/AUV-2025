@@ -1,7 +1,9 @@
 <launch>
     <arg name="sim" default="false" />
+    <arg name="unity" default="false" />
     <include file="$(find controls)/launch/pid.launch">
         <arg name="sim" value="$(arg sim)" />
+        <arg name="unity" value="$(arg unity)" />
     </include>
     
 	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"></node>
