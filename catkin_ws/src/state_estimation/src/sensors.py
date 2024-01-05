@@ -34,20 +34,24 @@ class Sensor():
         self.last_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
     
     def updateLastState(self):
-        if not self.hasValidData(): return
-
         current_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
-        different = self.isDataDifferent()
+        different = False
+        for i in range(len(current_state)):	
+            if isinstance(current_state[i], Iterable):
+                different = True if different else any([curr_state_el != last_state_el for curr_state_el, last_state_el in zip(current_state[i], self.last_state[i])])
+            else:
+                different = True if different else current_state[i] is not self.last_state[i]
+        
         if different:
             if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
                 rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_state_time = rospy.get_time()
             self.last_state = current_state
         
-        
     def isActive(self):
         if rospy.get_time() == 0: return False
-        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+        if not self.hasValidData(): return False #check that state is complete
+        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive: #check that state has changed in last N seconds
             if rospy.get_time() - self.last_error_message_time > 1:
                 self.last_error_message_time = rospy.get_time()
                 rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
@@ -56,10 +60,7 @@ class Sensor():
             return True
 
     def hasValidData(self):
-        raise NotImplementedError
-
-    def isDataDifferent(self):
-        raise NotImplementedError        
+        raise NotImplementedError    
 
 class DepthSensor(Sensor):
     def __init__(self):
@@ -73,10 +74,6 @@ class DepthSensor(Sensor):
     
     def hasValidData(self):
         return self.z is not None
-
-    def isDataDifferent(self):
-        last_z = self.last_state[2]
-        return self.z != last_z
 
 class IMU(Sensor):
     def __init__(self):
@@ -92,7 +89,6 @@ class IMU(Sensor):
         
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
         rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
-
         
     def ang_vel_cb(self, msg):
         # angular velocity vector relative to imu frame 
@@ -110,13 +106,6 @@ class IMU(Sensor):
 
     def hasValidData(self):
         return self.q_nwu_auv is not None and self.angular_velocity is not None
-    
-    def isDataDifferent(self):
-        last_quaternion, last_angular_velocity = self.last_state[3], self.last_state[4]
-        quaternion_different = last_quaternion is not None and (self.q_nwu_auv.x != last_quaternion.x or self.q_nwu_auv.y != last_quaternion.y or self.q_nwu_auv.z != last_quaternion.z or self.q_nwu_auv.w != last_quaternion.w)
-        angular_velocity_different = last_angular_velocity is not None and (self.angular_velocity[0] != last_angular_velocity[0] or self.angular_velocity[1] != last_angular_velocity[1] or self.angular_velocity[2] != last_angular_velocity[2])
-        return quaternion_different or angular_velocity_different
-        
 
 class DVL(Sensor):
     def __init__(self, imu):
@@ -140,7 +129,7 @@ class DVL(Sensor):
         self.q_dvlref_nwu = None
         
         rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dr_cb)
-    
+
     def dr_cb(self, dr_msg):
         # quaternion/position of dvl relative to dvlref 
         # q_dvlref_dvl = #quaternion.from_euler_angles(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
@@ -192,8 +181,3 @@ class DVL(Sensor):
 
     def hasValidData(self):
         return self.x is not None and self.y is not None and self.z is not None
-    
-    def isDataDifferent(self):
-        last_x, last_y, last_z = self.last_state[0], self.last_state[1], self.last_state[2]
-        return self.x != last_x or self.y != last_y or self.z != last_z
-        
