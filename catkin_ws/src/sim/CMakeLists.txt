@@ -24,5 +24,3 @@ catkin_package( CATKIN_DEPENDS
     sbg_driver
 	message_runtime
 )
-
-add_executable(sim.x86_64)
