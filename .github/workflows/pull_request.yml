@@ -16,6 +16,7 @@ jobs:
         run: |
             git config --global --add safe.directory /__w/AUV-2024/AUV-2024
             git submodule update --init --recursive
+            git lfs install
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
