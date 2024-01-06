@@ -1,4 +1,5 @@
 <launch>
 	<include file="$(find sim)/launch/sim.launch"/>
+	<include file="$(find sim)/launch/headless.launch"/>
 	<test test-name="move" pkg="planner" type="move_test.py" time-limit="1500.0"/>
 </launch>
