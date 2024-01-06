@@ -25,41 +25,42 @@ class Sensor():
         self.x = 0
         self.y = 0
         self.z = 0
-        self.roll = 0
-        self.pitch = 0
-        self.yaw = 0
         
         self.q_nwu_auv = np.quaternion(1, 0, 0, 0)
         self.angular_velocity = np.array([0,0,0])
 
         # initialize a sensor as "inactive"
         self.last_unique_state_time = -1 * self.time_before_considered_inactive
-        self.last_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
+        self.last_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
     
     def updateLastState(self):
-        current_state = [self.x,self.y,self.z,self.roll,self.pitch,self.yaw,self.q_nwu_auv,self.angular_velocity]
-        for i in range(len(current_state)):
-            if isinstance(current_state[i], Iterable): 
-                different = any([vc != vl for vc, vl in zip(current_state[i], self.last_state[i])])
+        current_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
+        different = False
+        for i in range(len(current_state)):	
+            if isinstance(current_state[i], Iterable):
+                different = True if different else any([curr_state_el != last_state_el for curr_state_el, last_state_el in zip(current_state[i], self.last_state[i])])
             else:
-                different = current_state[i] is None or current_state[i] is not self.last_state[i]
-            if different:
-                if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
-                    rospy.loginfo("{} has become active.".format(self.sensor_name))
-                self.last_unique_state_time = rospy.get_time() 
-                break
-        self.last_state = current_state
+                different = True if different else current_state[i] is not self.last_state[i]
         
+        if different:
+            if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
+            self.last_unique_state_time = rospy.get_time()
+            self.last_state = current_state
         
     def isActive(self):
         if rospy.get_time() == 0: return False
-        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+        if not self.hasValidData(): return False #check that state is complete
+        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive: #check that state has changed in last N seconds
             if rospy.get_time() - self.last_error_message_time > 1:
                 self.last_error_message_time = rospy.get_time()
                 rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
             return False
         else:
-            return True        
+            return True
+
+    def hasValidData(self):
+        raise NotImplementedError    
 
 class DepthSensor(Sensor):
     def __init__(self):
@@ -70,6 +71,9 @@ class DepthSensor(Sensor):
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
         self.updateLastState()
+    
+    def hasValidData(self):
+        return self.z is not None
 
 class IMU(Sensor):
     def __init__(self):
@@ -85,7 +89,6 @@ class IMU(Sensor):
         
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
         rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
-
         
     def ang_vel_cb(self, msg):
         # angular velocity vector relative to imu frame 
@@ -95,12 +98,14 @@ class IMU(Sensor):
         self.updateLastState()
 
     def quat_cb(self, msg):
-        
         q_ned_imu = np.quaternion(msg.quaternion.w, msg.quaternion.x, msg.quaternion.y, msg.quaternion.z)
+        # print(q_ned_imu)
         q_nwu_imu = Q_NWU_NED * q_ned_imu
         self.q_nwu_auv = q_nwu_imu * self.q_imu_auv
-
         self.updateLastState()
+
+    def hasValidData(self):
+        return self.q_nwu_auv is not None and self.angular_velocity is not None
 
 class DVL(Sensor):
     def __init__(self, imu):
@@ -124,7 +129,7 @@ class DVL(Sensor):
         self.q_dvlref_nwu = None
         
         rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dr_cb)
-    
+
     def dr_cb(self, dr_msg):
         # quaternion/position of dvl relative to dvlref 
         # q_dvlref_dvl = #quaternion.from_euler_angles(dr_msg.roll*RAD_PER_DEG, dr_msg.pitch*RAD_PER_DEG, dr_msg.yaw*RAD_PER_DEG)
@@ -147,30 +152,32 @@ class DVL(Sensor):
         self.y = pos_auv[1]
         self.z = pos_auv[2]
 
-        self.q_nwu_auv = self.q_dvlref_nwu.inverse() * q_dvlref_auv
+        # self.q_nwu_auv = self.q_dvlref_nwu.inverse() * q_dvlref_auv
 
-        np_quaternion = np.array([self.q_nwu_auv.x, self.q_nwu_auv.y, self.q_nwu_auv.z, self.q_nwu_auv.w])
+        # np_quaternion = np.array([self.q_nwu_auv.x, self.q_nwu_auv.y, self.q_nwu_auv.z, self.q_nwu_auv.w])
 
-        # # calculate angular velocity (not super precise but will only be used when IMU is inactive)
-        roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
-        pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
-        yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
+        # # # calculate angular velocity (not super precise but will only be used when IMU is inactive)
+        # roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
+        # pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
+        # yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
 
-        dt = (rospy.get_time() - self.last_unique_state_time)
-        if dt != 0:
-            rate_of_change_euler_x = (roll - self.roll) * RAD_PER_DEG / dt
-            rate_of_change_euler_y = (pitch - self.pitch) * RAD_PER_DEG / dt
-            rate_of_change_euler_z = (yaw - self.yaw) * RAD_PER_DEG / dt
+        # dt = (rospy.get_time() - self.last_unique_state_time)
+        # if dt != 0:
+        #     rate_of_change_euler_x = (roll - self.roll) * RAD_PER_DEG / dt
+        #     rate_of_change_euler_y = (pitch - self.pitch) * RAD_PER_DEG / dt
+        #     rate_of_change_euler_z = (yaw - self.yaw) * RAD_PER_DEG / dt
 
-            wx = rate_of_change_euler_y * math.sin(roll) * math.sin(yaw) + rate_of_change_euler_x * math.cos(yaw)
-            wy = rate_of_change_euler_y * math.sin(roll) * math.cos(yaw) - rate_of_change_euler_x * math.sin(yaw)
-            wz = rate_of_change_euler_y * math.cos(roll) + rate_of_change_euler_z
+        #     wx = rate_of_change_euler_y * math.sin(roll) * math.sin(yaw) + rate_of_change_euler_x * math.cos(yaw)
+        #     wy = rate_of_change_euler_y * math.sin(roll) * math.cos(yaw) - rate_of_change_euler_x * math.sin(yaw)
+        #     wz = rate_of_change_euler_y * math.cos(roll) + rate_of_change_euler_z
 
-            self.angular_velocity = np.array([wx, wy, wz])
+        #     self.angular_velocity = np.array([wx, wy, wz])
 
-            self.roll = roll
-            self.pitch = pitch
-            self.yaw = yaw
+        #     self.roll = roll
+        #     self.pitch = pitch
+        #     self.yaw = yaw
 
         self.updateLastState()
-        
+
+    def hasValidData(self):
+        return self.x is not None and self.y is not None and self.z is not None

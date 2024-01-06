@@ -109,7 +109,7 @@ if __name__ == '__main__':
         "x" : [dvl],
         "y" : [dvl],
         "z" : [depth_sensor, dvl],
-        "orientation" : [imu, dvl],
+        "orientation" : [imu],
     }
 
     timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("~update_rate")), update_state)
