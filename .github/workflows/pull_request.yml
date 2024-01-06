@@ -19,6 +19,7 @@ jobs:
             source /opt/ros/noetic/setup.bash
             cd catkin_ws
             catkin build
+            chmod +x src/sim/builds/linux/sim.x86_64
       - name: state test
         shell: bash
         run: |
