@@ -112,7 +112,7 @@ class QuaternionPID:
         return torque
     
 if __name__ == "__main__":
-    rospy.init_node("quaternion_pid", log_level=rospy.DEBUG)
+    rospy.init_node("quaternion_pid")
     pid = QuaternionPID()
     pid.execute()
     rospy.spin()

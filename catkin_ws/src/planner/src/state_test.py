@@ -27,4 +27,5 @@ if __name__ == '__main__':
     state = StateTracker()
     while state.pose is None:
         rospy.sleep(0.5)
+    rospy.sleep(5)
     rostest.rosrun("planner", 'state_test', state_test)
