@@ -6,10 +6,10 @@
 		<include file="$(find sensors)/launch/dvl.launch"/>
     </group>
 
-	<arg name="q_imu_auv_w" default="0.0" />
-	<arg name="q_imu_auv_x" default="0.0" />
-	<arg name="q_imu_auv_y" default="0.0" />
-	<arg name="q_imu_auv_z" default="1.0" />
+	<arg name="q_imunominal_imu_w" default="0.0" />
+	<arg name="q_imunominal_imu_x" default="0.0" />
+	<arg name="q_imunominal_imu_y" default="0.0" />
+	<arg name="q_imunominal_imu_z" default="1.0" />
 
 	<arg name="q_dvl_auv_w" default="0.0" />
 	<arg name="q_dvl_auv_x" default="0.0" />
@@ -22,10 +22,10 @@
 
 	<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen">
 		<param name="update_rate" value="100" />
-		<param name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
-		<param name="q_imu_auv_x" value="$(arg q_imu_auv_x)" />
-		<param name="q_imu_auv_y" value="$(arg q_imu_auv_y)" />
-		<param name="q_imu_auv_z" value="$(arg q_imu_auv_z)" />
+		<param name="q_imunominal_imu_w" value="$(arg q_imunominal_imu_w)" />
+		<param name="q_imunominal_imu_x" value="$(arg q_imunominal_imu_x)" />
+		<param name="q_imunominal_imu_y" value="$(arg q_imunominal_imu_y)" />
+		<param name="q_imunominal_imu_z" value="$(arg q_imunominal_imu_z)" />
 
 		<param name="q_dvl_auv_w" value="$(arg q_dvl_auv_w)" />
 		<param name="q_dvl_auv_x" value="$(arg q_dvl_auv_x)" />

@@ -12,6 +12,7 @@ from std_msgs.msg import Float64, Bool
 from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
+Q_IMUNOMINAL_AUV = np.quaternion(0, 1, 0, 0)
 DEG_PER_RAD = 180 / np.pi
 RAD_PER_DEG = 1 / DEG_PER_RAD
 
@@ -79,12 +80,13 @@ class IMU(Sensor):
     def __init__(self):
         super().__init__("IMU")
 
-        q_imu_auv_w = rospy.get_param("~q_imu_auv_w")
-        q_imu_auv_x = rospy.get_param("~q_imu_auv_x")
-        q_imu_auv_y = rospy.get_param("~q_imu_auv_y")
-        q_imu_auv_z = rospy.get_param("~q_imu_auv_z")
+        q_imunominal_imu_w = rospy.get_param("~q_imunominal_imu_w")
+        q_imunominal_imu_x = rospy.get_param("~q_imunominal_imu_x")
+        q_imunominal_imu_y = rospy.get_param("~q_imunominal_imu_y")
+        q_imunominal_imu_z = rospy.get_param("~q_imunominal_imu_z")
 
-        self.q_imu_auv = np.quaternion(q_imu_auv_w, q_imu_auv_x, q_imu_auv_y, q_imu_auv_z)
+        self.q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
+        self.q_imu_auv = self.q_imunominal_imu.inverse() * Q_IMUNOMINAL_AUV
         self.q_nwu_auv = None
         
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
