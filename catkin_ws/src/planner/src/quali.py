@@ -3,12 +3,20 @@ import rospy
 from substates.utility.controller import Controller
 
 rospy.init_node("quali")
-rospy.sleep(25)
 controls = Controller(rospy.Time(0))
-controls.rotateEuler((0,0,None))
-controls.moveDelta((None,None,-2))
-controls.forceLocal((16,0))
-rospy.sleep(60)
-controls.forceLocal((0,0))
-controls.moveDelta((None,None,2))
+controls.move([0,0,-2])
+controls.rotateDelta([0,1,0,0])
+controls.rotateDeltaEuler([None,0,180])
+controls.rotateDeltaEuler([90,None,None])
+
+controls.move([0,0,-2])
+controls.rotate([0,1,0,0])
+controls.rotateEuler([0,None,180])
+controls.rotateEuler([None,90,None])
+
+controls.move([0,0,-2])
+controls.torque([10,10,0])
+rospy.sleep(1)
+controls.rotate([1,0,0,0])
+
 controls.kill()

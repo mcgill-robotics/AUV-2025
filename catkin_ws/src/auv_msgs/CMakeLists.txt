@@ -21,7 +21,9 @@ add_message_files(FILES
 	VisionObjectArray.msg
 	DeadReckonReport.msg
 	VelocityReport.msg
+	UnityState.msg
 )
+
 
 add_action_files(FILES
 	StateQuaternion.action

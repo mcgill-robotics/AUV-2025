@@ -122,6 +122,8 @@ def updateMap(obj_i, observation):
                 new_extra_field = observed_extra_field
             else:
                 new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
+        else:
+            new_extra_field = -1234.5
 
     object_map[obj_i][1] = new_x
     object_map[obj_i][2] = new_y

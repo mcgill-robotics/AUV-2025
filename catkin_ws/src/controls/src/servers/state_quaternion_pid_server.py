@@ -12,7 +12,7 @@ import quaternion
 class StateQuaternionServer(BaseServer):
     def __init__(self):
         super().__init__()
-        self.server = actionlib.SimpleActionServer('state_quaternion_server', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('/controls/server/state', StateQuaternionAction, execute_cb=self.callback, auto_start=False)
         self.previous_goal_quat = None
         self.previous_goal_x = None
         self.previous_goal_y = None
@@ -21,10 +21,10 @@ class StateQuaternionServer(BaseServer):
         self.max_safe_goal_depth = -0.5
         self.goal_id = 0
 
-        self.enable_quat_sub = rospy.Subscriber("pid_quat_enable", Bool, self.quat_enable_cb)
-        self.enable_x_sub = rospy.Subscriber("pid_x_enable", Bool, self.x_enable_cb)
-        self.enable_y_sub = rospy.Subscriber("pid_y_enable", Bool, self.y_enable_cb)
-        self.enable_z_sub = rospy.Subscriber("pid_z_enable", Bool, self.z_enable_cb)
+        self.enable_quat_sub = rospy.Subscriber("/controls/pid/quat/enable", Bool, self.quat_enable_cb)
+        self.enable_x_sub = rospy.Subscriber("/controls/pid/x/enable", Bool, self.x_enable_cb)
+        self.enable_y_sub = rospy.Subscriber("/controls/pid/y/enable", Bool, self.y_enable_cb)
+        self.enable_z_sub = rospy.Subscriber("/controls/pid/z/enable", Bool, self.z_enable_cb)
         
         self.server.start()    
 
@@ -128,7 +128,7 @@ class StateQuaternionServer(BaseServer):
             else:
                 goal_quat = None
 
-            time_to_settle = 4
+            time_to_settle = 8
             settled = False
             while not settled and not self.cancelled and my_goal == self.goal_id and not rospy.is_shutdown():
                 start = rospy.get_time()
@@ -163,8 +163,8 @@ class StateQuaternionServer(BaseServer):
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
 
-        tolerance_position = 0.3
-        tolerance_quat_w = 0.995
+        tolerance_position = 0.2
+        tolerance_quat_w = 0.997
 
         if goal_position[0] is not None:
             pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])

@@ -421,21 +421,21 @@ def publishToMap(marker):
 
 setup()
 
-x_pos_sub = rospy.Subscriber('state_x', Float64, updateAUVX)
-y_pos_sub = rospy.Subscriber('state_y', Float64, updateAUVY)
-z_pos_sub = rospy.Subscriber('state_z', Float64, updateAUVZ)
-theta_x_sub = rospy.Subscriber('state_theta_x', Float64, updateAUVThetaX)
-theta_y_sub = rospy.Subscriber('state_theta_y', Float64, updateAUVThetaY)
-theta_z_sub = rospy.Subscriber('state_theta_z', Float64, updateAUVThetaZ)
+x_pos_sub = rospy.Subscriber('/state/x', Float64, updateAUVX)
+y_pos_sub = rospy.Subscriber('/state/y', Float64, updateAUVY)
+z_pos_sub = rospy.Subscriber('/state/z', Float64, updateAUVZ)
+theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, updateAUVThetaX)
+theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, updateAUVThetaY)
+theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, updateAUVThetaZ)
 obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
 map_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, objectMapCb)
-sub_effort = rospy.Subscriber('/effort', Wrench, effortCb)
-dvl_sub = rospy.Subscriber('dead_reckon_report', DeadReckonReport, dvlDataCb)
+sub_effort = rospy.Subscriber('/controls/effort', Wrench, effortCb)
+dvl_sub = rospy.Subscriber('/sensors/dvl/pose', DeadReckonReport, dvlDataCb)
 
 x_setpoint_sub = rospy.Subscriber('x_setpoint', Float64, setpointXCb)
 y_setpoint_sub = rospy.Subscriber('y_setpoint', Float64, setpointYCb)
 z_setpoint_sub = rospy.Subscriber('z_setpoint', Float64, setpointZCb)
-quat_setpoint_sub = rospy.Subscriber('quat_setpoint', Quaternion, setpointQuatCb)
+quat_setpoint_sub = rospy.Subscriber('/controls/quaternion_pid/setpoint', Quaternion, setpointQuatCb)
 
 
 rospy.spin()

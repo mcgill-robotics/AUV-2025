@@ -11,17 +11,17 @@ from tf2_ros import Buffer, TransformListener
 class Superimposer:
     def __init__(self):
         # forces in robot reference frame
-        self.surge = Superimposer.Degree_Of_Freedom('surge')
-        self.sway = Superimposer.Degree_Of_Freedom('sway')
-        self.heave = Superimposer.Degree_Of_Freedom('heave')
-        self.roll = Superimposer.Degree_Of_Freedom('roll')
-        self.pitch = Superimposer.Degree_Of_Freedom('pitch')
-        self.yaw = Superimposer.Degree_Of_Freedom('yaw')
+        self.surge = Superimposer.Degree_Of_Freedom('/controls/force/surge')
+        self.sway = Superimposer.Degree_Of_Freedom('/controls/force/sway')
+        self.heave = Superimposer.Degree_Of_Freedom('/controls/force/heave')
+        self.roll = Superimposer.Degree_Of_Freedom('/controls/torque/roll')
+        self.pitch = Superimposer.Degree_Of_Freedom('/controls/torque/pitch')
+        self.yaw = Superimposer.Degree_Of_Freedom('/controls/torque/yaw')
 
         # forces in global reference frame
-        self.global_x = Superimposer.Degree_Of_Freedom('global_x')
-        self.global_y = Superimposer.Degree_Of_Freedom('global_y')
-        self.global_z = Superimposer.Degree_Of_Freedom('global_z')
+        self.global_x = Superimposer.Degree_Of_Freedom('/controls/force/global/x')
+        self.global_y = Superimposer.Degree_Of_Freedom('/controls/force/global/y')
+        self.global_z = Superimposer.Degree_Of_Freedom('/controls/force/global/z')
 
         # tf2 buffer
         self.tf_buffer = Buffer()
@@ -31,7 +31,7 @@ class Superimposer:
         # just update the time
         self.header = Header(frame_id="auv_rotation")
 
-        self.pub_effort = rospy.Publisher('effort', Wrench, queue_size=1)
+        self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
 
 
     def update_effort(self, _):
@@ -86,7 +86,7 @@ class Superimposer:
                     force_auv.y + self.global_y.val, 
                     force_auv.z + self.global_z.val)
 
-            print("exception ---", type(e), e)
+            # print("exception ---", type(e), e)
 
         # publish superimposed effort
         effort = Wrench(force=force_auv, torque=torque_auv) 

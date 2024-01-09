@@ -8,11 +8,14 @@ from tf2_ros import TransformBroadcaster
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 DEG_PER_RAD = 180 / np.pi
 
 def update_state(_):    
+    pub_dvl_sensor_status.publish(dvl.isActive())
+    pub_imu_sensor_status.publish(imu.isActive())
+    pub_depth_sensor_status.publish(depth_sensor.isActive())
     x = None
     y = None
     z = None
@@ -79,14 +82,20 @@ def broadcast_auv_pose(pose):
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')
 
-    pub_pose = rospy.Publisher('pose', Pose, queue_size=1)
-    pub_x = rospy.Publisher('state_x', Float64, queue_size=1)
-    pub_y = rospy.Publisher('state_y', Float64, queue_size=1)
-    pub_z = rospy.Publisher('state_z', Float64, queue_size=1)
-    pub_theta_x = rospy.Publisher('state_theta_x', Float64, queue_size=1)
-    pub_theta_y = rospy.Publisher('state_theta_y', Float64, queue_size=1)
-    pub_theta_z = rospy.Publisher('state_theta_z', Float64, queue_size=1)
-    pub_ang_vel = rospy.Publisher('angular_velocity', Vector3, queue_size=1)
+    pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
+    
+    pub_x = rospy.Publisher('/state/x', Float64, queue_size=1)
+    pub_y = rospy.Publisher('/state/y', Float64, queue_size=1)
+    pub_z = rospy.Publisher('/state/z', Float64, queue_size=1)
+    pub_theta_x = rospy.Publisher('/state/theta/x', Float64, queue_size=1)
+    pub_theta_y = rospy.Publisher('/state/theta/y', Float64, queue_size=1)
+    pub_theta_z = rospy.Publisher('/state/theta/z', Float64, queue_size=1)
+    pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)
+
+    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
+    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
+    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+
     tf_broadcaster = TransformBroadcaster()
 
     last_error_message_time = rospy.get_time()
@@ -100,7 +109,7 @@ if __name__ == '__main__':
         "x" : [dvl],
         "y" : [dvl],
         "z" : [depth_sensor, dvl],
-        "orientation" : [imu, dvl],
+        "orientation" : [imu],
     }
 
     timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("~update_rate")), update_state)
