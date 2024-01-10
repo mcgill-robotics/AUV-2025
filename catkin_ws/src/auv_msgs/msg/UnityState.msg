@@ -2,7 +2,7 @@ geometry_msgs/Vector3 position
 geometry_msgs/Quaternion orientation
 geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 angular_velocity
-geometry_msgs/Vector3 hydrophones_distances
+geometry_msgs/Vector3 hydrophones_time_diff
 bool isDVLActive
 bool isDepthSensorActive
 bool isIMUActive
