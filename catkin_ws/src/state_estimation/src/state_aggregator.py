@@ -112,7 +112,7 @@ if __name__ == '__main__':
         "orientation" : [imu],
     }
 
-    timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("~update_rate")), update_state)
+    timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("update_rate")), update_state)
     rospy.on_shutdown(timer.shutdown)
     
     rospy.spin()
