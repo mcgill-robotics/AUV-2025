@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y wget \
     ros-noetic-rqt-gui \
     ros-noetic-rviz \
     ros-noetic-smach-ros \ 
-    ros-noetic-rviz \
     git-lfs \
     git \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
