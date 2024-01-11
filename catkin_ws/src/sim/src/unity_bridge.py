@@ -28,9 +28,9 @@ def cb_unity_state(msg):
     twist_angular_y = msg.angular_velocity[1]
     twist_angular_z = msg.angular_velocity[2]
 
-    isDVLActive = msg.isDVLActive
-    isIMUActive = msg.isIMUActive
-    isDepthSensorActive = msg.isDepthSensorActive
+    isDVLActive = msg.isDVLActive.data
+    isIMUActive = msg.isIMUActive.data
+    isDepthSensorActive = msg.isDepthSensorActive.data
 
     # DVL - NWU
     if isDVLActive:
