@@ -16,10 +16,10 @@ def cb_unity_state(msg):
     pose_x = msg.position[0]
     pose_y = msg.position[1]
     pose_z = msg.position[2]
-    pose_quat_x = msg.orientation.x
-    pose_quat_y = msg.orientation.y
-    pose_quat_z = msg.orientation.z
-    pose_quat_w = msg.orientation.w
+    q_NED_imunominal_x = msg.orientation.x
+    q_NED_imunominal_y = msg.orientation.y
+    q_NED_imunominal_z = msg.orientation.z
+    q_NED_imunominal_w = msg.orientation.w
 
     twist_linear_x = msg.velocity[0]
     twist_linear_y = msg.velocity[1]
@@ -41,11 +41,10 @@ def cb_unity_state(msg):
         position_dvl_dvlref = position_auv_dvlref + dvl_offset_NWU
 
         # Orientation
-        q_NWU_auv = np.quaternion(pose_quat_w, pose_quat_x, pose_quat_y, pose_quat_z)
+        q_NWU_auv = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
         q_dvlref_dvl = q_NWU_dvlref.inverse() * q_NWU_auv * q_dvl_auv.inverse()
         # euler_dvlref_auv = quaternion.as_euler_angles(q_dvlref_dvl)
         euler_dvlref_dvl = transformations.euler_from_quaternion([q_dvlref_dvl.x, q_dvlref_dvl.y, q_dvlref_dvl.z, q_dvlref_dvl.w])
-
 
         dvl_msg = DeadReckonReport()
 
@@ -62,7 +61,10 @@ def cb_unity_state(msg):
     # IMU - NED
     if isIMUActive:
         sbg_quat_msg = SbgEkfQuat()
-        sbg_quat_msg.quaternion = Quaternion(pose_quat_x, pose_quat_y, pose_quat_z, pose_quat_w)
+        q_NED_imunominal = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
+
+        q_NED_imu = q_NED_imunominal * q_imunominal_imu
+        sbg_quat_msg.quaternion = Quaternion(q_NED_imu.x, q_NED_imu.y, q_NED_imu.z, q_NED_imu.w)
         pub_imu_quat_sensor.publish(sbg_quat_msg)
 
         sbg_data_msg = SbgImuData()
@@ -74,9 +76,6 @@ def cb_unity_state(msg):
         depth_msg = Float64()
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
-
-    
-
 
 
 if __name__ == '__main__':
@@ -92,24 +91,16 @@ if __name__ == '__main__':
     auv_dvl_offset_y = rospy.get_param("~auv_dvl_offset_y")
     auv_dvl_offset_z = rospy.get_param("~auv_dvl_offset_z")
     
-    q_imu_auv_w = rospy.get_param("~q_imu_auv_w")
-    q_imu_auv_x = rospy.get_param("~q_imu_auv_x")
-    q_imu_auv_y = rospy.get_param("~q_imu_auv_y")
-    q_imu_auv_z = rospy.get_param("~q_imu_auv_z")
+    q_imunominal_imu_w = rospy.get_param("q_imunominal_imu_w")
+    q_imunominal_imu_x = rospy.get_param("q_imunominal_imu_x")
+    q_imunominal_imu_y = rospy.get_param("q_imunominal_imu_y")
+    q_imunominal_imu_z = rospy.get_param("q_imunominal_imu_z")
+
+    q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
 
     # REFERENCE FRAME DEFINITIONS
-    q_NED_NWU = np.quaternion(0, 1, 0, 0)
     q_NWU_dvlref = np.quaternion(0,1,0,0)
-
-    q_imu_auv = np.quaternion(q_imu_auv_w, q_imu_auv_x, q_imu_auv_y, q_imu_auv_z)
-
-    q_auv_gazeboImu = np.quaternion(0, -0.70710678, 0, 0.70710678)
-    q_NWU_gazeboImuRef = np.quaternion(0, -0.70710678, 0, 0.70710678)
-    q_gazeboImu_imu = q_auv_gazeboImu.inverse() * q_imu_auv.inverse()
-
     q_dvl_auv = np.quaternion(q_dvl_auv_w, q_dvl_auv_x, q_dvl_auv_y, q_dvl_auv_z)
-
-
 
     # Set up subscribers and publishers
     rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
