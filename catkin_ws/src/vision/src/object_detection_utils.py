@@ -374,11 +374,11 @@ front_cam_model_filename = ""
 
 # Select the proper models & depth_scale_factor based on the sim argument
 if sim:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1
 else:
-    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1000
 
