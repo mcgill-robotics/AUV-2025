@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y wget \
 
 
 RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
+    && pip install --no-cache-dir --upgrade numpy \
     && rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
