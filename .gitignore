@@ -25,6 +25,7 @@ catkin_ws/.catkin_tools/
 *.png
 *.jpg
 *.bag
+*unity.lock
 
 #testing files
 catkin_ws/src/planner/src/testMission.py
