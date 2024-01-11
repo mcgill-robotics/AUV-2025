@@ -6,34 +6,33 @@ import numpy as np
 from auv_msgs.msg import DeadReckonReport, UnityState
 from geometry_msgs.msg import Quaternion, Vector3
 from sbg_driver.msg import SbgImuData, SbgEkfQuat
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from tf import transformations
 import quaternion
 
 DEG_PER_RAD = (180 / np.pi)
 
 def cb_unity_state(msg):
-    pose_x = msg.position[0]
-    pose_y = msg.position[1]
-    pose_z = msg.position[2]
+    pose_x = msg.position.z
+    pose_y = -msg.position.x
+    pose_z = msg.position.y
     q_NED_imunominal_x = msg.orientation.x
     q_NED_imunominal_y = msg.orientation.y
     q_NED_imunominal_z = msg.orientation.z
     q_NED_imunominal_w = msg.orientation.w
 
-    twist_linear_x = msg.velocity[0]
-    twist_linear_y = msg.velocity[1]
-    twist_linear_z = msg.velocity[2]
-    twist_angular_x = msg.angular_velocity[0]
-    twist_angular_y = msg.angular_velocity[1]
-    twist_angular_z = msg.angular_velocity[2]
+    twist_angular_x = -msg.angular_velocity.z
+    twist_angular_y = msg.angular_velocity.x
+    twist_angular_z = -msg.angular_velocity.y
 
-    isDVLActive = msg.isDVLActive.data
-    isIMUActive = msg.isIMUActive.data
-    isDepthSensorActive = msg.isDepthSensorActive.data
+    isDVLActive = msg.isDVLActive
+    isIMUActive = msg.isIMUActive
+    isDepthSensorActive = msg.isDepthSensorActive
+
 
     # DVL - NWU
     if isDVLActive:
+        pub_dvl_sensor_status.publish(Bool(True))
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
         position_auv_dvlref = quaternion.rotate_vectors(q_NWU_dvlref.inverse(), position_NWU_auv)
@@ -60,6 +59,7 @@ def cb_unity_state(msg):
 
     # IMU - NED
     if isIMUActive:
+        pub_imu_sensor_status.publish(Bool(True))
         sbg_quat_msg = SbgEkfQuat()
         q_NED_imunominal = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
 
@@ -68,11 +68,12 @@ def cb_unity_state(msg):
         pub_imu_quat_sensor.publish(sbg_quat_msg)
 
         sbg_data_msg = SbgImuData()
-        sbg_data_msg.gyro = Vector3(twist_angular_x[0], twist_angular_y[1], twist_angular_z[2])
+        sbg_data_msg.gyro = Vector3(twist_angular_x, twist_angular_y, twist_angular_z)
         pub_imu_data_sensor.publish(sbg_data_msg)
 
     # DEPTH SENSOR
     if isDepthSensorActive:
+        pub_depth_sensor_status.publish(Bool(True))
         depth_msg = Float64()
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
@@ -82,14 +83,14 @@ if __name__ == '__main__':
     rospy.init_node('unity_bridge')
 
     # Load parameters
-    q_dvl_auv_w = rospy.get_param("~q_dvl_auv_w")
-    q_dvl_auv_x = rospy.get_param("~q_dvl_auv_x")
-    q_dvl_auv_y = rospy.get_param("~q_dvl_auv_y")
-    q_dvl_auv_z = rospy.get_param("~q_dvl_auv_z")
+    q_dvl_auv_w = rospy.get_param("q_dvl_auv_w")
+    q_dvl_auv_x = rospy.get_param("q_dvl_auv_x")
+    q_dvl_auv_y = rospy.get_param("q_dvl_auv_y")
+    q_dvl_auv_z = rospy.get_param("q_dvl_auv_z")
     
-    auv_dvl_offset_x = rospy.get_param("~auv_dvl_offset_x")
-    auv_dvl_offset_y = rospy.get_param("~auv_dvl_offset_y")
-    auv_dvl_offset_z = rospy.get_param("~auv_dvl_offset_z")
+    auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
+    auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
+    auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
     
     q_imunominal_imu_w = rospy.get_param("q_imunominal_imu_w")
     q_imunominal_imu_x = rospy.get_param("q_imunominal_imu_x")
@@ -107,6 +108,10 @@ if __name__ == '__main__':
 
     # TODO: ADD DVL VELOCITY
     
+    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
+    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
+    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+
     pub_dvl_sensor = rospy.Publisher('/sensors/dvl/pose', DeadReckonReport, queue_size=1)
     pub_depth_sensor = rospy.Publisher('/sensors/depth/z', Float64, queue_size=1)
     pub_imu_quat_sensor = rospy.Publisher('/sensors/imu/quaternion', SbgEkfQuat, queue_size=1)
