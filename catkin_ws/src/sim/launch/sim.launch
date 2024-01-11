@@ -15,7 +15,7 @@
 	<arg name="auv_dvl_offset_y" default="0.0" />
 	<arg name="auv_dvl_offset_z" default="-0." />
 
-    <arg name="vision" default="false" />
+    <arg name="vision" default="true" />
 
     <param name="sim" value="true" />
     <param name="q_imunominal_imu_w" value="1.0" />
@@ -34,6 +34,7 @@
     <param name="update_rate" value="99" />
     <include file="$(find bringup)/launch/bringup.launch">
         <arg name="sim" value="true" />
+        <arg name="vision" value="$(arg vision)" />
     </include>
 
     <include file="$(find sim)/launch/endpoint.launch"></include>
