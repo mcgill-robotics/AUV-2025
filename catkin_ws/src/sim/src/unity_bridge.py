@@ -67,6 +67,7 @@ def cb_unity_state(msg):
         sbg_quat_msg.quaternion = Quaternion(q_NED_imu.x, q_NED_imu.y, q_NED_imu.z, q_NED_imu.w)
         pub_imu_quat_sensor.publish(sbg_quat_msg)
 
+        twist_angular_x, twist_angular_y, twist_angular_z = quaternion.rotate_vectors(q_NWU_auv.inverse(), [twist_angular_x, twist_angular_y, twist_angular_z])
         sbg_data_msg = SbgImuData()
         sbg_data_msg.gyro = Vector3(twist_angular_x, twist_angular_y, twist_angular_z)
         pub_imu_data_sensor.publish(sbg_data_msg)
