@@ -6,3 +6,4 @@ float64[] dt_pinger1
 bool isDVLActive
 bool isDepthSensorActive
 bool isIMUActive
+bool isHydrophonesActive

@@ -7,7 +7,7 @@ from tf import transformations
 from tf2_ros import TransformBroadcaster
 from auv_msgs.msg import UnityState
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Bool, Float64MultiArray
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -49,10 +49,13 @@ def cb_unity_state(msg):
     pose = Pose(Point(x=pose_x, y=pose_y, z=pose_z), Quaternion(x = q_NWU_auv.x, y = q_NWU_auv.y, z = q_NWU_auv.z, w = q_NWU_auv.w))
     pub_pose.publish(pose)
     broadcast_auv_pose(pose)
+
+    pub_hydrophones_sensor.publish(msg.dt_pinger1)
     
     pub_imu_sensor_status.publish(Bool(True))
     pub_depth_sensor_status.publish(Bool(True))
     pub_dvl_sensor_status.publish(Bool(True))
+    pub_hydrophones_sensor_status.publish(Bool(True))
 
 def broadcast_auv_pose(pose):
     global last_broadcasted_timestamp
@@ -95,6 +98,8 @@ if __name__ == '__main__':
     pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
     pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
     pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+    pub_hydrophones_sensor_status = rospy.Publisher("/sensors/hydrophones/status", Bool, queue_size=1)
+    pub_hydrophones_sensor = rospy.Publisher('/sensors/hydrophones', Float64MultiArray, queue_size=1)
     pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
     pub_x = rospy.Publisher('/state/x', Float64, queue_size=1)
     pub_y = rospy.Publisher('/state/y', Float64, queue_size=1)

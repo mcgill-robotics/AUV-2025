@@ -1,0 +1,8 @@
+<launch>
+  <node name="hydrophones_bearing"
+        pkg="sensors"
+        type="hydrophones_bearing.py"
+        output="screen"
+        respawn="true">
+  </node>
+</launch>
