@@ -41,7 +41,7 @@ class State:
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
         self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
         # Update the point cloud whenever the current image is updated
-        self.camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, self.updateCameraInfo)
+        self.camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
 
     def updateX(self, msg):
@@ -89,13 +89,15 @@ class State:
         self.depth = temp/depth_scale_factor
         self.updatePointCloud()
     def updateCameraInfo(self, msg):
-        if(self.y_over_z_map is not None): return
+        # if(self.y_over_z_map is not None): return
         fx = msg.K[0]
         fy = msg.K[4]
         cy = msg.K[2]
         cx = msg.K[5]
-        self.width = msg.width
-        self.height = msg.height
+
+        # Un-hardcode later
+        self.width = 640
+        self.height = 480
 
         u_map = np.tile(np.arange(self.width),(self.height,1)) +1
         v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
@@ -384,8 +386,13 @@ def analyzeBuoy(detections):
         ...
 
     """
+
+    rospy.loginfo("ANALYZING BUOY")
     symbols = []
     buoy_was_detected = False
+
+    if buoy_was_detected:
+        rospy.loginfo("BUOY WAS DETECTED")
 
     for detection in detections:
 
@@ -482,7 +489,7 @@ detect_every = 5  #run the model every _ frames received (to not eat up too much
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
 
-sim = rospy.get_param("sim")
+sim = rospy.get_param("sim", True)
 
 down_cam_model_filename = ""
 front_cam_model_filename = ""

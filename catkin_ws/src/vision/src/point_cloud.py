@@ -78,6 +78,7 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         return xyz_rgb_img
 
 def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
+    print(height, width)
     if y_over_z_map is not None:
         xyz_img = np.zeros((height, width, 3)) 
 

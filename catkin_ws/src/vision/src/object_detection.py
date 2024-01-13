@@ -176,6 +176,8 @@ def detect_on_image(raw_img, camera_id):
     detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
 
     if len(detectionFrameArray) > 0:
+        for detection_frame in detectionFrameArray:
+            print(detection_frame)
         #create object detection frame message and publish it
         detectionFrameArrayMsg = VisionObjectArray()
         detectionFrameArrayMsg.array = detectionFrameArray
