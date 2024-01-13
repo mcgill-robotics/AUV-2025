@@ -249,7 +249,6 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     z = z_pos
     return x, y, z
 
-# TODO: Tarek
 # point cloud stuff
 # given a bounding box, tells you where it is in 3D space (not relative to the AUV)
 # gets mean of all values that are numerical
