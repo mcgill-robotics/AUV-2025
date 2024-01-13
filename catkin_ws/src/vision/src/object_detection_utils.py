@@ -386,13 +386,8 @@ def analyzeBuoy(detections):
         ...
 
     """
-
-    rospy.loginfo("ANALYZING BUOY")
     symbols = []
     buoy_was_detected = False
-
-    if buoy_was_detected:
-        rospy.loginfo("BUOY WAS DETECTED")
 
     for detection in detections:
 
