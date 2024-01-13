@@ -249,7 +249,6 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     z = z_pos
     return x, y, z
 
-# TODO: Tarek
 # point cloud stuff
 # given a bounding box, tells you where it is in 3D space (not relative to the AUV)
 # gets mean of all values that are numerical
@@ -319,10 +318,27 @@ def measureAngle(bbox):
     # angle = math.degrees(math.atan(right_slope - left_slope))
     # print("ANGLE IS HERE!!!!!!!!", angle)
 
+    left_point_cloud_x = left_point_cloud[:,:,0].flatten()
+    left_point_cloud_y = left_point_cloud[:,:,1].flatten()
+
+    right_point_cloud_x = right_point_cloud[:,:,0].flatten()
+    right_point_cloud_y = right_point_cloud[:,:,1].flatten()
+
+    left_point_cloud_x = left_point_cloud_x[~np.isnan(left_point_cloud_x)]
+    left_point_cloud_x = left_point_cloud_x[~np.isnan(left_point_cloud_y)]
+    left_point_cloud_y = left_point_cloud_y[~np.isnan(left_point_cloud_x)]
+    left_point_cloud_y = left_point_cloud_y[~np.isnan(left_point_cloud_y)]
+
+    right_point_cloud_x = right_point_cloud_x[~np.isnan(right_point_cloud_x)]
+    right_point_cloud_x = right_point_cloud_x[~np.isnan(right_point_cloud_y)]
+    right_point_cloud_y = right_point_cloud_y[~np.isnan(right_point_cloud_x)]
+    right_point_cloud_y = right_point_cloud_y[~np.isnan(right_point_cloud_y)]
+
+
     # Fit a line to the left and right point clouds
-    left_slope, _ = np.polyfit(left_point_cloud[0], left_point_cloud[1], 1)
+    left_slope, _ = np.polyfit(left_point_cloud_x, left_point_cloud_y, 1)
     print("LEFT SLOPE!!", left_slope)
-    right_slope, _ = np.polyfit(right_point_cloud[0], right_point_cloud[1], 1)
+    right_slope, _ = np.polyfit(right_point_cloud_x, right_point_cloud_y, 1)
     print("RIGHT SLOPE!!", right_slope)
 
     # Calculate the angle between the two lines
