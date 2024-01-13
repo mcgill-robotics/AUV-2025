@@ -50,7 +50,9 @@ def cb_unity_state(msg):
     pub_pose.publish(pose)
     broadcast_auv_pose(pose)
 
-    pub_hydrophones_sensor.publish(msg.dt_pinger1)
+    hydrophones_msg = Float64MultiArray()
+    hydrophones_msg.data = msg.dt_pinger1
+    pub_hydrophones_sensor.publish(hydrophones_msg)
     
     pub_imu_sensor_status.publish(Bool(True))
     pub_depth_sensor_status.publish(Bool(True))
