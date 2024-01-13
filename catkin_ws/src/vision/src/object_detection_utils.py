@@ -489,11 +489,11 @@ front_cam_model_filename = ""
 
 # Select the proper models & depth_scale_factor based on the sim argument
 if sim:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_sim.pt"
+    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1
 else:
-    down_cam_model_filename = pwd + "/models/down_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1000
 
@@ -507,7 +507,7 @@ for m in model:
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
-    ["Lane Marker", "Octagon Table"],
+    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
     ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
     ]
 max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":1, "Octagon Table":1}

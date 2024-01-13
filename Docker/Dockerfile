@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y wget \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
     && apt-get install -y python3-catkin-tools python3-pip python-is-python3 \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
     ros-noetic-rosserial-arduino \
     ros-noetic-pid \
     ros-noetic-joy \
@@ -16,15 +16,16 @@ RUN apt-get update && apt-get install -y wget \
     ros-noetic-cv-bridge \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
-    ros-noetic-smach-ros \
+    ros-noetic-rviz \
+    ros-noetic-smach-ros \ 
+    git-lfs \
     git \
-    && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash \
-    && apt-get install -y git-lfs
+    && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
 
 
 RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
+    && pip install --no-cache-dir --upgrade numpy \
     && rm -f /usr/local/bin/cmake  \
-    && pip3 install --no-cache-dir numpy==1.22.2 \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip \

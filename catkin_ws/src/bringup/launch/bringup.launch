@@ -2,23 +2,12 @@
     <arg name="sim" default="false" />
     <arg name="bag" default="false" />
     <arg name="vision" default="true" />
+	<arg name="actions" default="false" />
 
-    <arg name="q_imu_auv_w" default="0.0" />
-	<arg name="q_imu_auv_x" default="0.0" />
-	<arg name="q_imu_auv_y" default="0.0" />
-	<arg name="q_imu_auv_z" default="1.0" />
-
-	<arg name="q_dvl_auv_w" default="0.0" />
-	<arg name="q_dvl_auv_x" default="0.0" />
-	<arg name="q_dvl_auv_y" default="0.0" />
-	<arg name="q_dvl_auv_z" default="1.0" />
-
-	<arg name="auv_dvl_offset_x" default="0.0" />
-	<arg name="auv_dvl_offset_y" default="0.0" />
-	<arg name="auv_dvl_offset_z" default="-0.3" />
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
+		<arg name="actions" value="$(arg actions)" />
 	</include>
 	<include file="$(find propulsion)/launch/propulsion.launch">
 		<arg name="sim" value="$(arg sim)" />
@@ -27,19 +16,6 @@
     <group if="$(arg sim)">
 		<include file="$(find state_estimation)/launch/state_estimation.launch">
 			<arg name="sim" value="true" />
-			<arg name="q_imu_auv_w" value="$(arg q_imu_auv_w)" />
-			<arg name="q_imu_auv_x" value="$(arg q_imu_auv_x)" />
-			<arg name="q_imu_auv_y" value="$(arg q_imu_auv_y)" />
-			<arg name="q_imu_auv_z" value="$(arg q_imu_auv_z)" />
-
-			<arg name="q_dvl_auv_w" value="$(arg q_dvl_auv_w)" />
-			<arg name="q_dvl_auv_x" value="$(arg q_dvl_auv_x)" />
-			<arg name="q_dvl_auv_y" value="$(arg q_dvl_auv_y)" />
-			<arg name="q_dvl_auv_z" value="$(arg q_dvl_auv_z)" />
-
-			<arg name="auv_dvl_offset_x" value="$(arg auv_dvl_offset_x)" />
-			<arg name="auv_dvl_offset_y" value="$(arg auv_dvl_offset_y)" />
-			<arg name="auv_dvl_offset_z" value="$(arg auv_dvl_offset_z)" />
 		</include>
     </group>
 	<group unless="$(arg sim)">

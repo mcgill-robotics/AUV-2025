@@ -8,7 +8,7 @@ jobs:
   CI:
     runs-on: ubuntu-20.04
     container:
-        image: mcgillrobotics/auv_2024:unity
+        image: mcgillrobotics/auv_2024:main
     steps:
       - uses: actions/checkout@v3
       - name: catkin build
@@ -16,32 +16,14 @@ jobs:
         run: |
             git config --global --add safe.directory /__w/AUV-2024/AUV-2024
             git submodule update --init --recursive
-            git lfs install
-            ls catkin_ws/src/sim/builds/linux
             source /opt/ros/noetic/setup.bash
-            cd catkin_ws
+            cd catkin_ws/src
+            git clone https://github.com/mcgill-robotics/auv-sim-gazebo.git
+            cd ..
             catkin build
       - name: state test
         shell: bash
         run: |
             cd catkin_ws
             source devel/setup.bash
-            chmod +x src/planner/src/*_test.py
-            chmod +x src/sim/builds/linux/sim.x86_64
-            rostest planner state.test
-      - name: rotate test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            chmod +x src/planner/src/*_test.py
-            chmod +x src/sim/builds/linux/sim.x86_64
-            rostest planner rotate.test
-      - name: move test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            chmod +x src/sim/builds/linux/sim.x86_64
-            chmod +x src/planner/src/*_test.py
-            rostest planner move.test
+            rostest planner simple.test
