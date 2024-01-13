@@ -21,6 +21,8 @@ def cb_unity_state(msg):
     q_NED_imunominal_z = msg.orientation.z
     q_NED_imunominal_w = msg.orientation.w
 
+    q_NED_imunominal = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
+
     twist_angular_x = -msg.angular_velocity.z
     twist_angular_y = msg.angular_velocity.x
     twist_angular_z = -msg.angular_velocity.y
@@ -40,7 +42,7 @@ def cb_unity_state(msg):
         position_dvl_dvlref = position_auv_dvlref + dvl_offset_NWU
 
         # Orientation
-        q_NWU_auv = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
+        q_NWU_auv = q_NWU_NED * q_NED_imunominal  * q_imunominal_auv
         q_dvlref_dvl = q_NWU_dvlref.inverse() * q_NWU_auv * q_dvl_auv.inverse()
         # euler_dvlref_auv = quaternion.as_euler_angles(q_dvlref_dvl)
         euler_dvlref_dvl = transformations.euler_from_quaternion([q_dvlref_dvl.x, q_dvlref_dvl.y, q_dvlref_dvl.z, q_dvlref_dvl.w])
@@ -61,10 +63,9 @@ def cb_unity_state(msg):
     if isIMUActive:
         pub_imu_sensor_status.publish(Bool(True))
         sbg_quat_msg = SbgEkfQuat()
-        q_NED_imunominal = np.quaternion(q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z)
 
         q_NED_imu = q_NED_imunominal * q_imunominal_imu
-        sbg_quat_msg.quaternion = Quaternion(q_NED_imu.x, q_NED_imu.y, q_NED_imu.z, q_NED_imu.w)
+        sbg_quat_msg.quaternion = Quaternion(x = q_NED_imu.x, y = q_NED_imu.y, z= q_NED_imu.z, w = q_NED_imu.w)
         pub_imu_quat_sensor.publish(sbg_quat_msg)
 
         twist_angular_x, twist_angular_y, twist_angular_z = quaternion.rotate_vectors(q_NWU_auv.inverse(), [twist_angular_x, twist_angular_y, twist_angular_z])
@@ -102,6 +103,8 @@ if __name__ == '__main__':
 
     # REFERENCE FRAME DEFINITIONS
     q_NWU_dvlref = np.quaternion(0,1,0,0)
+    q_imunominal_auv = np.quaternion(0,1,0,0)
+    q_NWU_NED = np.quaternion(0,1,0,0)
     q_dvl_auv = np.quaternion(q_dvl_auv_w, q_dvl_auv_x, q_dvl_auv_y, q_dvl_auv_z)
 
     # Set up subscribers and publishers
