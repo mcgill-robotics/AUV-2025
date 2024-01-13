@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
+import rospy
+
 import numpy as np
 from std_msgs.msg import Float64MultiArray
 
 
 def cb_hydrophones(msg):
-    dt_h1 = msg.dt_pinger1[0]
-    dt_h2 = msg.dt_pinger1[1]
+    dt_h1 = msg.data[0]
+    dt_h2 = msg.data[1]
 
     measurements = calculate_time_measurements(dt_h1, dt_h2) 
-    bearing_vector = solve_bearing_vector(measurements)
-    pub_pinger_direction.publish(bearing_vector)
+    bearing_vector = solve_bearing_vector(measurements[0], measurements[1])
+    bearing_vector_msg = Float64MultiArray()
+    bearing_vector_msg.data = bearing_vector
+    pub_pinger_direction.publish(bearing_vector_msg)
 
 #With 4 hydrophones
 def solve_bearing_vector(H_matrix, measurements, num):
@@ -56,7 +60,7 @@ def solve_bearing_vector(dx,dy):
 if __name__ == "__main__":
     rospy.init_node("hydrophones_bearing")
     rospy.Subscriber("/sensors/hydrophones", Float64MultiArray, cb_hydrophones)
-    pub_pinger_direction = rospy.Publisher("/pinger_direction", Float64MultiArray, queue_size=1)
+    pub_pinger_direction = rospy.Publisher("/sensors/hydrophones/pinger_direction", Float64MultiArray, queue_size=1)
 
     # Speed of sound in water
     c = 1480
@@ -77,6 +81,8 @@ if __name__ == "__main__":
     # H1 is at the origin, H2 is on the x-axis, H3 is on the y-axis
     x = 0.05
     y = 0.05
+
+    rospy.spin()
 
     
 
