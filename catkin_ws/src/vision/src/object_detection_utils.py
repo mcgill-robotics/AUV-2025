@@ -95,9 +95,8 @@ class State:
         cy = msg.K[2]
         cx = msg.K[5]
 
-        # Un-hardcode later
-        self.width = 640
-        self.height = 480
+        self.width = msg.width
+        self.height = msg.height
 
         u_map = np.tile(np.arange(self.width),(self.height,1)) +1
         v_map = np.tile(np.arange(self.height),(self.width,1)).T +1
