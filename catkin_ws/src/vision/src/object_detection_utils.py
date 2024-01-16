@@ -238,10 +238,14 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     pitch_angle_offset = down_cam_vfov*y_center_offset
 
     local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
+    print("LOCAL DIRECTION TO OBJECT", local_direction_to_object)
+    print("Down cam yaw offset", down_cam_yaw_offset)
     global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0, yaw_offset=down_cam_yaw_offset)
+    print("GLOBAL DIRECTION TO OBJECT", global_direction_to_object)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
     obj_pos = findIntersection(global_direction_to_object, z_pos)
+    print("OBJECT POSITION", obj_pos)
     if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
     x = obj_pos[0]
     y = obj_pos[1]
@@ -276,46 +280,9 @@ def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
     """
-    print("MEASURING ANGLE")
     point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
     left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
-    print("LEFT POINT CLOUD", left_point_cloud)
     right_point_cloud = point_cloud[:, int(point_cloud.shape[1]/2):]
-    print("RIGHT POINT CLOUD", right_point_cloud)
-
-    # #avg left points together and right points together so we get two (x,y) points
-    # # local_(left/right)_avg_point is in the form [x, y, z]
-    # local_left_avg_point = np.nanmean(left_point_cloud, axis=(0,1))
-    # local_right_avg_point = np.nanmean(right_point_cloud, axis=(0,1))
-
-    # #measure angle of vector defined by averaged left/right points
-    # left_x,left_y,left_z = transformLocalToGlobal(local_left_avg_point[0], local_left_avg_point[1], local_left_avg_point[2], camera_id=1)
-    # right_x,right_y,right_z = transformLocalToGlobal(local_right_avg_point[0], local_right_avg_point[1], local_right_avg_point[2], camera_id=1)
-    # left_avg_point = np.array([left_x,left_y,left_z])
-    # right_avg_point = np.array([right_x,right_y,right_z])
-    # # zero_angle_vector causing errors bc hardcoded
-    # # dimensions dont match
-    # zero_angle_vector = np.array([0,-1, 0])
-    # arg_vector = right_avg_point - left_avg_point
-    # magnitude_arg_vector = np.linalg.norm(arg_vector)
-    # # TODO: Check ValueError (dimensions don't match when doing dot product)
-    # dot_product = np.dot(zero_angle_vector, arg_vector)
-    # print("DOT PRODUCT HERE!!", dot_product)
-
-    # angle = math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
-    # print("ANGLE HERE!!", angle)
-    # return angle
-    # # Calculate the slope for the left points
-    # left_slope = np.nanmean(np.diff(left_point_cloud[1]) / np.diff(left_point_cloud[0]))
-    # print("LEFT SLOPE!!", left_slope)
-
-    # # Calculate the slope for the right points
-    # right_slope = np.nanmean(np.diff(right_point_cloud[1]) / np.diff(right_point_cloud[0]))
-    # print("RIGHT SLOPE!!", right_slope)
-    
-    # # Calculate the angle as the difference in slopes
-    # angle = math.degrees(math.atan(right_slope - left_slope))
-    # print("ANGLE IS HERE!!!!!!!!", angle)
 
     left_point_cloud_x = left_point_cloud[:,:,0].flatten()
     left_point_cloud_y = left_point_cloud[:,:,1].flatten()
