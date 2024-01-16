@@ -258,6 +258,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 # assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
+    print("POINT CLOUD", point_cloud)
     lx = np.nanmean(point_cloud[:,:,0])
     ly = np.nanmean(point_cloud[:,:,1])
     lz = np.nanmean(point_cloud[:,:,2])
