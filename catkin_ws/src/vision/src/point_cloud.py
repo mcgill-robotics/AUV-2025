@@ -67,7 +67,6 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         xyz_rgb_img = np.zeros((height, width, 6))
         xyz_rgb_img[:, :, 3:6] = color        
 
-        # TODO: Check RuntimeWarning (invalid value encountered in multiply)
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 

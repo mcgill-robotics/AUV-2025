@@ -70,13 +70,22 @@ class State:
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud):
         #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
+        # median_blur_size = 5
+        # point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
+        # #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
+        # closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
+        # far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
+        # point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
+        # return point_cloud
+        
         median_blur_size = 5
-        point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
-        #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
-        closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
-        far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
-        point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
-        return point_cloud
+        cleaned_point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
+        closest_x_point = np.nanmin(cleaned_point_cloud[:, :, 0])
+        far_mask = cleaned_point_cloud[:, :, 0] > closest_x_point + 2
+        cleaned_point_cloud[far_mask] = np.nan
+
+        return cleaned_point_cloud
+        
 
     def getPointCloud(self, bbox=None):
         if bbox is None: 
