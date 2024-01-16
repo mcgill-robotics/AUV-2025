@@ -304,13 +304,10 @@ def measureAngle(bbox):
 
     # Fit a line to the left and right point clouds
     left_slope, _ = np.polyfit(left_point_cloud_x, left_point_cloud_y, 1)
-    print("LEFT SLOPE!!", left_slope)
     right_slope, _ = np.polyfit(right_point_cloud_x, right_point_cloud_y, 1)
-    print("RIGHT SLOPE!!", right_slope)
 
     # Calculate the angle between the two lines
     angle = math.degrees(math.atan((right_slope - left_slope) / (1 + right_slope * left_slope)))
-    print("ANGLE IS HERE!!!!!!!!", angle)
     return angle
 
 # CHECK
