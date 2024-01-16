@@ -54,7 +54,7 @@ class Superimposer:
         yaw = self.yaw.val
         
 	#Toggled in state_quaternion_pid_server.py
-        if (rospy.get_param("enable_buoyant_force_offset")):
+        if (rospy.get_param("enable_buoyant_force_offset") and rospy.get_param("enable_buoyant_force_global")):
             buoyant_force_offset = rospy.get_param("buoyant_force_offset")
         else:
             buoyant_force_offset = 0
