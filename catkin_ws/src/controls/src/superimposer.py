@@ -5,7 +5,7 @@ import numpy as np
 import tf2_geometry_msgs
 
 from geometry_msgs.msg import Vector3, Vector3Stamped, Wrench 
-from std_msgs.msg import Float64, Header
+from std_msgs.msg import Float64, Header, Bool
 from tf2_ros import Buffer, TransformListener
 
 class Superimposer:
@@ -54,11 +54,13 @@ class Superimposer:
         yaw = self.yaw.val
         
 	#Toggled in state_quaternion_pid_server.py
-        if (rospy.get_param("enable_buoyant_force_offset") and rospy.get_param("enable_buoyant_force_global")):
-            buoyant_force_offset = rospy.get_param("buoyant_force_offset")
-        else:
-            buoyant_force_offset = 0
-
+        def buoyant_force_cb(self, msg):
+            global buoyant_force_offset
+            if msg.data and rospy.get_param("enable_buoyant_force_global"):
+                buoyant_force_offset = rospy.get_param("buoyant_force_offset")
+            else:
+                buoyant_force_offset = 0
+        buoyant_force_sub = rospy.Subscriber("enable_buoyant_force_offset", Bool, buoyant_force_cb)
 	
         force_global = Vector3(
                 self.global_x.val, self.global_y.val, self.global_z.val + buoyant_force_offset)
