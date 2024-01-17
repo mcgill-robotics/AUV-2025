@@ -116,7 +116,7 @@ class StateQuaternionServer(BaseServer):
 
                 #Toggles buoyant force
                 buoyant_force_pub = rospy.Publisher("enable_buoyant_force_offset", Bool, queue_size=1)
-                rospy.init_node("buoyant_force", anonymous=True)
+                # rospy.init_node("buoyant_force", anonymous=True)
                 if goal_position[2] < rospy.get_param("buoyant_force_active_depth"):
                     msg = Bool()
                     msg.data = True
