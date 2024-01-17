@@ -60,7 +60,7 @@ def solve_bearing_vector(dx,dy):
 if __name__ == "__main__":
     rospy.init_node("hydrophones_bearing")
     rospy.Subscriber("/sensors/hydrophones", Float64MultiArray, cb_hydrophones)
-    pub_pinger_direction = rospy.Publisher("/sensors/hydrophones/pinger_bearing", Float64MultiArray, queue_size=1)
+    pub_pinger_direction = rospy.Publisher("/sensors/hydrophones/pinger1_bearing", Float64MultiArray, queue_size=1)
 
     # Speed of sound in water
     c = 1480
