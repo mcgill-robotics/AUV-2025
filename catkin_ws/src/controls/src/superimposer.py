@@ -60,6 +60,7 @@ class Superimposer:
                 buoyant_force_offset = rospy.get_param("buoyant_force_offset")
             else:
                 buoyant_force_offset = 0
+        rospy.init_node("buoyant_force")
         buoyant_force_sub = rospy.Subscriber("enable_buoyant_force_offset", Bool, buoyant_force_cb)
 	
         force_global = Vector3(
