@@ -38,9 +38,11 @@ def update_state(_):
         if sensor.isActive():
             np_quaternion = np.array([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
             quaternion = Quaternion(x = sensor.q_nwu_auv.x, y = sensor.q_nwu_auv.y, z = sensor.q_nwu_auv.z, w = sensor.q_nwu_auv.w)
-            roll = transformations.euler_from_quaternion(np_quaternion, 'rxyz')[0] * DEG_PER_RAD
-            pitch = transformations.euler_from_quaternion(np_quaternion, 'ryxz')[0] * DEG_PER_RAD
-            yaw = transformations.euler_from_quaternion(np_quaternion, 'rzyx')[0] * DEG_PER_RAD
+            euler_dvlref_dvl = transformations.euler_from_quaternion([np_quaternion.x, np_quaternion.y, np_quaternion.z, np_quaternion.w])
+            roll = euler_dvlref_dvl[0] * DEG_PER_RAD
+            pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
+            yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
+
             angular_velocity = Vector3(sensor.angular_velocity[0], sensor.angular_velocity[1], sensor.angular_velocity[2])
             break
     if x is not None and y is not None and z is not None and quaternion is not None:
