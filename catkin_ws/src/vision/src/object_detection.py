@@ -71,7 +71,7 @@ def detect_on_image(raw_img, camera_id):
             if camera_id == 0: # DOWN CAM
                 if global_class_name == "Lane Marker":
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     headings, center, debug_img = measureLaneMarker(img, bbox, debug_img)
                     if None in headings:
                         detectionFrame.extra_field = None
@@ -99,7 +99,7 @@ def detect_on_image(raw_img, camera_id):
                     
                 elif global_class_name == "Octagon Table": # OCTAGON TABLE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionDownCam(bbox[0], bbox[1], img_h, img_w, octagon_table_top_z)
                     detectionFrame.x = pred_obj_x
                     detectionFrame.y = pred_obj_y
@@ -114,7 +114,7 @@ def detect_on_image(raw_img, camera_id):
             else: # FORWARD CAM
                 if global_class_name == "Lane Marker" or global_class_name == "Octagon Table": # LANE MARKER OR OCTAGON TABLE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
                     detectionFrame.y = pred_obj_y
@@ -125,7 +125,7 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrameArray.append(detectionFrame)
                 elif global_class_name == "Gate": # GATE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     theta_z = measureAngle(bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
@@ -137,7 +137,7 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrameArray.append(detectionFrame)
                 elif global_class_name == "Buoy": # BUOY
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     theta_z = measureAngle(bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
@@ -154,7 +154,7 @@ def detect_on_image(raw_img, camera_id):
                         detectionFrame.x = symbol_x
                         detectionFrame.y = symbol_y
                         detectionFrame.z = symbol_z
-                        confidence.append(confidence)
+                        detectionFrame.confidence = confidence
                         detectionFrame.theta_z = theta_z
                         detectionFrame.extra_field = None
 
@@ -168,7 +168,7 @@ def detect_on_image(raw_img, camera_id):
         obj.extra_field = obj.extra_field if obj.extra_field is not None else -1234.5
     
 
-    detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
+    detectionFrameArray = cleanDetections(detectionFrameArray)
 
     if len(detectionFrameArray) > 0:
         #create object detection frame message and publish it

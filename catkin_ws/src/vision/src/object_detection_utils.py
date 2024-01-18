@@ -302,7 +302,7 @@ def analyzeBuoy(detections):
 
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
-def cleanDetections(detectionFrameArray, confidences):
+def cleanDetections(detectionFrameArray):
     label_counts = {}
     selected_detections = []
 
@@ -310,9 +310,9 @@ def cleanDetections(detectionFrameArray, confidences):
         obj = detectionFrameArray[i]
         if None in [obj.x, obj.y, obj.z]: continue
         if label_counts.get(obj.label, 0) >= max_counts_per_label[obj.label]:
-            candidate_obj_conf = confidences[i]
-            min_conf_i = min(selected_detections, key=lambda x : confidences[x])
-            if confidences[min_conf_i] < candidate_obj_conf:
+            candidate_obj_conf = obj.confidence
+            min_conf_i = min(selected_detections, key=lambda x : detectionFrameArray[x].confidence)
+            if detectionFrameArray[min_conf_i].confidence < candidate_obj_conf:
                 selected_detections.remove(min_conf_i)
                 selected_detections.append(i)
         else:
