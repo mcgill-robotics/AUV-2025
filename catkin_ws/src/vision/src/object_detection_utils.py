@@ -302,7 +302,7 @@ def analyzeBuoy(detections):
 
 
 #selects highest confidence detection from duplicates and ignores objects with no position measurement
-def cleanDetections(detectionFrameArray, confidences):
+def cleanDetections(detectionFrameArray):
     label_counts = {}
     selected_detections = []
 
@@ -310,9 +310,9 @@ def cleanDetections(detectionFrameArray, confidences):
         obj = detectionFrameArray[i]
         if None in [obj.x, obj.y, obj.z]: continue
         if label_counts.get(obj.label, 0) >= max_counts_per_label[obj.label]:
-            candidate_obj_conf = confidences[i]
-            min_conf_i = min(selected_detections, key=lambda x : confidences[x])
-            if confidences[min_conf_i] < candidate_obj_conf:
+            candidate_obj_conf = obj.confidence
+            min_conf_i = min(selected_detections, key=lambda x : detectionFrameArray[x].confidence)
+            if detectionFrameArray[min_conf_i].confidence < candidate_obj_conf:
                 selected_detections.remove(min_conf_i)
                 selected_detections.append(i)
         else:
@@ -392,8 +392,8 @@ for m in model:
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
-    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
-    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
+    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon Table"],
+    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon Table"],
     ]
 max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":1, "Octagon Table":1}
 
