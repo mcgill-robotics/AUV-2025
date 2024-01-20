@@ -149,7 +149,7 @@ class DVL(Sensor):
 
         pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu.inverse(), pos_dvlref_dvl)
         dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv, self.auv_dvl_offset)
-        pos_auv += dvl_auv_offset_rotated
+        pos_auv -= dvl_auv_offset_rotated
         self.x = pos_auv[0]
         self.y = pos_auv[1]
         self.z = pos_auv[2]

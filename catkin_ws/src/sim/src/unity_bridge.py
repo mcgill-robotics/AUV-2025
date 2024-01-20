@@ -35,14 +35,14 @@ def cb_unity_state(msg):
     # DVL - NWU
     if isDVLActive:
         pub_dvl_sensor_status.publish(Bool(True))
+        q_NWU_auv = q_NWU_NED * q_NED_imunominal  * q_imunominal_auv
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
-        position_auv_dvlref = quaternion.rotate_vectors(q_NWU_dvlref.inverse(), position_NWU_auv)
-        dvl_offset_NWU = quaternion.rotate_vectors(q_NWU_dvlref, np.array([auv_dvl_offset_x, auv_dvl_offset_y, auv_dvl_offset_z]))
-        position_dvl_dvlref = position_auv_dvlref + dvl_offset_NWU
+        dvl_offset_NWU = quaternion.rotate_vectors(q_NWU_auv, np.array([auv_dvl_offset_x, auv_dvl_offset_y, auv_dvl_offset_z]))
+        position_NWU_auv+= dvl_offset_NWU
+        position_dvl_dvlref = quaternion.rotate_vectors(q_NWU_dvlref.inverse(), position_NWU_auv)
 
         # Orientation
-        q_NWU_auv = q_NWU_NED * q_NED_imunominal  * q_imunominal_auv
         q_dvlref_dvl = q_NWU_dvlref.inverse() * q_NWU_auv * q_dvl_auv.inverse()
         # euler_dvlref_auv = quaternion.as_euler_angles(q_dvlref_dvl)
         euler_dvlref_dvl = transformations.euler_from_quaternion([q_dvlref_dvl.x, q_dvlref_dvl.y, q_dvlref_dvl.z, q_dvlref_dvl.w])
