@@ -37,13 +37,6 @@ def detect_on_image(raw_img, camera_id):
 
     #initialize empty array for object detection frame message
     detectionFrameArray = []
-    '''label = []
-    obj_x = []
-    obj_y = []
-    obj_z = []
-    obj_theta_z = []
-    extra_field = []'''
-    confidence = []
     img_h, img_w, _ = img.shape
     if camera_id == 1:
         #[COMP] change target symbol to match planner
