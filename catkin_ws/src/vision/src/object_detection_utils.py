@@ -69,7 +69,8 @@ class State:
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud):
-        #APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
+        print("POINT CLOUD Before", point_cloud)
+        # # APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         # median_blur_size = 5
         # point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
         # #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
@@ -77,14 +78,23 @@ class State:
         # far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
         # point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
         # return point_cloud
-        
-        median_blur_size = 5
-        cleaned_point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
-        closest_x_point = np.nanmin(cleaned_point_cloud[:, :, 0])
-        far_mask = cleaned_point_cloud[:, :, 0] > closest_x_point + 2
-        cleaned_point_cloud[far_mask] = np.nan
 
-        return cleaned_point_cloud
+        # APPLY BILATERAL FILTER TO REMOVE NOISE
+        d = 15          # Diameter of each pixel neighborhood that is used during filtering
+        sigmaColor = 75 # Filter sigma in the color space
+        sigmaSpace = 75 # Filter sigma in the coordinate space
+
+        # Apply bilateral filter to remove noise
+        point_cloud = cv2.bilateralFilter(point_cloud.astype("float32"), d, sigmaColor, sigmaSpace)
+
+        # REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
+        closest_x_point = np.nanmin(point_cloud[:, :, 0])       # Gets min of array, ignores non-numbers
+        far_mask = point_cloud[:, :, 0] > closest_x_point + 2   # Set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
+        point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan]) # Set to NaN to remove
+
+        print("POINT CLOUD After", point_cloud)
+
+        return point_cloud
         
 
     def getPointCloud(self, bbox=None):
@@ -267,7 +277,7 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 # assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
-    print("POINT CLOUD", point_cloud)
+    print("POINT CLOUD After", point_cloud)
     lx = np.nanmean(point_cloud[:,:,0])
     ly = np.nanmean(point_cloud[:,:,1])
     lz = np.nanmean(point_cloud[:,:,2])
