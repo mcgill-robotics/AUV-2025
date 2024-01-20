@@ -2,7 +2,7 @@ geometry_msgs/Vector3 position
 geometry_msgs/Quaternion orientation
 geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 angular_velocity
-float64[] dt_pinger1
+
 bool isDVLActive
 bool isDepthSensorActive
 bool isIMUActive
