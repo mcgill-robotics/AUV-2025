@@ -49,10 +49,6 @@ def cb_unity_state(msg):
     pose = Pose(Point(x=pose_x, y=pose_y, z=pose_z), Quaternion(x = q_NWU_auv.x, y = q_NWU_auv.y, z = q_NWU_auv.z, w = q_NWU_auv.w))
     pub_pose.publish(pose)
     broadcast_auv_pose(pose)
-
-    hydrophones_msg = Float64MultiArray()
-    hydrophones_msg.data = msg.dt_pinger1
-    pub_hydrophones_sensor.publish(hydrophones_msg)
     
     pub_imu_sensor_status.publish(Bool(True))
     pub_depth_sensor_status.publish(Bool(True))
@@ -101,7 +97,6 @@ if __name__ == '__main__':
     pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
     pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
     pub_hydrophones_sensor_status = rospy.Publisher("/sensors/hydrophones/status", Bool, queue_size=1)
-    pub_hydrophones_sensor = rospy.Publisher('/sensors/hydrophones', Float64MultiArray, queue_size=1)
     pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
     pub_x = rospy.Publisher('/state/x', Float64, queue_size=1)
     pub_y = rospy.Publisher('/state/y', Float64, queue_size=1)

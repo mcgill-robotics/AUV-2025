@@ -31,7 +31,6 @@ def cb_unity_state(msg):
     isDVLActive = msg.isDVLActive
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
-    isHydrophonesActive = msg.isHydrophonesActive
 
     # DVL - NWU
     if isDVLActive:
@@ -76,13 +75,6 @@ def cb_unity_state(msg):
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
 
-    # HYDROPHONES
-    if isHydrophonesActive:
-        hydrophones_msg = Float64MultiArray()
-        hydrophones_msg.data = msg.dt_pinger1
-        pub_hydrophones_sensor.publish(hydrophones_msg)
-
-
 
 
 if __name__ == '__main__':
@@ -124,7 +116,6 @@ if __name__ == '__main__':
     
     pub_dvl_sensor = rospy.Publisher('/sensors/dvl/pose', DeadReckonReport, queue_size=1)
     pub_depth_sensor = rospy.Publisher('/sensors/depth/z', Float64, queue_size=1)
-    pub_hydrophones_sensor = rospy.Publisher('/sensors/hydrophones', Float64MultiArray, queue_size=1)
     pub_imu_quat_sensor = rospy.Publisher('/sensors/imu/quaternion', SbgEkfQuat, queue_size=1)
     pub_imu_data_sensor = rospy.Publisher('/sensors/imu/angular_velocity', SbgImuData, queue_size=1)
 
