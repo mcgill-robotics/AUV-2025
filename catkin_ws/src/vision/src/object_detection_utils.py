@@ -316,7 +316,8 @@ def measureAngle(bbox):
     angle = math.degrees(math.atan((right_slope - left_slope) / (1 + right_slope * left_slope)))
     return angle
 
-# CHECK
+# does what its supposed to, gate isnt in right position
+# Abydos to the left earth to the right detected
 # is there a gate?
 # if so did i see a symbol?
 # if so, which side did i see it on?
