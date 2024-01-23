@@ -92,8 +92,6 @@ class State:
         far_mask = point_cloud[:, :, 0] > closest_x_point + 2   # Set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
         point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan]) # Set to NaN to remove
 
-        print("POINT CLOUD After", point_cloud)
-
         return point_cloud
         
 
@@ -281,6 +279,9 @@ def getObjectPositionFrontCam(bbox):
     lx = np.nanmean(point_cloud[:,:,0])
     ly = np.nanmean(point_cloud[:,:,1])
     lz = np.nanmean(point_cloud[:,:,2])
+    print("LX", lx)
+    print("LY", ly)
+    print("LZ", lz)
     x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
     return x, y, z
 
