@@ -1,4 +1,7 @@
 <launch>
+  <param name="hydrophones_dx" value="0.1"/>
+  <param name="hydrophones_dy" value="0.1"/>
+  
   <node name="hydrophones_bearing"
         pkg="sensors"
         type="hydrophones_bearing.py"

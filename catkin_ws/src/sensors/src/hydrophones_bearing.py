@@ -91,8 +91,8 @@ if __name__ == "__main__":
     # Assume H1 is the "origin" hydrophone
     # If you change the values here, you must also change the values in the Unity editor
     # H1 is at the origin, H2 is on the x-axis, H3 is on the y-axis
-    x = 0.1
-    y = 0.1
+    x = rospy.get_param("hydrophones_dx")
+    y = rospy.get_param("hydrophones_dy")
 
     rospy.spin()
 
