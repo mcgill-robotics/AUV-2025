@@ -69,15 +69,6 @@ class State:
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud):
-        # # APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
-        # median_blur_size = 5
-        # point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
-        # #REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
-        # closest_x_point = np.nanmin(point_cloud[:, :, 0]) # gets min of array, ignores non-numbers
-        # far_mask = point_cloud[:, :, 0] > closest_x_point + 2 #set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
-        # point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan])
-        # return point_cloud
-
         # APPLY BILATERAL FILTER TO REMOVE NOISE
         d = 15          # Diameter of each pixel neighborhood that is used during filtering
         sigmaColor = 75 # Filter sigma in the color space
@@ -321,7 +312,8 @@ def measureAngle(bbox):
     angle = math.degrees(math.atan((right_slope - left_slope) / (1 + right_slope * left_slope)))
     return angle
 
-# CHECK
+# does what its supposed to, gate isnt in right position
+# Abydos to the left earth to the right detected
 # is there a gate?
 # if so did i see a symbol?
 # if so, which side did i see it on?
@@ -350,8 +342,7 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-# TODO: Gulce
-# HIGH LEVEL IMPROVEMENTS
+# Works! 
 # four symbols in buoy
 # hit them in correct order
 # right now the symbols are treated as objects
@@ -378,6 +369,7 @@ def analyzeBuoy(detections):
     symbols = []
     buoy_was_detected = False
 
+    print("DETECTIONS", detections)
     for detection in detections:
 
         if torch.cuda.is_available(): 
@@ -394,7 +386,6 @@ def analyzeBuoy(detections):
             if (global_class_name == "Buoy"):
                 buoy_was_detected = True
 
-                # what does this elif statement do?
             elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
                 x,y,z = getObjectPositionFrontCam(bbox)
                 symbols.append([global_class_name, x, y, z, conf])
