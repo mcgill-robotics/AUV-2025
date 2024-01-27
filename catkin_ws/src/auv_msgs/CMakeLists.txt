@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(FILES
 	ThrusterMicroseconds.msg
 	ThrusterForces.msg
+	PingerBearing.msg
+	PingerTimeDifference.msg
 	VisionObject.msg
 	VisionObjectArray.msg
 	DeadReckonReport.msg

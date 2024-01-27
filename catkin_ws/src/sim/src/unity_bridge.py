@@ -80,6 +80,9 @@ def cb_unity_state(msg):
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
 
+    
+
+
 
 if __name__ == '__main__':
     rospy.init_node('unity_bridge')
