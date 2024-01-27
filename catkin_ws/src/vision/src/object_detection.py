@@ -30,6 +30,7 @@ def detect_on_image(raw_img, camera_id):
         print("Point cloud not yet published.")
         states[camera_id].resume()
         return
+    
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
@@ -167,8 +168,6 @@ def detect_on_image(raw_img, camera_id):
     detectionFrameArray = cleanDetections(detectionFrameArray)
 
     if len(detectionFrameArray) > 0:
-        for detection_frame in detectionFrameArray:
-            print(detection_frame)
         #create object detection frame message and publish it
         detectionFrameArrayMsg = VisionObjectArray()
         detectionFrameArrayMsg.array = detectionFrameArray

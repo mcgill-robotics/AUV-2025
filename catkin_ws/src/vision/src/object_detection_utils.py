@@ -69,7 +69,6 @@ class State:
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud):
-        print("POINT CLOUD Before", point_cloud)
         # # APPLY MEDIAN BLUR FILTER TO REMOVE SALT AND PEPPER NOISE
         # median_blur_size = 5
         # point_cloud = cv2.medianBlur(self.point_cloud.astype("float32"), median_blur_size)
@@ -208,28 +207,20 @@ def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
 
-def eulerToVectorDownCam(x_deg, y_deg):
-    """
-    Given the euler angles in degrees, returns a vector relative to the AUV
-    """
-    x_rad = math.radians(x_deg)
-    y_rad = math.radians(y_deg)
-    x = -math.tan(y_rad)
-    y = math.tan(x_rad)
-    vec = np.array([x,y,-1])
-    vec = vec / np.linalg.norm(vec)
-    return vec
-
-def findIntersection(vector, plane_z_pos):
+def findIntersection(starting_point, vector, plane_z_pos):
     """
     Given a vector and a z position, returns the point 
     where the vector intersects the plane defined by the z position
     If they dont intersect, returns None
     """
     if vector[2] == 0: return None
-    scaling_factor = plane_z_pos / vector[2]
+    
+    z_diff = plane_z_pos - starting_point[2]
+    
+    scaling_factor = z_diff / vector[2]
     if scaling_factor < 0: return None
-    return np.array(vector) * scaling_factor
+    
+    return starting_point + np.array(vector) * scaling_factor
 
 # TODO: Vivek
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
@@ -253,16 +244,20 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     #assuming FOV increases linearly with distance from center pixel
     roll_angle_offset = down_cam_hfov*x_center_offset
     pitch_angle_offset = down_cam_vfov*y_center_offset
-
-    local_direction_to_object = eulerToVectorDownCam(roll_angle_offset, pitch_angle_offset)
-    print("LOCAL DIRECTION TO OBJECT", local_direction_to_object)
-    print("Down cam yaw offset", down_cam_yaw_offset)
-    global_direction_to_object = transformLocalToGlobal(local_direction_to_object[0], local_direction_to_object[1], local_direction_to_object[2], 0, yaw_offset=down_cam_yaw_offset)
-    print("GLOBAL DIRECTION TO OBJECT", global_direction_to_object)
+    
+    x_pos_offset = -math.tan(math.radians(pitch_angle_offset))
+    y_pos_offset = math.tan(math.radians(roll_angle_offset))
+    
+    local_direction_to_object = np.array([x_pos_offset,y_pos_offset,-1])
+    
+    rotation_offset = transformations.quaternion_from_euler(0, 0, down_cam_yaw_offset)
+    rotation = states[0].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
+    global_direction_to_object = quaternion.rotate_vectors(rotation, local_direction_to_object)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
-    obj_pos = findIntersection(global_direction_to_object, z_pos)
-    print("OBJECT POSITION", obj_pos)
+    auv_pos = np.array([states[0].x, states[0].y, states[0].z])
+    obj_pos = findIntersection(auv_pos, global_direction_to_object, z_pos)
+    
     if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
     x = obj_pos[0]
     y = obj_pos[1]
@@ -275,13 +270,9 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 # assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
-    print("POINT CLOUD After", point_cloud)
     lx = np.nanmean(point_cloud[:,:,0])
     ly = np.nanmean(point_cloud[:,:,1])
     lz = np.nanmean(point_cloud[:,:,2])
-    print("LX", lx)
-    print("LY", ly)
-    print("LZ", lz)
     x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
     return x, y, z
 
@@ -343,13 +334,11 @@ def analyzeGate(detections):
         else: boxes = detection.boxes.numpy()
         for box in boxes:
             bbox = list(box.xywh[0])
-            print("Bounding box", bbox)
             x_coord = bbox[0]
             conf = float(list(box.conf)[0])
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[1][cls_id]
             if (global_class_name in ["Earth Symbol", "Abydos Symbol", "Gate"]) and conf > min_prediction_confidence:
-                print("Global class name", global_class_name, x_coord)
                 gate_elements_detected[cls_id] = 999999 if global_class_name == "Gate" else x_coord
 
     if "Earth Symbol" not in gate_elements_detected.keys(): return None
@@ -459,27 +448,25 @@ states = (State(), State())
 
 
 ############## PARAMETERS ##############
-min_prediction_confidence = 0.4
+min_prediction_confidence = 0.3
 max_dist_to_measure = 10
-
-# [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
-pool_depth = -4.9
-octagon_table_height = 1.5 # 0.9m - 1.5m
-lane_marker_height = 0.4
-lane_marker_top_z = -3.7 #pool_depth + lane_marker_height
-octagon_table_top_z = pool_depth + octagon_table_height
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
+
+# [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
+pool_depth = -5
+octagon_table_height = 1.25 # 0.9m - 1.5m
+lane_marker_height = 0.4
+lane_marker_top_z = pool_depth + lane_marker_height
+octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 50 #set to 220 when not in sim!
-down_cam_vfov = 28 #set to 165.26 when not in sim!
+down_cam_hfov = 125
+down_cam_vfov = 100
 down_cam_yaw_offset = 0
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
-#only report predictions with confidence at least 40%
-
 
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
@@ -491,11 +478,11 @@ front_cam_model_filename = ""
 
 # Select the proper models & depth_scale_factor based on the sim argument
 if sim:
-    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1
 else:
-    down_cam_model_filename = pwd + "/models/front_cam_model.pt"
+    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
     front_cam_model_filename = pwd + "/models/front_cam_model.pt"
     depth_scale_factor = 1000
 
@@ -509,10 +496,10 @@ for m in model:
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
-    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
+    ["Lane Marker", "Octagon Table"],
     ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
     ]
-max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":1, "Octagon Table":1}
+max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":2, "Octagon Table":1}
 
 if torch.cuda.is_available(): device=0
 else: device = 'cpu'
