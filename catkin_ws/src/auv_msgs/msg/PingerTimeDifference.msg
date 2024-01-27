@@ -7,3 +7,6 @@ float64[] dt_pinger1
 float64[] dt_pinger2
 float64[] dt_pinger3
 float64[] dt_pinger4
+
+float64 state_x
+float64 state_y
