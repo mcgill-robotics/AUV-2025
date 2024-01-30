@@ -1,5 +1,15 @@
 <launch>
     <arg name="sim" default="false" />
+    <group unless="$(arg sim)"> 
+        <param name="buoyant_force_offset" value="-1"/> # force of buoyant force offset
+	    <param name="buoyant_force_active_depth" value="-1.5"/> # depth which buoyant force should activate below
+	    <param name="enable_buoyant_force_global" value="true"/> # toggle used to completely deactivate buoyant force true means buoyant for is on
+    </group>
+    <group if="$(arg sim)">  
+        <param name="buoyant_force_offset" value="15.54"/>
+        <param name="buoyant_force_active_depth" value="-1.5"/>
+        <param name="enable_buoyant_force_global" value="true"/> # toggle used to completely deactivate buoyant force true means buoyant for is on
+    </group>
     <arg name="actions" default="false" />
     <include file="$(find controls)/launch/pid.launch">
         <arg name="sim" value="$(arg sim)" />
