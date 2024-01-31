@@ -4,6 +4,7 @@ import rospy
 
 import numpy as np
 from auv_msgs.msg import PingerBearing, PingerTimeDifference
+from std_msgs.msg import Float64
 from sbg_driver.msg import SbgEkfQuat
 import quaternion
 
@@ -50,6 +51,9 @@ def cb_hydrophones_time_difference(msg):
         PingerBearing_msg.pinger4_bearing.x = bearing_vector_global[0]
         PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
         PingerBearing_msg.pinger4_bearing.z = 0
+
+    PingerBearing_msg.state_x = state_x
+    PingerBearing_msg.state_y = state_y
     
     pub_pinger_bearing.publish(PingerBearing_msg)
 
@@ -59,6 +63,14 @@ def cb_imu_quat(msg):
     auv_rotation.x = msg.quaternion.x
     auv_rotation.y = msg.quaternion.y
     auv_rotation.z = msg.quaternion.z
+
+def cb_state_x(msg):
+    global state_x
+    state_x = msg.data
+
+def cb_state_y(msg):
+    global state_y
+    state_y = msg.data
 
 
 #With 3 hydrophones, placed on x-y axes
@@ -80,6 +92,8 @@ def solve_bearing_vector(dx, dy):
 if __name__ == "__main__":
     rospy.init_node("hydrophones_bearing")
     rospy.Subscriber("/sensors/hydrophones/pinger_time_difference", PingerTimeDifference, cb_hydrophones_time_difference)
+    rospy.Subscriber("/state/x", Float64, cb_state_x)
+    rospy.Subscriber("/state/y", Float64, cb_state_y)
     rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, cb_imu_quat)
     pub_pinger_bearing = rospy.Publisher("/sensors/hydrophones/pinger_bearing", PingerBearing, queue_size=1)
 
@@ -87,6 +101,8 @@ if __name__ == "__main__":
 
     # Speed of sound in water
     c = 1480
+    state_x = 0.0
+    state_y = 0.0
 
     # Assume H1 is the "origin" hydrophone
     # If you change the values here, you must also change the values in the Unity editor
