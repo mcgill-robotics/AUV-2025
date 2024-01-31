@@ -60,9 +60,9 @@ class Superimposer:
                 buoyant_force_offset = rospy.get_param("buoyant_force_offset")
             else:
                 buoyant_force_offset = 0
-        # rospy.init_node("buoyant_force", anonymous=True)
+
         rospy.Subscriber("enable_buoyant_force_offset", Bool, buoyant_force_cb)
-	
+
         force_global = Vector3(
                 self.global_x.val, self.global_y.val, self.global_z.val + buoyant_force_offset)
         force_auv = Vector3(surge, sway, heave)

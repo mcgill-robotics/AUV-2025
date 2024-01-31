@@ -2,7 +2,7 @@
 
 import rospy
 from servers.base_server import BaseServer
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 import actionlib
 from auv_msgs.msg import StateQuaternionAction
 from geometry_msgs.msg import Quaternion
@@ -26,6 +26,8 @@ class StateQuaternionServer(BaseServer):
         self.enable_y_sub = rospy.Subscriber("/controls/pid/y/enable", Bool, self.y_enable_cb)
         self.enable_z_sub = rospy.Subscriber("/controls/pid/z/enable", Bool, self.z_enable_cb)
         
+        self.buoyant_force_pub = rospy.Publisher('/enable_buoyant_force_offset', Bool, queue_size=1)                
+
         self.server.start()    
 
     def x_enable_cb(self, data):
@@ -94,33 +96,12 @@ class StateQuaternionServer(BaseServer):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
 
-                # def buoyant_force_offset():
-                # 	#Toggles buoyant force
-                #     buoyant_force_pub = rospy.Publisher("enable_buoyant_force_offset", Bool, queue_size=1)
-                #     rospy.init_node("buoyant_force_offset", anonymous=True)
-                #     rate = rospy.Rate(10)
-                #     while not rospy.is_shutdown():
-                #         if goal_position[2] < rospy.get_param("buoyant_force_active_depth"):
-                #             msg = Bool()
-                #             msg.data = True
-                #         else:
-                #             msg = Bool()
-                #             msg.data = False
-                #         buoyant_force_pub.publish(msg)
-                #         rate.sleep()
-
-                # buoyant_force_offset()
-
                 #Toggles buoyant force
-                buoyant_force_pub = rospy.Publisher("enable_buoyant_force_offset", Bool, queue_size=1)
-                # rospy.init_node("buoyant_force", anonymous=True)
                 if goal_position[2] < rospy.get_param("buoyant_force_active_depth"):
-                    msg = Bool()
-                    msg.data = True
+                    self.buoyant_force_pub.publish(Bool(True))
                 else:
-                    msg = Bool()
-                    msg.data = False
-                buoyant_force_pub.publish(msg)
+                    self.buoyant_force_pub.publish(Bool(False))
+
 
                 safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))

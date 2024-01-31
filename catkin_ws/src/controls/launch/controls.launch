@@ -6,7 +6,7 @@
 	    <param name="enable_buoyant_force_global" value="true"/> # toggle used to completely deactivate buoyant force true means buoyant for is on
     </group>
     <group if="$(arg sim)">  
-        <param name="buoyant_force_offset" value="15.54"/>
+        <param name="buoyant_force_offset" value="-100"/>
         <param name="buoyant_force_active_depth" value="-1.5"/>
         <param name="enable_buoyant_force_global" value="true"/> # toggle used to completely deactivate buoyant force true means buoyant for is on
     </group>
