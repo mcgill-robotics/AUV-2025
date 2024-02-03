@@ -5,10 +5,11 @@ import rospy
 from auv_msgs.msg import VisionObjectArray
 from substates.utility.controller import Controller
 from substates.utility.vision import ObjectMapper
+from substates.utility.state import StateTracker
 from substates.breadth_first_search import *
 
-# import unittest
-# import rostest
+import unittest
+import rostest
 
 ### Write ros testing mission for object positions on down cam ###
 
@@ -59,5 +60,23 @@ if __name__ == '__main__':
     print("Actual Lane Marker Position: ", lane_marker_pos)
     print("Lane Marker Position: ", lane_marker_map_pos)
     rospy.spin()
+
+############################
+    
+# class ObjectPositionTest(unittest.TestCase):
+#     ## test 1 == 1
+#     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
+#         controls.move([0,0,-2])
+#         controls.rotate([1,0,0,0])
+#         self.assertTrue(True)
+
+# if __name__ == '__main__':
+#     rospy.init_node('object_position_test')
+#     controls = Controller(rospy.Time(0))
+#     state = StateTracker()
+#     while state.pose is None:
+#         rospy.sleep(1)
+#     rospy.sleep(5)
+#     rostest.rosrun("planner", 'settle_test', ObjectPositionTest)
     
     
