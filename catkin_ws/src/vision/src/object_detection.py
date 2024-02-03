@@ -7,6 +7,8 @@ from object_detection_utils import *
 import object_detection_utils
 import torch
 
+# structurally good
+# dont forget to change things here after modifying object_detection_utils.py
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
@@ -28,6 +30,7 @@ def detect_on_image(raw_img, camera_id):
         print("Point cloud not yet published.")
         states[camera_id].resume()
         return
+    
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
@@ -40,6 +43,7 @@ def detect_on_image(raw_img, camera_id):
     img_h, img_w, _ = img.shape
     if camera_id == 1:
         #[COMP] change target symbol to match planner
+
         buoy_symbols = analyzeBuoy(detections)
         leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
@@ -141,13 +145,13 @@ def detect_on_image(raw_img, camera_id):
 
                     detectionFrameArray.append(detectionFrame)
 
-                    for symbol_class_name, symbol_x, symbol_y, symbol_z, confidence in buoy_symbols:
+                    for symbol_class_name, symbol_x, symbol_y, symbol_z, symbol_confidence in buoy_symbols:
                         detectionFrame = VisionObject()
                         detectionFrame.label = symbol_class_name
                         detectionFrame.x = symbol_x
                         detectionFrame.y = symbol_y
                         detectionFrame.z = symbol_z
-                        detectionFrame.confidence = confidence
+                        detectionFrame.confidence = symbol_confidence
                         detectionFrame.theta_z = theta_z
                         detectionFrame.extra_field = None
 
