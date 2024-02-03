@@ -2,6 +2,8 @@ geometry_msgs/Vector3 position
 geometry_msgs/Quaternion orientation
 geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 angular_velocity
+
 bool isDVLActive
 bool isDepthSensorActive
 bool isIMUActive
+bool isHydrophonesActive
