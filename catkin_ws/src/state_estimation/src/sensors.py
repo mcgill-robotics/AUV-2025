@@ -86,7 +86,7 @@ class IMU(Sensor):
         q_imunominal_imu_z = rospy.get_param("q_imunominal_imu_z")
 
         self.q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
-        self.q_imu_auv = self.q_imunominal_imu.inverse() * Q_IMUNOMINAL_AUV
+        self.q_imu_auv = self.q_imunominal_imu.conjugate() * Q_IMUNOMINAL_AUV
         self.q_nwu_auv = None
         
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
@@ -144,11 +144,11 @@ class DVL(Sensor):
         #update dvl ref frame using imu
         if self.imu.isActive():
             q_nwu_auv = self.imu.q_nwu_auv
-            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.inverse() 
+            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.conjugate() 
 
         if self.q_dvlref_nwu is None: return
 
-        temp_pos_auv = self.q_dvlref_nwu.inverse() * np.quaternion(0, pos_dvlref_dvl[0], pos_dvlref_dvl[1],pos_dvlref_dvl[2]) * self.q_dvlref_nwu
+        temp_pos_auv = self.q_dvlref_nwu.conjugate() * np.quaternion(0, pos_dvlref_dvl[0], pos_dvlref_dvl[1],pos_dvlref_dvl[2]) * self.q_dvlref_nwu
         pos_auv = np.array([temp_pos_auv.x, temp_pos_auv.y, temp_pos_auv.z])
         temp_dvl_auv_offset_rotated = self.imu.q_nwu_auv * np.quaternion(0,self.auv_dvl_offset[0],self.auv_dvl_offset[1], self.auv_dvl_offset[2]) * self.imu.q_nwu_auv.conjugate()
         dvl_auv_offset_rotated = np.array([temp_dvl_auv_offset_rotated.x, temp_dvl_auv_offset_rotated.y, temp_dvl_auv_offset_rotated.z])
