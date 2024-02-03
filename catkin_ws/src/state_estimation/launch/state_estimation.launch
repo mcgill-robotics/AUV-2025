@@ -19,9 +19,9 @@
 		<param name="auv_dvl_offset_x" value="0.0" />
 		<param name="auv_dvl_offset_y" value="0.0" />
 		<param name="auv_dvl_offset_z" value="-0.3" />
-		<param name="update_rate" value="99" />
 
 		<param name="update_state_on_clock" value="false" />
+		<param name="update_rate" value="100" />
     </group>
     <group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
