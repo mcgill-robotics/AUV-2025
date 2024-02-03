@@ -1,0 +1,7 @@
+geometry_msgs/Vector3 pinger1_bearing
+geometry_msgs/Vector3 pinger2_bearing
+geometry_msgs/Vector3 pinger3_bearing
+geometry_msgs/Vector3 pinger4_bearing
+
+float64 state_x
+float64 state_y
