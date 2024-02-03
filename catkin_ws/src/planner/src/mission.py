@@ -78,6 +78,20 @@ def laneMarkerMission():
         res = sm.execute()
     # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
+    
+def goToPinger():
+        pub_mission_display.publish("Pinger")
+        global sm
+        sm = smach.StateMachine(outcomes=['success', 'failure'])
+        with sm:
+                smach.StateMachine.add('find_pinger', InPlaceSearch(timeout=120, target_class="Pinger", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+                        transitions={'success': 'navigate_pinger', 'failure': 'failure'})
+
+                smach.StateMachine.add('navigate_pinger', NavigatePinger(control=control, mapping=mapping, state=state), 
+                        transitions={'success': 'success', 'failure':'failure'})
+                res = sm.execute()
+        # display_mission.updateMission("Pinger {}".format(res))
+        endMission("Finished pinger. Result {}".format(res))
 
 def semiFinals():
     global sm
@@ -155,7 +169,8 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        laneMarkerMission()
+        #laneMarkerMission()
+        goToPinger()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
