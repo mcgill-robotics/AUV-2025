@@ -1,7 +1,7 @@
 <launch>
     <param name="/use_sim_time" value="true" />
 
-    <arg name="vision" default="false" />
+    <arg name="vision" default="true" />
 
     <param name="sim" value="true" />
 
@@ -18,8 +18,6 @@
     <param name="auv_dvl_offset_x" value="0.0" />
     <param name="auv_dvl_offset_y" value="0.0" />
     <param name="auv_dvl_offset_z" value="-0.3" />
-
-    <param name="update_rate" value="25" />
 
     <include file="$(find bringup)/launch/bringup.launch">
         <arg name="sim" value="true" />
