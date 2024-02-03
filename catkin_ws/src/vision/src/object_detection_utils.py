@@ -369,7 +369,7 @@ def analyzeBuoy(detections):
     symbols = []
     buoy_was_detected = False
 
-    print("DETECTIONS", detections)
+    # print("DETECTIONS", detections)
     for detection in detections:
 
         if torch.cuda.is_available(): 
