@@ -9,10 +9,18 @@ from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
 from std_msgs.msg import Float64, Bool
+from rosgraph_msgs.msg import Clock
 
 DEG_PER_RAD = 180 / np.pi
 
-def update_state(_):    
+def update_state(msg):
+    if update_state_on_clock:
+        global last_clock_msg_s
+        global last_clock_msg_ns
+        if last_clock_msg_s == msg.clock.secs and last_clock_msg_ns == msg.clock.nsecs: return
+        last_clock_msg_s = msg.clock.secs
+        last_clock_msg_ns = msg.clock.nsecs
+        
     pub_dvl_sensor_status.publish(dvl.isActive())
     pub_imu_sensor_status.publish(imu.isActive())
     pub_depth_sensor_status.publish(depth_sensor.isActive())
@@ -113,7 +121,14 @@ if __name__ == '__main__':
         "orientation" : [imu],
     }
 
-    timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("update_rate")), update_state)
-    rospy.on_shutdown(timer.shutdown)
+    update_state_on_clock = rospy.get_param("update_state_on_clock")
+
+    if update_state_on_clock:
+        rospy.Subscriber("/clock", Clock, update_state)
+        last_clock_msg_s = None
+        last_clock_msg_ns = None
+    else:
+        timer = rospy.Timer(rospy.Duration(1.0/rospy.get_param("update_rate")), update_state)
+        rospy.on_shutdown(timer.shutdown)
     
     rospy.spin()
