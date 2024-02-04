@@ -58,16 +58,15 @@ def convert_from_uvd(width, height):
 
 def get_point_cloud_image(bridge, color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
-        xyz_rgb_img = get_xyz_image(color, z_map, width, height, x_over_z_map, y_over_z_map)
+        xyz_rgb_img = get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map)
         point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:,:,:3]))
         return point_cloud_img
 
-def get_xyz_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
+def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
         xyz_rgb_img = np.zeros((height, width, 6))
         xyz_rgb_img[:, :, 3:6] = color        
 
-        # TODO: Check RuntimeWarning (invalid value encountered in multiply)
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 
@@ -76,6 +75,20 @@ def get_xyz_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         xyz_rgb_img[:, :, 2] = y_map
 
         return xyz_rgb_img
+
+def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
+    if y_over_z_map is not None:
+        xyz_img = np.zeros((height, width, 3)) 
+
+        # TODO: Check RuntimeWarning (invalid value encountered in multiply)
+        x_map = x_over_z_map * z_map
+        y_map = y_over_z_map * z_map
+
+        xyz_img[:, :, 0] = z_map
+        xyz_img[:, :, 1] = x_map
+        xyz_img[:, :, 2] = y_map
+
+        return xyz_img
 
         
 def pub_transform():

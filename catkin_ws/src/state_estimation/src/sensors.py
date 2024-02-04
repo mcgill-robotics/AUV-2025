@@ -86,7 +86,7 @@ class IMU(Sensor):
         q_imunominal_imu_z = rospy.get_param("q_imunominal_imu_z")
 
         self.q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
-        self.q_imu_auv = self.q_imunominal_imu.inverse() * Q_IMUNOMINAL_AUV
+        self.q_imu_auv = self.q_imunominal_imu.conjugate() * Q_IMUNOMINAL_AUV
         self.q_nwu_auv = None
         
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
@@ -96,7 +96,8 @@ class IMU(Sensor):
         # angular velocity vector relative to imu frame 
         ang_vel_imu = np.array([msg.gyro.x, msg.gyro.y, msg.gyro.z])
         # anuglar velocity vector relative to AUV frame 
-        self.angular_velocity = quaternion.rotate_vectors(self.q_imu_auv, ang_vel_imu)
+        temp_angular_velocity = self.q_imu_auv * np.quaternion(0, ang_vel_imu[0], ang_vel_imu[1], ang_vel_imu[2]) * self.q_imu_auv.conjugate()
+        self.angular_velocity = np.array([temp_angular_velocity.x, temp_angular_velocity.y, temp_angular_velocity.z])
         self.updateLastState()
 
     def quat_cb(self, msg):
@@ -143,12 +144,14 @@ class DVL(Sensor):
         #update dvl ref frame using imu
         if self.imu.isActive():
             q_nwu_auv = self.imu.q_nwu_auv
-            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.inverse() 
+            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.conjugate() 
 
         if self.q_dvlref_nwu is None: return
 
-        pos_auv = quaternion.rotate_vectors(self.q_dvlref_nwu.inverse(), pos_dvlref_dvl)
-        dvl_auv_offset_rotated = quaternion.rotate_vectors(self.imu.q_nwu_auv, self.auv_dvl_offset)
+        temp_pos_auv = self.q_dvlref_nwu.conjugate() * np.quaternion(0, pos_dvlref_dvl[0], pos_dvlref_dvl[1],pos_dvlref_dvl[2]) * self.q_dvlref_nwu
+        pos_auv = np.array([temp_pos_auv.x, temp_pos_auv.y, temp_pos_auv.z])
+        temp_dvl_auv_offset_rotated = self.imu.q_nwu_auv * np.quaternion(0,self.auv_dvl_offset[0],self.auv_dvl_offset[1], self.auv_dvl_offset[2]) * self.imu.q_nwu_auv.conjugate()
+        dvl_auv_offset_rotated = np.array([temp_dvl_auv_offset_rotated.x, temp_dvl_auv_offset_rotated.y, temp_dvl_auv_offset_rotated.z])
         pos_auv -= dvl_auv_offset_rotated
         self.x = pos_auv[0]
         self.y = pos_auv[1]
