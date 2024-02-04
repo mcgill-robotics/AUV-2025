@@ -65,7 +65,7 @@ def get_point_cloud_image(bridge, color, z_map, width, height, x_over_z_map, y_o
 def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
         xyz_rgb_img = np.zeros((height, width, 6))
-        xyz_rgb_img[:, :, 3:6] = color[:,:,0:3]      
+        xyz_rgb_img[:, :, 3:6] = color[:,:,0:3]
 
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
@@ -75,7 +75,6 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         xyz_rgb_img[:, :, 2] = y_map
 
         return xyz_rgb_img
-
 
 def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
@@ -125,4 +124,4 @@ if __name__ == "__main__":
         if(rgb is not None and depth is not None):
             msg = convert_from_uvd(width, height)
             if msg is not None:
-              point_cloud_pub.publish(msg)
+                point_cloud_pub.publish(msg)
