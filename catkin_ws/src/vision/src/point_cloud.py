@@ -65,7 +65,7 @@ def get_point_cloud_image(bridge, color, z_map, width, height, x_over_z_map, y_o
 def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
         xyz_rgb_img = np.zeros((height, width, 6))
-        xyz_rgb_img[:, :, 3:6] = color        
+        xyz_rgb_img[:, :, 3:6] = color[:,:,0:3]      
 
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
@@ -76,38 +76,6 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
 
         return xyz_rgb_img
 
-def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
-    if y_over_z_map is not None:
-        xyz_img = np.zeros((height, width, 3)) 
-
-        # TODO: Check RuntimeWarning (invalid value encountered in multiply)
-        x_map = x_over_z_map * z_map
-        y_map = y_over_z_map * z_map
-
-        xyz_img[:, :, 0] = z_map
-        xyz_img[:, :, 1] = x_map
-        xyz_img[:, :, 2] = y_map
-
-        return xyz_img
-
-        
-def pub_transform():
-    br = TransformBroadcaster()
-
-    t = TransformStamped()
-    t.header.stamp = rospy.Time.now()
-    t.header.frame_id = "world"
-    t.child_frame_id = "auv_base"
-
-    t.transform.translation.x = 0
-    t.transform.translation.y = 0
-    t.transform.translation.z = 0
-    t.transform.rotation.w = 1
-    t.transform.rotation.x = 0
-    t.transform.rotation.y = 0
-    t.transform.rotation.z = 0
-
-    br.sendTransform(t)
 
 if __name__ == "__main__":
     rospy.init_node('point_cloud_sim')
@@ -120,10 +88,10 @@ if __name__ == "__main__":
     else:
         depth_scale_factor = 1000
 
-    camera_info_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/camera_info', CameraInfo, camera_info_callback)
+    camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, camera_info_callback)
     depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
     rgb_sub = rospy.Subscriber('/vision/front_cam/color/image_raw', Image, rbg_callback)
-    point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud', PointCloud2, queue_size=3)
+    point_cloud_pub = rospy.Publisher('vision/front_cam/point_cloud_raw', PointCloud2, queue_size=3)
     # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     fx = None
