@@ -12,7 +12,7 @@ import torch
 from geometry_msgs.msg import Pose
 import quaternion
 import os
-from point_cloud import get_point_cloud_image, get_xyz_image
+from point_cloud import get_xyz_image
 from tf import transformations
 class State:
     def __init__(self):

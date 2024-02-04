@@ -38,7 +38,7 @@ def camera_info_callback(msg):
 def convert_from_uvd(width, height):
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rgb_img = get_xyz_image(rgb, depth, width, height, x_over_z_map, y_over_z_map)
+        xyz_rgb_img = get_xyz_rgb_image(rgb, depth, width, height, x_over_z_map, y_over_z_map)
 
 
         xyz_rgb_img = xyz_rgb_img.reshape((width*height, 6))
@@ -77,6 +77,19 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         return xyz_rgb_img
 
 
+def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
+    if y_over_z_map is not None:
+        xyz_img = np.zeros((height, width, 3))
+
+        x_map = x_over_z_map * z_map
+        y_map = y_over_z_map * z_map
+
+        xyz_img[:, :, 0] = z_map
+        xyz_img[:, :, 1] = x_map
+        xyz_img[:, :, 2] = y_map
+
+        return xyz_img
+
 if __name__ == "__main__":
     rospy.init_node('point_cloud_sim')
 
@@ -109,9 +122,6 @@ if __name__ == "__main__":
     
 
     while not rospy.is_shutdown():
-        if not is_sim:
-            pub_transform()
-            
         if(rgb is not None and depth is not None):
             msg = convert_from_uvd(width, height)
             if msg is not None:
