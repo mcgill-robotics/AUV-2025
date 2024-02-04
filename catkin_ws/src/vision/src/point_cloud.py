@@ -21,11 +21,12 @@ def depth_callback(msg):
 
 def camera_info_callback(msg):
     global fx, fy, cx, cy, width, height, x_over_z_map, y_over_z_map
-    if(y_over_z_map is not None): return
+    # if(y_over_z_map is not None): return
     fx = msg.K[0]
     fy = msg.K[4]
-    cy = msg.K[2]
-    cx = msg.K[5]
+    cx = msg.K[2]
+    cy = msg.K[5]
+    
     width = msg.width
     height = msg.height
 

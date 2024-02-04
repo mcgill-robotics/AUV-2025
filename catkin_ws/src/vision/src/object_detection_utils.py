@@ -39,7 +39,6 @@ class State:
         self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
         self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
-        self.point_cloud_sub = rospy.Subscriber('vision/front_cam/point_cloud_raw', Image, self.updatePointCloud, queue_size=1)
         # Update the point cloud whenever the current image is updated
         self.camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
@@ -435,7 +434,7 @@ lane_marker_height = 0.4
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 130
+down_cam_hfov = 121.5
 down_cam_vfov = 100
 down_cam_yaw_offset = 0
 
@@ -464,7 +463,7 @@ model = [
     YOLO(front_cam_model_filename)
     ]
 
-if not torch.cuda.is_available(): rospy.logwarn("WARN: CUDA is not available! Running on CPU")
+if not torch.cuda.is_available(): rospy.logwarn("CUDA is not available! YOLO inference will run on CPU.")
 
 for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
