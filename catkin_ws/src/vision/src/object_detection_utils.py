@@ -76,12 +76,7 @@ class State:
 
         # Apply bilateral filter to remove noise
         point_cloud = cv2.bilateralFilter(point_cloud.astype("float32"), d, sigmaColor, sigmaSpace)
-
-        # REMOVE BACKGROUND (PIXELS TOO FAR AWAY FROM CLOSEST PIXEL)
-        closest_x_point = np.nanmin(point_cloud[:, :, 0])       # Gets min of array, ignores non-numbers
-        far_mask = point_cloud[:, :, 0] > closest_x_point + 2   # Set to 2 instead of 3 since the gate will never be perfectly orthogonal to the camera
-        point_cloud[far_mask] = np.array([np.nan, np.nan, np.nan]) # Set to NaN to remove
-
+        
         return point_cloud
         
 
@@ -283,33 +278,20 @@ def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
     """
-    point_cloud = states[1].getPointCloud(bbox) # ignore z position of points
-    left_point_cloud = point_cloud[:, :int(point_cloud.shape[1]/2)]
-    right_point_cloud = point_cloud[:, int(point_cloud.shape[1]/2):]
+    point_cloud = states[1].getPointCloud(bbox)
 
-    left_point_cloud_x = left_point_cloud[:,:,0].flatten()
-    left_point_cloud_y = left_point_cloud[:,:,1].flatten()
+    point_cloud_x = point_cloud[:,:,0].flatten() # collect x, ignore z positions of points
+    point_cloud_y = point_cloud[:,:,1].flatten() # collect y, ignore z position of points
 
-    right_point_cloud_x = right_point_cloud[:,:,0].flatten()
-    right_point_cloud_y = right_point_cloud[:,:,1].flatten()
+    nan_indices = np.isnan(point_cloud_x) | np.isnan(point_cloud_y) # find indices to remove (NaNs)
 
-    left_point_cloud_x = left_point_cloud_x[~np.isnan(left_point_cloud_x)]
-    left_point_cloud_x = left_point_cloud_x[~np.isnan(left_point_cloud_y)]
-    left_point_cloud_y = left_point_cloud_y[~np.isnan(left_point_cloud_x)]
-    left_point_cloud_y = left_point_cloud_y[~np.isnan(left_point_cloud_y)]
+    filtered_point_cloud_x = point_cloud_x[~nan_indices] # filter point cloud x so it has no NaNs
+    filtered_point_cloud_y = point_cloud_y[~nan_indices] # filter point cloud y so it has no NaNs
 
-    right_point_cloud_x = right_point_cloud_x[~np.isnan(right_point_cloud_x)]
-    right_point_cloud_x = right_point_cloud_x[~np.isnan(right_point_cloud_y)]
-    right_point_cloud_y = right_point_cloud_y[~np.isnan(right_point_cloud_x)]
-    right_point_cloud_y = right_point_cloud_y[~np.isnan(right_point_cloud_y)]
+    slope, _ = np.polyfit(filtered_point_cloud_x, filtered_point_cloud_y, 1) # Fit a line to the point cloud on x/y
 
-
-    # Fit a line to the left and right point clouds
-    left_slope, _ = np.polyfit(left_point_cloud_x, left_point_cloud_y, 1)
-    right_slope, _ = np.polyfit(right_point_cloud_x, right_point_cloud_y, 1)
-
-    # Calculate the angle between the two lines
-    angle = math.degrees(math.atan((right_slope - left_slope) / (1 + right_slope * left_slope)))
+    angle = -math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
+    
     return angle
 
 # does what its supposed to, gate isnt in right position
@@ -453,7 +435,7 @@ lane_marker_height = 0.4
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 125
+down_cam_hfov = 130
 down_cam_vfov = 100
 down_cam_yaw_offset = 0
 
@@ -481,9 +463,11 @@ model = [
     YOLO(down_cam_model_filename),
     YOLO(front_cam_model_filename)
     ]
+
+if not torch.cuda.is_available(): rospy.logwarn("WARN: CUDA is not available! Running on CPU")
+
 for m in model:
     if torch.cuda.is_available(): m.to(torch.device('cuda'))
-    else: print("WARN: CUDA is not available! Running on CPU")
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id

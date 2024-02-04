@@ -36,7 +36,7 @@ def detect_on_image(raw_img, camera_id):
     debug_img = np.copy(img)
     
     #run model on img
-    detections = model[camera_id].predict(img, device=device) #change device for cuda
+    detections = model[camera_id].predict(img, device=device, verbose=print_debug_info) #change device for cuda
 
     #initialize empty array for object detection frame message
     detectionFrameArray = []
@@ -54,7 +54,7 @@ def detect_on_image(raw_img, camera_id):
             conf = float(list(box.conf)[0])
             #only consider prediction if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
-                print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
+                if print_debug_info: print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
                 continue
             
             bbox = list(box.xywh[0])
@@ -178,6 +178,7 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(debug_img)   
     states[camera_id].resume()
 
+print_debug_info = rospy.get_param("log_model_prediction_info", False)
 
 #the int argument is used to index debug publisher, model, class names, and i
 subs = [
