@@ -3,8 +3,8 @@ import rospy
 from geometry_msgs.msg import Pose
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-import time
-import transformations
+from time import strftime
+from tf import transformations
 import math
 
 def pose_callback(msg):
@@ -29,18 +29,19 @@ def xyz_to_gps(x, y, z):
     return latitude, longitude
 
 def init_text_file():
-    output = open('data.txt', 'w')
-    output.write('Date Heure Latitude Longitude	Immersion Cap Pitch	Roll Easting_st	Northing_s Altitude_s\n')
+    global output_txt
+    output_txt = open('data.txt', 'w')
+    output_txt.write('Date Heure Latitude Longitude	Immersion Cap Pitch	Roll Easting_st	Northing_s Altitude_s\n')
 
-def save_data():
+def save_data(_):
     global gps 
     global depth
     global image
     global output_txt
     if gps is not None and image is not None:
-        date = time.strftime("%d/%m/%Y")
-        time = time.strftime("%H:%M:%S")
-        output_txt.write(date + ' ' + time + ' ' + gps[0] + ' ' + gps[1] + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + ' ' + '1.0' + ' ' + '1.0' + ' ' + '1.0' + '\n') 
+        date = strftime("%d/%m/%Y")
+        time = strftime("%H:%M:%S")
+        output_txt.write(date + ' ' + time + ' ' + str(gps[0]) + ' ' + str(gps[1]) + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + ' ' + '1.0' + ' ' + '1.0' + ' ' + '1.0' + '\n') 
 
 
 def get_gps_factors(depth):
@@ -54,6 +55,7 @@ def get_gps_factors(depth):
 
 def shutdown():
     global timer
+    global output_txt
     output_txt.close()
     timer.shutdown()
 
@@ -70,7 +72,7 @@ if __name__ == '__main__':
     longitude_offset = rospy.get_param('~longitude_offset')
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
-    output_txt = init_text_file()
+    init_text_file()
     update_rate = rospy.get_param('~update_rate')
     timer = rospy.Timer(rospy.Duration(1/update_rate), save_data)
     rospy.on_shutdown(shutdown)
