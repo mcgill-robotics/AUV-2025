@@ -14,8 +14,8 @@ import rostest
 ### Write ros testing mission for object positions on down cam ###
 
 #Hardcode the positions of Lane Marker and Octagon Table based on their location in the Unity sim
-octagon_table_pos=[0,0,0]
-lane_marker_pos=[0,0,0]
+octagon_table_pos=[-4.706,-9.036,-2.486]
+lane_marker_pos=[1.661,6.204,-2.363]
 
 
 def moveAroundTarget(self): #Make a square around the target
