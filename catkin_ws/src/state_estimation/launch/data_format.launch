@@ -7,6 +7,6 @@
         <param name="update_rate" value="100" />
         <param name="radius_earth" value="6378.1370" />
         <param name="laditude_offset" value="0" />
-        <param name="tude_offset" value="0" />
+        <param name="longitude_offset" value="0" />
     </node>
 </launch>
