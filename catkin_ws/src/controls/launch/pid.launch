@@ -108,14 +108,14 @@
 			</node>
 
 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
-				<param name="Kp" value="5" />
+				<param name="Kp" value="3" />
 				<param name="Ki" value="0" />
-				<param name="Kd" value="2" />
+				<param name="Kd" value="1" />
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
 	</group>
-	 <group if="$(arg actions)">  
+	<group if="$(arg actions)">  
 		<node name="z_pid" pkg="pid" type="controller" >
 			<param name="Kp" value="10" />
 			<param name="Ki" value="0.7" />
