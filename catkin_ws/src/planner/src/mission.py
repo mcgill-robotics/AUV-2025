@@ -66,7 +66,7 @@ def tricks(t):
     endMission("Finished trick. Result {}".format(res))
 
 def laneMarkerMission():
-    pub_mission_display.publish("Lane Marker")
+    pub_mission_display.publish("Lane")
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
