@@ -20,9 +20,10 @@ def image_callback(msg):
     data = bridge.imgmsg_to_cv2(msg)
     image = data
 
-def xyz_to_gps(x, y):
+def xyz_to_gps(x, y, z):
     # This function will convert the x, y, z coordinates to GPS coordinates
-    # The GPS coordinates will be returned as a tuple
+    # The GPS coordinates will be returned as a tupl
+    km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
     latitude = x * 1000 / km_per_deg_lat + laditude_offset
     longitude = -y * 1000 / km_per_deg_long + longitude_offset
     return (latitude, longitude)
@@ -41,6 +42,16 @@ def save_data():
         time = time.strftime("%H:%M:%S")
         output_txt.write(date + ' ' + time + ' ' + gps[0] + ' ' + gps[1] + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + ' ' + '1.0' + ' ' + '1.0' + ' ' + '1.0' + '\n') 
 
+
+def get_gps_factors(depth):
+    global radius_earth
+    global laditude_offset
+    global longitude_offset
+    radius = radius_earth + depth
+    lat_factor = radius * math.pi / 180
+    long_factor = lat_factor * math.cos(math.radians(laditude_offset))
+    return lat_factor, long_factor
+
 def shutdown():
     global timer
     output_txt.close()
@@ -57,8 +68,6 @@ if __name__ == '__main__':
     radius_earth = rospy.get_param('~radius_earth')
     laditude_offset = rospy.get_param('~laditude_offset')
     longitude_offset = rospy.get_param('~longitude_offset')
-    km_per_deg_lat = math.pi * radius_earth / 180.0
-    km_per_deg_long = km_per_deg_lat * math.cos(math.radians(laditude_offset))
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
     output_txt = init_text_file()
