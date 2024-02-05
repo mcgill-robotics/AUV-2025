@@ -10,6 +10,7 @@ import math
 def pose_callback(msg):
     global gps
     global roll, pitch, yaw
+    global depth
     depth = msg.position.z
     gps = xyz_to_gps(msg.position.x, msg.position.y, msg.position.z)
     roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
@@ -40,6 +41,10 @@ def save_data():
         time = time.strftime("%H:%M:%S")
         output_txt.write(date + ' ' + time + ' ' + gps[0] + ' ' + gps[1] + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + ' ' + '1.0' + ' ' + '1.0' + ' ' + '1.0' + '\n') 
 
+def shutdown():
+    global timer
+    output_txt.close()
+    timer.shutdown()
 
 if __name__ == '__main__':
     rospy.init_node('data_collection')
@@ -57,5 +62,9 @@ if __name__ == '__main__':
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/camera/image', Image, image_callback)
     output_txt = init_text_file()
+    update_rate = rospy.get_param('~update_rate')
+    timer = rospy.Timer(rospy.Duration(1/update_rate), save_data)
+    rospy.on_shutdown(shutdown)
+
 
     rospy.spin()
