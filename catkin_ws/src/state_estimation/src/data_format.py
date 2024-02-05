@@ -60,7 +60,7 @@ if __name__ == '__main__':
     km_per_deg_lat = math.pi * radius_earth / 180.0
     km_per_deg_long = km_per_deg_lat * math.cos(math.radians(laditude_offset))
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
-    image_sub = rospy.Subscriber('/camera/image', Image, image_callback)
+    image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
     output_txt = init_text_file()
     update_rate = rospy.get_param('~update_rate')
     timer = rospy.Timer(rospy.Duration(1/update_rate), save_data)
