@@ -3,7 +3,7 @@
     <node name="extract" pkg="image_view" type="extract_images" respawn="false" required="true" output="screen" cwd="ROS_HOME">
         <remap from="image" to="/vision/front_cam/color/image_raw"/>
     </node>
-    <node pkg="state_estimation" type="data_collection.py" respawn="false" output="screen">
+    <node pkg="state_estimation" type="data_format.py" name="data_collection" respawn="false" output="screen">
         <param name="update_rate" value="100" />
         <param name="radius_earth" value="6378.1370" />
         <param name="laditude_offset" value="0" />
