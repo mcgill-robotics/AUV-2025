@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="rosbag" type="play" name="rosbag" required="true" args=""/>
+    <node name="extract" pkg="image_view" type="extract_images" respawn="false" required="true" output="screen" cwd="ROS_HOME">
+        <remap from="image" to="/vision/front_cam/color/image_raw"/>
+    </node>
+    <node pkg="state_estimation" type="data_collection.py" respawn="false" output="screen"/>
+</launch>
