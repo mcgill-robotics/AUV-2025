@@ -26,7 +26,7 @@ def xyz_to_gps(x, y, z):
     km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
     latitude = x * 1000 / km_per_deg_lat + laditude_offset
     longitude = -y * 1000 / km_per_deg_long + longitude_offset
-    return (latitude, longitude)
+    return latitude, longitude
 
 def init_text_file():
     output = open('data.txt', 'w')
