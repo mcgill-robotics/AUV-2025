@@ -177,7 +177,7 @@ def publishMap():
 min_observations = 5
 object_map = []
 
-sameObjectRadiusPerLabel = { "Lane Marker": 3, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
+sameObjectRadiusPerLabel = { "Lane Marker": 1.5, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
 
 rospy.init_node('object_map')
 obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)
