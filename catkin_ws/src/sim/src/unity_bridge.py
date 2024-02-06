@@ -111,7 +111,7 @@ if __name__ == '__main__':
     q_imunominal_auv = np.quaternion(0,1,0,0)
     q_dvlnominal_auv = np.quaternion(0,1,0,0)
     q_NWU_NED = np.quaternion(0,1,0,0)
-    q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_dvl 
+    q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv 
     # Set up subscribers and publishers
     rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
 
