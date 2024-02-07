@@ -9,32 +9,25 @@ import math
 import cv2
 
 def camera_info_callback(msg):
-    global video
-    global frame_rate
-    global output_dir
+    global video, frame_rat, output_dir, title
     if video is not None: return
     width, height = msg.width, msg.height
     size = (width, height)
-    title = strftime("%d/%m/%Y_%H:%M:%S")
-    video = cv2.VideoWriter(output_dir + "/" + title + ".mp4", cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, size)
+    codec = cv2.VideoWriter_fourcc(*'MJPG')
+    video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
 
 def pose_callback(msg):
-    global gps
-    global roll, pitch, yaw
-    global depth
-    global seen_pose
-    depth = msg.position.z
+    global gps, roll, pitch, yaw, depth, seen_pose, msg.position.zs
     gps = xyz_to_gps(msg.position.x, msg.position.y, msg.position.z)
     roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
     seen_pose = True
 
 def image_callback(msg):
-    global video
-    global seen_image
+    global video, seen_image
     if video is None: return
     seen_image = True
     if not seen_pose: return
-    data = bridge.imgmsg_to_cv2(msg)
+    data = bridge.imgmsg_to_cv2(msg, "bgr8")
     video.write(data)
 
 def xyz_to_gps(x, y, z):
@@ -46,19 +39,12 @@ def xyz_to_gps(x, y, z):
     return latitude, longitude
 
 def init_text_file():
-    global output_txt
-    global output_dir
-    output_txt = open(output_dir + '/data.txt', 'w')
+    global output_txt, output_dir, title
+    output_txt = open(output_dir + f'/{title}.txt', 'w')
     output_txt.write('#date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
 
 def save_data(_):
-    global gps 
-    global depth
-    global image
-    global output_txt
-    global roll, pitch, yaw
-    global video
-    print(seen_image, video, gps)
+    global gps, depth, image, output_txt, roll, pitch, yaw, video
     if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
         time = strftime("%H:%M:%S")
@@ -79,6 +65,7 @@ def shutdown():
     global timer
     global output_txt
     print("shutting down")
+    cv2.destroyAllWindows()
     output_txt.close()
     video.release()
     timer.shutdown()
@@ -92,6 +79,7 @@ if __name__ == '__main__':
     seen_pose = False
     seen_image = False
     video = None
+    title = strftime("%d/%m/%Y_%H:%M:%S")
     bridge = CvBridge()
     radius_earth = rospy.get_param('~radius_earth')
     laditude_offset = rospy.get_param('~laditude_offset')
