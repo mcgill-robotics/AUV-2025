@@ -17,8 +17,9 @@ def camera_info_callback(msg):
     video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
 
 def pose_callback(msg):
-    global gps, roll, pitch, yaw, depth, seen_pose, msg.position.zs
+    global gps, roll, pitch, yaw, depth, seen_pose
     gps = xyz_to_gps(msg.position.x, msg.position.y, msg.position.z)
+    depth = msg.position.z
     roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
     seen_pose = True
 
@@ -33,7 +34,7 @@ def image_callback(msg):
 def xyz_to_gps(x, y, z):
     # This function will convert the x, y, z coordinates to GPS coordinates
     # The GPS coordinates will be returned as a tupl
-    km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
+    km_per_deg_lat, km_per_deg_long = get_gps_factors(0)
     latitude = x * 1000 / km_per_deg_lat + laditude_offset
     longitude = -y * 1000 / km_per_deg_long + longitude_offset
     return latitude, longitude
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     seen_pose = False
     seen_image = False
     video = None
-    title = strftime("%d/%m/%Y_%H:%M:%S")
+    title = strftime("%d_%m_%Y_%H:%M:%S")
     bridge = CvBridge()
     radius_earth = rospy.get_param('~radius_earth')
     laditude_offset = rospy.get_param('~laditude_offset')
