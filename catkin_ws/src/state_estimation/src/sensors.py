@@ -123,7 +123,6 @@ class DVL(Sensor):
 
         q_dvlnominal_dvl = np.quaternion(q_dvlnominal_dvl_w,q_dvlnominal_dvl_x,q_dvlnominal_dvl_y,q_dvlnominal_dvl_z)
         
-        
         self.q_dvl_auv = q_dvlnominal_dvl.conjugate() * Q_DVLNOMINAL_AUV
 
         auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
