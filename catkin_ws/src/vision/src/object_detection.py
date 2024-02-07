@@ -7,6 +7,8 @@ from object_detection_utils import *
 import object_detection_utils
 import torch
 
+# structurally good
+# dont forget to change things here after modifying object_detection_utils.py
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
@@ -28,18 +30,20 @@ def detect_on_image(raw_img, camera_id):
         print("Point cloud not yet published.")
         states[camera_id].resume()
         return
+    
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
     
     #run model on img
-    detections = model[camera_id].predict(img, device=device) #change device for cuda
+    detections = model[camera_id].predict(img, device=device, verbose=print_debug_info) #change device for cuda
 
     #initialize empty array for object detection frame message
     detectionFrameArray = []
     img_h, img_w, _ = img.shape
     if camera_id == 1:
         #[COMP] change target symbol to match planner
+
         buoy_symbols = analyzeBuoy(detections)
         leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
@@ -50,7 +54,7 @@ def detect_on_image(raw_img, camera_id):
             conf = float(list(box.conf)[0])
             #only consider prediction if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
-                print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
+                if print_debug_info: print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
                 continue
             
             bbox = list(box.xywh[0])
@@ -141,13 +145,13 @@ def detect_on_image(raw_img, camera_id):
 
                     detectionFrameArray.append(detectionFrame)
 
-                    for symbol_class_name, symbol_x, symbol_y, symbol_z, confidence in buoy_symbols:
+                    for symbol_class_name, symbol_x, symbol_y, symbol_z, symbol_confidence in buoy_symbols:
                         detectionFrame = VisionObject()
                         detectionFrame.label = symbol_class_name
                         detectionFrame.x = symbol_x
                         detectionFrame.y = symbol_y
                         detectionFrame.z = symbol_z
-                        detectionFrame.confidence = confidence
+                        detectionFrame.confidence = symbol_confidence
                         detectionFrame.theta_z = theta_z
                         detectionFrame.extra_field = None
 
@@ -174,6 +178,7 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(debug_img)   
     states[camera_id].resume()
 
+print_debug_info = rospy.get_param("log_model_prediction_info", False)
 
 #the int argument is used to index debug publisher, model, class names, and i
 subs = [

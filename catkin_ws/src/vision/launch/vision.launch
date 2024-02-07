@@ -4,7 +4,12 @@
         <include file="$(find vision)/launch/stream-down-cam.launch" />
         <!-- <include file="$(find vision)/launch/stream-front-cam.launch" /> -->
     </group>
+
+    <param name="log_model_prediction_info" value="false" />
     <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
+
     <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/>
+    <node name="point_cloud" pkg="vision" type="point_cloud.py" respawn="true"  output="screen"/>
+
     <!-- <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true"  output="screen"/> -->
 </launch>
