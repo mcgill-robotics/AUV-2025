@@ -33,7 +33,7 @@ class Superimposer:
 
         self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
 
-        self.buoyant_force_offset = 1
+        self.buoyant_force_offset = 0
     
     #Toggled in state_quaternion_pid_server.py
     def buoyant_force_cb(self, msg):
