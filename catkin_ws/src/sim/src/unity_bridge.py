@@ -88,11 +88,13 @@ if __name__ == '__main__':
     rospy.init_node('unity_bridge')
 
     # Load parameters
-    q_dvl_auv_w = rospy.get_param("q_dvl_auv_w")
-    q_dvl_auv_x = rospy.get_param("q_dvl_auv_x")
-    q_dvl_auv_y = rospy.get_param("q_dvl_auv_y")
-    q_dvl_auv_z = rospy.get_param("q_dvl_auv_z")
     
+    q_dvlnominal_dvl_w = rospy.get_param("q_dvlnominal_dvl_w")
+    q_dvlnominal_dvl_x = rospy.get_param("q_dvlnominal_dvl_x")
+    q_dvlnominal_dvl_y = rospy.get_param("q_dvlnominal_dvl_y")
+    q_dvlnominal_dvl_z = rospy.get_param("q_dvlnominal_dvl_z")
+    q_dvlnominal_dvl = np.quaternion(q_dvlnominal_dvl_w,q_dvlnominal_dvl_x,q_dvlnominal_dvl_y,q_dvlnominal_dvl_z)
+
     auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
     auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
     auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
@@ -109,9 +111,9 @@ if __name__ == '__main__':
     random_vector = random_vector / np.linalg.norm(random_vector)
     q_NWU_dvlref = np.quaternion(random_vector[0],random_vector[1],random_vector[2],random_vector[3])
     q_imunominal_auv = np.quaternion(0,1,0,0)
+    q_dvlnominal_auv = np.quaternion(0,1,0,0)
     q_NWU_NED = np.quaternion(0,1,0,0)
-    q_dvl_auv = np.quaternion(q_dvl_auv_w, q_dvl_auv_x, q_dvl_auv_y, q_dvl_auv_z)
-
+    q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv 
     # Set up subscribers and publishers
     rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
 

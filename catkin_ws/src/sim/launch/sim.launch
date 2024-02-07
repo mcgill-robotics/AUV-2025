@@ -10,10 +10,10 @@
     <param name="q_imunominal_imu_y" value="0.0" />
     <param name="q_imunominal_imu_z" value="0.0"/>
 
-    <param name="q_dvl_auv_w" value="0.0" />
-    <param name="q_dvl_auv_x" value="1.0" />
-    <param name="q_dvl_auv_y" value="0.0"/>
-    <param name="q_dvl_auv_z" value="0.0" />
+    <param name="q_dvlnominal_dvl_w" value="1.0" />
+	<param name="q_dvlnominal_dvl_x" value="0.0" />
+	<param name="q_dvlnominal_dvl_y" value="0.0"/>
+	<param name="q_dvlnominal_dvl_z" value="0.0" />
 
     <param name="auv_dvl_offset_x" value="0.0" />
     <param name="auv_dvl_offset_y" value="0.0" />
