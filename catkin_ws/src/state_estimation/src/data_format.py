@@ -6,19 +6,25 @@ from sensor_msgs.msg import Image
 from time import strftime
 from tf import transformations
 import math
+import cv2
 
 def pose_callback(msg):
     global gps
     global roll, pitch, yaw
     global depth
+    global seen_pose
+    seen_pose = True
     depth = msg.position.z
     gps = xyz_to_gps(msg.position.x, msg.position.y, msg.position.z)
     roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
 
 def image_callback(msg):
-    global image
+    global video
+    global seen_image
+    seen_image = True
+    if not seen_pose: return
     data = bridge.imgmsg_to_cv2(msg)
-    image = data
+    video.write(data)
 
 def xyz_to_gps(x, y, z):
     # This function will convert the x, y, z coordinates to GPS coordinates
@@ -31,17 +37,17 @@ def xyz_to_gps(x, y, z):
 def init_text_file():
     global output_txt
     output_txt = open('data.txt', 'w')
-    output_txt.write('Date Heure Latitude Longitude	Immersion Cap Pitch	Roll Easting_st	Northing_s Altitude_s\n')
+    output_txt.write('#date_dd/MM/yyyy,time,latitude,longitude,depth,altitude,pitch,roll\n')
 
 def save_data(_):
     global gps 
     global depth
     global image
     global output_txt
-    if gps is not None and image is not None:
+    if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
         time = strftime("%H:%M:%S")
-        output_txt.write(date + ' ' + time + ' ' + str(gps[0]) + ' ' + str(gps[1]) + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + ' ' + '1.0' + ' ' + '1.0' + ' ' + '1.0' + '\n') 
+        output_txt.write(date + ' ' + time + ' ' + str(gps[0]) + ' ' + str(gps[1]) + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + '\n') 
 
 
 def get_gps_factors(depth):
@@ -54,9 +60,11 @@ def get_gps_factors(depth):
     return lat_factor, long_factor
 
 def shutdown():
+    global video
     global timer
     global output_txt
     output_txt.close()
+    video.release()
     timer.shutdown()
 
 if __name__ == '__main__':
@@ -65,7 +73,9 @@ if __name__ == '__main__':
     gps = None
     depth = None
     roll, pitch, yaw = None, None, None
-    image = None    
+    seen_pose = False
+    seen_image = False
+    video = cv2.VideoWriter("data.mp4")
     bridge = CvBridge()
     radius_earth = rospy.get_param('~radius_earth')
     laditude_offset = rospy.get_param('~laditude_offset')
