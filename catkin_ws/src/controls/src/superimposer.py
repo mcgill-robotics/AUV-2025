@@ -33,6 +33,15 @@ class Superimposer:
 
         self.pub_effort = rospy.Publisher('/controls/effort', Wrench, queue_size=1)
 
+        self.buoyant_force_offset = 1
+    
+    #Toggled in state_quaternion_pid_server.py
+    def buoyant_force_cb(self, msg):
+        # rospy.loginfo("message_data: " + str(msg.data))
+        if msg.data and rospy.get_param("enable_buoyant_force_global"):
+            self.buoyant_force_offset = rospy.get_param("buoyant_force_offset")
+        else:
+            self.buoyant_force_offset = 0
 
     def update_effort(self, _):
         '''
@@ -53,18 +62,12 @@ class Superimposer:
         pitch = self.pitch.val
         yaw = self.yaw.val
 
-	    #Toggled in state_quaternion_pid_server.py
-        def buoyant_force_cb(self, msg):
-            global buoyant_force_offset
-            if msg.data and rospy.get_param("enable_buoyant_force_global"):
-                buoyant_force_offset = rospy.get_param("buoyant_force_offset")
-            else:
-                buoyant_force_offset = 0
+        rospy.Subscriber("/enable_buoyant_force_offset", Bool, self.buoyant_force_cb)
 
-        rospy.Subscriber("enable_buoyant_force_offset", Bool, buoyant_force_cb)
+        # rospy.loginfo("buoyant_force_offset: " + str(self.buoyant_force_offset))
 
         force_global = Vector3(
-                self.global_x.val, self.global_y.val, self.global_z.val + buoyant_force_offset)
+                self.global_x.val, self.global_y.val, self.global_z.val + self.buoyant_force_offset)
         force_auv = Vector3(surge, sway, heave)
         torque_auv = Vector3(roll, pitch, yaw)
 

@@ -52,9 +52,14 @@ class StateQuaternionServer(BaseServer):
         my_goal = self.goal_id
         self.cancelled = False
         self.goal = goal
+        
         if self.pose is not None:
             goal_position = [self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z]
             goal_quat = np.quaternion(self.goal.pose.orientation.w, self.goal.pose.orientation.x, self.goal.pose.orientation.y, self.goal.pose.orientation.z)
+
+            self.buoyant_force_pub.publish(Bool(True))
+
+
             if self.goal.local.data:
                 goal_position = self.local_to_global(goal_position)
             if(self.goal.displace.data):
@@ -95,13 +100,10 @@ class StateQuaternionServer(BaseServer):
             if(self.goal.do_z.data):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
+                # self.buoyant_force_pub.publish(Bool(True))
 
-                #Toggles buoyant force
-                if goal_position[2] < rospy.get_param("buoyant_force_active_depth"):
-                    self.buoyant_force_pub.publish(Bool(True))
-                else:
+                if goal_position[2] > rospy.get_param("buoyant_force_active_depth"):
                     self.buoyant_force_pub.publish(Bool(False))
-
 
                 safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
