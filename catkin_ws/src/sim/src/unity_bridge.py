@@ -107,7 +107,9 @@ if __name__ == '__main__':
     q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
 
     # REFERENCE FRAME DEFINITIONS
-    q_NWU_dvlref = np.quaternion(0,1,0,0)
+    random_vector = np.random.rand(4)
+    random_vector = random_vector / np.linalg.norm(random_vector)
+    q_NWU_dvlref = np.quaternion(random_vector[0],random_vector[1],random_vector[2],random_vector[3])
     q_imunominal_auv = np.quaternion(0,1,0,0)
     q_dvlnominal_auv = np.quaternion(0,1,0,0)
     q_NWU_NED = np.quaternion(0,1,0,0)
