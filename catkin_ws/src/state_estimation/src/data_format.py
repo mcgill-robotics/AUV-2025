@@ -24,12 +24,12 @@ def pose_callback(msg):
     seen_pose = True
 
 def image_callback(msg):
-    global video, seen_image
+    global image, seen_image
     if video is None: return
     seen_image = True
     if not seen_pose: return
     data = bridge.imgmsg_to_cv2(msg, "bgr8")
-    video.write(data)
+    image = data
 
 def xyz_to_gps(x, y, z):
     # This function will convert the x, y, z coordinates to GPS coordinates
@@ -50,6 +50,7 @@ def save_data(_):
         date = strftime("%d/%m/%Y")
         time = strftime("%H:%M:%S")
         output_txt.write(date + ' ' + time + ' ' + str(gps[0]) + ' ' + str(gps[1]) + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + '\n') 
+        video.write(image)
 
 
 def get_gps_factors(depth):
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     roll, pitch, yaw = None, None, None
     seen_pose = False
     seen_image = False
+    image = None
     video = None
     title = strftime("%d_%m_%Y_%H:%M:%S")
     bridge = CvBridge()
@@ -91,8 +93,7 @@ if __name__ == '__main__':
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
     camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
     init_text_file()
-    update_rate = rospy.get_param('~update_rate')
-    timer = rospy.Timer(rospy.Duration(1/update_rate), save_data)
+    timer = rospy.Timer(rospy.Duration(1/frame_rate), save_data)
     try:
         rospy.spin()
     finally:
