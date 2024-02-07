@@ -49,7 +49,7 @@ def init_text_file():
     global output_txt
     global output_dir
     output_txt = open(output_dir + '/data.txt', 'w')
-    output_txt.write('#date_dd/MM/yyyy,time,latitude,longitude,depth,altitude,pitch,roll\n')
+    output_txt.write('#date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
 
 def save_data(_):
     global gps 
