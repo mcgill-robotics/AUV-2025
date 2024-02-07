@@ -13,6 +13,7 @@ class StateTracker:
         self.theta_y = None
         self.theta_z = None
         self.pose = None
+        self.hydrophone = None
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
@@ -35,6 +36,8 @@ class StateTracker:
         self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
+    def updateHydrophone(self, msg):
+        self.hydrophone = float(msg.data)
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()
@@ -42,5 +45,3 @@ class StateTracker:
         self.theta_x_sub.unregister()
         self.theta_y_sub.unregister()
         self.theta_z_sub.unregister()
-    def getPinger(self):
-        return self.x, self.y, self.z

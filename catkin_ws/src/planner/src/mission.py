@@ -15,6 +15,7 @@ from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
+from substates.navigate_pinger import *
 
 
 def endMission(msg):
@@ -79,15 +80,17 @@ def laneMarkerMission():
     # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
     
-def goToPinger():
+def pingerMission():
         pub_mission_display.publish("Pinger")
         global sm
         sm = smach.StateMachine(outcomes=['success', 'failure'])
         with sm:
-                smach.StateMachine.add('find_pinger', InPlaceSearch(timeout=120, target_class="Pinger", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+                # Search for the object corresponding to the pinger number
+                # TODO [COMP]: Just going to Octagon table for now, but later the object we need to  go towards will correspond to the pinger number
+                smach.StateMachine.add('find_pinger', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                         transitions={'success': 'navigate_pinger', 'failure': 'failure'})
 
-                smach.StateMachine.add('navigate_pinger', NavigatePinger(control=control, mapping=mapping, state=state), 
+                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=pinger_num), 
                         transitions={'success': 'success', 'failure':'failure'})
                 res = sm.execute()
         # display_mission.updateMission("Pinger {}".format(res))
@@ -151,6 +154,7 @@ if __name__ == '__main__':
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
+        pinger_num = 1 # [COMP] change this to an integer depending on which pinger is being used
         sm = None
 
 
@@ -168,9 +172,9 @@ if __name__ == '__main__':
         # gateMission()
         #qualiVisionMission()
         #buoyMission()  
-        #tricks()  
-        #laneMarkerMission()
-        goToPinger()
+        # tricks()  
+        # laneMarkerMission()
+        pingerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
