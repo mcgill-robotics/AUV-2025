@@ -25,7 +25,6 @@ class GoToPinger(smach.State):
         pinger_object = None
 
         while(pinger_object is None):
-            # TODO [COMP]: Just going to nearest object towards pinger bearing for now, but later the object 
             # we need to go towards will correspond to the pinger number
             pingerBearingX = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].x
             pingerBearingY = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].y
@@ -34,7 +33,7 @@ class GoToPinger(smach.State):
             stateX = self.state.pingerBearing.state_x
             stateY = self.state.pingerBearing.state_y
             
-            pinger_object = self.mapping.getClosestObject(pos=(self.state.x, self.state.y))
+            pinger_object = self.mapping.getClosestObject(cls = "Gate", pos=(self.state.x, self.state.y))
             
             # Move towards the object
             print("Centering and rotating in front of object.")
