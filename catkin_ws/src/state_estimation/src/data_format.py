@@ -34,9 +34,9 @@ def image_callback(msg):
 def xyz_to_gps(x, y, z):
     # This function will convert the x, y, z coordinates to GPS coordinates
     # The GPS coordinates will be returned as a tupl
-    km_per_deg_lat, km_per_deg_long = get_gps_factors(0)
-    latitude = x * 1000 / km_per_deg_lat + laditude_offset
-    longitude = -y * 1000 / km_per_deg_long + longitude_offset
+    km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
+    latitude = x / 1000 / km_per_deg_lat + laditude_offset
+    longitude = -y / 1000 / km_per_deg_long + longitude_offset
     return latitude, longitude
 
 def init_text_file():
