@@ -85,13 +85,7 @@ def pingerMission():
         global sm
         sm = smach.StateMachine(outcomes=['success', 'failure'])
         with sm:
-                # Search for the object corresponding to the pinger number
-                # TODO [COMP]: Just going to Octagon table for now, but later the object we need to  go towards will correspond to the pinger number
-                smach.StateMachine.add('find_pinger', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
-                        transitions={'success': 'navigate_pinger', 'failure': 'failure'})
-                
                 # Turn towards pinger bearing and move towards it until you find an object
-
                 smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=2), 
                         transitions={'success': 'success', 'failure':'failure'})
                 res = sm.execute()

@@ -22,43 +22,46 @@ class GoToPinger(smach.State):
         self.control.move((None, None, -2))
         self.control.rotateEuler((0,0,None))
 
-        # TODO [COMP]: Just going to nearest object towards pinger bearing for now, but later the object 
-        # we need to go towards will correspond to the pinger number
-        pingerBearingX = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].x
-        pingerBearingY = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].y
-
-        # Get current AUV Position when it measured the pinger bearing
-        stateX = self.state.pingerBearing.state_x
-        stateY = self.state.pingerBearing.state_y
-
         while(pinger_object is None):
+            # TODO [COMP]: Just going to nearest object towards pinger bearing for now, but later the object 
+            # we need to go towards will correspond to the pinger number
+            pingerBearingX = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].x
+            pingerBearingY = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].y
+
+            # Get current AUV Position when it measured the pinger bearing
+            stateX = self.state.pingerBearing.state_x
+            stateY = self.state.pingerBearing.state_y
+            
             pinger_object = self.mapping.getClosestObject(pos=(self.state.x, self.state.y))
-            if pinger_object is None:
+            
+            # Move towards the object
+            print("Centering and rotating in front of object.")
+            offset_distance = -2
+            dtv = degreesToVector(pinger_object[4])
+            offset = [] 
+            for i in range(len(dtv)):
+                offset.append(offset_distance * dtv[i]) 
+            # homing_rotation = (0,0,pinger_object[4])
+            homing_position = (pinger_object[1] + offset[0], pinger_object[2] + offset[1], pinger_object[3])
+
+            # # Couldn't find the object with the specified pinger
+            # if pingerBearingX is None or pingerBearingY is None:
+            #     print("No object in object map! Failed.")
+            #     return 'failure'
+            
+            # Calculate the delta between the pinger object and the AUV
+            pingerDeltaX = pingerBearingX - stateX
+            pingerDeltaY = pingerBearingY - stateY
+
+            new_position = (pingerDeltaX,pingerDeltaY,0)
+
+            # Move towards pinger position
+            self.control.rotateDelta(new_position) 
+            self.control.move(homing_position)
+            
+        if pinger_object is None:
                 print("No object in object map! Failed.")
                 return 'failure'
-    
-        print("Centering and rotating in front of object.")
-        offset_distance = -2
-        dtv = degreesToVector(pinger_object[4])
-        offset = [] 
-        for i in range(len(dtv)):
-            offset.append(offset_distance * dtv[i]) 
-        homing_rotation = (0,0,pinger_object[4])
-        homing_position = (pinger_object[1] + offset[0], pinger_object[2] + offset[1], pinger_object[3])
-
-        # Couldn't find the object with the specified pinger
-        if pingerBearingX is None or pingerBearingY is None:
-            print("No object in object map! Failed.")
-            return 'failure'
-        
-        # Calculate the delta between the pinger object and the AUV
-        pingerDeltaX = pingerBearingX - stateX
-        pingerDeltaY = pingerBearingY - stateY
-
-        new_position = (pingerDeltaX,pingerDeltaY,0)
-
-        # Move towards pinger position
-        self.control.moveDelta(new_position) 
 
         # TODO: Log the type of object once that information becomes available
         print("Successfully centered in front of pinger object")
