@@ -49,7 +49,7 @@ def save_data(_):
     if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
         time = strftime("%H:%M:%S")
-        output_txt.write(date + ' ' + time + ' ' + str(gps[0]) + ' ' + str(gps[1]) + ' ' + str(depth) + ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll) + '\n') 
+        output_txt.write(f"{date},{time},{gps[0]:10.9f},{gps[1]:10.9f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
         video.write(image)
 
 
