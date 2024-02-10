@@ -32,16 +32,10 @@ class GoToPinger(smach.State):
         stateY = self.state.pingerBearing.state_y
 
         while(pinger_object is None):
-            pinger_object = self.mapping.getClosestObject(cls="Buoy", pos=(self.state.x, self.state.y))
+            pinger_object = self.mapping.getClosestObject(pos=(self.state.x, self.state.y))
             if pinger_object is None:
                 print("No object in object map! Failed.")
                 return 'failure'
-
-
-        pinger_object = self.mapping.getClosestObject(cls="Buoy", pos=(self.state.x, self.state.y))
-        if pinger_object is None:
-            print("No object in object map! Failed.")
-            return 'failure'
     
         print("Centering and rotating in front of object.")
         offset_distance = -2
@@ -51,8 +45,6 @@ class GoToPinger(smach.State):
             offset.append(offset_distance * dtv[i]) 
         homing_rotation = (0,0,pinger_object[4])
         homing_position = (pinger_object[1] + offset[0], pinger_object[2] + offset[1], pinger_object[3])
-
-
 
         # Couldn't find the object with the specified pinger
         if pingerBearingX is None or pingerBearingY is None:
