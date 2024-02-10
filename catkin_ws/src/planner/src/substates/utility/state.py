@@ -3,6 +3,7 @@
 import rospy
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
+from auv_msgs.msg import PingerBearing
 
 class StateTracker:
     def __init__(self):
@@ -21,7 +22,7 @@ class StateTracker:
         self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
-        self.hydrophone_sub = rospy.Subscriber('/sensors/hydrophones/pinger_bearing', Pose, self.updatePingerBearing)
+        self.hydrophone_sub = rospy.Subscriber('/sensors/hydrophones/pinger_bearing', PingerBearing, self.updatePingerBearing)
     def updatePose(self,msg):
         self.pose = msg
     def updateX(self, msg):
@@ -37,7 +38,7 @@ class StateTracker:
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
     def updatePingerBearing(self, msg):
-        self.pingerBearing = float(msg.data)
+        self.pingerBearing = msg
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()

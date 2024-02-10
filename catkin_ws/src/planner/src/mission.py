@@ -86,7 +86,7 @@ def pingerMission():
         sm = smach.StateMachine(outcomes=['success', 'failure'])
         with sm:
                 # Turn towards pinger bearing and move towards it until you find an object
-                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=2), 
+                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=1), 
                         transitions={'success': 'success', 'failure':'failure'})
                 res = sm.execute()
         # display_mission.updateMission("Pinger {}".format(res))
@@ -165,12 +165,12 @@ if __name__ == '__main__':
             
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        gateMission()
+        # gateMission()
         #qualiVisionMission()
         #buoyMission()  
         # tricks()  
         # laneMarkerMission()
-        # pingerMission()
+        pingerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()

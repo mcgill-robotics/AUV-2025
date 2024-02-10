@@ -22,6 +22,8 @@ class GoToPinger(smach.State):
         self.control.move((None, None, -2))
         self.control.rotateEuler((0,0,None))
 
+        pinger_object = None
+
         while(pinger_object is None):
             # TODO [COMP]: Just going to nearest object towards pinger bearing for now, but later the object 
             # we need to go towards will correspond to the pinger number
