@@ -51,8 +51,8 @@ if __name__ == '__main__':
         print("STARTING")
 
         #Go to approximate position of the Octagon Table and Lane Marker
-        octagon_table_pos=[-4.706,-9.036,-2.486]
-        lane_marker_pos=[1.661,6.204,-2.363]
+        octagon_table_pos=[-4.706,-9.036, 0]
+        lane_marker_pos=[1.661,6.204, 0]
         lane_marker_pos2=[9.882, 1.281, 0]
 
         goToTarget(octagon_table_pos)
