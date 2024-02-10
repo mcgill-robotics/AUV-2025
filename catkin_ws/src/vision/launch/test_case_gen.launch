@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="vision" type="test_case_gen.py" name="test_case_gen" respawn="false" output="screen">
+        <param name="test_dir" value="$(find vision)/test/" />
+    </node>
+</launch>
