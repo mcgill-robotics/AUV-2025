@@ -1,6 +1,3 @@
 <launch>
-	<include file="$(find sim)/launch/sim.launch">
-        <arg name="vision" value="true" />
-	</include>
-	<test test-name="object_position" pkg="planner" type="object_position_test.py" time-limit="1500.0"/>
+	<node pkg="planner" name="object_position" type="fuck_around.py" respawn="False" output="screen"/>
 </launch>

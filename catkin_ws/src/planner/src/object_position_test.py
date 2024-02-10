@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
 import rospy
-
+import smach
 from auv_msgs.msg import VisionObjectArray
-from substates.utility.controller import Controller
-from substates.utility.vision import ObjectMapper
-from substates.utility.state import StateTracker
+
+import time
+
 from substates.breadth_first_search import *
+from substates.utility.controller import *
+from substates.utility.state import *
+from substates.utility.vision import *
 
-import unittest
-import rostest
-
-### Write ros testing mission for object positions on down cam ###
-
-#Hardcode the positions of Lane Marker and Octagon Table based on their location in the Unity sim
-octagon_table_pos=[-4.706,-9.036,-2.486]
-lane_marker_pos=[1.661,6.204,-2.363]
-
+def endPlanner(msg="Shutting down mission planner."):
+    print(msg)
+    control.kill()
 
 def moveAroundTarget(self): #Make a square around the target
         control.moveDeltaLocal([4,0,0])
@@ -29,54 +26,50 @@ def moveAroundTarget(self): #Make a square around the target
         control.moveDeltaLocal([4,0,0])
         control.kill()
 
-def goToTarget(self, target):
+def goToTarget(target):
+    print("Moving to target")
     x,y,z = target
     control.move([x,y,-2], face_destination=True)
-    moveAroundTarget()
-        
+    print("Arrived at target")
+    #moveAroundTarget()
 
 def object_map_cb(msg):
     for obj in msg.objects:
         print(obj)
 
 if __name__ == '__main__':
-    rospy.init_node('object_position_test')
-    map = ObjectMapper()
-    control = Controller(rospy.Time(0))
+    rospy.init_node('object_position_test',log_level=rospy.DEBUG)
     sub = rospy.Subscriber('vision/object_map', VisionObjectArray, object_map_cb)
+    rospy.on_shutdown(endPlanner)
 
-    #Make AUV do a breath first search to find the Lane Marker and Octagon Table
-    #BreadthFirstSearch()
+    try:
+        mapping = ObjectMapper()
+        state = StateTracker()
+        control = Controller(rospy.Time(0))
+        sm = None
 
-    goToTarget(octagon_table_pos)
-    goToTarget(lane_marker_pos)
+        print("STARTING")
 
-    #See if the object map contains the Lane Marker and Octagon Table at the correct positions
-    octagon_table_map_pos = map.getClass(cls="Octagon Table")
-    lane_marker_map_pos = map.getClass(cls="Lane Marker")
+        #Go to approximate position of the Octagon Table and Lane Marker
+        octagon_table_pos=[-4.706,-9.036,-2.486]
+        lane_marker_pos=[1.661,6.204,-2.363]
+        lane_marker_pos2=[9.882, 1.281, 0]
 
-    print("Actual Octagon Table Position: ", octagon_table_pos)
-    print("Octagon Table Position: ", octagon_table_map_pos)
-    print("Actual Lane Marker Position: ", lane_marker_pos)
-    print("Lane Marker Position: ", lane_marker_map_pos)
-    rospy.spin()
+        goToTarget(octagon_table_pos)
+        goToTarget(lane_marker_pos)
+        goToTarget(lane_marker_pos2)
 
-############################
-    
-# class ObjectPositionTest(unittest.TestCase):
-#     ## test 1 == 1
-#     def test__simple_movement(self): # only functions with 'test_'-prefix will be run!
-#         controls.move([0,0,-2])
-#         controls.rotate([1,0,0,0])
-#         self.assertTrue(True)
+        time.sleep(5)
 
-# if __name__ == '__main__':
-#     rospy.init_node('object_position_test')
-#     controls = Controller(rospy.Time(0))
-#     state = StateTracker()
-#     while state.pose is None:
-#         rospy.sleep(1)
-#     rospy.sleep(5)
-#     rostest.rosrun("planner", 'settle_test', ObjectPositionTest)
-    
-    
+        control.kill()
+
+        octagon_table_map_pos = mapping.getClass(cls="Octagon Table")
+        lane_marker_map_pos = mapping.getClass(cls="Lane Marker")
+
+        print("Octagon Table Position: ", octagon_table_map_pos)
+        print("Lane Marker Position(s): ", lane_marker_map_pos)
+
+    except KeyboardInterrupt:
+        if sm is not None: sm.request_preempt()
+    finally:
+        endPlanner()
