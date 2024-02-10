@@ -55,7 +55,6 @@ if __name__ == '__main__':
     image_sub1 = rospy.Subscriber('/vision/down_cam/image_raw', Image, down_callback)
     image_sub2 = rospy.Subscriber('/vision/front_cam/color/image_raw',Image, front_callback)
     image_sub3 = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw',Image, depth_image_callback)
-    detection_sub = rospy.Subscriber('/vision/viewframe_detection', VisionObjectArray, detection_callback)
     while(input("press enter to capture, x to escape") != "x"):
         print("trying to capture")
         save_data()
