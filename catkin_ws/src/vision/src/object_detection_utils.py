@@ -14,6 +14,8 @@ import quaternion
 import os
 from point_cloud import get_xyz_image
 from tf import transformations
+from scipy.cluster.vq import kmeans, vq
+
 class State:
     def __init__(self):
         self.x = None
@@ -26,7 +28,7 @@ class State:
         self.q_auv = None
         self.point_cloud = None
         self.depth = None
-        self.rgb = None
+        self.bgr_img = None
         self.width = None
         self.height = None
         self.x_over_z_map = None
@@ -67,24 +69,51 @@ class State:
     def updatePointCloud(self):
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
-    def cleanPointCloud(self, point_cloud):
-        # APPLY BILATERAL FILTER TO REMOVE NOISE
-        d = 15          # Diameter of each pixel neighborhood that is used during filtering
-        sigmaColor = 75 # Filter sigma in the color space
-        sigmaSpace = 75 # Filter sigma in the coordinate space
+    def cleanPointCloud(self, point_cloud, bgr):
+        # Apply weighting for color axes before clustering
+        bgr[:,:,0] *= b_weight
+        bgr[:,:,1] *= g_weight
+        bgr[:,:,2] *= r_weight
+        # store copy of point cloud to filter from later
+        cluster_1 = np.copy(point_cloud)
+        cluster_2 = np.copy(point_cloud)
+        # Apply weighting for positional axes before clustering
+        point_cloud[:,:,0] *= x_weight
+        point_cloud[:,:,1] *= y_weight
+        point_cloud[:,:,2] *= z_weight
+        # Combine bgr and xyz data into a flattened array    
+        bgr_xyz = np.concatenate((bgr, point_cloud), axis=2)
+        original_bgr_xyz_shape = bgr_xyz.shape[0:2]
+        bgr_xyz_flat = bgr_xyz.reshape(-1, 6)
 
-        # Apply bilateral filter to remove noise
-        point_cloud = cv2.bilateralFilter(point_cloud.astype("float32"), d, sigmaColor, sigmaSpace)
+        # Cluster BGRXYZ points into 2 groups (object, not object)
+        centroids, _ = kmeans(bgr_xyz_flat, 2)
+        # Assign each point to the nearest centroid
+        cluster_assignments, _ = vq(bgr_xyz_flat, centroids)
+        # create clusters from point cloud copies
+        cluster_assignments = cluster_assignments.reshape(original_bgr_xyz_shape)
+        # apply clusters to point cloud copies saved earlier
+        cluster_1[cluster_assignments == 0] = np.array([np.nan]*3)
+        cluster_2[cluster_assignments == 1] = np.array([np.nan]*3)
         
-        return point_cloud
+        # decide which cluster is the object vs. the background
+        # to do this, take the cluster which has the least range in distance to the AUV
+        min_dist_from_cluster_1 = np.nanmin(np.linalg.norm(cluster_1 - np.array([self.x, self.y, self.z]), axis=2))
+        min_dist_from_cluster_2 = np.nanmin(np.linalg.norm(cluster_2 - np.array([self.x, self.y, self.z]), axis=2))
+        max_dist_from_cluster_1 = np.nanmax(np.linalg.norm(cluster_1 - np.array([self.x, self.y, self.z]), axis=2))
+        max_dist_from_cluster_2 = np.nanmax(np.linalg.norm(cluster_2 - np.array([self.x, self.y, self.z]), axis=2))
+        cluster_1_range = max_dist_from_cluster_1 - min_dist_from_cluster_1
+        cluster_2_range = max_dist_from_cluster_2 - min_dist_from_cluster_2
         
+        if cluster_1_range < cluster_2_range: return cluster_1
+        else: return cluster_2
 
     def getPointCloud(self, bbox=None):
         if bbox is None: 
         # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
-            return self.cleanPointCloud(self.point_cloud)
+            return self.cleanPointCloud(self.point_cloud, self.bgr_img)
         else:
-            return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
+            return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True), cropToBbox(self.bgr_img, bbox, copy=True))
     def updateDepth(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
         self.depth = temp/depth_scale_factor
@@ -426,6 +455,14 @@ max_dist_to_measure = 10
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
+
+# FOR POINT CLOUD CLUSTERING
+x_weight = 5
+y_weight = 5
+z_weight = 5
+r_weight = 1
+g_weight = 1
+b_weight = 1
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
 pool_depth = -5
