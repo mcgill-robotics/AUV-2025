@@ -88,11 +88,13 @@ if __name__ == '__main__':
     rospy.init_node('unity_bridge')
 
     # Load parameters
-    q_dvl_auv_w = rospy.get_param("q_dvl_auv_w")
-    q_dvl_auv_x = rospy.get_param("q_dvl_auv_x")
-    q_dvl_auv_y = rospy.get_param("q_dvl_auv_y")
-    q_dvl_auv_z = rospy.get_param("q_dvl_auv_z")
     
+    q_dvlnominal_dvl_w = rospy.get_param("q_dvlnominal_dvl_w")
+    q_dvlnominal_dvl_x = rospy.get_param("q_dvlnominal_dvl_x")
+    q_dvlnominal_dvl_y = rospy.get_param("q_dvlnominal_dvl_y")
+    q_dvlnominal_dvl_z = rospy.get_param("q_dvlnominal_dvl_z")
+    q_dvlnominal_dvl = np.quaternion(q_dvlnominal_dvl_w,q_dvlnominal_dvl_x,q_dvlnominal_dvl_y,q_dvlnominal_dvl_z)
+
     auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
     auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
     auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
@@ -105,13 +107,13 @@ if __name__ == '__main__':
     q_imunominal_imu = np.quaternion(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z)
 
     # REFERENCE FRAME DEFINITIONS
-    q_NWU_dvlref = np.quaternion(0,1,0,0)
+    random_vector = np.random.rand(4)
+    random_vector = random_vector / np.linalg.norm(random_vector)
+    q_NWU_dvlref = np.quaternion(random_vector[0],random_vector[1],random_vector[2],random_vector[3])
     q_imunominal_auv = np.quaternion(0,1,0,0)
+    q_dvlnominal_auv = np.quaternion(0,1,0,0)
     q_NWU_NED = np.quaternion(0,1,0,0)
-    q_dvl_auv = np.quaternion(q_dvl_auv_w, q_dvl_auv_x, q_dvl_auv_y, q_dvl_auv_z)
-
-    # Set up subscribers and publishers
-    rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
+    q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv 
 
     # TODO: ADD DVL VELOCITY
     
@@ -123,5 +125,8 @@ if __name__ == '__main__':
     pub_depth_sensor = rospy.Publisher('/sensors/depth/z', Float64, queue_size=1)
     pub_imu_quat_sensor = rospy.Publisher('/sensors/imu/quaternion', SbgEkfQuat, queue_size=1)
     pub_imu_data_sensor = rospy.Publisher('/sensors/imu/angular_velocity', SbgImuData, queue_size=1)
+    
+    # Set up subscribers and publishers
+    rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
 
     rospy.spin()
