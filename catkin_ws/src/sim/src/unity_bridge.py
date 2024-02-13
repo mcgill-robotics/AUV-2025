@@ -114,8 +114,6 @@ if __name__ == '__main__':
     q_dvlnominal_auv = np.quaternion(0,1,0,0)
     q_NWU_NED = np.quaternion(0,1,0,0)
     q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv 
-    # Set up subscribers and publishers
-    rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
 
     # TODO: ADD DVL VELOCITY
     
@@ -127,5 +125,8 @@ if __name__ == '__main__':
     pub_depth_sensor = rospy.Publisher('/sensors/depth/z', Float64, queue_size=1)
     pub_imu_quat_sensor = rospy.Publisher('/sensors/imu/quaternion', SbgEkfQuat, queue_size=1)
     pub_imu_data_sensor = rospy.Publisher('/sensors/imu/angular_velocity', SbgImuData, queue_size=1)
+    
+    # Set up subscribers and publishers
+    rospy.Subscriber('/unity/state', UnityState, cb_unity_state)
 
     rospy.spin()
