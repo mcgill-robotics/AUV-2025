@@ -27,10 +27,8 @@ class GoToPinger(smach.State):
 
         give_up_threshold = 10
 
-        # "pinger{}_bearing".format(self.pinger_num)
-
         while(pinger_object is None and give_up_threshold > 0):
-            # we need to go towards will correspond to the pinger number
+            # The object we need to go towards will correspond to the pinger number
             print("Pinger bearing", self.state.pingerBearing)
             pingerBearingX = self.state.pingerBearing.pinger1_bearing.x
             pingerBearingY = self.state.pingerBearing.pinger1_bearing.y
@@ -47,7 +45,7 @@ class GoToPinger(smach.State):
             print("Pinger delta X", pingerDeltaX, "Pinger delta Y", pingerDeltaY)
 
             # Rotate and move towards pinger position
-            self.control.rotateDeltaEuler([pingerDeltaX,pingerDeltaY,0]) 
+            self.control.rotateEuler([pingerDeltaX, pingerDeltaY, 0]) 
             self.control.moveDelta([1, 0, 0])
             
             # Try to get the current closest object
@@ -65,7 +63,7 @@ class GoToPinger(smach.State):
             return 'failure'
         else:
             # Move towards the object
-            print("Object found! Centering and rotating in front of", pinger_object[0])
+            print("Object found! Centering and rotating in front of the {}".format(pinger_object[0]))
             offset_distance = -2
             rotation_amount = 180 if pinger_object[4] is None else pinger_object[4]
             dtv = degreesToVector(rotation_amount)
@@ -78,8 +76,7 @@ class GoToPinger(smach.State):
 
             self.control.move(homing_position)
 
-        # TODO: Log the type of object once that information becomes available
-        print("Successfully centered in front of pinger object")
+        print("Successfully centered in front of the {}".format(pinger_object[0]))
         print("Successfully completed pinger task!")
         
         return 'success'
