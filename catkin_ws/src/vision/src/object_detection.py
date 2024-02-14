@@ -34,6 +34,7 @@ def detect_on_image(raw_img, camera_id):
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
+    states[camera_id].bgr_img = np.copy(img)
     
     #run model on img
     detections = model[camera_id].predict(img, device=device, verbose=print_debug_info) #change device for cuda
