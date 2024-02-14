@@ -324,10 +324,6 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
     def flatten(self):
-        orientation = self.orientation
-        orientation.x = 0
-        orientation.y = 0
         sign = 1 if orientation.z > 0 else -1
-        orientation.z = sign*math.sqrt(1 - orientation.w**2)
-        goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
+        goal = self.get_state_goal([None,None,None,self.orientation.w,0,0,sign*math.sqrt(1 - self.orientation.w**2)],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal)

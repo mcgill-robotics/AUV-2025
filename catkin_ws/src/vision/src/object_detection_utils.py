@@ -15,15 +15,13 @@ import os
 from point_cloud import get_xyz_image
 from tf import transformations
 from scipy.cluster.vq import kmeans, vq
+from scipy.stats import mode
 
 class State:
     def __init__(self):
         self.x = None
         self.y = None
         self.z = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
         self.paused = False
         self.q_auv = None
         self.point_cloud = None
@@ -38,9 +36,7 @@ class State:
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
-        self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
-        self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
+
         # Update the point cloud whenever the current image is updated
         self.camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
@@ -54,18 +50,16 @@ class State:
     def updateZ(self, msg):
         if self.paused: return
         self.z = float(msg.data)
-    def updateThetaX(self, msg):
-        if self.paused: return
-        self.theta_x = float(msg.data)
-    def updateThetaY(self, msg):
-        if self.paused: return
-        self.theta_y = float(msg.data)
-    def updateThetaZ(self, msg):
-        if self.paused: return
-        self.theta_z = float(msg.data)
     def updatePose(self,msg):
         if self.paused: return
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+        # calculate heading from quaternion
+        orientation = np.quaternion(self.q_auv.w,self.q_auv.x,self.q_auv.y,self.q_auv.z)
+        orientation.x = 0
+        orientation.y = 0
+        orientation = orientation.normalized()
+        sign = 
+        self.theta_z = np.degrees(2 * np.arcsin(orientation.z))
     def updatePointCloud(self):
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
@@ -105,8 +99,24 @@ class State:
         cluster_1_range = max_dist_from_cluster_1 - min_dist_from_cluster_1
         cluster_2_range = max_dist_from_cluster_2 - min_dist_from_cluster_2
         
-        if cluster_1_range < cluster_2_range: return cluster_1
-        else: return cluster_2
+        if cluster_1_range < cluster_2_range:
+            selected_cluster = cluster_1
+            selected_cluster_assignments = cluster_assignments == 1
+        else:
+            selected_cluster = cluster_2
+            selected_cluster_assignments = cluster_assignments == 0
+        
+        # remove very far points from the point cloud (under assumption one object will never span more than _m)
+        closest_point = np.nanmin(selected_cluster[:,:,0])
+        selected_cluster[selected_cluster[:,:,0] > closest_point + 1.5] = np.array([np.nan]*3)
+        selected_cluster_assignments[selected_cluster[:,:,0] > closest_point + 1.5] = False
+        
+        # for debugging [TODO REMOVE WHEN NOT NEEDED]
+        debug_img = np.uint8(np.zeros((selected_cluster.shape)))
+        debug_img[selected_cluster_assignments] = np.array([0,0,255])
+        rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
+        
+        return selected_cluster
 
     def getPointCloud(self, bbox=None):
         if bbox is None: 
@@ -284,24 +294,13 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
 # assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
-    lx = np.nanmean(point_cloud[:,:,0])
-    ly = np.nanmean(point_cloud[:,:,1])
-    lz = np.nanmean(point_cloud[:,:,2])
+    lx = mode((point_cloud[:,:,0]).flatten(), nan_policy='omit')[0][0]
+    ly = mode((point_cloud[:,:,1]).flatten(), nan_policy='omit')[0][0]
+    lz = mode((point_cloud[:,:,2]).flatten(), nan_policy='omit')[0][0]
     x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
     return x, y, z
 
-# TODO: Gulce
-# tells you how the object is oriented in space
-
-# splits gate image in half
-# takes an avg point of all pixels on the left side and the right side 
-# finds angle between two points
-
-# detection bbox, so theres definitely smth
-# bbox allows me to crop the point cloud and flatten it into x-y cloud of bbox
-# find best fitting line
-# find angle
-# assumes point cloud cleaning is good, not a safe assumption
+# tells you how the object is oriented in space (Z axis)
 def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
@@ -320,13 +319,8 @@ def measureAngle(bbox):
 
     angle = -math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
     
-    return angle
+    return angle + states[1].theta_z
 
-# does what its supposed to, gate isnt in right position
-# Abydos to the left earth to the right detected
-# is there a gate?
-# if so did i see a symbol?
-# if so, which side did i see it on?
 def analyzeGate(detections):
     # Return the class_id of the symbol on the left of the gate
     # If no symbol return None
@@ -352,34 +346,10 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-# Works! 
-# four symbols in buoy
-# hit them in correct order
-# right now the symbols are treated as objects
-# or we can do the same thing as the gate, seeing where they are
-
-# whats detections? 
 def analyzeBuoy(detections):
-    """
-    Analyzes buoy to detect the four symbols.
-
-    Parameters:
-        detections (array?): 
-
-    Returns:
-        ...
-
-    Examples:
-        >>> analyzeBuoy()
-        output
-        >>>...
-        ...
-
-    """
     symbols = []
     buoy_was_detected = False
 
-    # print("DETECTIONS", detections)
     for detection in detections:
 
         if torch.cuda.is_available(): 
@@ -406,9 +376,8 @@ def analyzeBuoy(detections):
     else: 
         return []
 
-# CHECK
 # lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
-#selects highest confidence detection from duplicates and ignores objects with no position measurement
+# selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(detectionFrameArray):
     label_counts = {}
     selected_detections = []
@@ -457,9 +426,9 @@ BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 
 # FOR POINT CLOUD CLUSTERING
-x_weight = 5
-y_weight = 5
-z_weight = 5
+x_weight = 3
+y_weight = 3
+z_weight = 3
 r_weight = 1
 g_weight = 1
 b_weight = 1

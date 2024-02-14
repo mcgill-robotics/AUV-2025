@@ -19,7 +19,7 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     states[camera_id].pause()
     
-    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z}
+    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "q": states[camera_id].q_auv, "theta_z": states[camera_id].theta_z}
     for v in current_states.values():
         if v is None:
             print("State information missing. Skipping detection.")
