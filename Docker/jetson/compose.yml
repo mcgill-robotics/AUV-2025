@@ -9,11 +9,14 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
+
+    runtime: nvidia
+    devices:
+      - /dev/auv_imu:/dev/auv_imu
     # image: "mcgillrobotics/auv_2024:main"
     command: bash -c "tail -f /dev/null"
     network_mode: host
     restart: always
-    runtime: nvidia
     build: .
     deploy:
       resources:
