@@ -42,7 +42,7 @@ def xyz_to_gps(x, y, z):
 def init_text_file():
     global output_txt, output_dir, title
     output_txt = open(output_dir + f'/{title}.txt', 'w')
-    output_txt.write('#date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
+    output_txt.write('##date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
 
 def save_data(_):
     global gps, depth, image, output_txt, roll, pitch, yaw, video
