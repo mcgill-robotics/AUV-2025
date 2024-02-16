@@ -327,8 +327,7 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
     def flatten(self):
-        orientation = np.quaternion(self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z)
-        
+        orientation = np.quaternion(self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z)        
         v = orientation * np.quaternion(0,1,0,0) * orientation.conjugate()
         v = np.array([v.x,v.y])
         v = v / np.linalg.norm(v)
