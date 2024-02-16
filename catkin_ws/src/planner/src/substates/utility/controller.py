@@ -10,6 +10,8 @@ from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 import math
 from .functions import *
+import numpy as np
+import quaternion
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -324,6 +326,9 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
     def flatten(self):
-        sign = 1 if orientation.z > 0 else -1
-        goal = self.get_state_goal([None,None,None,self.orientation.w,0,0,sign*math.sqrt(1 - self.orientation.w**2)],do_not_displace)
+        orientation = np.quaternion(self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z)
+        orientation.x = 0
+        orientation.y = 0
+        orientation = orientation.normalized()
+        goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
