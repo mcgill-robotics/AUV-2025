@@ -390,7 +390,7 @@ states = (State(), State())
 
 
 ############## PARAMETERS ##############
-min_prediction_confidence = 0.3
+min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
 HEADING_COLOR = (255, 0, 0) # Blue
