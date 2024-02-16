@@ -29,6 +29,7 @@ catkin_ws/.catkin_tools/
 
 #testing files
 catkin_ws/src/planner/src/testMission.py
+catkin_ws/src/state_estimation/data/
 
 # taken from ros tcp endpoint
 catkin_ws/src/sim/.DS_Store
