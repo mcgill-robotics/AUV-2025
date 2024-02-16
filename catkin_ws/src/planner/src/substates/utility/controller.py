@@ -12,6 +12,7 @@ import math
 from .functions import *
 import numpy as np
 import quaternion
+import math
 
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -326,9 +327,16 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
     def flatten(self):
-        orientation = np.quaternion(self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z)
-        orientation.x = 0
-        orientation.y = 0
-        orientation = orientation.normalized()
-        goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
+        orientation = np.quaternion(self.orientation.w,self.orientation.x,self.orientation.y,self.orientation.z)        
+        v = orientation * np.quaternion(0,1,0,0) * orientation.conjugate()
+        v = np.array([v.x,v.y])
+        v = v / np.linalg.norm(v)
+        forward = np.array((1,0))
+        angle = math.acos(v.dot(forward))
+        if v[0] < 0:
+            angle *= -1
+        final = np.quaternion(math.cos(angle/2),0,0,math.sin(angle/2))
+
+
+        goal = self.get_state_goal([None,None,None,final.w,final.x,final.y,final.z],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
