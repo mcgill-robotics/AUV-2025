@@ -105,9 +105,9 @@ class State:
         # if(self.y_over_z_map is not None): return
         fx = msg.K[0]
         fy = msg.K[4]
-        cy = msg.K[2]
-        cx = msg.K[5]
-
+        cx = msg.K[2]
+        cy = msg.K[5]
+        
         self.width = msg.width
         self.height = msg.height
 
