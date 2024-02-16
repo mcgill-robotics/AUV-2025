@@ -71,7 +71,6 @@ class State:
         eps = 0.1  # Maximum distance between two samples for them to be considered as in the same neighborhood
         min_samples = 10  # The number of samples in a neighborhood for a point to be considered as a core point
 
-
         # Perform DBSCAN clustering
         dbscan = DBSCAN(eps=eps, min_samples=min_samples)
         labels = dbscan.fit_predict(point_cloud)
@@ -84,10 +83,10 @@ class State:
         point_cloud = point_cloud.reshape(initial_point_cloud_shape)
         object_mask = object_mask.reshape(initial_point_cloud_shape[0:2])
         
-        # for debugging [TODO REMOVE WHEN NOT NEEDED]
-        debug_img = np.uint8(np.zeros((point_cloud.shape)))
-        debug_img[object_mask] = np.array([0,0,255])
-        rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
+        # for debugging [ONLY UNCOMMENT IF NEEDED]
+        # debug_img = np.uint8(np.zeros((point_cloud.shape)))
+        # debug_img[object_mask] = np.array([0,0,255])
+        # rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
         
         return point_cloud
 
@@ -102,7 +101,6 @@ class State:
         self.depth = temp/depth_scale_factor
         self.updatePointCloud()
     def updateCameraInfo(self, msg):
-        # if(self.y_over_z_map is not None): return
         fx = msg.K[0]
         fy = msg.K[4]
         cx = msg.K[2]
@@ -124,7 +122,7 @@ class State:
         self.paused = False
 
 # bbox is an array of 4 elements
-#given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
+# given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     #get xmin, xmax, ymin, ymax from bbox 
     x_center, y_center, w, h = bbox
@@ -157,7 +155,6 @@ def cropToBbox(img, bbox, copy=True):
     if copy: return np.copy(img[y_min:y_max, x_min:x_max])
     else: return img[y_min:y_max, x_min:x_max]
 
-# works for sure
 def measureLaneMarker(img, bbox, debug_img):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
@@ -213,7 +210,6 @@ def findIntersection(starting_point, vector, plane_z_pos):
     
     return starting_point + np.array(vector) * scaling_factor
 
-# TODO: Vivek
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     """
     Given the pixel locations and height and width
@@ -265,42 +261,12 @@ def getObjectPositionFrontCam(bbox):
     max_lx = np.nanmax(point_cloud[:,:,0].flatten())
     max_ly = np.nanmax(point_cloud[:,:,1].flatten())
     max_lz = np.nanmax(point_cloud[:,:,2].flatten())
-    # lx = (max_lx + min_lx) / 2
-    # ly = (max_ly + min_ly) / 2
-    # lz = (max_lz + min_lz) / 2
+    lx = (max_lx + min_lx) / 2
+    ly = (max_ly + min_ly) / 2
+    lz = (max_lz + min_lz) / 2
     
-    print(min_ly, max_ly)
-    print(min_lz, max_lz)
-    
-    # lx = np.nanmedian(point_cloud[:,:,0].flatten())
-    # ly = np.nanmedian(point_cloud[:,:,1].flatten())
-    # lz = np.nanmedian(point_cloud[:,:,2].flatten())
-    
-    lx = np.nanmean(point_cloud[:,:,0].flatten())
-    ly = np.nanmean(point_cloud[:,:,1].flatten())
-    lz = np.nanmean(point_cloud[:,:,2].flatten())
-    
-    # point_cloud_x = point_cloud[:,:,0].flatten() # collect x, ignore z positions of points
-    # point_cloud_y = point_cloud[:,:,1].flatten() # collect y, ignore z position of points
-    # point_cloud_z = point_cloud[:,:,2].flatten() # collect y, ignore z position of points
-    # nan_indices = np.isnan(point_cloud_x) | np.isnan(point_cloud_y) | np.isnan(point_cloud_z)
-    # filtered_point_cloud_x = point_cloud_x[~nan_indices] # filter point cloud x so it has no NaNs
-    # filtered_point_cloud_y = point_cloud_y[~nan_indices] # filter point cloud y so it has no NaNs
-    # filtered_point_cloud_z = point_cloud_z[~nan_indices] # filter point cloud y so it has no NaNs
-    
-    # ransac = RANSACRegressor()
-    # X = np.ones_like(filtered_point_cloud_x).reshape(-1, 1)
-    # ransac.fit(X, filtered_point_cloud_x)
-    # lx = ransac.estimator_.intercept_
-    # ransac.fit(X, filtered_point_cloud_y)
-    # ly = ransac.estimator_.intercept_
-    # ransac.fit(X, filtered_point_cloud_z)
-    # lz = ransac.estimator_.intercept_
-
     # Get the best estimate of the mean
-    print(lx, ly, lz)
     x,y,z = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz])) + np.array([states[1].x, states[1].y, states[1].z])
-    print(x,y,z)
     return x, y, z
 
 # tells you how the object is oriented in space (Z axis)
@@ -318,6 +284,7 @@ def measureAngle(bbox):
     filtered_point_cloud_x = point_cloud_x[~nan_indices] # filter point cloud x so it has no NaNs
     filtered_point_cloud_y = point_cloud_y[~nan_indices] # filter point cloud y so it has no NaNs
 
+    # fit a line to the point cloud X/Y with RANSAC (removes outliers)
     ransac = RANSACRegressor()
     ransac.fit(-1 * filtered_point_cloud_y.reshape(-1,1), filtered_point_cloud_x)
     slope = ransac.estimator_.coef_[0]
