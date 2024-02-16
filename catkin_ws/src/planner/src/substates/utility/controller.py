@@ -336,7 +336,6 @@ class Controller:
         angle = math.acos(v.dot(forward))
         if v[0] < 0:
             angle *= -1
-        print(angle*180/math.pi)
         final = np.quaternion(math.cos(angle/2),0,0,math.sin(angle/2))
 
 
