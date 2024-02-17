@@ -11,6 +11,7 @@ from pyproj import Transformer
 from pyproj import CRS
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
+import time
 
 def camera_info_callback(msg):
     global video, frame_rat, output_dir, title
@@ -24,9 +25,11 @@ def pose_callback(msg):
     global gps, roll, pitch, yaw, depth, seen_pose, backwards, north_offset, east_offset
     new_north, new_east = north_offset + msg.position.x/1000, east_offset + msg.position.y/1000
     gps = backwards.transform(new_north,  new_east)
-    print(gps)
     depth = msg.position.z
-    roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
+    yaw, pitch, roll = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
+    roll *= 180 / math.pi
+    pitch *= 180 / math.pi
+    yaw *= 180 / math.pi
     seen_pose = True
 
 def image_callback(msg):
@@ -54,8 +57,9 @@ def save_data(_):
     global gps, depth, image, output_txt, roll, pitch, yaw, video
     if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
-        time = strftime("%H:%M:%S")
-        output_txt.write(f"{date},{time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
+        millis = str(int(round(time.time() * 1000)))[0:3]
+        the_time = strftime(f"%H:%M:%S.{millis}")
+        output_txt.write(f"{date},{the_time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
         video.write(image)
 
 
