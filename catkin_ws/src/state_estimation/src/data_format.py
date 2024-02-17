@@ -7,6 +7,10 @@ from time import strftime
 from tf import transformations
 import math
 import cv2
+from pyproj import Transformer
+from pyproj import CRS
+from pyproj.aoi import AreaOfInterest
+from pyproj.database import query_utm_crs_info
 
 def camera_info_callback(msg):
     global video, frame_rat, output_dir, title
@@ -17,8 +21,10 @@ def camera_info_callback(msg):
     video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
 
 def pose_callback(msg):
-    global gps, roll, pitch, yaw, depth, seen_pose
-    gps = xyz_to_gps(msg.position.x, msg.position.y, msg.position.z)
+    global gps, roll, pitch, yaw, depth, seen_pose, backwards, north_offset, east_offset
+    new_north, new_east = north_offset + msg.position.x/1000, east_offset + msg.position.y/1000
+    gps = backwards.transform(new_north,  new_east)
+    print(gps)
     depth = msg.position.z
     roll, pitch, yaw = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
     seen_pose = True
@@ -31,13 +37,13 @@ def image_callback(msg):
     data = bridge.imgmsg_to_cv2(msg, "bgr8")
     image = data
 
-def xyz_to_gps(x, y, z):
-    # This function will convert the x, y, z coordinates to GPS coordinates
-    # The GPS coordinates will be returned as a tupl
-    km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
-    latitude = x / 1000 / km_per_deg_lat + laditude_offset
-    longitude = -y / 1000 / km_per_deg_long + longitude_offset
-    return latitude, longitude
+# def xyz_to_gps(x, y, z):
+#     # This function will convert the x, y, z coordinates to GPS coordinates
+#     # The GPS coordinates will be returned as a tupl
+#     km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
+#     latitude = x / 1000 / km_per_deg_lat + laditude_offset
+#     longitude = -y / 1000 / km_per_deg_long + longitude_offset
+#     return latitude, longitude
 
 def init_text_file():
     global output_txt, output_dir, title
@@ -49,18 +55,18 @@ def save_data(_):
     if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
         time = strftime("%H:%M:%S")
-        output_txt.write(f"{date},{time},{gps[0]:10.9f},{gps[1]:10.9f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
+        output_txt.write(f"{date},{time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
         video.write(image)
 
 
-def get_gps_factors(depth):
-    global radius_earth
-    global laditude_offset
-    global longitude_offset
-    radius = radius_earth + depth/1000
-    lat_factor = radius * math.pi / 180
-    long_factor = lat_factor * math.cos(math.radians(laditude_offset))
-    return lat_factor, long_factor
+# def get_gps_factors(depth):
+#     global radius_earth
+#     global laditude_offset
+#     global longitude_offset
+#     radius = radius_earth + depth/1000
+#     lat_factor = radius * math.pi / 180
+#     long_factor = lat_factor * math.cos(math.radians(laditude_offset))
+#     return lat_factor, long_factor
 
 def shutdown():
     global video
@@ -89,6 +95,25 @@ if __name__ == '__main__':
     longitude_offset = rospy.get_param('~longitude_offset')
     frame_rate = rospy.get_param('~frame_rate')
     output_dir = rospy.get_param('~output_dir')
+
+    utm_crs_list = query_utm_crs_info(
+            datum_name="WGS 84",
+            area_of_interest=AreaOfInterest(
+                west_lon_degree=longitude_offset,
+                south_lat_degree=laditude_offset,
+                east_lon_degree=longitude_offset,
+                north_lat_degree=laditude_offset,
+            ),
+        )
+    utm_crs = CRS.from_epsg(utm_crs_list[0].code)
+    forwards = Transformer.from_crs("EPSG:4326", utm_crs, always_xy=True)
+    backwards = Transformer.from_crs(utm_crs, "EPSG:4326", always_xy=True)
+    north_offset, east_offset = forwards.transform(laditude_offset, laditude_offset)
+    print(north_offset, east_offset)
+    bakced = backwards.transform(north_offset, east_offset)
+    print(bakced)
+
+
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
     camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
