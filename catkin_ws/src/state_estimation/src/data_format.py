@@ -12,6 +12,8 @@ from pyproj import CRS
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
 import time
+import numpy as np
+import quaternion
 
 def camera_info_callback(msg):
     global video, frame_rat, output_dir, title
@@ -23,10 +25,13 @@ def camera_info_callback(msg):
 
 def pose_callback(msg):
     global gps, roll, pitch, yaw, depth, seen_pose, backwards, north_offset, east_offset
-    new_north, new_east = north_offset + msg.position.x/1000, east_offset + msg.position.y/1000
+    new_north, new_east = north_offset + msg.position.x, east_offset + msg.position.y
     gps = backwards.transform(new_north,  new_east)
-    depth = msg.position.z
-    yaw, pitch, roll = transformations.euler_from_quaternion([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w], axes='szyx')
+    depth = -msg.position.z
+    q_nwu_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+    quat_auv_dc = np.quaternion(0.707,0,0.707,0)
+    q_nwu_dc = q_nwu_auv * quat_auv_dc 
+    yaw, pitch, roll = transformations.euler_from_quaternion([q_nwu_dc.x, q_nwu_dc.y, q_nwu_dc.z, q_nwu_dc.w], axes='szyx')
     roll *= 180 / math.pi
     pitch *= 180 / math.pi
     yaw *= 180 / math.pi
@@ -51,7 +56,7 @@ def image_callback(msg):
 def init_text_file():
     global output_txt, output_dir, title
     output_txt = open(output_dir + f'/{title}.txt', 'w')
-    output_txt.write('##date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
+    output_txt.write('##date_dd/MM/yyyy,time,latitude,longitude,depth\n')
 
 def save_data(_):
     global gps, depth, image, output_txt, roll, pitch, yaw, video
@@ -59,7 +64,7 @@ def save_data(_):
         date = strftime("%d/%m/%Y")
         millis = str(int(round(time.time() * 1000)))[0:3]
         the_time = strftime(f"%H:%M:%S.{millis}")
-        output_txt.write(f"{date},{the_time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
+        output_txt.write(f"{date},{the_time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f}\n")
         video.write(image)
 
 
