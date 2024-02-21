@@ -13,6 +13,7 @@ from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
 Q_IMUNOMINAL_AUV = np.quaternion(0, 1, 0, 0)
+Q_DVLNOMINAL_AUV = np.quaternion(0,1,0,0)
 DEG_PER_RAD = 180 / np.pi
 RAD_PER_DEG = 1 / DEG_PER_RAD
 
@@ -116,12 +117,14 @@ class DVL(Sensor):
         # self.quat_mount_offset = np.quaternion(0, 0.3826834, 0.9238795, 0) # RPY [deg]: (180, 0, -135) 
         # self.pos_mount_offset = np.array([0.0, 0.0, -0.3])
 
-        q_dvl_auv_w = rospy.get_param("q_dvl_auv_w")
-        q_dvl_auv_x = rospy.get_param("q_dvl_auv_x")
-        q_dvl_auv_y = rospy.get_param("q_dvl_auv_y")
-        q_dvl_auv_z = rospy.get_param("q_dvl_auv_z")
+        q_dvlnominal_dvl_w = rospy.get_param("q_dvlnominal_dvl_w")
+        q_dvlnominal_dvl_x = rospy.get_param("q_dvlnominal_dvl_x")
+        q_dvlnominal_dvl_y = rospy.get_param("q_dvlnominal_dvl_y")
+        q_dvlnominal_dvl_z = rospy.get_param("q_dvlnominal_dvl_z")
 
-        self.q_dvl_auv = np.quaternion(q_dvl_auv_w, q_dvl_auv_x, q_dvl_auv_y, q_dvl_auv_z)
+        q_dvlnominal_dvl = np.quaternion(q_dvlnominal_dvl_w,q_dvlnominal_dvl_x,q_dvlnominal_dvl_y,q_dvlnominal_dvl_z)
+        
+        self.q_dvl_auv = q_dvlnominal_dvl.conjugate() * Q_DVLNOMINAL_AUV
 
         auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
         auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")

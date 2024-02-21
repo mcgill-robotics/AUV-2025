@@ -14,19 +14,20 @@ import quaternion
 import os
 from point_cloud import get_xyz_image
 from tf import transformations
+from sklearn.linear_model import RANSACRegressor
+from sklearn.cluster import DBSCAN
+
 class State:
     def __init__(self):
         self.x = None
         self.y = None
         self.z = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
         self.paused = False
         self.q_auv = None
+        self.theta_z= None
         self.point_cloud = None
         self.depth = None
-        self.rgb = None
+        self.bgr_img = None
         self.width = None
         self.height = None
         self.x_over_z_map = None
@@ -36,9 +37,8 @@ class State:
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
-        self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
-        self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
+
         # Update the point cloud whenever the current image is updated
         self.camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, self.updateCameraInfo)
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
@@ -52,12 +52,6 @@ class State:
     def updateZ(self, msg):
         if self.paused: return
         self.z = float(msg.data)
-    def updateThetaX(self, msg):
-        if self.paused: return
-        self.theta_x = float(msg.data)
-    def updateThetaY(self, msg):
-        if self.paused: return
-        self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
         if self.paused: return
         self.theta_z = float(msg.data)
@@ -67,35 +61,51 @@ class State:
     def updatePointCloud(self):
         if self.paused: return
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
-    def cleanPointCloud(self, point_cloud):
-        # APPLY BILATERAL FILTER TO REMOVE NOISE
-        d = 15          # Diameter of each pixel neighborhood that is used during filtering
-        sigmaColor = 75 # Filter sigma in the color space
-        sigmaSpace = 75 # Filter sigma in the coordinate space
+    def cleanPointCloud(self, point_cloud, bgr):
+        # Find the closest point to the camera
+        initial_point_cloud_shape = point_cloud.shape
+        point_cloud = point_cloud.reshape(-1,3)
+        point_cloud[point_cloud[:,0] < 0.5] = 10000 # ignore depth values which are less than 0.5m
+        closest_point_index = np.argmin(point_cloud[:,0])
 
-        # Apply bilateral filter to remove noise
-        point_cloud = cv2.bilateralFilter(point_cloud.astype("float32"), d, sigmaColor, sigmaSpace)
+        eps = 0.1  # Maximum distance between two samples for them to be considered as in the same neighborhood
+        min_samples = 10  # The number of samples in a neighborhood for a point to be considered as a core point
+
+        # Perform DBSCAN clustering
+        dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+        labels = dbscan.fit_predict(point_cloud)
+
+        # Extract the cluster containing the seed point
+        closest_object_label = labels[closest_point_index]
+        object_mask = (labels == closest_object_label)
+        point_cloud[~object_mask] = np.array([np.nan]*3)
+        
+        point_cloud = point_cloud.reshape(initial_point_cloud_shape)
+        object_mask = object_mask.reshape(initial_point_cloud_shape[0:2])
+        
+        # for debugging [ONLY UNCOMMENT IF NEEDED]
+        # debug_img = np.uint8(np.zeros((point_cloud.shape)))
+        # debug_img[object_mask] = np.array([0,0,255])
+        # rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
         
         return point_cloud
-        
 
     def getPointCloud(self, bbox=None):
         if bbox is None: 
         # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
-            return self.cleanPointCloud(self.point_cloud)
+            return self.cleanPointCloud(np.copy(self.point_cloud), np.copy(self.bgr_img))
         else:
-            return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True))
+            return self.cleanPointCloud(cropToBbox(self.point_cloud, bbox, copy=True), cropToBbox(self.bgr_img, bbox, copy=True))
     def updateDepth(self, msg):
         temp = bridge.imgmsg_to_cv2(msg)
         self.depth = temp/depth_scale_factor
         self.updatePointCloud()
     def updateCameraInfo(self, msg):
-        # if(self.y_over_z_map is not None): return
         fx = msg.K[0]
         fy = msg.K[4]
-        cy = msg.K[2]
-        cx = msg.K[5]
-
+        cx = msg.K[2]
+        cy = msg.K[5]
+        
         self.width = msg.width
         self.height = msg.height
 
@@ -112,7 +122,7 @@ class State:
         self.paused = False
 
 # bbox is an array of 4 elements
-#given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
+# given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
     #get xmin, xmax, ymin, ymax from bbox 
     x_center, y_center, w, h = bbox
@@ -145,7 +155,6 @@ def cropToBbox(img, bbox, copy=True):
     if copy: return np.copy(img[y_min:y_max, x_min:x_max])
     else: return img[y_min:y_max, x_min:x_max]
 
-# works for sure
 def measureLaneMarker(img, bbox, debug_img):
     #crop image to lane marker
     cropped_img = cropToBbox(img, bbox)
@@ -186,12 +195,6 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-# given a vector relative to the auv, turns local measurements to global
-def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
-    rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
-    rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
-    return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
-
 def findIntersection(starting_point, vector, plane_z_pos):
     """
     Given a vector and a z position, returns the point 
@@ -207,7 +210,6 @@ def findIntersection(starting_point, vector, plane_z_pos):
     
     return starting_point + np.array(vector) * scaling_factor
 
-# TODO: Vivek
 def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     """
     Given the pixel locations and height and width
@@ -249,30 +251,25 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     z = z_pos
     return x, y, z
 
-# point cloud stuff
-# given a bounding box, tells you where it is in 3D space (not relative to the AUV)
-# gets mean of all values that are numerical
+# given a bounding box, tells you where the main object in the bounding box is in 3D space (world space)
 # assumes cleaning was correct
 def getObjectPositionFrontCam(bbox):
     point_cloud = states[1].getPointCloud(bbox)
-    lx = np.nanmean(point_cloud[:,:,0])
-    ly = np.nanmean(point_cloud[:,:,1])
-    lz = np.nanmean(point_cloud[:,:,2])
-    x,y,z = transformLocalToGlobal(lx,ly,lz,camera_id=1)
+    min_lx = np.nanmin(point_cloud[:,:,0].flatten())
+    min_ly = np.nanmin(point_cloud[:,:,1].flatten())
+    min_lz = np.nanmin(point_cloud[:,:,2].flatten())
+    max_lx = np.nanmax(point_cloud[:,:,0].flatten())
+    max_ly = np.nanmax(point_cloud[:,:,1].flatten())
+    max_lz = np.nanmax(point_cloud[:,:,2].flatten())
+    lx = (max_lx + min_lx) / 2
+    ly = (max_ly + min_ly) / 2
+    lz = (max_lz + min_lz) / 2
+    
+    # Get the best estimate of the mean
+    x,y,z = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz])) + np.array([states[1].x, states[1].y, states[1].z])
     return x, y, z
 
-# TODO: Gulce
-# tells you how the object is oriented in space
-
-# splits gate image in half
-# takes an avg point of all pixels on the left side and the right side 
-# finds angle between two points
-
-# detection bbox, so theres definitely smth
-# bbox allows me to crop the point cloud and flatten it into x-y cloud of bbox
-# find best fitting line
-# find angle
-# assumes point cloud cleaning is good, not a safe assumption
+# tells you how the object is oriented in space (Z axis)
 def measureAngle(bbox):
     """
     Given a bounding box, returns the angle of the object in degrees (only for front cam)
@@ -287,17 +284,15 @@ def measureAngle(bbox):
     filtered_point_cloud_x = point_cloud_x[~nan_indices] # filter point cloud x so it has no NaNs
     filtered_point_cloud_y = point_cloud_y[~nan_indices] # filter point cloud y so it has no NaNs
 
-    slope, _ = np.polyfit(filtered_point_cloud_x, filtered_point_cloud_y, 1) # Fit a line to the point cloud on x/y
+    # fit a line to the point cloud X/Y with RANSAC (removes outliers)
+    ransac = RANSACRegressor()
+    ransac.fit(-1 * filtered_point_cloud_y.reshape(-1,1), filtered_point_cloud_x)
+    slope = ransac.estimator_.coef_[0]
 
-    angle = -math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
+    angle = math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
     
-    return angle
+    return angle + states[1].theta_z
 
-# does what its supposed to, gate isnt in right position
-# Abydos to the left earth to the right detected
-# is there a gate?
-# if so did i see a symbol?
-# if so, which side did i see it on?
 def analyzeGate(detections):
     # Return the class_id of the symbol on the left of the gate
     # If no symbol return None
@@ -323,34 +318,10 @@ def analyzeGate(detections):
     if min_key == "Earth Symbol": return 1.0
     else: return 0.0
 
-# Works! 
-# four symbols in buoy
-# hit them in correct order
-# right now the symbols are treated as objects
-# or we can do the same thing as the gate, seeing where they are
-
-# whats detections? 
 def analyzeBuoy(detections):
-    """
-    Analyzes buoy to detect the four symbols.
-
-    Parameters:
-        detections (array?): 
-
-    Returns:
-        ...
-
-    Examples:
-        >>> analyzeBuoy()
-        output
-        >>>...
-        ...
-
-    """
     symbols = []
     buoy_was_detected = False
 
-    # print("DETECTIONS", detections)
     for detection in detections:
 
         if torch.cuda.is_available(): 
@@ -377,9 +348,8 @@ def analyzeBuoy(detections):
     else: 
         return []
 
-# CHECK
 # lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
-#selects highest confidence detection from duplicates and ignores objects with no position measurement
+# selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(detectionFrameArray):
     label_counts = {}
     selected_detections = []
@@ -420,12 +390,20 @@ states = (State(), State())
 
 
 ############## PARAMETERS ##############
-min_prediction_confidence = 0.3
+min_prediction_confidence = 0.4
 max_dist_to_measure = 10
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
+
+# FOR POINT CLOUD CLUSTERING
+x_weight = 5
+y_weight = 3
+z_weight = 3
+r_weight = 1
+g_weight = 1
+b_weight = 1
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
 pool_depth = -5
