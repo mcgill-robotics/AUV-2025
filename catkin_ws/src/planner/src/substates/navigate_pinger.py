@@ -30,22 +30,35 @@ class GoToPinger(smach.State):
         while(pinger_object is None and give_up_threshold > 0):
             # The object we need to go towards will correspond to the pinger number
             print("Pinger bearing", self.state.pingerBearing)
-            pingerBearingX = self.state.pingerBearing.pinger1_bearing.x
-            pingerBearingY = self.state.pingerBearing.pinger1_bearing.y
+            # pingerBearingX = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].x
+            # pingerBearingY = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].y
+            pingerBearingX = self.state.pingerBearing.pinger2_bearing.x
+            pingerBearingY = self.state.pingerBearing.pinger2_bearing.y
 
-            # Get current AUV Position when it measured the pinger bearing
             stateX = self.state.pingerBearing.state_x
             stateY = self.state.pingerBearing.state_y
-            print("state X", stateX, "state Y", stateY)
+
+            pingerDeltaX = (pingerBearingX - stateX)
+            pingerDeltaY = (pingerBearingY - stateY)
+            
+
+            # arctan with pinger bearing x and y to get an angle
+            angle = (180/math.pi) * np.arctan2(pingerDeltaX, pingerDeltaY)
+            print("Angle", angle)
+            # Rotate towards that angle on z, x/y = 0
+
+            # Get current AUV Position when it measured the pinger bearing
+
+            # print("state X", stateX, "state Y", stateY)
 
             # Calculate the delta between the pinger object and the AUV in degrees
-            pingerDeltaX = (180/math.pi) * (pingerBearingX - stateX)
-            pingerDeltaY = (180/math.pi) * (pingerBearingY - stateY)
+            # pingerDeltaX = (180/math.pi) * (pingerBearingX - stateX)
+            # pingerDeltaY = (180/math.pi) * (pingerBearingY - stateY)
 
-            print("Pinger delta X", pingerDeltaX, "Pinger delta Y", pingerDeltaY)
+            # print("Pinger delta X", pingerDeltaX, "Pinger delta Y", pingerDeltaY)
 
             # Rotate and move towards pinger position
-            self.control.rotateEuler([pingerDeltaX, pingerDeltaY, 0]) 
+            self.control.rotateDeltaEuler([0, 0, angle])
             self.control.moveDelta([1, 0, 0])
             
             # Try to get the current closest object
