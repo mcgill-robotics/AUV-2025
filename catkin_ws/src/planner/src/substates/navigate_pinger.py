@@ -34,18 +34,26 @@ class GoToPinger(smach.State):
             # pingerBearingY = self.state.pingerBearing["pinger{}_bearing".format(self.pinger_num)].y
             pingerBearingX = self.state.pingerBearing.pinger2_bearing.x
             pingerBearingY = self.state.pingerBearing.pinger2_bearing.y
-
-            stateX = self.state.pingerBearing.state_x
-            stateY = self.state.pingerBearing.state_y
-
-            pingerDeltaX = (pingerBearingX - stateX)
-            pingerDeltaY = (pingerBearingY - stateY)
+            
             
 
             # arctan with pinger bearing x and y to get an angle
-            angle = (180/math.pi) * np.arctan2(pingerDeltaX, pingerDeltaY)
+            angle = (180/math.pi) * np.acos(pingerBearingX, pingerBearingY)
             print("Angle", angle)
             # Rotate towards that angle on z, x/y = 0
+
+            if (angle < 0):
+                angle += 360
+            
+            if (angle > 0 and angle < 90):
+                self.control.rotateDeltaEuler([0, 0, angle])
+            elif (angle >= 90 and angle < 180):
+                self.control.rotateDeltaEuler([0, 0, angle])
+            elif (angle >= 180 and angle < 270):
+                self.control.rotateDeltaEuler([0, 0, angle - 180])
+            elif (angle >= 270 and angle < 360):
+                self.control.rotateDeltaEuler([0, 0, angle - 180])
+
 
             # Get current AUV Position when it measured the pinger bearing
 
@@ -58,7 +66,7 @@ class GoToPinger(smach.State):
             # print("Pinger delta X", pingerDeltaX, "Pinger delta Y", pingerDeltaY)
 
             # Rotate and move towards pinger position
-            self.control.rotateDeltaEuler([0, 0, angle])
+            # self.control.rotateDeltaEuler([0, 0, angle])
             self.control.moveDelta([1, 0, 0])
             
             # Try to get the current closest object
