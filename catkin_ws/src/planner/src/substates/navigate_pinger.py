@@ -28,17 +28,23 @@ class GoToPinger(smach.State):
         give_up_threshold = 10
 
         while(pinger_object is None and give_up_threshold > 0):
+            print(self.state.pingerBearing)
             # The object we need to go towards will correspond to the pinger number
-            pingerBearingX = self.state.pingerBearing.pinger3_bearing.x
-            pingerBearingY = self.state.pingerBearing.pinger3_bearing.y
+            # pingerBearingX = self.state.pingerBearing.pinger2_bearing.x
+            # pingerBearingY = self.state.pingerBearing.pinger2_bearing.y
 
-            dotProduct = np.dot(pingerBearingX, pingerBearingY)
+            dotProduct = np.dot(np.array([1, 0, 0]), np.array([self.state.pingerBearing.pinger4_bearing.x, self.state.pingerBearing.pinger4_bearing.y, self.state.pingerBearing.pinger4_bearing.z]))
             
             # arctan with pinger bearing x and y to get an angle
             angle = (180/math.pi) * np.arccos(dotProduct)
+
+            print("Angle 1", angle)
+
             # Rotate towards that angle on z, x/y = 0
             if (angle < 0):
                 angle += 360
+
+            print("Angle 2", angle)
             
             self.control.rotateEuler([0, 0, angle])
             self.control.moveDelta([0, 1, 0])
