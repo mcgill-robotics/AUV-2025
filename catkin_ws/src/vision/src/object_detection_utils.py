@@ -68,7 +68,7 @@ class State:
         point_cloud[point_cloud[:,0] < 0.5] = 10000 # ignore depth values which are less than 0.5m
         closest_point_index = np.argmin(point_cloud[:,0])
 
-        eps = 0.1  # Maximum distance between two samples for them to be considered as in the same neighborhood
+        eps = 0.5  # Maximum distance between two samples for them to be considered as in the same neighborhood
         min_samples = 10  # The number of samples in a neighborhood for a point to be considered as a core point
 
         # Perform DBSCAN clustering
