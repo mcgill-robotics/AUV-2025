@@ -35,25 +35,24 @@ class GoToPinger(smach.State):
             pingerBearingX = self.state.pingerBearing.pinger2_bearing.x
             pingerBearingY = self.state.pingerBearing.pinger2_bearing.y
             
-            
+            is_normalized = math.sqrt(pingerBearingX**2 + pingerBearingY**2) == 1
+            if (not is_normalized):
+                pingerBearingX = np.linalg.norm([pingerBearingX.x, pingerBearingX.y, pingerBearingX.z])
+                pingerBearingY = np.linalg.norm([pingerBearingY.x, pingerBearingY.y, pingerBearingY.z])
 
+            dotProduct = np.dot(pingerBearingX, pingerBearingY)
+            
             # arctan with pinger bearing x and y to get an angle
-            angle = (180/math.pi) * np.acos(pingerBearingX, pingerBearingY)
+            angle = (180/math.pi) * np.acos(dotProduct)
             print("Angle", angle)
             # Rotate towards that angle on z, x/y = 0
 
             if (angle < 0):
                 angle += 360
+                
+            print("Angle2", angle)
             
-            if (angle > 0 and angle < 90):
-                self.control.rotateDeltaEuler([0, 0, angle])
-            elif (angle >= 90 and angle < 180):
-                self.control.rotateDeltaEuler([0, 0, angle])
-            elif (angle >= 180 and angle < 270):
-                self.control.rotateDeltaEuler([0, 0, angle - 180])
-            elif (angle >= 270 and angle < 360):
-                self.control.rotateDeltaEuler([0, 0, angle - 180])
-
+            self.control.rotateEuler([0, 0, angle])
 
             # Get current AUV Position when it measured the pinger bearing
 
