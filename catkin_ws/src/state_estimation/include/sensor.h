@@ -4,9 +4,9 @@
 
 class Sensor {
     public:
-        tf2::Vector3 pos_nwu_auv;
-        tf2::Quaternion q_nwu_auv;
-        tf2::Vector3 angular_velocity;
+        tf2::Vector3* pos_nwu_auv;
+        tf2::Quaternion* q_nwu_auv;
+        tf2::Vector3* angular_velocity;
         char[] sensor_name;
         bool is_active(void);
     private:

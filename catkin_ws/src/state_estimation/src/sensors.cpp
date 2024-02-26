@@ -89,10 +89,12 @@ DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle n) : Sensor() {
     static_transformStamped.transform.rotation.w = 1.0;
     static_broadcaster.sendTransform(static_transformStamped);
 
-    ros::Subscriber sub = n.subscribe("/sensors/depth/z",1000,)
+    ros::Subscriber sub = n.subscribe("/sensors/depth/z",1000,);
+    pos_nwu_auv = NULL;
+    prev_pos_nwu_auv
 }
 
-DepthSensor::depth_cb(std_msgs::Float64 msg) {
+void DepthSensor::depth_cb(std_msgs::Float64 msg) {
 
     double depth_z = msg.data;
     geometry_msgs::PointStamped in;
@@ -103,8 +105,11 @@ DepthSensor::depth_cb(std_msgs::Float64 msg) {
     in.point.z = msg.data;
     geometry_msgs::PointStamped out;
     tfBuffer.transform<geometry_msgs::PointStamped>(&in,&out,"AUV",ros::Duration(0.0));
+    if(pos_nwu_auv == NULL) {
+        pos_nwu_auv = new tf2::Vector3(0,0,out.point.z);
+    }
     pos_nwu_auv.z = out.z
-
+    update_last_state();
 
     // try {
     //     transformStamped = tfBuffer.lookupTransform("DEPTH_SENSOR", "AUV",ros::Time(0));
@@ -116,4 +121,8 @@ DepthSensor::depth_cb(std_msgs::Float64 msg) {
     // 
     // tf2_ros::Point3 transformedPoint;
     // tfListener
+}
+
+bool DepthSensor::has_valid_data() {
+    return pos_nwu_auv != NULL;
 }
