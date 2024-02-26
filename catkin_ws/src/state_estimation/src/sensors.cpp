@@ -1,5 +1,5 @@
-#include "state_estimation/sensor.h"
-#include "ros/ros.h"
+#include <state_estimation/sensor.h>
+#include <ros/ros.h>
 #include "state_estimation/dvl.h"
 #include "state_estimation/imu.h"
 #include "state_estimation/depth.h"
@@ -11,19 +11,33 @@
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <iostream>
+#include <ros/console.h>
 
 Sensor::Sensor() {
     tfBuffer = new tf2_ros::Buffer;
-    
     tfListener = new tf2_ros::TransformListener(*tfBuffer);
 }
 
-Sensor::update_last_state() {
-
+void Sensor::update_last_state() {
+    if(has_different_data()) {
+        if(ros::Time::now() - last_unique_state_time > time_before_considered_inactive) {
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
+            }
+            last_unique_state_time = ros::Time::now();
+            prev_pose_nwu_auv = pose_nwu_auv;
+    }
 }
 
-Sensor::is_active() {
-    
+bool Sensor::is_active() {
+    if(ros::Time::now() == 0) return false;
+    if(has_valid_data()) return false;
+    ros::Time now = ros::Time::now();
+    if ((now - last_unique_state_time) > time_before_considered_inactive) {
+        if(now - last_error_message_time > 1) {
+            last_error_message_time = ros::Time::now();
+            ROS_WARN(sensor_name << " has been inactive for " << time_before_considered_inactive << seconds);
+        } 
+    }
 }
 
 Dvl::Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl, Imu i, ros::NodeHandle n) : Sensor(){
@@ -46,6 +60,8 @@ Dvl::Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl, Imu i, ros::NodeHa
     static_broadcaster.sendTransform(static_transformStamped);
 
     ros::Subscriber sub = n.subscribe("/sensors/dvl/pose",1000,dr_cb);
+
+    sensor_name = "dvl";
 }
 
 Dvl::dr_cb(auv_msgs::DeadReckonReport) {
@@ -71,6 +87,8 @@ Imu::Imu(tf2::Quaternion q_auv_imu, ros::NodeHandle n) : Sensor(){
     static_broadcaster.sendTransform(static_transformStamped);
 
     ros::Subscriber sub = n.subscribe("/sensors/imu/quaternion",1000,quat_cb);
+
+    sensor_name = "imu";
     
 }
 
@@ -90,8 +108,16 @@ DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle n) : Sensor() {
     static_broadcaster.sendTransform(static_transformStamped);
 
     ros::Subscriber sub = n.subscribe("/sensors/depth/z",1000,);
-    pos_nwu_auv = NULL;
-    prev_pos_nwu_auv
+    pose_nwu_auv = NULL;
+    prev_pose_nwu_auv.position.x = 0;
+    prev_pose_nwu_auv.position.y = 0;
+    prev_pose_nwu_auv.position.z = 0;
+    prev_pose_nwu_auv.rotation.w = 1;
+    prev_pose_nwu_auv.rotation.x = 0;
+    prev_pose_nwu_auv.rotation.y = 0;
+    prev_pose_nwu_auv.rotation.z = 0;
+
+    sensor_name = "depth sensor";
 }
 
 void DepthSensor::depth_cb(std_msgs::Float64 msg) {
@@ -108,7 +134,7 @@ void DepthSensor::depth_cb(std_msgs::Float64 msg) {
     if(pos_nwu_auv == NULL) {
         pos_nwu_auv = new tf2::Vector3(0,0,out.point.z);
     }
-    pos_nwu_auv.z = out.z
+    pose_nwu_auv.position.z = out.z
     update_last_state();
 
     // try {
@@ -126,3 +152,8 @@ void DepthSensor::depth_cb(std_msgs::Float64 msg) {
 bool DepthSensor::has_valid_data() {
     return pos_nwu_auv != NULL;
 }
+
+bool has_different_data() {
+    return pose_nwu_auv != prev_pose_nwu_auv;
+}
+
