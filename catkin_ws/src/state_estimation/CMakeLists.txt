@@ -3,15 +3,26 @@ project(state_estimation)
 
 set(MSG_DEP_SET geometry_msgs std_msgs auv_msgs)
 
+find_package(catkin REQUIRED COMPONENTS
+	${MSG_DEP_SET}
+	sensors
+	rospy
+  tf
+	tf2
+	tf2_geometry_msgs
+	tf2_ros
+  sbg_driver
+)
+
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
 	sensors
 	rospy
-    tf
+  tf
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
-    sbg_driver
+  sbg_driver
 	INCLUDE_DIRS include
 )
 
@@ -21,19 +32,14 @@ include_directories(
 )
 
 
-find_package(catkin REQUIRED COMPONENTS
-	${MSG_DEP_SET}
-	sensors
-	rospy
-    tf
-	tf2
-	tf2_geometry_msgs
-	tf2_ros
-    sbg_driver
+
+
+add_library(sensors
+  src/sensors.cpp
 )
 
-add_library(${PROJECT_NAME}
-  src/sensors.cpp
+add_executable(${PROJECT_NAME}
+  src/state_aggregator.cpp
 )
 
 install(
