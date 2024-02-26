@@ -25,20 +25,22 @@ void Sensor::update_last_state() {
                 ROS_INFO("%s has become active",sensor_name.c_str());
             }
         last_unique_state_time = ros::Time::now();
-        prev_pose_nwu_auv = pose_nwu_auv;
+        set_prev_state();
     }
 }
 
 bool Sensor::is_active() {
-    if(ros::Time::now() == 0) return false;
+    if(ros::Time::now() == ros::Time(0.0)) return false;
     if(has_valid_data()) return false;
     ros::Time now = ros::Time::now();
     if ((now - last_unique_state_time) > time_before_considered_inactive) {
-        if(now - last_error_message_time > 1) {
+        if(now - last_error_message_time > ros::Duration(1.0)) {
             last_error_message_time = ros::Time::now();
-            ROS_WARN("%s has been inactive for %s seconds",sensor_name.c_str(),""<<time_before_considered_inactive);
+            ROS_WARN("%s has been inactive for %s seconds",sensor_name.c_str(),std::to_string(time_before_considered_inactive.sec).c_str());
         } 
+        return true;
     }
+    return false;
 }
 
 // Dvl::Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl, Imu i, ros::NodeHandle n) : Sensor(){

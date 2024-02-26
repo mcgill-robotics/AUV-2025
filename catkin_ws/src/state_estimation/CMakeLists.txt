@@ -5,7 +5,8 @@ set(MSG_DEP_SET geometry_msgs std_msgs auv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
 	${MSG_DEP_SET}
-	sensors
+  sensors
+  roscpp REQUIRED
 	rospy
   tf
 	tf2
@@ -16,7 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package( CATKIN_DEPENDS
 	${MSG_DEP_SET}
-	sensors
+  sensors
+  roscpp
 	rospy
   tf
 	tf2
@@ -29,12 +31,11 @@ catkin_package( CATKIN_DEPENDS
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${roscpp_INCLUDE_DIRS}
 )
 
 
-
-
-add_library(sensors
+add_library(sensors_lib
   src/sensors.cpp
 )
 
@@ -42,7 +43,9 @@ add_executable(${PROJECT_NAME}
   src/state_aggregator.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} sensors)
+target_link_libraries(${PROJECT_NAME} sensors_lib ${roscpp_LIBRARIES})
+
+
 
 install(
   TARGETS ${PROJECT_NAME}

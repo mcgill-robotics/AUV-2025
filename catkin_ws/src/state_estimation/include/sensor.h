@@ -17,6 +17,7 @@ class Sensor {
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
         void update_last_state(void);
+        void set_prev_state(void);
         virtual bool has_different_data(void);
         virtual bool has_valid_data(void);
         tf2_ros::Buffer* tfBuffer;

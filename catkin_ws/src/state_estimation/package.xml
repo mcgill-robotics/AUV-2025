@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>auv_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
   <build_depend>sensors</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>rospy</build_depend>
@@ -25,6 +26,7 @@
   <build_depend>sbg_driver</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
   <exec_depend>sensors</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
