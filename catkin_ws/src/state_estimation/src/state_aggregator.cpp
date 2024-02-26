@@ -1,6 +1,6 @@
-#include "state_estimation/dvl.h"
-#include "state_estimation/imu.h"
-#include "state_estimation/depth.h"
+#include "dvl.h"
+#include "imu.h"
+#include "depth.h"
 #include <geometry_msgs/Pose.h>
 
 int main(int argc, char** argv) {

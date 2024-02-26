@@ -42,6 +42,8 @@ add_executable(${PROJECT_NAME}
   src/state_aggregator.cpp
 )
 
+target_link_libraries(${PROJECT_NAME} sensors)
+
 install(
   TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
