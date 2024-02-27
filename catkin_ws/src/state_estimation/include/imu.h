@@ -12,6 +12,9 @@ class Imu : Sensor {
         void ang_vel_cb(void);
         void quat_cb(sbg_driver::SbgEkfQuat msg);
         tf2::Quaternion q_imunominal_imu;
+        bool has_valid_data() override;
+        bool has_different_data() override;
+        void set_prev_state(void) override;
 };
 
 #endif

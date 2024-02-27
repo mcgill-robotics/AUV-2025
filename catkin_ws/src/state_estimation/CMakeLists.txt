@@ -32,6 +32,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${roscpp_INCLUDE_DIRS}
+  ${tf2_ros_INCLUDE_DIRS}
+  ${tf2_INCLUDE_DIRS}
 )
 
 
@@ -43,7 +45,13 @@ add_executable(${PROJECT_NAME}
   src/state_aggregator.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} sensors_lib ${roscpp_LIBRARIES})
+target_link_libraries(
+  ${PROJECT_NAME} 
+  sensors_lib 
+  ${roscpp_LIBRARIES} 
+  ${tf2_ros_LIBRARIES}
+  ${tf2_LIBRARIES}
+)
 
 
 

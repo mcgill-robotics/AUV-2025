@@ -10,6 +10,7 @@
 class Sensor {
     public:
         Sensor(std::string name);
+        virtual ~Sensor();
         std::string sensor_name;
         bool is_active(void);
     private:
@@ -17,9 +18,9 @@ class Sensor {
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
         void update_last_state(void);
-        void set_prev_state(void);
-        virtual bool has_different_data(void);
-        virtual bool has_valid_data(void);
+        virtual void set_prev_state(void) = 0;
+        virtual bool has_different_data(void) = 0;
+        virtual bool has_valid_data(void) = 0;
         tf2_ros::Buffer* tfBuffer;
         tf2_ros::TransformListener* tfListener;
 };
