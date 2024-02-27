@@ -147,15 +147,13 @@ void DepthSensor::depth_cb(std_msgs::Float64 msg) {
 }
 
 bool DepthSensor::has_valid_data() {
-    return false;
-    // return pos_nwu_auv != NULL;
+    return true;
 }
 
 bool DepthSensor::has_different_data() {
-    return false;
-    // return pose_nwu_auv != prev_pose_nwu_auv;
+    return prev_z != z;
 }
 
 void DepthSensor::set_prev_state() {
-    return;
+    prev_z = z;
 }
