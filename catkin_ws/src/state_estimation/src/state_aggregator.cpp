@@ -12,7 +12,7 @@
 
 bool update_state_on_clock;
 ros::Time last_clock_msg;
-Sensor* depth_estimators[1];
+Sensor* z_estimators[1];
 ros::Publisher pub_pose;
 ros::Publisher pub_x;
 ros::Publisher pub_y;
@@ -36,18 +36,38 @@ void update_state(const ros::TimerEvent& event) {
     pub_depth_status.publish(depth_status_msg);
 
     double* z = NULL;
-    for(Sensor* sensor : depth_estimators) {
+    for(Sensor* sensor : z_estimators) {
         if(sensor->is_active()) {
             z = new double(sensor->depth);
             break;
         }
     }
     if(z != NULL) {
-        std_msgs::Float64 depth_msg;
-        depth_msg.data = *z;
-        pub_z.publish(depth_msg);
+        std_msgs::Float64 z_msg;
+        z_msg.data = *z;
+        pub_z.publish(z_msg);
         delete z;
     }
+}
+
+
+
+void set_imu_params(IMU_PARAMS& params) {
+
+    if(!n.getParam("q_imunominal_imu_w",params.q_imunominal_imu_w)) {
+        ROS_ERROR("Failed to get param 'q_imunominal_imu_w'");
+    }
+
+    if(!n.getParam("q_imunominal_imu_x",params.q_imunominal_imu_x)) {
+        ROS_ERROR("Failed to get param 'q_imunominal_imu_x'");
+    }
+    if(!n.getParam("q_imunominal_imu_y",params.q_imunominal_imu_y)) {
+        ROS_ERROR("Failed to get param 'q_imunominal_imu_y'");
+    }
+    if(!n.getParam("q_imunominal_imu_z",params.q_imunominal_imu_z)) {
+        ROS_ERROR("Failed to get param 'q_imunominal_imu_z'");
+    }
+
 }
 
 int main(int argc, char **argv) {
@@ -60,11 +80,12 @@ int main(int argc, char **argv) {
 
 
     depth = new DepthSensor(0.0,n,std::string("depth"));
-
     ros::Subscriber sub = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
-    ros::spinOnce();
+    z_estimators[0] = depth;
 
-    depth_estimators[0] = depth;
+    IMU_PARAMS q_imunominal_imu_s;
+    set_imu_params(q_imunominal_imu_s);
+
 
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x",1);

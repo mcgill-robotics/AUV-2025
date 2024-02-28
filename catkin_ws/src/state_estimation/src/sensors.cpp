@@ -8,6 +8,7 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <auv_msgs/DeadReckonReport.h>
 #include <sbg_driver/SbgEkfQuat.h>
+#include <sbg_driver/SbgImuData.h>
 #include <std_msgs/Float64.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -80,29 +81,85 @@ bool Sensor::is_active() {
     
 // }
 
-// Imu::Imu(tf2::Quaternion q_auv_imu, ros::NodeHandle n) : Sensor(){
+Imu::Imu(IMU_PARAMS q_imunominal_imu_s, ros::NodeHandle n, std::string name) : Sensor(name){
 
-//     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-//     geometry_msgs::TransformStamped static_transformStamped;
+    tf2::Quaternion q_imunominal_imu(q_imunominal_imu_s.x,q_imunominal_imu_s.y,q_imunominal_imu_s.z,q_imunominal_imu_s.w);
+    tf2::Quaternion q_imunominal_auv(1.0, 0.0, 0.0, 0.0);
+
+    tf2::Quaternion q_imu_auv = q_imunominal_imu.inverse() * q_imunominal_auv;
+
+
+    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    geometry_msgs::TransformStamped static_transformStamped;
     
-//     static_transformStamped.header.stamp = ros::Time::now();
-//     static_transformStamped.header.frame_id = "AUV";
-//     static_transformStamped.child_frame_id = "IMU";
-//     static_transformStamped.transform.translation.x = 0;
-//     static_transformStamped.transform.translation.y = 0;
-//     static_transformStamped.transform.translation.z = 0;
+    static_transformStamped.header.stamp = ros::Time::now();
+    static_transformStamped.header.frame_id = "IMU";
+    static_transformStamped.child_frame_id = "AUV";
+    static_transformStamped.transform.translation.x = 0;
+    static_transformStamped.transform.translation.y = 0;
+    static_transformStamped.transform.translation.z = 0;
 
-//     static_transformStamped.transform.rotation.x = q_auv_imu.x();
-//     static_transformStamped.transform.rotation.y = q_auv_imu.y();
-//     static_transformStamped.transform.rotation.z = q_auv_imu.z();
-//     static_transformStamped.transform.rotation.w = q_auv_imu.w();
-//     static_broadcaster.sendTransform(static_transformStamped);
+    static_transformStamped.transform.rotation.x = q_imu_auv.x();
+    static_transformStamped.transform.rotation.y = q_imu_auv.y();
+    static_transformStamped.transform.rotation.z = q_imu_auv.z();
+    static_transformStamped.transform.rotation.w = q_imu_auv.w();
+    static_broadcaster.sendTransform(static_transformStamped);    
 
-//     ros::Subscriber sub = n.subscribe("/sensors/imu/quaternion",1000,quat_cb);
+    q_nwu_auv = Quaternion(0.0, 0.0, 0.0, 1.0)
+}
 
-//     sensor_name = "imu";
-    
-// }
+void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
+    geometry_msgs::TransformStamped transformStamped;
+    transformStamped.header.stamp.secs = msg.head.stamp.secs;
+    transformStamped.header.stamp.nsecs = msg.head.stamp.nsecs;
+    transformStamped.header.frame_id = "NED";
+    transformStamped.child_frame_id = "IMU";
+    transformStamped.transform.translation.x = 0;
+    transformStamped.transform.translation.y = 0;
+    transformStamped.transform.translation.z = 0;
+
+    transformStamped.transform.rotation.x = msg.quaternion.x;
+    transformStamped.transform.rotation.y = msg.quaternion.y;
+    transformStamped.transform.rotation.z = msg.quaternion.z;
+    transformStamped.transform.rotation.w = msg.quaternion.w;
+
+    br.sendTransform(transformStamped);
+
+    geometry_msgs::TransformStamped q_nwu_auv_ts;
+    try{
+      q_nwu_auv_ts = tfBuffer.lookupTransform("NWU", "AUV",ros::Time(0));
+    }
+    catch (tf2::TransformException &ex) {
+      ROS_WARN("%s",ex.what());
+      ros::Duration(0.25).sleep();
+      return;
+    }
+    q_nwu_auv.w = q_nwu_auv_ts.rotation.w
+    q_nwu_auv.x = q_nwu_auv_ts.rotation.x
+    q_nwu_auv.y = q_nwu_auv_ts.rotation.y
+    q_nwu_auv.z = q_nwu_auv_ts.rotation.z
+
+    update_last_state();
+}
+
+void Imu::ang_vel_cb(const sbg_driver::ImuData::ConstPts& msg) {
+    tf2::Vector3 = 
+}
+
+
+bool Imu::has_valid_data() {
+    return true;
+}
+
+bool Imu::has_different_data() {
+    return prev_q_nwu_auv != q_nwu_auv;
+}
+
+void Imu::set_prev_state() {
+    prev_q_nwu_auv = q_nwu_auv;
+}
+
+
 DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string name) : Sensor(name) {
     geometry_msgs::TransformStamped static_transformStamped;
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
@@ -118,8 +175,8 @@ DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string n
     static_transformStamped.transform.rotation.z = 0.0;
     static_transformStamped.transform.rotation.w = 1.0;
     static_broadcaster.sendTransform(static_transformStamped);
-    prev_depth = 0;
-    depth = 0;
+    prev_z = 0;
+    z = 0;
 }
 
 void DepthSensor::depth_cb(const std_msgs::Float64::ConstPtr& msg) {
@@ -135,7 +192,7 @@ void DepthSensor::depth_cb(const std_msgs::Float64::ConstPtr& msg) {
     //     pos_nwu_auv = new tf2::Vector3(0,0,out.point.z);
     // }
     // pose_nwu_auv.position.z = out.z
-    depth = msg->data;
+    z = msg->data;
     update_last_state();
 
 }
@@ -145,9 +202,9 @@ bool DepthSensor::has_valid_data() {
 }
 
 bool DepthSensor::has_different_data() {
-    return prev_depth != depth;
+    return prev_z != z;
 }
 
 void DepthSensor::set_prev_state() {
-    prev_depth = depth;
+    prev_z = z;
 }

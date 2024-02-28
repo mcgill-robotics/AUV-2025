@@ -13,9 +13,10 @@ class Sensor {
         virtual ~Sensor();
         std::string sensor_name;
         bool is_active(void);
-        double depth;
+        double z;
+        tf2::Quaternion q_nwu_auv;
     protected:
-        double prev_depth;
+        tf2_ros::TransformBroadcaster br;
         ros::Time last_unique_state_time;
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
