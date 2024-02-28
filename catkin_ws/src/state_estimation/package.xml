@@ -22,7 +22,6 @@
   <build_depend>tf2</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>tf2_ros</build_depend>
-  <build_depend>tf</build_depend>
   <build_depend>sbg_driver</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
@@ -34,6 +33,5 @@
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
-  <exec_depend>tf</exec_depend>
   <exec_depend>sbg_driver</exec_depend>
 </package>

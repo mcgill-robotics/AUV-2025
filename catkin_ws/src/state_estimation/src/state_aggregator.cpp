@@ -13,6 +13,7 @@
 bool update_state_on_clock;
 ros::Time last_clock_msg;
 Sensor* z_estimators[1];
+Sensor* quat_estimators[1];
 ros::Publisher pub_pose;
 ros::Publisher pub_x;
 ros::Publisher pub_y;
@@ -22,6 +23,8 @@ ros::Publisher pub_imu_status;
 ros::Publisher pub_dvl_status;
 ros::Publisher pub_depth_status;
 DepthSensor* depth;
+Imu* imu;
+ros::NodeHandle n;
 
 void update_state(const ros::TimerEvent& event) {
     if(update_state_on_clock) {
@@ -35,19 +38,45 @@ void update_state(const ros::TimerEvent& event) {
     depth_status_msg.data = depth->is_active();
     pub_depth_status.publish(depth_status_msg);
 
-    double* z = NULL;
+    std_msgs::Float64 z;
+    std_msgs::Float64 x;
+    std_msgs::Float64 y;
+    geometry_msgs::Quaternion q_nwu_auv;
+    bool found_x = false;
+    bool found_y = false;
+    bool found_z = false;
+    bool found_quat = false;
     for(Sensor* sensor : z_estimators) {
         if(sensor->is_active()) {
-            z = new double(sensor->depth);
+            z.data = sensor->z;
+            found_z = true;
             break;
         }
     }
-    if(z != NULL) {
-        std_msgs::Float64 z_msg;
-        z_msg.data = *z;
-        pub_z.publish(z_msg);
-        delete z;
+
+    for(Sensor* sensor : quat_estimators) {
+        if(sensor->is_active()) {
+            q_nwu_auv.w = sensor->q_nwu_auv.w;
+            q_nwu_auv.x = sensor->q_nwu_auv.x;
+            q_nwu_auv.y = sensor->q_nwu_auv.y;
+            q_nwu_auv.z = sensor->q_nwu_auv.z;
+            found_quat = true;
+            break;
+        }
     }
+
+    if(found_x && found_y && found_z && found_quat) {
+        geometry_msgs::Pose pose;
+        pose.position.x = x.data;
+        pose.position.y = y.data;
+        pose.position.z = z.data;
+        pose.orientation = q_nwu_auv;
+        pub_x.publish(x);
+        pub_y.publish(y);
+        pub_z.publish(z);
+        pub_pose.publish(pose);
+    }
+
 }
 
 
@@ -72,20 +101,22 @@ void set_imu_params(IMU_PARAMS& params) {
 
 int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
-    ros::NodeHandle n;
 
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
 
 
-    depth = new DepthSensor(0.0,n,std::string("depth"));
-    ros::Subscriber sub = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
+    depth = new DepthSensor(0.0,std::string("depth"));
+    ros::Subscriber sub_depth = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
     z_estimators[0] = depth;
 
     IMU_PARAMS q_imunominal_imu_s;
     set_imu_params(q_imunominal_imu_s);
-
+    imu = new Imu(q_imunominal_imu_s,std::string("imu"));
+    ros::Subscriber sub_quat = n.subscribe("/sensors/imu/quaternion",100,&Imu::quat_cb, imu);
+    ros::Subscriber sub_ang_vel = n.subscribe("/sensors/imu/angular_velocity",100,&Imu::ang_vel_cb, imu);
+    quat_estimators[0] = imu;
 
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x",1);

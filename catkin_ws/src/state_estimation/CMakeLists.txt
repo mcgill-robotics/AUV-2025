@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
+  tf2_msgs
   sbg_driver
 )
 
@@ -20,7 +21,6 @@ catkin_package( CATKIN_DEPENDS
   sensors
   roscpp
 	rospy
-  tf
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
@@ -33,6 +33,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${roscpp_INCLUDE_DIRS}
   ${tf2_ros_INCLUDE_DIRS}
+  ${tf2_geometry_msgs_INCLUDE_DIRS}
   ${tf2_INCLUDE_DIRS}
 )
 
@@ -51,6 +52,8 @@ target_link_libraries(
   ${roscpp_LIBRARIES} 
   ${tf2_ros_LIBRARIES}
   ${tf2_LIBRARIES}
+  ${tf2_geometry_msgs_LIBRARIES}
+  ${geometry_msgs_LIBRARIES}
 )
 
 
@@ -62,6 +65,6 @@ install(
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 install(
-  DIRECTORY include/${PROJECT_NAME}/
+  DIRECTORY include/${PROJECT_NAME}
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )

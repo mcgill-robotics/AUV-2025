@@ -6,15 +6,18 @@
 #include <tf2_ros/transform_listener.h>
 #include "ros/ros.h"
 #include "tf2/LinearMath/Transform.h"
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 class Sensor {
     public:
         Sensor(std::string name);
         virtual ~Sensor();
         std::string sensor_name;
-        bool is_active(void);
+        virtual bool is_active(void);
         double z;
-        tf2::Quaternion q_nwu_auv;
+        geometry_msgs::Quaternion q_nwu_auv;
+        geometry_msgs::Vector3Stamped ang_vel_auv;
     protected:
         tf2_ros::TransformBroadcaster br;
         ros::Time last_unique_state_time;
@@ -23,7 +26,6 @@ class Sensor {
         void update_last_state(void);
         virtual void set_prev_state(void) = 0;
         virtual bool has_different_data(void) = 0;
-        virtual bool has_valid_data(void) = 0;
         tf2_ros::Buffer* tfBuffer;
         tf2_ros::TransformListener* tfListener;
 };
