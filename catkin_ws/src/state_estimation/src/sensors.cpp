@@ -25,6 +25,7 @@ Sensor::Sensor(std::string name) {
     sensor_name = name;
     last_unique_state_time = ros::Time(0,0);
     last_error_message_time = ros::Time(0,0);
+    time_before_considered_inactive = ros::Duration(1.0);
 }
 
 void Sensor::update_last_state() {
@@ -102,7 +103,6 @@ bool Sensor::is_active() {
 //     sensor_name = "imu";
     
 // }
-
 DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string name) : Sensor(name) {
     geometry_msgs::TransformStamped static_transformStamped;
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
@@ -118,16 +118,11 @@ DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string n
     static_transformStamped.transform.rotation.z = 0.0;
     static_transformStamped.transform.rotation.w = 1.0;
     static_broadcaster.sendTransform(static_transformStamped);
-
-    ros::Subscriber sub = n.subscribe("/sensors/depth/z",1000,&DepthSensor::depth_cb, this);
-
     prev_depth = 0;
     depth = 0;
-
-    sensor_name = "depth sensor";
 }
 
-void DepthSensor::depth_cb(std_msgs::Float64 msg) {
+void DepthSensor::depth_cb(const std_msgs::Float64::ConstPtr& msg) {
     // geometry_msgs::PointStamped in;
     // in.header.stamp = ros::Time::now();
     // in.header.frame_id = "DEPTH_SENSOR";
@@ -140,7 +135,7 @@ void DepthSensor::depth_cb(std_msgs::Float64 msg) {
     //     pos_nwu_auv = new tf2::Vector3(0,0,out.point.z);
     // }
     // pose_nwu_auv.position.z = out.z
-    depth = msg.data;
+    depth = msg->data;
     update_last_state();
 
 }

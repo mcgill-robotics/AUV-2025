@@ -37,7 +37,6 @@ void update_state(const ros::TimerEvent& event) {
 
     double* z = NULL;
     for(Sensor* sensor : depth_estimators) {
-        ROS_DEBUG("%s",sensor->sensor_name.c_str());
         if(sensor->is_active()) {
             z = new double(sensor->depth);
             break;
@@ -55,12 +54,16 @@ int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
 
-    // if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
-    //     ros::console::notifyLoggerLevelsChanged();
-    // }
+    if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+        ros::console::notifyLoggerLevelsChanged();
+    }
 
 
     depth = new DepthSensor(0.0,n,std::string("depth"));
+
+    ros::Subscriber sub = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
+    ros::spinOnce();
+
     depth_estimators[0] = depth;
 
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
@@ -82,7 +85,7 @@ int main(int argc, char **argv) {
         ROS_ERROR("Failed to get param 'update_rate'");
     }
     double freq = 1.0/update_rate;
-
+    ros::spinOnce();
     ros::Timer timer = n.createTimer(ros::Duration(freq), update_state);
 
     ros::spin();

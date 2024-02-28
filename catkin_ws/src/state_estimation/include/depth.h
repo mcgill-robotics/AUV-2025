@@ -6,8 +6,8 @@
 class DepthSensor : public Sensor {
     public:
         DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string name);
+        void depth_cb(const std_msgs::Float64::ConstPtr& msg);
     private:
-        void depth_cb(std_msgs::Float64 msg);
         bool has_valid_data() override;
         bool has_different_data() override;
         void set_prev_state(void) override;
