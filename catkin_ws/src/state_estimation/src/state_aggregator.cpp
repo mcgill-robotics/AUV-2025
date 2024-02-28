@@ -8,6 +8,7 @@
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Bool.h>
+#include <iostream>
 
 bool update_state_on_clock;
 ros::Time last_clock_msg;
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
 
+
     depth = new DepthSensor(0.0,n,std::string("depth"));
     Sensor* depth_estimators[] = {depth};
 
@@ -70,6 +72,14 @@ int main(int argc, char **argv) {
     if(!n.getParam("update_state_on_clock",update_state_on_clock)) {
         ROS_ERROR("Failed to get param 'update_state_on_clock'");
     }
+
+    int update_rate;
+    if(!n.getParam("update_rate",update_rate)) {
+        ROS_ERROR("Failed to get param 'update_rate'");
+    }
+    double freq = 1.0/update_rate;
+
+    ros::Timer timer = n.createTimer(ros::Duration(freq), update_state);
 
     ros::spin();
     delete depth;
