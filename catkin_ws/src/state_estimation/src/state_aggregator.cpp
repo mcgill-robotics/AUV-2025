@@ -31,22 +31,22 @@ void update_state(const ros::TimerEvent& event) {
         last_clock_msg.sec = event.current_expected.sec;
         last_clock_msg.nsec = event.current_expected.nsec;
     }
-
     std_msgs::Bool depth_status_msg;
     depth_status_msg.data = depth->is_active();
     pub_depth_status.publish(depth_status_msg);
 
-    double* z = 0;
+    double* z = NULL;
     for(Sensor* sensor : depth_estimators) {
+        ROS_DEBUG("%s",sensor->sensor_name.c_str());
         if(sensor->is_active()) {
             z = new double(sensor->depth);
+            break;
         }
-        break;
     }
-
     if(z != NULL) {
         std_msgs::Float64 depth_msg;
         depth_msg.data = *z;
+        pub_z.publish(depth_msg);
         delete z;
     }
 }
@@ -55,9 +55,13 @@ int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
 
+    // if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+    //     ros::console::notifyLoggerLevelsChanged();
+    // }
+
 
     depth = new DepthSensor(0.0,n,std::string("depth"));
-    Sensor* depth_estimators[] = {depth};
+    depth_estimators[0] = depth;
 
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x",1);

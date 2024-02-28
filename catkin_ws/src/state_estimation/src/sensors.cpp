@@ -46,9 +46,9 @@ bool Sensor::is_active() {
             last_error_message_time = ros::Time::now();
             ROS_WARN("%s has been inactive for %s seconds",sensor_name.c_str(),std::to_string(time_before_considered_inactive.sec).c_str());
         } 
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 // Dvl::Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl, Imu i, ros::NodeHandle n) : Sensor(){
