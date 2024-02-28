@@ -121,8 +121,8 @@ DepthSensor::DepthSensor(double pos_auv_depth, ros::NodeHandle& n, std::string n
 
     ros::Subscriber sub = n.subscribe("/sensors/depth/z",1000,depth_cb);
 
-    prev_z = 0;
-    z = 0;
+    prev_depth = 0;
+    depth = 0;
 
     sensor_name = "depth sensor";
 }
@@ -151,9 +151,9 @@ bool DepthSensor::has_valid_data() {
 }
 
 bool DepthSensor::has_different_data() {
-    return prev_z != z;
+    return prev_depth != depth;
 }
 
 void DepthSensor::set_prev_state() {
-    prev_z = z;
+    prev_depth = depth;
 }

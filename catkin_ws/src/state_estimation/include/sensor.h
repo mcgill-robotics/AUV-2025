@@ -13,7 +13,9 @@ class Sensor {
         virtual ~Sensor();
         std::string sensor_name;
         bool is_active(void);
-    private:
+        double depth;
+    protected:
+        double prev_depth;
         ros::Time last_unique_state_time;
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
