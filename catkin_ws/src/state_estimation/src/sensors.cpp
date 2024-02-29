@@ -19,13 +19,10 @@
 #include <ros/console.h>
 
 Sensor::~Sensor() {
-    delete tfBuffer;
-    delete tfListener;
+
 }
 
 Sensor::Sensor(std::string name, bool u_o_c) {
-    tfBuffer = new tf2_ros::Buffer;
-    tfListener = new tf2_ros::TransformListener(*tfBuffer);
     sensor_name = name;
     last_unique_state_time = ros::Time(0,0);
     last_error_message_time = ros::Time(0,0);
@@ -114,7 +111,6 @@ Imu::Imu(IMU_PARAMS params, std::string name, bool u_o_c) : Sensor(name,u_o_c){
 }
 
 void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
-
     if(update_on_clock && last_clock_msg == ros::Time::now()) return;
     last_clock_msg = ros::Time::now();
     geometry_msgs::TransformStamped transformStamped;
@@ -134,24 +130,26 @@ void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
 
     geometry_msgs::TransformStamped q_nwu_auv_ts;
     try{
-      q_nwu_auv_ts = tfBuffer->lookupTransform("NWU", "AUV",ros::Time(0));
+        tf2_ros::Buffer tfBuffer;
+        tf2_ros::TransformListener tfListener(tfBuffer);
+        q_nwu_auv_ts = tfBuffer.lookupTransform("NWU", "AUV",ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
-      ROS_WARN("%s",ex.what());
-      ros::Duration(0.25).sleep();
-      return;
+        ROS_WARN("%s",ex.what());
+        return;
     }
     q_nwu_auv.w = q_nwu_auv_ts.transform.rotation.w;
     q_nwu_auv.x = q_nwu_auv_ts.transform.rotation.x;
     q_nwu_auv.y = q_nwu_auv_ts.transform.rotation.y;
     q_nwu_auv.z = q_nwu_auv_ts.transform.rotation.z;
 
+    seen_quat = true;
+
     update_last_state();
 }
 
 bool Imu::is_active() {
-    if(!seen_quat || !seen_ang_vel) return false;
-    return Sensor::is_active();
+    return Sensor::is_active() && seen_ang_vel && seen_quat;
 }
 
 void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
@@ -162,9 +160,16 @@ void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
     ang_vel_imu.header.stamp.sec = msg->header.stamp.sec;
     ang_vel_imu.header.stamp.nsec = msg->header.stamp.nsec;
     ang_vel_imu.header.frame_id = "IMU";
-    tfBuffer->transform(ang_vel_imu,ang_vel_auv,std::string("AUV"));
-    seen_ang_vel;
-    seen_quat;
+    try {
+        tf2_ros::Buffer tfBuffer;
+        tf2_ros::TransformListener tfListener(tfBuffer);
+        tfBuffer.transform(ang_vel_imu,ang_vel_auv,"AUV");
+    }
+    catch (tf2::TransformException &ex) {
+        ROS_WARN("%s",ex.what());
+        return;
+    }
+    seen_ang_vel = true;
     update_last_state();
 }
 

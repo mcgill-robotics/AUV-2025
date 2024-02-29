@@ -28,8 +28,6 @@ class Sensor {
         void update_last_state(void);
         virtual void set_prev_state(void) = 0;
         virtual bool has_different_data(void) = 0;
-        tf2_ros::Buffer* tfBuffer;
-        tf2_ros::TransformListener* tfListener;
 };
 
 #endif

@@ -38,6 +38,11 @@ void update_state(const ros::TimerEvent& event) {
     depth_status_msg.data = depth->is_active();
     pub_depth_status.publish(depth_status_msg);
 
+    std_msgs::Bool imu_status_msg;
+    imu_status_msg.data = imu->is_active();
+    pub_imu_status.publish(imu_status_msg);
+
+
     std_msgs::Float64 z;
     std_msgs::Float64 x;
     std_msgs::Float64 y;
@@ -47,6 +52,7 @@ void update_state(const ros::TimerEvent& event) {
     bool found_z = false;
     bool found_quat = false;
     for(Sensor* sensor : z_estimators) {
+        continue;
         if(sensor->is_active()) {
             z.data = sensor->z;
             found_z = true;
@@ -54,6 +60,7 @@ void update_state(const ros::TimerEvent& event) {
         }
     }
 
+    ROS_DEBUG("looking for quat");
     for(Sensor* sensor : quat_estimators) {
         if(sensor->is_active()) {
             q_nwu_auv.w = sensor->q_nwu_auv.w;
@@ -64,7 +71,7 @@ void update_state(const ros::TimerEvent& event) {
             break;
         }
     }
-
+    ROS_DEBUG("done");
     if(found_x && found_y && found_z && found_quat) {
         geometry_msgs::Pose pose;
         pose.position.x = x.data;
