@@ -9,6 +9,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Bool.h>
 #include <iostream>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 bool update_state_on_clock;
 ros::Time last_clock_msg;
@@ -24,7 +25,6 @@ ros::Publisher pub_dvl_status;
 ros::Publisher pub_depth_status;
 DepthSensor* depth;
 Imu* imu;
-ros::NodeHandle n;
 
 void update_state(const ros::TimerEvent& event) {
     if(update_state_on_clock) {
@@ -79,9 +79,25 @@ void update_state(const ros::TimerEvent& event) {
 
 }
 
+void broad_cast_NWU_NED() {
+    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    geometry_msgs::TransformStamped static_transformStamped;
+    
+    static_transformStamped.header.stamp = ros::Time::now();
+    static_transformStamped.header.frame_id = "NWU";
+    static_transformStamped.child_frame_id = "NED";
+    static_transformStamped.transform.translation.x = 0;
+    static_transformStamped.transform.translation.y = 0;
+    static_transformStamped.transform.translation.z = 0;
 
+    static_transformStamped.transform.rotation.x = 1;
+    static_transformStamped.transform.rotation.y = 0;
+    static_transformStamped.transform.rotation.z = 0;
+    static_transformStamped.transform.rotation.w = 0;
+    static_broadcaster.sendTransform(static_transformStamped);   
+}
 
-void set_imu_params(IMU_PARAMS& params) {
+void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
 
     if(!n.getParam("q_imunominal_imu_w",params.q_imunominal_imu_w)) {
         ROS_ERROR("Failed to get param 'q_imunominal_imu_w'");
@@ -101,19 +117,24 @@ void set_imu_params(IMU_PARAMS& params) {
 
 int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
-
+    ros::NodeHandle n;
+    broad_cast_NWU_NED();
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
 
+    if(!n.getParam("update_state_on_clock",update_state_on_clock)) {
+        ROS_ERROR("Failed to get param 'update_state_on_clock'");
+    }
 
-    depth = new DepthSensor(0.0,std::string("depth"));
+
+    depth = new DepthSensor(0.0,std::string("depth"),update_state_on_clock);
     ros::Subscriber sub_depth = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
     z_estimators[0] = depth;
 
     IMU_PARAMS q_imunominal_imu_s;
-    set_imu_params(q_imunominal_imu_s);
-    imu = new Imu(q_imunominal_imu_s,std::string("imu"));
+    set_imu_params(q_imunominal_imu_s,n);
+    imu = new Imu(q_imunominal_imu_s,std::string("imu"),update_state_on_clock);
     ros::Subscriber sub_quat = n.subscribe("/sensors/imu/quaternion",100,&Imu::quat_cb, imu);
     ros::Subscriber sub_ang_vel = n.subscribe("/sensors/imu/angular_velocity",100,&Imu::ang_vel_cb, imu);
     quat_estimators[0] = imu;
@@ -128,9 +149,7 @@ int main(int argc, char **argv) {
     pub_depth_status = n.advertise<std_msgs::Bool>("/sensors/depth/status",1);
 
 
-    if(!n.getParam("update_state_on_clock",update_state_on_clock)) {
-        ROS_ERROR("Failed to get param 'update_state_on_clock'");
-    }
+    
 
     int update_rate;
     if(!n.getParam("update_rate",update_rate)) {

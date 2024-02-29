@@ -15,7 +15,7 @@ struct IMU_PARAMS {
 
 class Imu : public Sensor {
     public:
-        Imu(IMU_PARAMS q_imunominal_imu_s,std::string name);
+        Imu(IMU_PARAMS q_imunominal_imu_s,std::string name,bool update_on_clock);
         bool is_active(void) override;
         void ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg);
         void quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg);

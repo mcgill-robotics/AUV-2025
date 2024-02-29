@@ -23,13 +23,15 @@ Sensor::~Sensor() {
     delete tfListener;
 }
 
-Sensor::Sensor(std::string name) {
+Sensor::Sensor(std::string name, bool u_o_c) {
     tfBuffer = new tf2_ros::Buffer;
     tfListener = new tf2_ros::TransformListener(*tfBuffer);
     sensor_name = name;
     last_unique_state_time = ros::Time(0,0);
     last_error_message_time = ros::Time(0,0);
     time_before_considered_inactive = ros::Duration(1.0);
+    update_on_clock = u_o_c;
+    last_clock_msg = ros::Time::now();
 }
 
 void Sensor::update_last_state() {
@@ -83,7 +85,7 @@ bool Sensor::is_active() {
     
 // }
 
-Imu::Imu(IMU_PARAMS params, std::string name) : Sensor(name){
+Imu::Imu(IMU_PARAMS params, std::string name, bool u_o_c) : Sensor(name,u_o_c){
 
     tf2::Quaternion q_imunominal_imu(params.q_imunominal_imu_x,params.q_imunominal_imu_y,params.q_imunominal_imu_z,params.q_imunominal_imu_w);
     tf2::Quaternion q_imunominal_auv(1.0, 0.0, 0.0, 0.0);
@@ -112,9 +114,11 @@ Imu::Imu(IMU_PARAMS params, std::string name) : Sensor(name){
 }
 
 void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
+
+    if(update_on_clock && last_clock_msg == ros::Time::now()) return;
+    last_clock_msg = ros::Time::now();
     geometry_msgs::TransformStamped transformStamped;
-    transformStamped.header.stamp.sec = msg->header.stamp.sec;
-    transformStamped.header.stamp.nsec = msg->header.stamp.nsec;
+    transformStamped.header.stamp = ros::Time::now();
     transformStamped.header.frame_id = "NED";
     transformStamped.child_frame_id = "IMU";
     transformStamped.transform.translation.x = 0;
@@ -173,7 +177,7 @@ void Imu::set_prev_state() {
 }
 
 
-DepthSensor::DepthSensor(double pos_auv_depth, std::string name) : Sensor(name) {
+DepthSensor::DepthSensor(double pos_auv_depth, std::string name, bool u_o_c) : Sensor(name,u_o_c) {
     geometry_msgs::TransformStamped static_transformStamped;
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
     static_transformStamped.header.stamp = ros::Time::now();

@@ -11,7 +11,7 @@
 
 class Sensor {
     public:
-        Sensor(std::string name);
+        Sensor(std::string name, bool update_on_clock);
         virtual ~Sensor();
         std::string sensor_name;
         virtual bool is_active(void);
@@ -19,6 +19,8 @@ class Sensor {
         geometry_msgs::Quaternion q_nwu_auv;
         geometry_msgs::Vector3Stamped ang_vel_auv;
     protected:
+        ros::Time last_clock_msg;
+        bool update_on_clock;
         tf2_ros::TransformBroadcaster br;
         ros::Time last_unique_state_time;
         ros::Time last_error_message_time;
