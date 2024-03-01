@@ -1,8 +1,8 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
-        <include file="$(find vision)/launch/stream-down-cam.launch" />
-        <!-- <include file="$(find vision)/launch/stream-front-cam.launch" /> -->
+        <include file="$(find sensors)/launch/stream-down-cam.launch" />
+        <!-- <include file="$(find sensors)/launch/stream-front-cam.launch" /> -->
     </group>
 
     <param name="log_model_prediction_info" value="false" />
