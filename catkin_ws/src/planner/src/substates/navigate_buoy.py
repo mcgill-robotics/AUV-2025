@@ -13,11 +13,14 @@ class NavigateBuoy(smach.State):
         self.buoy_height = buoy_height
 
     def execute(self, ud):
+        # Start buoy navigation
         print("Starting buoy navigation.") 
-        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
-        self.control.rotateEuler((0,0,None))
 
+        # Move to the middle of pool depth and flat orientation
+        self.control.move((None, None, -2))
+        self.control.rotateEuler((0, 0, None))
+
+        # Find the closest buoy object
         buoy_object = self.mapping.getClosestObject(cls="Buoy", pos=(self.state.x, self.state.y))
         if buoy_object is None:
             print("No buoy in object map! Failed.")
@@ -26,38 +29,38 @@ class NavigateBuoy(smach.State):
         print("Centering and rotating in front of buoy.")
         offset_distance = -2
         dtv = degreesToVector(buoy_object[4])
-        offset = [] 
-        for i in range(len(dtv)):
-            offset.append(offset_distance * dtv[i]) 
-        homing_rotation = (0,0,buoy_object[4])
+        offset = [offset_distance * dtv[i] for i in range(len(dtv))] 
+        homing_rotation = (0, 0, buoy_object[4])
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 
-        self.control.rotateEuler(homing_rotation) # bring to exact angle 
-        self.control.move(homing_position) # move in front of buoy
+        # Move and rotate to face the buoy
+        self.control.rotateEuler(homing_rotation)
+        self.control.move(homing_position)
 
-        # wait and keep measuring just to be safe
+        # Wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
         rospy.sleep(10)
 
         print("Re-centering and rotating in front of buoy.")
         self.mapping.updateObject(buoy_object)
         dtv = degreesToVector(buoy_object[4])
-        offset = [] 
-        for i in range(len(dtv)):
-            offset.append(offset_distance * dtv[i]) 
-        homing_rotation = (0,0,buoy_object[4])
+        offset = [offset_distance * dtv[i] for i in range(len(dtv))]
+        homing_rotation = (0, 0, buoy_object[4])
         homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
 
+        # Move and rotate again to ensure accurate positioning
         self.control.rotateEuler(homing_rotation) # bring to exact angle 
         self.control.move(homing_position) # move in front of buoy
         print("Successfully centered in front of buoy")      
 
+        # Find symbol objects
         symbol_objects = self.mapping.getClass(cls=self.target_symbol)
         
+        # Move to each symbol and then back in front of the buoy
         for symbol in symbol_objects:
-            self.control.move((symbol[1], symbol[2], symbol[3])) # move to symbol
-            self.control.move(homing_position) # move in front of buoy
-            self.control.rotateEuler(homing_rotation) # bring to exact angle 
+            self.control.move((symbol[1], symbol[2], symbol[3]))  # Move to symbol
+            self.control.move(homing_position)  # Move back in front of buoy
+            self.control.rotateEuler(homing_rotation)  # Rotate to face buoy again
 
         print("Successfully completed buoy task!")
         

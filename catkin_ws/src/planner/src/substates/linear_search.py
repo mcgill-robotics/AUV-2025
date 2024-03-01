@@ -4,13 +4,12 @@ import rospy
 import smach
 import time
 
-#ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
+# State for performing a linear search for objects underwater.
 class LinearSearch(smach.State):
-    def __init__(self, timeout, forward_speed, control, mapping, target_class, min_objects, search_depth):
+    def __init__(self, timeout, forward_speed, auv_control, object_mapping, target_class, min_objects, search_depth):
         super().__init__(outcomes=['success', 'failure'])
-        self.control = control
-        self.mapping = mapping
-        self.detectedObject = False
+        self.auv_control = auv_control
+        self.object_mapping = object_mapping
         self.target_class = target_class
         self.min_objects = min_objects
         self.timeout = timeout
@@ -19,20 +18,31 @@ class LinearSearch(smach.State):
 
     def execute(self, ud):
         print("Starting linear search.")
-        self.control.move((None, None, self.search_depth))
-        self.control.rotateEuler((0,0,None))
+        
+        # Move to the search depth
+        self.auv_control.move((None, None, self.search_depth))
+        self.auv_control.rotateEuler((0, 0, None))
 
-        startTime = time.time()
-        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
-            self.control.moveDeltaLocal((2,0,0))
-            if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
-                self.detectedObject = True
-                self.control.freeze_pose()
+        # Start time for timeout
+        start_time = time.time()
+        
+        # Perform linear search until timeout or object is found
+        while start_time + self.timeout > time.time() and not rospy.is_shutdown(): 
+            # Move forward
+            self.auv_control.moveDeltaLocal((2, 0, 0))
+            
+            # Check if object is detected
+            if len(self.object_mapping.getClass(self.target_class)) >= self.min_objects:
                 print("Found object! Waiting 10 seconds to get more observations of object.")
+                # Freeze AUV position and wait for more observations
+                self.auv_control.freeze_pose()
                 rospy.sleep(10)
                 return 'success'
+            
+            # Pause briefly before next iteration
             rospy.sleep(0.1)
-        self.control.freeze_pose()
+        
+        # Freeze AUV position after timeout
+        self.auv_control.freeze_pose()
         print("Linear search timed out.")
         return 'failure'
-
