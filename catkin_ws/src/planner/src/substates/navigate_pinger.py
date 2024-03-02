@@ -30,24 +30,32 @@ class GoToPinger(smach.State):
         while(pinger_object is None and give_up_threshold > 0):
             print(self.state.pingerBearing)
             # The object we need to go towards will correspond to the pinger number
-            # pingerBearingX = self.state.pingerBearing.pinger2_bearing.x
-            # pingerBearingY = self.state.pingerBearing.pinger2_bearing.y
 
-            dotProduct = np.dot(np.array([1, 0, 0]), np.array([self.state.pingerBearing.pinger4_bearing.x, self.state.pingerBearing.pinger4_bearing.y, self.state.pingerBearing.pinger4_bearing.z]))
+            #TODO: Remove negation
+            pingerBearingX = -self.state.pingerBearing.pinger3_bearing.x
+            pingerBearingY = -self.state.pingerBearing.pinger3_bearing.y
+            pingerBearingZ = self.state.pingerBearing.pinger3_bearing.z
+
+            # Normalize (x magnitude = 1)
+            bearings = np.array([pingerBearingX, pingerBearingY, pingerBearingZ])
+            bearings = bearings / np.linalg.norm(bearings)
+
+            dotProduct = np.dot(np.array([1, 0, 0]), bearings)
             
             # arctan with pinger bearing x and y to get an angle
             angle = (180/math.pi) * np.arccos(dotProduct)
 
             print("Angle 1", angle)
 
-            # Rotate towards that angle on z, x/y = 0
-            if (angle < 0):
-                angle += 360
+            if (pingerBearingY < 0):
+                angle = -angle
+
+        
 
             print("Angle 2", angle)
             
             self.control.rotateEuler([0, 0, angle])
-            self.control.moveDelta([0, 1, 0])
+            self.control.moveDeltaLocal([1, 0, 0])
             
             # Try to get the current closest object
             # TODO: Can turn this into a specific target object if needed
