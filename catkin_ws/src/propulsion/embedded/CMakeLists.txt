@@ -11,8 +11,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 generate_arduino_firmware(${PROJECT_NAME}
 	SKETCH thrusters
-	BOARD mega2560
-	
+	BOARD teensy40	
 	# this is needed for node_handle
 	# avoids error: undefined reference to `ros::normalizeSecNSec(unsigned long&, unsigned long&)'
 	# feels like a bit of a hack, look into above documentation for neater solution
