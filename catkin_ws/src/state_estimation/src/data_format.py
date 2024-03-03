@@ -15,13 +15,13 @@ import time
 import numpy as np
 import quaternion
 
-def camera_info_callback(msg):
-    global video, frame_rat, output_dir, title
-    if video is not None: return
-    width, height = msg.width, msg.height
-    size = (width, height)
-    codec = cv2.VideoWriter_fourcc(*'MJPG')
-    video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
+# def camera_info_callback(msg):
+#     global video, frame_rat, output_dir, title
+#     if video is not None: return
+#     width, height = msg.width, msg.height
+#     size = (width, height)
+#     codec = cv2.VideoWriter_fourcc(*'MJPG')
+#     video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
 
 def pose_callback(msg):
     global gps, roll, pitch, yaw, depth, seen_pose, backwards, north_offset, east_offset
@@ -52,19 +52,20 @@ def image_callback(msg):
 #     longitude = -y / 1000 / km_per_deg_long + longitude_offset
 #     return latitude, longitude
 
-def init_text_file():
+def init_text_file(code):
     global output_txt, output_dir, title
     output_txt = open(output_dir + f'/{title}.txt', 'w')
-    output_txt.write('##date_dd/MM/yyyy,time,latitude,longitude,depth,heading,pitch,roll\n')
+    output_txt.write(str(code))
 
-def save_data(_):
+def save_data():
     global gps, depth, image, output_txt, roll, pitch, yaw, video
     if gps is not None and seen_image:
         date = strftime("%d/%m/%Y")
         millis = str(int(round(time.time() * 1000)))[0:3]
         the_time = strftime(f"%H:%M:%S.{millis}")
-        output_txt.write(f"{date},{the_time},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
-        video.write(image)
+        title = the_time+".jpg"
+        output_txt.write(f"{title},{gps[0]:10.15f},{gps[1]:10.15f},{depth:10.9f},{yaw:10.9f},{pitch:10.9f},{roll:10.9f}\n")
+        cv2.imwrite(title,image)
 
 
 # def get_gps_factors(depth):
@@ -113,6 +114,7 @@ if __name__ == '__main__':
             ),
         )
     utm_crs = CRS.from_epsg(utm_crs_list[0].code)
+    print(str(utm_crs))
     forwards = Transformer.from_crs("EPSG:4326", utm_crs, always_xy=True)
     backwards = Transformer.from_crs(utm_crs, "EPSG:4326", always_xy=True)
     north_offset, east_offset = forwards.transform(laditude_offset, laditude_offset)
@@ -120,10 +122,11 @@ if __name__ == '__main__':
 
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
-    camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
-    init_text_file()
-    timer = rospy.Timer(rospy.Duration(1/frame_rate), save_data)
-    try:
-        rospy.spin()
-    finally:
-        shutdown()
+    # camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
+    # timer = rospy.Timer(rospy.Duration(1/frame_rate), save_data)
+    # try:
+    #     rospy.spin()
+    # finally:
+    #     shutdown()
+    while(input("press any button to capture, x to finish") !="x"):
+        save_data()
