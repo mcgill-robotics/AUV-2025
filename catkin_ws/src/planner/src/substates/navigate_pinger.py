@@ -36,8 +36,8 @@ class GoToPinger(smach.State):
             # The object we need to go towards will correspond to the pinger number
 
             #TODO: Remove negation
-            pingerBearingX = -pingers[self.pinger_num - 1].x
-            pingerBearingY = -pingers[self.pinger_num - 1].y
+            pingerBearingX = pingers[self.pinger_num - 1].x
+            pingerBearingY = pingers[self.pinger_num - 1].y
             pingerBearingZ = pingers[self.pinger_num - 1].z
 
             # Normalize (x magnitude = 1)
@@ -51,10 +51,8 @@ class GoToPinger(smach.State):
 
             print("Angle 1", angle)
 
-            if (pingerBearingY < 0):
-                angle = -angle
-
-        
+            if (pingerBearingX < 0 or pingerBearingY < 0):
+                angle = angle + 180
 
             print("Angle 2", angle)
             
