@@ -71,9 +71,9 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 
-        xyz_rgb_img[:, :, 0] = z_map
-        xyz_rgb_img[:, :, 1] = x_map
-        xyz_rgb_img[:, :, 2] = y_map
+        xyz_rgb_img[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
+        xyz_rgb_img[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
+        xyz_rgb_img[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
 
         return xyz_rgb_img
 
@@ -84,9 +84,9 @@ def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 
-        xyz_img[:, :, 0] = z_map
-        xyz_img[:, :, 1] = x_map
-        xyz_img[:, :, 2] = y_map
+        xyz_img[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
+        xyz_img[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
+        xyz_img[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
 
         return xyz_img
 

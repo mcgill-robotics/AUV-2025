@@ -242,8 +242,8 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     global_direction_to_object = quaternion.rotate_vectors(rotation, local_direction_to_object)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
-    auv_pos = np.array([states[0].x, states[0].y, states[0].z])
-    obj_pos = findIntersection(auv_pos, global_direction_to_object, z_pos)
+    down_cam_pos = np.array([states[0].x, states[0].y, states[0].z]) + np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset])
+    obj_pos = findIntersection(down_cam_pos, global_direction_to_object, z_pos)
     
     if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
     x = obj_pos[0]
@@ -397,14 +397,6 @@ HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 
-# FOR POINT CLOUD CLUSTERING
-x_weight = 5
-y_weight = 3
-z_weight = 3
-r_weight = 1
-g_weight = 1
-b_weight = 1
-
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
 pool_depth = -5
 octagon_table_height = 1.25 # 0.9m - 1.5m
@@ -414,7 +406,10 @@ octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
 down_cam_hfov = 121.5
 down_cam_vfov = 100
-down_cam_yaw_offset = 0
+down_cam_x_offset = rospy.get_param("down_cam_x_offset", 0)
+down_cam_y_offset = rospy.get_param("down_cam_y_offset", 0)
+down_cam_z_offset = rospy.get_param("down_cam_z_offset", 0)
+down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset", 0)
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 
