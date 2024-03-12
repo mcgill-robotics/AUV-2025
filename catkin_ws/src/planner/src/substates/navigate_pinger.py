@@ -18,6 +18,10 @@ class GoToPinger(smach.State):
 
     def execute(self, ud):
         print("Starting pinger navigation. Navigating to object with pinger number", self.pinger_num) 
+        
+        # Get all the pinger bearings into an array to access bearings by the pinger_number
+        pinger_bearings = self.state.pingerBearing
+        pingers = [pinger_bearings.pinger1_bearing, pinger_bearings.pinger2_bearing, pinger_bearings.pinger3_bearing, pinger_bearings.pinger4_bearing]
 
         # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         self.control.move((None, None, -2))
@@ -32,9 +36,9 @@ class GoToPinger(smach.State):
             # The object we need to go towards will correspond to the pinger number
 
             #TODO: Remove negation
-            pingerBearingX = -self.state.pingerBearing.pinger3_bearing.x
-            pingerBearingY = -self.state.pingerBearing.pinger3_bearing.y
-            pingerBearingZ = self.state.pingerBearing.pinger3_bearing.z
+            pingerBearingX = -pingers[self.pinger_num - 1].x
+            pingerBearingY = -pingers[self.pinger_num - 1].y
+            pingerBearingZ = pingers[self.pinger_num - 1].z
 
             # Normalize (x magnitude = 1)
             bearings = np.array([pingerBearingX, pingerBearingY, pingerBearingZ])
