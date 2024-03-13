@@ -32,6 +32,12 @@ class State:
         self.height = None
         self.x_over_z_map = None
         self.y_over_z_map = None
+        self.x_while_paused = None
+        self.y_while_paused = None
+        self.z_while_paused = None
+        self.theta_z_while_paused = None
+        self.q_auv_while_paused = None
+        self.point_cloud_while_paused = None
 
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
@@ -44,22 +50,22 @@ class State:
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
 
     def updateX(self, msg):
-        if self.paused: return
+        if self.paused: self.x_while_paused = float(msg.data)
         self.x = float(msg.data)
     def updateY(self, msg):
-        if self.paused: return
+        if self.paused: self.y_while_paused = float(msg.data)
         self.y = float(msg.data)
     def updateZ(self, msg):
-        if self.paused: return
+        if self.paused: self.z_while_paused = float(msg.data)
         self.z = float(msg.data)
     def updateThetaZ(self, msg):
-        if self.paused: return
+        if self.paused: self.theta_z_while_paused = float(msg.data)
         self.theta_z = float(msg.data)
     def updatePose(self,msg):
-        if self.paused: return
+        if self.paused: self.q_auv_while_paused = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def updatePointCloud(self):
-        if self.paused: return
+        if self.paused: self.point_cloud_while_paused = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud, bgr):
         # Find the closest point to the camera
@@ -119,6 +125,20 @@ class State:
     def pause(self):
         self.paused = True
     def resume(self):
+        if self.x_while_paused is not None: self.x = self.x_while_paused
+        if self.y_while_paused is not None: self.y = self.y_while_paused
+        if self.z_while_paused is not None: self.z = self.z_while_paused
+        if self.theta_z_while_paused is not None: self.theta_z = self.theta_z_while_paused
+        if self.q_auv_while_paused is not None: self.q_auv = self.q_auv_while_paused
+        if self.point_cloud_while_paused is not None: self.point_cloud = self.point_cloud_while_paused
+        
+        self.x_while_paused = None
+        self.y_while_paused = None
+        self.z_while_paused = None
+        self.theta_z_while_paused = None
+        self.q_auv_while_paused = None
+        self.point_cloud_while_paused = None
+        
         self.paused = False
 
 # bbox is an array of 4 elements
@@ -242,7 +262,8 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     global_direction_to_object = quaternion.rotate_vectors(rotation, local_direction_to_object)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
-    down_cam_pos = np.array([states[0].x, states[0].y, states[0].z]) + np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset])
+    global_down_cam_offset = quaternion.rotate_vectors(states[0].q_auv, np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset]))
+    down_cam_pos = np.array([states[0].x, states[0].y, states[0].z]) + global_down_cam_offset
     obj_pos = findIntersection(down_cam_pos, global_direction_to_object, z_pos)
     
     if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
@@ -261,12 +282,15 @@ def getObjectPositionFrontCam(bbox):
     max_lx = np.nanmax(point_cloud[:,:,0].flatten())
     max_ly = np.nanmax(point_cloud[:,:,1].flatten())
     max_lz = np.nanmax(point_cloud[:,:,2].flatten())
+    
     lx = (max_lx + min_lx) / 2
     ly = (max_ly + min_ly) / 2
     lz = (max_lz + min_lz) / 2
     
+    global_obj_pos_offset = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz]))
+    
     # Get the best estimate of the mean
-    x,y,z = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz])) + np.array([states[1].x, states[1].y, states[1].z])
+    x,y,z = global_obj_pos_offset + np.array([states[1].x, states[1].y, states[1].z])
     return x, y, z
 
 # tells you how the object is oriented in space (Z axis)
@@ -404,7 +428,7 @@ lane_marker_height = 0.4
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 121.5
+down_cam_hfov = 129.4904
 down_cam_vfov = 100
 down_cam_x_offset = rospy.get_param("down_cam_x_offset", 0)
 down_cam_y_offset = rospy.get_param("down_cam_y_offset", 0)
