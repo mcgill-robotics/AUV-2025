@@ -112,8 +112,7 @@ if __name__ == "__main__":
     rospy.Subscriber("/sensors/hydrophones/pinger_time_difference", PingerTimeDifference, cb_hydrophones_time_difference)
     rospy.Subscriber("/state/x", Float64, cb_state_x)
     rospy.Subscriber("/state/y", Float64, cb_state_y)
-    rospy.Subscriber
-    rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, cb_imu_quat)
+    rospy.Subscriber("/sensors/imu/quate    rnion", SbgEkfQuat, cb_imu_quat)
     pub_pinger_bearing = rospy.Publisher("/sensors/hydrophones/pinger_bearing", PingerBearing, queue_size=1)
 
     auv_rotation = np.quaternion(1,0,0,0)   
@@ -126,7 +125,7 @@ if __name__ == "__main__":
 
     # Assume H1 is the "origin" hydrophone
     # If you change the values here, you must also change the values in the Unity editor
-    # H1 is at the origin, H2 is on the x-axis, H3 is on the y-axis
+    # H1 is at the origin, H2 is on the x-axis, H3 is on the y-axis, H4 is on the z-axis
     x = rospy.get_param("hydrophones_dx")
     y = rospy.get_param("hydrophones_dy")
     z = rospy.get_param("hydrophones_dz")
