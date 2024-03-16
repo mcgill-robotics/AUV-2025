@@ -28,10 +28,8 @@ class Trick(smach.State):
     def execute_roll(self):
         # TODO: Need to update the X in state to reset and have it keep rotating
         print("Starting roll trick")
-        for _ in range(self.num_full_spins*6): 
-            self.state.updateX({"data": 0})
-            self.control.rotateEuler((179.0,0,0))
-            print(self.state.x, self.state.theta_x)
+        self.control.move((None, None, -1))
+        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((120.0,0,0))
             
         print("Completed")
         return 'success'   
