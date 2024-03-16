@@ -60,7 +60,7 @@ def tricks(t):
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
+        smach.StateMachine.add('trick', Trick(control=control, trick_type=t, state=state, num_full_spins=3), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     # display_mission.updateMission("Tricks {}".format(res))
@@ -171,9 +171,9 @@ if __name__ == '__main__':
         # gateMission()
         #qualiVisionMission()
         #buoyMission()  
-        # tricks()  
+        tricks("roll")  
         # laneMarkerMission()
-        pingerMission()
+        # pingerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()

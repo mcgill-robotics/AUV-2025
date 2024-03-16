@@ -4,10 +4,11 @@ import rospy
 import smach
 
 class Trick(smach.State):
-    def __init__(self, control, trick_type, num_full_spins=1):
+    def __init__(self, control, trick_type, state, num_full_spins=1):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.trick_type = trick_type
+        self.state = state
         self.num_full_spins = int(num_full_spins)
 
     def execute(self,ud):
@@ -25,8 +26,13 @@ class Trick(smach.State):
         self.control.rotateEuler((0,0,None))
     
     def execute_roll(self):
+        # TODO: Need to update the X in state to reset and have it keep rotating
         print("Starting roll trick")
-        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((120.0, 0, 0))
+        for _ in range(self.num_full_spins*6): 
+            self.state.updateX({"data": 0})
+            self.control.rotateEuler((179.0,0,0))
+            print(self.state.x, self.state.theta_x)
+            
         print("Completed")
         return 'success'   
     
