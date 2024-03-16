@@ -9,7 +9,7 @@ from auv_msgs.msg import PingerBearing
 class GoToPinger(smach.State):
 
     def __init__(self, control, state, mapping, pinger_num):
-        super().__init__(outcomes=['success', 'failure'])
+        super().__init__(outcomes=['success', 'failure', 'search'])
         self.control = control
         self.mapping = mapping
         self.state = state
@@ -29,13 +29,13 @@ class GoToPinger(smach.State):
 
         pinger_object = None
 
+        # Amount of times to turn towards the pinger/move while an object is not found before giving up
         give_up_threshold = 10
 
         while(pinger_object is None and give_up_threshold > 0):
             print(self.state.pingerBearing)
-            # The object we need to go towards will correspond to the pinger number
 
-            #TODO: Remove negation
+            # The object we need to go towards will correspond to the pinger number
             pingerBearingX = pingers[self.pinger_num - 1].x
             pingerBearingY = pingers[self.pinger_num - 1].y
             pingerBearingZ = pingers[self.pinger_num - 1].z
@@ -51,11 +51,17 @@ class GoToPinger(smach.State):
 
             print("Angle 1", angle)
 
+            # Add 180 degrees if the angle is negative
             if (pingerBearingX < 0 or pingerBearingY < 0):
                 angle = angle + 180
 
             print("Angle 2", angle)
+
+            # If the pinger is reached and no object is found (after the first attempt), exit the loop and search for it
+            if angle > 180 and give_up_threshold < 10:
+                return 'search'
             
+            # Rotate towards the pinger bearing and move forward a bit
             self.control.rotateEuler([0, 0, angle])
             self.control.moveDeltaLocal([1, 0, 0])
             
@@ -81,7 +87,6 @@ class GoToPinger(smach.State):
             offset = [] 
             for i in range(len(dtv)):
                 offset.append(offset_distance * dtv[i]) 
-            # TODO: Check why this makes the AUV do backflips
             self.control.rotateEuler((None,None,rotation_amount))
             homing_position = (pinger_object[1] + offset[0], pinger_object[2] + offset[1], pinger_object[3])
 

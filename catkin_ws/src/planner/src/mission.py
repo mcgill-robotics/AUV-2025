@@ -87,6 +87,9 @@ def pingerMission():
         with sm:
                 # Turn towards pinger bearing and move towards it until you find an object
                 smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=4), 
+                        transitions={'success': 'success', 'failure':'failure', 'search': 'breadth_first_search'})
+                # TODO [COMP]: Specify target class
+                smach.StateMachine.add('breadth_first_search', BreadthFirstSearch(timeout=120, target_class="", expansionAmt=0.5, min_objects=1, control=control, mapping=mapping, search_depth=-1), 
                         transitions={'success': 'success', 'failure':'failure'})
                 res = sm.execute()
         # display_mission.updateMission("Pinger {}".format(res))
