@@ -7,14 +7,18 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <auv_msgs/DeadReckonReport.h>
 
-class Dvl : Sensor {
+class Dvl : public Sensor {
     public:
-        Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl);
+        Dvl(std::string name, bool u_o_cl);
+        void dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg);
     private:
-        void dr_cb(auv_msgs::DeadReckonReport msg);
         tf2::Vector3 pos_auv_dvl;
-        Imu imu;
         tf2::Quaternion q_dvlref_nwu;
+        void set_prev_state(void) override;
+        double prev_x;
+        double prev_y;
+        double prev_z;
+        geometry_msgs::Quaternion prev_q_nwu_auv;
 };
 
 #endif

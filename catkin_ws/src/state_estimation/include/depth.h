@@ -9,8 +9,9 @@ class DepthSensor : public Sensor {
         void depth_cb(const std_msgs::Float64::ConstPtr& msg);
     private:
         double prev_z;
-        bool has_different_data() override;
+        bool has_different_data();
         void set_prev_state(void) override;
+        void update_last_state(void) override;
 };
 
 #endif

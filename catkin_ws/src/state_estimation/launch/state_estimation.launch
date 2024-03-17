@@ -27,6 +27,12 @@
 		<param name="update_state_on_clock" value="true" />
     </group>
 
+	<node pkg="tf2_ros" type="static_transform_publisher" name="nwu_ned_broadcaster" args="0 0 0 1 0 0 0 NED NWU" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="imu_imunominal_broadcaster" args="0 0 0 0 0 0 1 IMUNOMINAL IMU" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="imunominal_auv_broadcaster" args="0 0 0 1 0 0 0 AUV IMUNOMINAL" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="dvlnominal_auv_broadcaster" args="0 0 0 1 0 0 0 AUV DVLNOMINAL" />
+	<node pkg="tf2_ros" type="static_transform_publisher" name="dvl_dvlnominal_broadcaster" args="0 0 0 0 0 0 1 DVLNOMINAL DVL" />
+
 	<param name="hydrophones_dx" value="0.1"/>
 	<param name="hydrophones_dy" value="0.1"/>
 	<node name="hydrophones_bearing"

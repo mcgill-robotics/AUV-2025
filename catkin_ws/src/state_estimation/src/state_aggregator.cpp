@@ -10,21 +10,27 @@
 #include <std_msgs/Bool.h>
 #include <iostream>
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 bool update_state_on_clock;
 ros::Time last_clock_msg;
 Sensor* z_estimators[1];
 Sensor* quat_estimators[1];
+Sensor* pos_estimators[1];
 ros::Publisher pub_pose;
 ros::Publisher pub_x;
 ros::Publisher pub_y;
 ros::Publisher pub_z;
+ros::Publisher pub_theta_x;
+ros::Publisher pub_theta_y;
+ros::Publisher pub_theta_z;
 ros::Publisher pub_av;
 ros::Publisher pub_imu_status;
 ros::Publisher pub_dvl_status;
 ros::Publisher pub_depth_status;
 DepthSensor* depth;
 Imu* imu;
+Dvl* dvl;
 
 void update_state(const ros::TimerEvent& event) {
     if(update_state_on_clock) {
@@ -52,7 +58,6 @@ void update_state(const ros::TimerEvent& event) {
     bool found_z = false;
     bool found_quat = false;
     for(Sensor* sensor : z_estimators) {
-        continue;
         if(sensor->is_active()) {
             z.data = sensor->z;
             found_z = true;
@@ -60,7 +65,6 @@ void update_state(const ros::TimerEvent& event) {
         }
     }
 
-    ROS_DEBUG("looking for quat");
     for(Sensor* sensor : quat_estimators) {
         if(sensor->is_active()) {
             q_nwu_auv.w = sensor->q_nwu_auv.w;
@@ -71,7 +75,17 @@ void update_state(const ros::TimerEvent& event) {
             break;
         }
     }
-    ROS_DEBUG("done");
+
+    for(Sensor* sensor: pos_estimators) {
+        if(sensor->is_active()) {
+            x.data = sensor->x;
+            y.data = sensor->y;
+            found_x = true;
+            found_y = true;
+            break;
+        }
+    }
+
     if(found_x && found_y && found_z && found_quat) {
         geometry_msgs::Pose pose;
         pose.position.x = x.data;
@@ -82,26 +96,27 @@ void update_state(const ros::TimerEvent& event) {
         pub_y.publish(y);
         pub_z.publish(z);
         pub_pose.publish(pose);
+
+        tf2::Quaternion quat_tf2_format(q_nwu_auv.x,q_nwu_auv.y,q_nwu_auv.z,q_nwu_auv.w);
+        tf2::Matrix3x3 mat(quat_tf2_format);
+        double yaw;
+        double pitch;
+        double roll;
+        mat.getEulerYPR(yaw,pitch,roll);
+
+        std_msgs::Float64 yaw_msg;
+        std_msgs::Float64 pitch_msg;
+        std_msgs::Float64 roll_msg;
+
+        yaw_msg.data = yaw;
+        pitch_msg.data = pitch;
+        roll_msg.data = roll;
+
+        pub_theta_x.publish(roll_msg);
+        pub_theta_y.publish(pitch_msg);
+        pub_theta_z.publish(yaw_msg);
     }
 
-}
-
-void broad_cast_NWU_NED() {
-    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-    geometry_msgs::TransformStamped static_transformStamped;
-    
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "NWU";
-    static_transformStamped.child_frame_id = "NED";
-    static_transformStamped.transform.translation.x = 0;
-    static_transformStamped.transform.translation.y = 0;
-    static_transformStamped.transform.translation.z = 0;
-
-    static_transformStamped.transform.rotation.x = 1;
-    static_transformStamped.transform.rotation.y = 0;
-    static_transformStamped.transform.rotation.z = 0;
-    static_transformStamped.transform.rotation.w = 0;
-    static_broadcaster.sendTransform(static_transformStamped);   
 }
 
 void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
@@ -125,10 +140,10 @@ void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
 int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
-    broad_cast_NWU_NED();
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
+    ros::Duration(0.5).sleep();
 
     if(!n.getParam("update_state_on_clock",update_state_on_clock)) {
         ROS_ERROR("Failed to get param 'update_state_on_clock'");
@@ -146,10 +161,17 @@ int main(int argc, char **argv) {
     ros::Subscriber sub_ang_vel = n.subscribe("/sensors/imu/angular_velocity",100,&Imu::ang_vel_cb, imu);
     quat_estimators[0] = imu;
 
+    dvl = new Dvl(std::string("dvl"),update_state_on_clock);
+    ros::Subscriber sub_dvl = n.subscribe("sensors/dvl/pose",100,&Dvl::dr_cb, dvl);
+    pos_estimators[0] = dvl;
+
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x",1);
     pub_y = n.advertise<std_msgs::Float64>("/state/y",1);
     pub_z = n.advertise<std_msgs::Float64>("/state/z",1);
+    pub_theta_x = n.advertise<std_msgs::Float64>("/state/theta/x",1);
+    pub_theta_y = n.advertise<std_msgs::Float64>("/state/theta/y",1);
+    pub_theta_z = n.advertise<std_msgs::Float64>("/state/theta/z",1);
     pub_av = n.advertise<geometry_msgs::Vector3>("/state/angular_velocity",1);
     pub_imu_status = n.advertise<std_msgs::Bool>("/sensors/imu/status",1);
     pub_dvl_status = n.advertise<std_msgs::Bool>("/sensors/dvl/status",1);
@@ -164,9 +186,12 @@ int main(int argc, char **argv) {
     }
     double freq = 1.0/update_rate;
     ros::spinOnce();
+
+    // broad_cast_NWU_NED();
     ros::Timer timer = n.createTimer(ros::Duration(freq), update_state);
 
     ros::spin();
     delete depth;
+    delete imu;
     return 0;
 }

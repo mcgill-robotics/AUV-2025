@@ -19,7 +19,7 @@
 #include <ros/console.h>
 
 Sensor::~Sensor() {
-
+    delete tfListener;
 }
 
 Sensor::Sensor(std::string name, bool u_o_c) {
@@ -29,16 +29,15 @@ Sensor::Sensor(std::string name, bool u_o_c) {
     time_before_considered_inactive = ros::Duration(1.0);
     update_on_clock = u_o_c;
     last_clock_msg = ros::Time::now();
+    tfListener = new tf2_ros::TransformListener(tfBuffer);
 }
 
 void Sensor::update_last_state() {
-    if(has_different_data()) {
-        if(ros::Time::now() - last_unique_state_time > time_before_considered_inactive) {
-                ROS_INFO("%s has become active",sensor_name.c_str());
-            }
-        last_unique_state_time = ros::Time::now();
-        set_prev_state();
-    }
+    if(ros::Time::now() - last_unique_state_time > time_before_considered_inactive) {
+            ROS_INFO("%s has become active",sensor_name.c_str());
+        }
+    last_unique_state_time = ros::Time::now();
+    set_prev_state();
 }
 
 bool Sensor::is_active() {
@@ -54,60 +53,59 @@ bool Sensor::is_active() {
     return true;
 }
 
-// Dvl::Dvl(tf2::Quaternion q_auv_dvl, tf2::Vector3 pos_auv_dvl, Imu i, ros::NodeHandle n) : Sensor(){
-//     imu = i;
+Dvl::Dvl(std::string name, bool u_o_c) : Sensor(name, u_o_c) {
+}
 
-//     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-//     geometry_msgs::TransformStamped static_transformStamped;
-    
-//     static_transformStamped.header.stamp = ros::Time::now();
-//     static_transformStamped.header.frame_id = "AUV";
-//     static_transformStamped.child_frame_id = "DVL";
-//     static_transformStamped.transform.translation.x = pos_auv_dvl.getX();
-//     static_transformStamped.transform.translation.y = pos_auv_dvl.getY();
-//     static_transformStamped.transform.translation.z = pos_auv_dvl.getZ();
+void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
+    if(update_on_clock && last_clock_msg == ros::Time::now()) return;
+    tf2::Quaternion q_dvlref_dvl;
+    q_dvlref_dvl.setEuler(msg->yaw,msg->pitch,msg->roll);
 
-//     static_transformStamped.transform.rotation.x = q_auv_dvl.x();
-//     static_transformStamped.transform.rotation.y = q_auv_dvl.y();
-//     static_transformStamped.transform.rotation.z = q_auv_dvl.z();
-//     static_transformStamped.transform.rotation.w = q_auv_dvl.w();
-//     static_broadcaster.sendTransform(static_transformStamped);
+    geometry_msgs::TransformStamped transformStamped;
+    transformStamped.header.stamp = ros::Time::now();
+    transformStamped.header.frame_id = "DVL";
+    transformStamped.child_frame_id = "DVLREF";
+    transformStamped.transform.translation.x = -msg->x;
+    transformStamped.transform.translation.y = -msg->y;
+    transformStamped.transform.translation.z = -msg->z;
+    transformStamped.transform.rotation.w = q_dvlref_dvl.getW();
+    transformStamped.transform.rotation.x = -q_dvlref_dvl.getX();
+    transformStamped.transform.rotation.y = -q_dvlref_dvl.getY();
+    transformStamped.transform.rotation.z = -q_dvlref_dvl.getZ();
 
-//     ros::Subscriber sub = n.subscribe("/sensors/dvl/pose",1000,dr_cb);
+    br.sendTransform(transformStamped);
 
-//     sensor_name = "dvl";
-// }
+    geometry_msgs::TransformStamped t_nwu_auv;
+    try{
+        t_nwu_auv = tfBuffer.lookupTransform("NWU", "AUV",ros::Time(0));
+    }
+    catch (tf2::TransformException &ex) {
+        ROS_WARN("%s",ex.what());
+        return;
+    }
+    q_nwu_auv.w = t_nwu_auv.transform.rotation.w;
+    q_nwu_auv.x = t_nwu_auv.transform.rotation.x;
+    q_nwu_auv.y = t_nwu_auv.transform.rotation.y;
+    q_nwu_auv.z = t_nwu_auv.transform.rotation.z;
 
-// Dvl::dr_cb(auv_msgs::DeadReckonReport) {
-    
-// }
+    x = t_nwu_auv.transform.translation.x;
+    y = t_nwu_auv.transform.translation.y;
+    z = t_nwu_auv.transform.translation.z;
+
+    ROS_DEBUG("x: %lf, y: %lf, z: %lf\n",x,y,z);
+
+    update_last_state();
+
+}
+
+
+void Dvl::set_prev_state() {
+    prev_q_nwu_auv = q_nwu_auv;
+}
 
 Imu::Imu(IMU_PARAMS params, std::string name, bool u_o_c) : Sensor(name,u_o_c){
-
-    tf2::Quaternion q_imunominal_imu(params.q_imunominal_imu_x,params.q_imunominal_imu_y,params.q_imunominal_imu_z,params.q_imunominal_imu_w);
-    tf2::Quaternion q_imunominal_auv(1.0, 0.0, 0.0, 0.0);
-
-    tf2::Quaternion q_imu_auv = q_imunominal_imu.inverse() * q_imunominal_auv;
-
-
-    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-    geometry_msgs::TransformStamped static_transformStamped;
-    
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "IMU";
-    static_transformStamped.child_frame_id = "AUV";
-    static_transformStamped.transform.translation.x = 0;
-    static_transformStamped.transform.translation.y = 0;
-    static_transformStamped.transform.translation.z = 0;
-
-    static_transformStamped.transform.rotation.x = q_imu_auv.x();
-    static_transformStamped.transform.rotation.y = q_imu_auv.y();
-    static_transformStamped.transform.rotation.z = q_imu_auv.z();
-    static_transformStamped.transform.rotation.w = q_imu_auv.w();
-    static_broadcaster.sendTransform(static_transformStamped);   
     seen_ang_vel = false;
     seen_quat = false; 
-
 }
 
 void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
@@ -115,23 +113,21 @@ void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
     last_clock_msg = ros::Time::now();
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.stamp = ros::Time::now();
-    transformStamped.header.frame_id = "NED";
-    transformStamped.child_frame_id = "IMU";
+    transformStamped.header.frame_id = "IMU";
+    transformStamped.child_frame_id = "NED";
     transformStamped.transform.translation.x = 0;
     transformStamped.transform.translation.y = 0;
     transformStamped.transform.translation.z = 0;
 
-    transformStamped.transform.rotation.x = msg->quaternion.x;
-    transformStamped.transform.rotation.y = msg->quaternion.y;
-    transformStamped.transform.rotation.z = msg->quaternion.z;
+    transformStamped.transform.rotation.x = -msg->quaternion.x;
+    transformStamped.transform.rotation.y = -msg->quaternion.y;
+    transformStamped.transform.rotation.z = -msg->quaternion.z;
     transformStamped.transform.rotation.w = msg->quaternion.w;
 
     br.sendTransform(transformStamped);
 
     geometry_msgs::TransformStamped q_nwu_auv_ts;
     try{
-        tf2_ros::Buffer tfBuffer;
-        tf2_ros::TransformListener tfListener(tfBuffer);
         q_nwu_auv_ts = tfBuffer.lookupTransform("NWU", "AUV",ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
@@ -161,8 +157,6 @@ void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
     ang_vel_imu.header.stamp.nsec = msg->header.stamp.nsec;
     ang_vel_imu.header.frame_id = "IMU";
     try {
-        tf2_ros::Buffer tfBuffer;
-        tf2_ros::TransformListener tfListener(tfBuffer);
         tfBuffer.transform(ang_vel_imu,ang_vel_auv,"AUV");
     }
     catch (tf2::TransformException &ex) {
@@ -173,30 +167,12 @@ void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
     update_last_state();
 }
 
-bool Imu::has_different_data() {
-    return prev_q_nwu_auv != q_nwu_auv;
-}
-
 void Imu::set_prev_state() {
     prev_q_nwu_auv = q_nwu_auv;
 }
 
 
 DepthSensor::DepthSensor(double pos_auv_depth, std::string name, bool u_o_c) : Sensor(name,u_o_c) {
-    geometry_msgs::TransformStamped static_transformStamped;
-    tf2_ros::StaticTransformBroadcaster static_broadcaster;
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "AUV";
-    static_transformStamped.child_frame_id = "DEPTH_SENSOR";
-    static_transformStamped.transform.translation.x = 0;
-    static_transformStamped.transform.translation.y = 0;
-    static_transformStamped.transform.translation.z = pos_auv_depth;
-
-    static_transformStamped.transform.rotation.x = 0.0;
-    static_transformStamped.transform.rotation.y = 0.0;
-    static_transformStamped.transform.rotation.z = 0.0;
-    static_transformStamped.transform.rotation.w = 1.0;
-    static_broadcaster.sendTransform(static_transformStamped);
     prev_z = 0;
     z = 0;
 }
@@ -225,4 +201,8 @@ bool DepthSensor::has_different_data() {
 
 void DepthSensor::set_prev_state() {
     prev_z = z;
+}
+
+void DepthSensor::update_last_state() {
+    if(update_on_clock || has_different_data()) Sensor::update_last_state();
 }

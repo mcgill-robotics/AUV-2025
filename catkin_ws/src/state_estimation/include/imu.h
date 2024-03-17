@@ -24,7 +24,6 @@ class Imu : public Sensor {
         bool seen_quat;
         bool seen_ang_vel;
         tf2::Quaternion q_imunominal_imu;
-        bool has_different_data() override;
         void set_prev_state(void) override;
 };
 

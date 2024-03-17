@@ -15,6 +15,8 @@ class Sensor {
         virtual ~Sensor();
         std::string sensor_name;
         virtual bool is_active(void);
+        double x;
+        double y;
         double z;
         geometry_msgs::Quaternion q_nwu_auv;
         geometry_msgs::Vector3Stamped ang_vel_auv;
@@ -22,12 +24,13 @@ class Sensor {
         ros::Time last_clock_msg;
         bool update_on_clock;
         tf2_ros::TransformBroadcaster br;
+        tf2_ros::Buffer tfBuffer;
+        tf2_ros::TransformListener* tfListener;
         ros::Time last_unique_state_time;
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
-        void update_last_state(void);
+        virtual void update_last_state(void);
         virtual void set_prev_state(void) = 0;
-        virtual bool has_different_data(void) = 0;
 };
 
 #endif
