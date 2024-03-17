@@ -5,6 +5,6 @@
         <param name="laditude_offset" value="0" />
         <param name="longitude_offset" value="0" />
         <param name="frame_rate" value="10" />
-        <param name="output_dir" value="$(find state_estimation)/data/" />
+        <param name="output_dir" value="$(find state_estimation)/data" />
     </node>
 </launch>
