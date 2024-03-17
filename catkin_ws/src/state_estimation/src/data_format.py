@@ -41,8 +41,8 @@ def camera_info_callback(msg):
             "height": height,
             "focal_x": focal_x,
             "focal_y": focal_y,
-            "c_x": c_x,
-            "c_y": c_y,
+            "c_x": (c_x - (width / 2)) / (width / 2),
+            "c_y": (c_y - (height / 2)) / (height / 2),
             "k1": k1,
             "k2": k2,
             "p1": p1,
@@ -68,14 +68,6 @@ def image_callback(msg):
     data = bridge.imgmsg_to_cv2(msg, "bgr8")
     image = data
     seen_image = True
-
-# def xyz_to_gps(x, y, z):
-#     # This function will convert the x, y, z coordinates to GPS coordinates
-#     # The GPS coordinates will be returned as a tupl
-#     km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
-#     latitude = x / 1000 / km_per_deg_lat + laditude_offset
-#     longitude = -y / 1000 / km_per_deg_long + longitude_offset
-#     return latitude, longitude
 
 def init_text_file():
     global output_txt, output_dir, title
