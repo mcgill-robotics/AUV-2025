@@ -4,24 +4,57 @@ from geometry_msgs.msg import Pose
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from time import strftime
-from tf import transformations
-import math
 import cv2
 from pyproj import Transformer
 from pyproj import CRS
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
 import time
-import numpy as np
-import quaternion
+import os
+import json
 
-# def camera_info_callback(msg):
-#     global video, frame_rat, output_dir, title
-#     if video is not None: return
-#     width, height = msg.width, msg.height
-#     size = (width, height)
-#     codec = cv2.VideoWriter_fourcc(*'MJPG')
-#     video = cv2.VideoWriter(output_dir + f"/{title}.avi", codec, frame_rate, size)
+def camera_info_callback(msg):
+    global output_dir, title, camera_info_seen
+
+    if camera_info_seen: return
+    camera_info_seen = True
+
+    # Extract camera parameters
+    width = msg.width
+    height = msg.height
+    distortion_model = msg.distortion_model
+    focal_x = msg.K[0]
+    focal_y = msg.K[4]
+    c_x = msg.K[2]
+    c_y = msg.K[5]
+    k1 = msg.D[0]
+    k2 = msg.D[1]
+    p1 = msg.D[2]
+    p2 = msg.D[3]
+    k3 = msg.D[4]
+
+    # Format camera parameters
+    camera_params = {
+        f"{width} {height} {distortion_model} {focal_x:.8f}": {
+            "projection_type": distortion_model,
+            "width": width,
+            "height": height,
+            "focal_x": focal_x,
+            "focal_y": focal_y,
+            "c_x": (c_x - (width / 2)) / (width / 2),
+            "c_y": (c_y - (height / 2)) / (height / 2),
+            "k1": k1,
+            "k2": k2,
+            "p1": p1,
+            "p2": p2,
+            "k3": k3
+
+        }
+    }
+
+    camera_txt = open(output_dir + f"/cameras.json","w")
+    camera_txt.write(json.dumps(camera_params))
+    camera_txt.close()
 
 def pose_callback(msg):
     global gps, depth, seen_pose, backwards, north_offset, east_offset
@@ -36,17 +69,9 @@ def image_callback(msg):
     image = data
     seen_image = True
 
-# def xyz_to_gps(x, y, z):
-#     # This function will convert the x, y, z coordinates to GPS coordinates
-#     # The GPS coordinates will be returned as a tupl
-#     km_per_deg_lat, km_per_deg_long = get_gps_factors(z)
-#     latitude = x / 1000 / km_per_deg_lat + laditude_offset
-#     longitude = -y / 1000 / km_per_deg_long + longitude_offset
-#     return latitude, longitude
-
 def init_text_file():
     global output_txt, output_dir, title
-    output_txt = open(output_dir + f'/{title}.txt', 'w')
+    output_txt = open(output_dir + f'/geo.txt', 'w')
     output_txt.write("EPSG:4326\n")
 
 def save_data():
@@ -60,15 +85,6 @@ def save_data():
         output_txt.write(f"{title} {gps[0]:10.13f} {gps[1]:10.13f} {depth}\n")
         cv2.imwrite(output_dir + "/" + title,image)
 
-
-# def get_gps_factors(depth):
-#     global radius_earth
-#     global laditude_offset
-#     global longitude_offset
-#     radius = radius_earth + depth/1000
-#     lat_factor = radius * math.pi / 180
-#     long_factor = lat_factor * math.cos(math.radians(laditude_offset))
-#     return lat_factor, long_factor
 
 def shutdown():
     global output_txt
@@ -89,7 +105,11 @@ if __name__ == '__main__':
     laditude_offset = rospy.get_param('~laditude_offset')
     longitude_offset = rospy.get_param('~longitude_offset')
     frame_rate = rospy.get_param('~frame_rate')
-    output_dir = rospy.get_param('~output_dir')
+    data_dir = rospy.get_param('~output_dir')
+    camera_info_seen = False
+
+    output_dir = f"{data_dir}/{title}"
+    os.mkdir(output_dir)
 
     utm_crs_list = query_utm_crs_info(
             datum_name="WGS 84",
@@ -108,12 +128,8 @@ if __name__ == '__main__':
 
     pose_sub = rospy.Subscriber('/state/pose', Pose, pose_callback)
     image_sub = rospy.Subscriber('/vision/down_cam/image_raw', Image, image_callback)
-    # camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
-    # timer = rospy.Timer(rospy.Duration(1/frame_rate), save_data)
-    # try:
-    #     rospy.spin()
-    # finally:
-    #     shutdown()
+    camera_info_sub = rospy.Subscriber('/vision/down_cam/camera_info', CameraInfo, camera_info_callback)
+
     init_text_file()
     while(input("press any button to capture, x to finish") !="x"):
         save_data()
