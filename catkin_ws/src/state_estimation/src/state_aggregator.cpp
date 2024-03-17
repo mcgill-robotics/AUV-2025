@@ -48,6 +48,10 @@ void update_state(const ros::TimerEvent& event) {
     imu_status_msg.data = imu->is_active();
     pub_imu_status.publish(imu_status_msg);
 
+    std_msgs::Bool dvl_status_msg;
+    dvl_status_msg.data = dvl->is_active();
+    pub_dvl_status.publish(dvl_status_msg);
+
 
     std_msgs::Float64 z;
     std_msgs::Float64 x;

@@ -77,20 +77,13 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
 
     geometry_msgs::TransformStamped t_nwu_auv;
     try{
-        t_nwu_auv = tfBuffer.lookupTransform("NWU", "AUV",ros::Time(0));
+        t_nwu_auv = tfBuffer.lookupTransform("DVLREF", "NWU",ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
         ROS_WARN("%s",ex.what());
         return;
     }
-    q_nwu_auv.w = t_nwu_auv.transform.rotation.w;
-    q_nwu_auv.x = t_nwu_auv.transform.rotation.x;
-    q_nwu_auv.y = t_nwu_auv.transform.rotation.y;
-    q_nwu_auv.z = t_nwu_auv.transform.rotation.z;
-
-    x = t_nwu_auv.transform.translation.x;
-    y = t_nwu_auv.transform.translation.y;
-    z = t_nwu_auv.transform.translation.z;
+    
 
     ROS_DEBUG("x: %lf, y: %lf, z: %lf\n",x,y,z);
 
