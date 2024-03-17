@@ -12,6 +12,11 @@ from pyproj.database import query_utm_crs_info
 import time
 import os
 import json
+import numpy as np
+import quaternion
+from tf import transformations
+
+DEG_PER_RAD = 180 / np.pi
 
 def camera_info_callback(msg):
     global output_dir, title, camera_info_seen
