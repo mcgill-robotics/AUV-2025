@@ -12,6 +12,11 @@ from pyproj.database import query_utm_crs_info
 import time
 import os
 import json
+import numpy as np
+import quaternion
+from tf import transformations
+
+DEG_PER_RAD = 180 / np.pi
 
 def camera_info_callback(msg):
     global output_dir, title, camera_info_seen
@@ -57,10 +62,17 @@ def camera_info_callback(msg):
     camera_txt.close()
 
 def pose_callback(msg):
-    global gps, depth, seen_pose, backwards, north_offset, east_offset
+    global gps, depth, seen_pose, backwards, north_offset, east_offset, roll, pitch, yaw
     new_north, new_east = north_offset + msg.position.x, east_offset - msg.position.y
     gps = backwards.transform(new_east,  new_north)
     depth = msg.position.z
+
+    quaternion_nwu = np.quaternion(msg.orientation.w,msg.orientation.x,msg.orientation.y,msg.orientation.z)
+    quaternion_ned = np.quaternion(0,1,0,0) * quaternion_nwu * np.quaternion(0,1,0,0)
+    yaw, pitch, roll = transformations.euler_from_quaternion([quaternion_ned.x,quaternion_ned.y,quaternion_ned.z,quaternion_ned.w],'szyx')
+    yaw *= DEG_PER_RAD
+    pitch *= DEG_PER_RAD
+    roll *= DEG_PER_RAD
     seen_pose = True
 
 def image_callback(msg):
@@ -75,14 +87,14 @@ def init_text_file():
     output_txt.write("EPSG:4326\n")
 
 def save_data():
-    global gps, depth, image, output_txt, video
+    global gps, depth, image, output_txt, video, roll, pitch, yaw, seen_pose
     print(gps,seen_image)
-    if gps is not None and seen_image:
+    if seen_pose and seen_image:
         print("saving")
         millis = str(int(round(time.time() * 1000)))[0:3]
         the_time = strftime(f"%H:%M:%S.{millis}")
         title = the_time+".jpg"
-        output_txt.write(f"{title} {gps[0]:10.13f} {gps[1]:10.13f} {depth}\n")
+        output_txt.write(f"{title} {gps[0]:10.13f} {gps[1]:10.13f} {depth} {yaw} {pitch} {roll}\n")
         cv2.imwrite(output_dir + "/" + title,image)
 
 
@@ -100,6 +112,9 @@ if __name__ == '__main__':
     seen_image = False
     image = None
     video = None
+    roll = None
+    pitch = None
+    yaw = None
     title = strftime("%d_%m_%Y_%H:%M:%S")
     bridge = CvBridge()
     laditude_offset = rospy.get_param('~laditude_offset')
