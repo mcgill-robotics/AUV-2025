@@ -32,6 +32,8 @@ DepthSensor* depth;
 Imu* imu;
 Dvl* dvl;
 
+double RAD_TO_DEG = 180.0 / 3.14159265;
+
 void update_state(const ros::TimerEvent& event) {
     if(update_state_on_clock) {
         if(event.current_expected == last_clock_msg) {
@@ -112,9 +114,15 @@ void update_state(const ros::TimerEvent& event) {
         std_msgs::Float64 pitch_msg;
         std_msgs::Float64 roll_msg;
 
+        yaw *= RAD_TO_DEG;
+        pitch *= RAD_TO_DEG;
+        roll *= RAD_TO_DEG;
+
         yaw_msg.data = yaw;
         pitch_msg.data = pitch;
         roll_msg.data = roll;
+
+        // ROS_DEBUG("roll: %lf, pitch: %lf, yaw: %lf",roll, pitch, yaw);
 
         pub_theta_x.publish(roll_msg);
         pub_theta_y.publish(pitch_msg);
@@ -141,6 +149,30 @@ void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
 
 }
 
+void set_dvl_params(DVL_PARAMS& params, ros::Nodehandle& n) {
+    if(!n.getParam("q_dvlnominal_dvl_w",params.q_dvlnominal_dvl_w)) {
+        ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_w'");
+    }
+    if(!n.getParam("q_dvlnominal_dvl_x",params.q_dvlnominal_dvl_x)) {
+        ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_x'");
+    }
+    if(!n.getParam("q_dvlnominal_dvl_y",params.q_dvlnominal_dvl_y)) {
+        ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_y'");
+    }
+    if(!n.getParam("q_dvlnominal_dvl_z",params.q_dvlnominal_dvl_z)) {
+        ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_z'");
+    }
+    if(!n.getParam("pos_auv_dvl_x",params.pos_auv_dvl_x)) {
+        ROS_ERROR("Failed to get param 'pos_auv_dvl_x'");
+    }
+    if(!n.getParam("pos_auv_dvl_y",params.pos_auv_dvl_y)) {
+        ROS_ERROR("Failed to get param 'pos_auv_dvl_y'");
+    }
+    if(!n.getParam("pos_auv_dvl_z",params.pos_auv_dvl_z)) {
+        ROS_ERROR("Failed to get param 'pos_auv_dvl_z'");
+    }
+}
+
 int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
@@ -153,11 +185,6 @@ int main(int argc, char **argv) {
         ROS_ERROR("Failed to get param 'update_state_on_clock'");
     }
 
-
-    depth = new DepthSensor(0.0,std::string("depth"),update_state_on_clock);
-    ros::Subscriber sub_depth = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
-    z_estimators[0] = depth;
-
     IMU_PARAMS q_imunominal_imu_s;
     set_imu_params(q_imunominal_imu_s,n);
     imu = new Imu(q_imunominal_imu_s,std::string("imu"),update_state_on_clock);
@@ -165,9 +192,20 @@ int main(int argc, char **argv) {
     ros::Subscriber sub_ang_vel = n.subscribe("/sensors/imu/angular_velocity",100,&Imu::ang_vel_cb, imu);
     quat_estimators[0] = imu;
 
-    dvl = new Dvl(std::string("dvl"),update_state_on_clock);
+    DVL_PARAMS dvl_s;
+    set_dvl_params(dvl_s,n);
+    dvl = new Dvl(dvl_s,std::string("dvl"),update_state_on_clock, imu);
     ros::Subscriber sub_dvl = n.subscribe("sensors/dvl/pose",100,&Dvl::dr_cb, dvl);
     pos_estimators[0] = dvl;
+
+
+    // double pos_auv_depth = 0;
+    // if(!n.getParam("pos_auv_dvl_z",pos_auv_depth)) {
+    //     ROS_ERROR("Failed to get param 'pos_auv_dvl_z'");
+    // }
+    depth = new DepthSensor(0.0,std::string("depth"),update_state_on_clock, imu);
+    ros::Subscriber sub_depth = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
+    z_estimators[0] = depth;
 
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x",1);

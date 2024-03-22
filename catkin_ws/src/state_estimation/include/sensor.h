@@ -18,7 +18,7 @@ class Sensor {
         double x;
         double y;
         double z;
-        geometry_msgs::Quaternion q_nwu_auv;
+        tf2::Quaternion q_nwu_auv;
         geometry_msgs::Vector3Stamped ang_vel_auv;
     protected:
         ros::Time last_clock_msg;
@@ -30,7 +30,6 @@ class Sensor {
         ros::Time last_error_message_time;
         ros::Duration time_before_considered_inactive;
         virtual void update_last_state(void);
-        virtual void set_prev_state(void) = 0;
 };
 
 #endif
