@@ -21,6 +21,8 @@
 tf2::Quaternion Q_NWU_NED(1,0,0,0);
 tf2::Quaternion Q_DVLNOMINAL_AUV(1,0,0,0);
 
+double RAD_PER_DEG = 3.14159265 / 180.0;
+
 Sensor::~Sensor() {
     delete tfListener;
 }
@@ -55,7 +57,7 @@ bool Sensor::is_active() {
     return true;
 }
 
-Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, Imu& _imu) : Sensor(name, u_o_c), imu(_imu) {
+Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, Imu* _imu) : Sensor(name, u_o_c), imu(_imu) {
     tf2::Quaternion q_dvlnominal_dvl(params.q_dvlnominal_dvl_x, params.q_dvlnominal_dvl_y, params.q_dvlnominal_dvl_z, params.q_dvlnominal_dvl_w);
     q_dvl_auv = q_dvlnominal_dvl * Q_DVLNOMINAL_AUV;
     pos_auv_dvl = tf2::Vector3(params.pos_auv_dvl_x, params.pos_auv_dvl_y, params.pos_auv_dvl_z);
@@ -67,13 +69,13 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
     last_clock_msg = ros::Time::now();
 
     tf2::Quaternion q_dvlref_dvl;
-    q_dvlref_dvl.setEuler(msg->yaw,msg->pitch,msg->roll);
+    q_dvlref_dvl.setRPY(RAD_PER_DEG * msg->roll,RAD_PER_DEG * msg->pitch,RAD_PER_DEG * msg->yaw);
     tf2::Quaternion q_dvlref_auv = q_dvlref_dvl * q_dvl_auv;
 
-    if(imu.is_active()) {
+    if(imu->is_active()) {
         // this should be made into a moving average or something at some point.
         // not even gonna bother trying until a pool test is possible
-        q_nwu_dvlref = imu.q_nwu_auv * q_dvlref_auv.inverse();
+        q_nwu_dvlref = imu->q_nwu_auv * q_dvlref_auv.inverse();
         valid_q_nwu_dvlref = true;
     }
 
@@ -82,7 +84,7 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
         tf2::Quaternion quat_post_nwu_dvl = q_nwu_dvlref * quat_pos_dvlref_dvl * q_nwu_dvlref.inverse();
         x = quat_post_nwu_dvl.getX();
         y = quat_post_nwu_dvl.getY();
-        z = quat_post_nwu_dvl.getZ();       
+        z = quat_post_nwu_dvl.getZ();   
     }
 
     update_last_state();
