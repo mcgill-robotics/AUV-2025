@@ -2,6 +2,7 @@
 
 import rospy
 import smach
+import numpy as np
 
 class Trick(smach.State):
     def __init__(self, control, trick_type, state, num_full_spins=1):
@@ -26,10 +27,35 @@ class Trick(smach.State):
         self.control.rotateEuler((0,0,None))
     
     def execute_roll(self):
-        # TODO: Need to update the X in state to reset and have it keep rotating
-        print("Starting roll trick")
+        # Get the number of seconds to roll the AUV as a parameter
+        num_seconds_to_roll = rospy.get_param('num_seconds_to_roll')
+
+        print("Starting roll trick. AUV will roll for {} seconds".format(num_seconds_to_roll))
+
+        # Move downwards a bit before rolling the AUV
         self.control.move((None, None, -1))
-        for _ in range(self.num_full_spins*3): self.control.rotateDeltaEuler((120.0,0,0))
+
+        # Store the state that the AUV shuld return to
+        before_state = [self.control.orientation.w, self.control.orientation.x, self.control.orientation.y, self.control.orientation.z]
+
+        # Get current time to track how long the AUV has been rolling
+        start = rospy.get_time()
+
+        # Start rolling the AUV
+        self.control.torque([1, 0, 0])
+
+        # Stop rolling after num_seconds_to_roll seconds
+        while True:
+            if (rospy.get_time() - start > num_seconds_to_roll):
+                self.control.torque([0, 0, 0])
+                break
+
+        print("Before state", before_state)
+        
+        # Rotate back to the original position
+        self.control.rotateDelta(before_state)
+
+        self.control.flatten()
             
         print("Completed")
         return 'success'   
