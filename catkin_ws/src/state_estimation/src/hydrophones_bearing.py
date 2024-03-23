@@ -12,55 +12,104 @@ import quaternion
 def cb_hydrophones_time_difference(msg):
     PingerBearing_msg = PingerBearing()
 
-    if msg.is_pinger1_active:
-        dt_hx = msg.dt_pinger1[0]
-        dt_hy = msg.dt_pinger1[1]
-        dt_hz = msg.dt_pinger1[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz) 
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger1_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger1_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger1_bearing.z = bearing_vector_global[2]
+    if (check_four_hydrophones(msg)):
+        if msg.is_pinger1_active:
+            dt_hx = msg.dt_pinger1[0]
+            dt_hy = msg.dt_pinger1[1]
+            dt_hz = msg.dt_pinger1[2]
+            measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz) 
+            bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
+            PingerBearing_msg.pinger1_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger1_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger1_bearing.z = bearing_vector_global[2]
 
-    if msg.is_pinger2_active:
-        dt_hx = msg.dt_pinger2[0]
-        dt_hy = msg.dt_pinger2[1]
-        dt_hz = msg.dt_pinger2[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger2_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger2_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger2_bearing.z = bearing_vector_global[2]
+        if msg.is_pinger2_active:
+            dt_hx = msg.dt_pinger2[0]
+            dt_hy = msg.dt_pinger2[1]
+            dt_hz = msg.dt_pinger2[2]
+            measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
+            bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
+            PingerBearing_msg.pinger2_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger2_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger2_bearing.z = bearing_vector_global[2]
 
-    if msg.is_pinger3_active:
-        dt_hx = msg.dt_pinger3[0]
-        dt_hy = msg.dt_pinger3[1]
-        dt_hz = msg.dt_pinger3[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger3_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger3_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger3_bearing.z = bearing_vector_global[2]
+        if msg.is_pinger3_active:
+            dt_hx = msg.dt_pinger3[0]
+            dt_hy = msg.dt_pinger3[1]
+            dt_hz = msg.dt_pinger3[2]
+            measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
+            bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
+            PingerBearing_msg.pinger3_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger3_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger3_bearing.z = bearing_vector_global[2]
 
-    if msg.is_pinger4_active:
-        dt_hx = msg.dt_pinger4[0]
-        dt_hy = msg.dt_pinger4[1]
-        dt_hz = msg.dt_pinger4[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger4_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger4_bearing.z = bearing_vector_global[2]
+        if msg.is_pinger4_active:
+            dt_hx = msg.dt_pinger4[0]
+            dt_hy = msg.dt_pinger4[1]
+            dt_hz = msg.dt_pinger4[2]
+            measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
+            bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
+            PingerBearing_msg.pinger4_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger4_bearing.z = bearing_vector_global[2]
+    else:
+        if msg.is_pinger1_active:
+            dt_hx = msg.dt_pinger1[0]
+            dt_hy = msg.dt_pinger1[1]
+            measurements = calculate_time_measurements(dt_hx, dt_hy) 
+            bearing_vector_local = solve_bearing_vector(measurements[0], measurements[1])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], 0]))
+            PingerBearing_msg.pinger1_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger1_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger1_bearing.z = 0
+
+        if msg.is_pinger2_active:
+            dt_hx = msg.dt_pinger2[0]
+            dt_hy = msg.dt_pinger2[1]
+            measurements = calculate_time_measurements(dt_hx, dt_hy)
+            bearing_vector_local = solve_bearing_vector(measurements[0], measurements[1])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], 0]))
+            PingerBearing_msg.pinger2_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger2_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger2_bearing.z = 0
+
+        if msg.is_pinger3_active:
+            dt_hx = msg.dt_pinger3[0]
+            dt_hy = msg.dt_pinger3[1]
+            measurements = calculate_time_measurements(dt_hx, dt_hy)
+            bearing_vector_local = solve_bearing_vector(measurements[0], measurements[1])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], 0]))
+            PingerBearing_msg.pinger3_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger3_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger3_bearing.z = 0
+
+        if msg.is_pinger4_active:
+            dt_hx = msg.dt_pinger4[0]
+            dt_hy = msg.dt_pinger4[1]
+            measurements = calculate_time_measurements(dt_hx, dt_hy)
+            bearing_vector_local = solve_bearing_vector(measurements[0], measurements[1])
+            bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], 0]))
+            PingerBearing_msg.pinger4_bearing.x = bearing_vector_global[0]
+            PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
+            PingerBearing_msg.pinger4_bearing.z = 0
+
 
     PingerBearing_msg.state_x = state_x
     PingerBearing_msg.state_y = state_y
     PingerBearing_msg.state_z = state_z
     
     pub_pinger_bearing.publish(PingerBearing_msg)
+
+# Checks if there are four hydrophones data, returns boolean
+def check_four_hydrophones(msg):
+    if (len(msg.dt_pinger1) == 3 and len(msg.dt_pinger2) == 3 and len(msg.dt_pinger3) == 3 and len(msg.dt_pinger4) == 3):
+        return True
+    else:
+        return False
 
 
 def cb_quat(msg):
@@ -134,7 +183,3 @@ if __name__ == "__main__":
     z = rospy.get_param("hydrophones_dz")
 
     rospy.spin()
-
-    
-
-    
