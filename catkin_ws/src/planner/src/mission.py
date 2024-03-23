@@ -34,7 +34,7 @@ def gateMission():
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     # display_mission.updateMission("Gate Task {}".format(res))
@@ -140,10 +140,10 @@ def semiFinals():
 buoy_width = 1.2
 buoy_height = 1.2
 gate_width = 3
-target_symbol = "Earth Symbol" # "Abydos Symbol"
 wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
+    mission = input("Enter mission to run: ")
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
@@ -156,24 +156,20 @@ if __name__ == '__main__':
         pinger_num = 1 # [COMP] change this to an integer depending on which pinger is being used
         sm = None
 
+        # Run a planner mission based on the user input 
+        if mission == "tricks":
+             tricks("roll")
+        elif mission == "pinger":
+             pingerMission()
+        elif mission == "laneMarker":
+             laneMarkerMission()
+        elif mission == "buoy":
+             buoyMission()
+        elif mission == "gate":
+             gateMission()
+        else: 
+             print("Invalid mission name")
 
-        # control.move((None,None,-1))
-        # control.moveDelta((0,0,0))
-        # control.rotateEuler((0,0,None))
-        # while True:
-        #     control.rotateEuler((0,0,0))
-        #     control.rotateEuler((0,0,90))
-        #     control.rotateEuler((0,90,90))
-        #     control.rotateEuler((-90,0,0))
-            
-
-        # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        # gateMission()
-        #qualiVisionMission()
-        #buoyMission()  
-        tricks("roll")  
-        # laneMarkerMission()
-        # pingerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
