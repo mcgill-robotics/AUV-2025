@@ -73,10 +73,10 @@ void update_state(const ros::TimerEvent& event) {
 
     for(Sensor* sensor : quat_estimators) {
         if(sensor->is_active()) {
-            q_nwu_auv.w = sensor->q_nwu_auv.w;
-            q_nwu_auv.x = sensor->q_nwu_auv.x;
-            q_nwu_auv.y = sensor->q_nwu_auv.y;
-            q_nwu_auv.z = sensor->q_nwu_auv.z;
+            q_nwu_auv.w = sensor->q_nwu_auv.getW();
+            q_nwu_auv.x = sensor->q_nwu_auv.getX();
+            q_nwu_auv.y = sensor->q_nwu_auv.getY();
+            q_nwu_auv.z = sensor->q_nwu_auv.getZ();
             found_quat = true;
             break;
         }
@@ -149,7 +149,7 @@ void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
 
 }
 
-void set_dvl_params(DVL_PARAMS& params, ros::Nodehandle& n) {
+void set_dvl_params(DVL_PARAMS& params, ros::NodeHandle& n) {
     if(!n.getParam("q_dvlnominal_dvl_w",params.q_dvlnominal_dvl_w)) {
         ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_w'");
     }
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     // if(!n.getParam("pos_auv_dvl_z",pos_auv_depth)) {
     //     ROS_ERROR("Failed to get param 'pos_auv_dvl_z'");
     // }
-    depth = new DepthSensor(0.0,std::string("depth"),update_state_on_clock, imu);
+    depth = new DepthSensor(std::string("depth"),update_state_on_clock);
     ros::Subscriber sub_depth = n.subscribe("/sensors/depth/z",100,&DepthSensor::depth_cb, depth);
     z_estimators[0] = depth;
 

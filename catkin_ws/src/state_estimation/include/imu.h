@@ -20,7 +20,6 @@ class Imu : public Sensor {
         void ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg);
         void quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg);
     private:
-        geometry_msgs::Quaternion q_imu_auv;
         bool seen_quat;
         bool seen_ang_vel;
         tf2::Quaternion q_imu_auv;

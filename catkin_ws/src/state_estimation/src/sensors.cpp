@@ -55,11 +55,10 @@ bool Sensor::is_active() {
     return true;
 }
 
-Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, const Imu& _imu) : Sensor(name, u_o_c) {
+Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, Imu& _imu) : Sensor(name, u_o_c), imu(_imu) {
     tf2::Quaternion q_dvlnominal_dvl(params.q_dvlnominal_dvl_x, params.q_dvlnominal_dvl_y, params.q_dvlnominal_dvl_z, params.q_dvlnominal_dvl_w);
     q_dvl_auv = q_dvlnominal_dvl * Q_DVLNOMINAL_AUV;
     pos_auv_dvl = tf2::Vector3(params.pos_auv_dvl_x, params.pos_auv_dvl_y, params.pos_auv_dvl_z);
-    imu = _imu;
     valid_q_nwu_dvlref = false;
 }
 
@@ -69,22 +68,21 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
 
     tf2::Quaternion q_dvlref_dvl;
     q_dvlref_dvl.setEuler(msg->yaw,msg->pitch,msg->roll);
-    tf2::Vector3 pos_dvlref_dvl(msg->position.x,msg->position.y,msg->position.z);
     tf2::Quaternion q_dvlref_auv = q_dvlref_dvl * q_dvl_auv;
 
-    if(imu->is_active()) {
+    if(imu.is_active()) {
         // this should be made into a moving average or something at some point.
         // not even gonna bother trying until a pool test is possible
-        q_nwu_dvlref = imu->q_nwu_auv * q_dvlref_auv.conjugate();
+        q_nwu_dvlref = imu.q_nwu_auv * q_dvlref_auv.inverse();
         valid_q_nwu_dvlref = true;
     }
 
     if(valid_q_nwu_dvlref) {
-        tf2::Quaterion quat_pos_dvlref_dvl(msg->position.x,msg->position.y,msg->position.z,0);
-        tf2::Quaternion quat_post_nwu_dvl = q_nwu_dvlref * quat_pos_dvlref_dvl * q_nwu_dvlref.conjugate();
-        pos_nwu_auv.x = quat_post_nwu_dvl.getX();
-        pos_nwu_auv.y = quat_post_nwu_dvl.getY();
-        pos_nwu_auv.z = quat_post_nwu_dvl.getZ();       
+        tf2::Quaternion quat_pos_dvlref_dvl(msg->x,msg->y,msg->z,0);
+        tf2::Quaternion quat_post_nwu_dvl = q_nwu_dvlref * quat_pos_dvlref_dvl * q_nwu_dvlref.inverse();
+        x = quat_post_nwu_dvl.getX();
+        y = quat_post_nwu_dvl.getY();
+        z = quat_post_nwu_dvl.getZ();       
     }
 
     update_last_state();
@@ -97,9 +95,9 @@ bool Dvl::is_active() {
 Imu::Imu(IMU_PARAMS params, std::string name, bool u_o_c) : Sensor(name,u_o_c){
     seen_ang_vel = false;
     seen_quat = false;
-    tf2::Quaternion q_imunominal_imu(q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z);
+    tf2::Quaternion q_imunominal_imu(params.q_imunominal_imu_x, params.q_imunominal_imu_y, params.q_imunominal_imu_z,params.q_imunominal_imu_w);
     tf2::Quaternion q_imunominal_auv(1,0,0,0);
-    q_imu_auv = q_imunominal_imu.conjugate() * q_imunominal_auv;
+    q_imu_auv = q_imunominal_imu.inverse() * q_imunominal_auv;
 
 }
 
@@ -120,10 +118,8 @@ bool Imu::is_active() {
 
 void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
     tf2::Quaternion quat_ang_vel_imu(msg->gyro.x, msg->gyro.y, msg->gyro.z,0);
-    tf2::Quaternion quat_ang_vel_auv = q_imu_auv * quat_ang_vel_imu * q_imu_auv.conjugate();
-    ang_vel_auv.x = quat_ang_vel_auv.getX();
-    ang_vel_auv.y = quat_ang_vel_auv.getY();
-    ang_vel_auv.z = quat_ang_vel_auv.getZ();
+    tf2::Quaternion quat_ang_vel_auv = q_imu_auv * quat_ang_vel_imu * q_imu_auv.inverse();
+    ang_vel_auv = tf2::Vector3(quat_ang_vel_auv.getX(),quat_ang_vel_auv.getY(),quat_ang_vel_auv.getZ());
 
     
     seen_ang_vel = true;
@@ -131,12 +127,10 @@ void Imu::ang_vel_cb(const sbg_driver::SbgImuData::ConstPtr& msg) {
 }
 
 
-DepthSensor::DepthSensor(double pos_auv_depth, std::string name, bool u_o_c, const Imu& _imu) : Sensor(name,u_o_c) {
+DepthSensor::DepthSensor(std::string name, bool u_o_c) : Sensor(name,u_o_c) {
     prev_z = 0;
     z = 0;
     pos_auv_depth = pos_auv_depth;
-    imu = _imu;
-    pos_auv_depth_nwu = pos_auv_depth;
 }
 
 void DepthSensor::depth_cb(const std_msgs::Float64::ConstPtr& msg) {

@@ -19,7 +19,7 @@ class Sensor {
         double y;
         double z;
         tf2::Quaternion q_nwu_auv;
-        geometry_msgs::Vector3Stamped ang_vel_auv;
+        tf2::Vector3 ang_vel_auv;
     protected:
         ros::Time last_clock_msg;
         bool update_on_clock;
