@@ -12,7 +12,6 @@ import quaternion
 def cb_hydrophones_time_difference(msg):
     PingerBearing_msg = PingerBearing()
 
-<<<<<<< HEAD
     if (check_four_hydrophones(msg)):
         if msg.is_pinger1_active:
             dt_hx = msg.dt_pinger1[0]
@@ -98,51 +97,6 @@ def cb_hydrophones_time_difference(msg):
             PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
             PingerBearing_msg.pinger4_bearing.z = 0
 
-=======
-    if msg.is_pinger1_active:
-        dt_hx = msg.dt_pinger1[0]
-        dt_hy = msg.dt_pinger1[1]
-        dt_hz = msg.dt_pinger1[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz) 
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger1_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger1_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger1_bearing.z = bearing_vector_global[2]
-
-    if msg.is_pinger2_active:
-        dt_hx = msg.dt_pinger2[0]
-        dt_hy = msg.dt_pinger2[1]
-        dt_hz = msg.dt_pinger2[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger2_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger2_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger2_bearing.z = bearing_vector_global[2]
-
-    if msg.is_pinger3_active:
-        dt_hx = msg.dt_pinger3[0]
-        dt_hy = msg.dt_pinger3[1]
-        dt_hz = msg.dt_pinger3[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger3_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger3_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger3_bearing.z = bearing_vector_global[2]
-
-    if msg.is_pinger4_active:
-        dt_hx = msg.dt_pinger4[0]
-        dt_hy = msg.dt_pinger4[1]
-        dt_hz = msg.dt_pinger4[2]
-        measurements = calculate_time_measurements_3d(dt_hx, dt_hy, dt_hz)
-        bearing_vector_local = solve_bearing_vector_3d(measurements[0], measurements[1], measurements[2])
-        bearing_vector_global = quaternion.rotate_vectors(auv_rotation, np.array([bearing_vector_local[0], bearing_vector_local[1], bearing_vector_local[2]]))
-        PingerBearing_msg.pinger4_bearing.x = bearing_vector_global[0]
-        PingerBearing_msg.pinger4_bearing.y = bearing_vector_global[1]
-        PingerBearing_msg.pinger4_bearing.z = bearing_vector_global[2]
->>>>>>> Changed parameter names, fix quaternion orientation, working vector prediction
 
     PingerBearing_msg.state_x = state_x
     PingerBearing_msg.state_y = state_y
@@ -209,17 +163,8 @@ if __name__ == "__main__":
     rospy.Subscriber("/sensors/hydrophones/pinger_time_difference", PingerTimeDifference, cb_hydrophones_time_difference)
     rospy.Subscriber("/state/x", Float64, cb_state_x)
     rospy.Subscriber("/state/y", Float64, cb_state_y)
-<<<<<<< HEAD
-<<<<<<< HEAD
     rospy.Subscriber("/state/z", Float64, cb_state_z)
     rospy.Subscriber("/state/pose", Pose, cb_quat)
-=======
-    rospy.Subscriber("/sensors/imu/quate    rnion", SbgEkfQuat, cb_imu_quat)
->>>>>>> Fix extra rospy.Subscriber function call and add comment
-=======
-    rospy.Subscriber("/state/z", Float64, cb_state_z)
-    rospy.Subscriber("/state/pose", Pose, cb_quat)
->>>>>>> Changed parameter names, fix quaternion orientation, working vector prediction
     pub_pinger_bearing = rospy.Publisher("/sensors/hydrophones/pinger_bearing", PingerBearing, queue_size=1)
 
     auv_rotation = np.quaternion(1,0,0,0)   
@@ -232,15 +177,7 @@ if __name__ == "__main__":
 
     # Assume hx is the "origin" hydrophone
     # If you change the values here, you must also change the values in the Unity editor
-<<<<<<< HEAD
-<<<<<<< HEAD
     # hx is at the origin, hy is on the x-axis, hz is on the y-axis, H4 is on the z-axis
-=======
-    # H1 is at the origin, H2 is on the x-axis, H3 is on the y-axis, H4 is on the z-axis
->>>>>>> Fix extra rospy.Subscriber function call and add comment
-=======
-    # hx is at the origin, hy is on the x-axis, hz is on the y-axis, H4 is on the z-axis
->>>>>>> Changed parameter names, fix quaternion orientation, working vector prediction
     x = rospy.get_param("hydrophones_dx")
     y = rospy.get_param("hydrophones_dy")
     z = rospy.get_param("hydrophones_dz")
