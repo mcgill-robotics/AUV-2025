@@ -32,6 +32,12 @@ class State:
         self.height = None
         self.x_over_z_map = None
         self.y_over_z_map = None
+        self.x_while_paused = None
+        self.y_while_paused = None
+        self.z_while_paused = None
+        self.theta_z_while_paused = None
+        self.q_auv_while_paused = None
+        self.point_cloud_while_paused = None
 
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
@@ -44,22 +50,22 @@ class State:
         self.depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, self.updateDepth)
 
     def updateX(self, msg):
-        if self.paused: return
+        if self.paused: self.x_while_paused = float(msg.data)
         self.x = float(msg.data)
     def updateY(self, msg):
-        if self.paused: return
+        if self.paused: self.y_while_paused = float(msg.data)
         self.y = float(msg.data)
     def updateZ(self, msg):
-        if self.paused: return
+        if self.paused: self.z_while_paused = float(msg.data)
         self.z = float(msg.data)
     def updateThetaZ(self, msg):
-        if self.paused: return
+        if self.paused: self.theta_z_while_paused = float(msg.data)
         self.theta_z = float(msg.data)
     def updatePose(self,msg):
-        if self.paused: return
+        if self.paused: self.q_auv_while_paused = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
         self.q_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def updatePointCloud(self):
-        if self.paused: return
+        if self.paused: self.point_cloud_while_paused = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
         self.point_cloud = np.copy(get_xyz_image(self.depth, self.width, self.height, self.x_over_z_map, self.y_over_z_map))
     def cleanPointCloud(self, point_cloud, bgr):
         # Find the closest point to the camera
@@ -119,6 +125,20 @@ class State:
     def pause(self):
         self.paused = True
     def resume(self):
+        if self.x_while_paused is not None: self.x = self.x_while_paused
+        if self.y_while_paused is not None: self.y = self.y_while_paused
+        if self.z_while_paused is not None: self.z = self.z_while_paused
+        if self.theta_z_while_paused is not None: self.theta_z = self.theta_z_while_paused
+        if self.q_auv_while_paused is not None: self.q_auv = self.q_auv_while_paused
+        if self.point_cloud_while_paused is not None: self.point_cloud = self.point_cloud_while_paused
+        
+        self.x_while_paused = None
+        self.y_while_paused = None
+        self.z_while_paused = None
+        self.theta_z_while_paused = None
+        self.q_auv_while_paused = None
+        self.point_cloud_while_paused = None
+        
         self.paused = False
 
 # bbox is an array of 4 elements
@@ -242,8 +262,9 @@ def getObjectPositionDownCam(pixel_x, pixel_y, img_height, img_width, z_pos):
     global_direction_to_object = quaternion.rotate_vectors(rotation, local_direction_to_object)
 
     # solve for point that is defined by the intersection of the direction to the object and it's z position
-    auv_pos = np.array([states[0].x, states[0].y, states[0].z])
-    obj_pos = findIntersection(auv_pos, global_direction_to_object, z_pos)
+    global_down_cam_offset = quaternion.rotate_vectors(states[0].q_auv, np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset]))
+    down_cam_pos = np.array([states[0].x, states[0].y, states[0].z]) + global_down_cam_offset
+    obj_pos = findIntersection(down_cam_pos, global_direction_to_object, z_pos)
     
     if obj_pos is None or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z])) > max_dist_to_measure: return None, None, None
     x = obj_pos[0]
@@ -261,12 +282,15 @@ def getObjectPositionFrontCam(bbox):
     max_lx = np.nanmax(point_cloud[:,:,0].flatten())
     max_ly = np.nanmax(point_cloud[:,:,1].flatten())
     max_lz = np.nanmax(point_cloud[:,:,2].flatten())
+    
     lx = (max_lx + min_lx) / 2
     ly = (max_ly + min_ly) / 2
     lz = (max_lz + min_lz) / 2
     
+    global_obj_pos_offset = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz]))
+    
     # Get the best estimate of the mean
-    x,y,z = quaternion.rotate_vectors(states[1].q_auv, np.array([lx,ly,lz])) + np.array([states[1].x, states[1].y, states[1].z])
+    x,y,z = global_obj_pos_offset + np.array([states[1].x, states[1].y, states[1].z])
     return x, y, z
 
 # tells you how the object is oriented in space (Z axis)
@@ -292,61 +316,6 @@ def measureAngle(bbox):
     angle = math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
     
     return angle + states[1].theta_z
-
-def analyzeGate(detections):
-    # Return the class_id of the symbol on the left of the gate
-    # If no symbol return None
-    gate_elements_detected = {}
-    for detection in detections:
-        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
-        else: boxes = detection.boxes.numpy()
-        for box in boxes:
-            bbox = list(box.xywh[0])
-            x_coord = bbox[0]
-            conf = float(list(box.conf)[0])
-            cls_id = int(list(box.cls)[0])
-            global_class_name = class_names[1][cls_id]
-            if (global_class_name in ["Earth Symbol", "Abydos Symbol", "Gate"]) and conf > min_prediction_confidence:
-                gate_elements_detected[cls_id] = 999999 if global_class_name == "Gate" else x_coord
-
-    if "Earth Symbol" not in gate_elements_detected.keys(): return None
-    elif "Abydos Symbol" not in gate_elements_detected.keys(): return None
-    elif "Gate" not in gate_elements_detected.keys(): return None
-
-    min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
-
-    if min_key == "Earth Symbol": return 1.0
-    else: return 0.0
-
-def analyzeBuoy(detections):
-    symbols = []
-    buoy_was_detected = False
-
-    for detection in detections:
-
-        if torch.cuda.is_available(): 
-            boxes = detection.boxes.cpu().numpy()
-        else: 
-            boxes = detection.boxes.numpy()
-
-        for box in boxes:
-            bbox = list(box.xywh[0])
-            conf = float(list(box.conf)[0])
-            cls_id = int(list(box.cls)[0])
-            global_class_name = class_names[1][cls_id]
-
-            if (global_class_name == "Buoy"):
-                buoy_was_detected = True
-
-            elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
-                x,y,z = getObjectPositionFrontCam(bbox)
-                symbols.append([global_class_name, x, y, z, conf])
-
-    if buoy_was_detected: 
-        return symbols
-
-    else: 
-        return []
 
 # lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
 # selects highest confidence detection from duplicates and ignores objects with no position measurement
@@ -397,14 +366,6 @@ HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 
-# FOR POINT CLOUD CLUSTERING
-x_weight = 5
-y_weight = 3
-z_weight = 3
-r_weight = 1
-g_weight = 1
-b_weight = 1
-
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
 pool_depth = -5
 octagon_table_height = 1.25 # 0.9m - 1.5m
@@ -412,9 +373,12 @@ lane_marker_height = 0.4
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 121.5
+down_cam_hfov = 129.4904
 down_cam_vfov = 100
-down_cam_yaw_offset = 0
+down_cam_x_offset = rospy.get_param("down_cam_x_offset", 0)
+down_cam_y_offset = rospy.get_param("down_cam_y_offset", 0)
+down_cam_z_offset = rospy.get_param("down_cam_z_offset", 0)
+down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset", 0)
 
 detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
 
@@ -451,7 +415,7 @@ class_names = [ #one array per camera, name index should be class id
     ["Lane Marker", "Octagon Table"],
     ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
     ]
-max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":2, "Octagon Table":1}
+max_counts_per_label = {"Abydos Symbol":0, "Buoy":1, "Earth Symbol":0, "Gate":1, "Lane Marker":2, "Octagon Table":1}
 
 if torch.cuda.is_available(): device=0
 else: device = 'cpu'
