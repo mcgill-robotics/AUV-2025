@@ -60,7 +60,8 @@ bool Sensor::is_active() {
 Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, Imu* _imu) : Sensor(name, u_o_c), imu(_imu) {
     tf2::Quaternion q_dvlnominal_dvl(params.q_dvlnominal_dvl_x, params.q_dvlnominal_dvl_y, params.q_dvlnominal_dvl_z, params.q_dvlnominal_dvl_w);
     q_dvl_auv = q_dvlnominal_dvl * Q_DVLNOMINAL_AUV;
-    pos_auv_dvl = tf2::Vector3(params.pos_auv_dvl_x, params.pos_auv_dvl_y, params.pos_auv_dvl_z);
+    pos_auv_dvl_auv = tf2::Vector3(params.pos_auv_dvl_x, params.pos_auv_dvl_y, params.pos_auv_dvl_z);
+    pos_auv_dvl_nwu = pos_auv_dvl_auv;
     valid_q_nwu_dvlref = false;
 }
 
@@ -77,14 +78,19 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
         // not even gonna bother trying until a pool test is possible
         q_nwu_dvlref = imu->q_nwu_auv * q_dvlref_auv.inverse();
         valid_q_nwu_dvlref = true;
+        tf2::Quaternion q_pos_auv_dvl_auv(pos_auv_dvl_auv[0],pos_auv_dvl_auv[1],pos_auv_dvl_auv[2],0);
+        tf2::Quaternion q_pos_auv_dvl_nwu = imu->q_nwu_auv * q_pos_auv_dvl_auv * imu->q_nwu_auv.inverse();
+        pos_auv_dvl_nwu = tf2::Vector3(q_pos_auv_dvl_nwu.getX(),q_pos_auv_dvl_nwu.getY(),q_pos_auv_dvl_nwu.getZ());
     }
 
     if(valid_q_nwu_dvlref) {
         tf2::Quaternion quat_pos_dvlref_dvl(msg->x,msg->y,msg->z,0);
         tf2::Quaternion quat_post_nwu_dvl = q_nwu_dvlref * quat_pos_dvlref_dvl * q_nwu_dvlref.inverse();
-        x = quat_post_nwu_dvl.getX();
-        y = quat_post_nwu_dvl.getY();
-        z = quat_post_nwu_dvl.getZ();   
+
+
+        x = quat_post_nwu_dvl.getX() - pos_auv_dvl_nwu[0];
+        y = quat_post_nwu_dvl.getY() - pos_auv_dvl_nwu[1];
+        z = quat_post_nwu_dvl.getZ() - pos_auv_dvl_nwu[2];   
     }
 
     update_last_state();

@@ -23,7 +23,8 @@ class Dvl : public Sensor {
         void dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg);
         virtual bool is_active(void) override;
     private:
-        tf2::Vector3 pos_auv_dvl;
+        tf2::Vector3 pos_auv_dvl_auv; // displacement of auv to the dvl in the auv frame
+        tf2::Vector3 pos_auv_dvl_nwu; // displacement of auv to the dvl in the nwu frame
         tf2::Quaternion q_dvl_auv;
         Imu* imu;
         tf2::Quaternion q_nwu_dvlref;

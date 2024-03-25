@@ -162,13 +162,13 @@ void set_dvl_params(DVL_PARAMS& params, ros::NodeHandle& n) {
     if(!n.getParam("q_dvlnominal_dvl_z",params.q_dvlnominal_dvl_z)) {
         ROS_ERROR("Failed to get param 'q_dvlnominal_dvl_z'");
     }
-    if(!n.getParam("pos_auv_dvl_x",params.pos_auv_dvl_x)) {
+    if(!n.getParam("auv_dvl_offset_x",params.pos_auv_dvl_x)) {
         ROS_ERROR("Failed to get param 'pos_auv_dvl_x'");
     }
-    if(!n.getParam("pos_auv_dvl_y",params.pos_auv_dvl_y)) {
+    if(!n.getParam("auv_dvl_offset_y",params.pos_auv_dvl_y)) {
         ROS_ERROR("Failed to get param 'pos_auv_dvl_y'");
     }
-    if(!n.getParam("pos_auv_dvl_z",params.pos_auv_dvl_z)) {
+    if(!n.getParam("auv_dvl_offset_z",params.pos_auv_dvl_z)) {
         ROS_ERROR("Failed to get param 'pos_auv_dvl_z'");
     }
 }
