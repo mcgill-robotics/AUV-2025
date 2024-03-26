@@ -17,8 +17,6 @@ class StateQuaternionServer(BaseServer):
         self.previous_goal_x = None
         self.previous_goal_y = None
         self.previous_goal_z = None
-        self.min_safe_goal_depth = -3 # [COMP] make safety values appropriate for comp pool
-        self.max_safe_goal_depth = -0.5
         self.goal_id = 0
 
         self.enable_quat_sub = rospy.Subscriber("/controls/pid/quat/enable", Bool, self.quat_enable_cb)
@@ -94,7 +92,7 @@ class StateQuaternionServer(BaseServer):
                 self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
 
-                safe_goal = max(min(goal_position[2], self.max_safe_goal_depth), self.min_safe_goal_depth)
+                safe_goal = max(min(goal_position[2], rospy.get_param("max_safe_goal_depth")), rospy.get_param("min_safe_goal_depth"))
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
                 self.pub_z_pid.publish(safe_goal)
                 self.pub_heave.publish(0)
@@ -128,7 +126,9 @@ class StateQuaternionServer(BaseServer):
             else:
                 goal_quat = None
 
-            time_to_settle = 8
+            time_to_settle = rospy.get_param("time_to_settle")
+            settle_check_loop_time = 1.0 / rospy.get_param("settle_check_rate")
+            
             settled = False
             while not settled and not self.cancelled and my_goal == self.goal_id and not rospy.is_shutdown():
                 start = rospy.get_time()
@@ -138,7 +138,7 @@ class StateQuaternionServer(BaseServer):
                         settled = True
                         print("settled")
                         break
-                    rospy.sleep(0.01)
+                    rospy.sleep(settle_check_loop_time)
         else:
             print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
 

@@ -105,6 +105,6 @@ class Superimposer:
 if __name__ == '__main__':
     rospy.init_node('superimposer')
     si = Superimposer()
-    timer = rospy.Timer(rospy.Duration(0.1), si.update_effort)
+    timer = rospy.Timer(rospy.Duration(rospy.get_param("superimposer_loop_rate")), si.update_effort)
     rospy.on_shutdown(timer.shutdown)
     rospy.spin()
