@@ -40,9 +40,6 @@ def detect_on_image(raw_img, camera_id):
     #initialize empty array for object detection frame message
     detectionFrameArray = []
     img_h, img_w, _ = img.shape
-    if camera_id == 1:
-        buoy_symbols = analyzeBuoy(detections)
-        leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
@@ -103,6 +100,8 @@ def detect_on_image(raw_img, camera_id):
 
                     # Add the detection frame to the array
                     detectionFrameArray.append(detectionFrame)
+                # TODO: add support for grabber objects here
+                # TODO: add support for dropper bin here
 
                 
             else: # FORWARD CAM
@@ -126,35 +125,21 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrame.y = pred_obj_y
                     detectionFrame.z = pred_obj_z
                     detectionFrame.theta_z = theta_z
-                    detectionFrame.extra_field = leftmost_gate_symbol # 1 for earth, 0 for the other one
+                    detectionFrame.extra_field = None
 
                     detectionFrameArray.append(detectionFrame)
                 elif global_class_name == "Buoy": # BUOY
                     detectionFrame.label = global_class_name
                     detectionFrame.confidence = conf
-                    theta_z = measureAngle(bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
                     detectionFrame.y = pred_obj_y
                     detectionFrame.z = pred_obj_z
-                    detectionFrame.theta_z = theta_z
+                    detectionFrame.theta_z = None
                     detectionFrame.extra_field = None
 
                     detectionFrameArray.append(detectionFrame)
-
-                    for symbol_class_name, symbol_x, symbol_y, symbol_z, symbol_confidence in buoy_symbols:
-                        detectionFrame = VisionObject()
-                        detectionFrame.label = symbol_class_name
-                        detectionFrame.x = symbol_x
-                        detectionFrame.y = symbol_y
-                        detectionFrame.z = symbol_z
-                        detectionFrame.confidence = symbol_confidence
-                        detectionFrame.theta_z = theta_z
-                        detectionFrame.extra_field = None
-
-                        detectionFrameArray.append(detectionFrame)
-
-                    
+                # TODO: add support for grabber objects            
                 
     for obj in detectionFrameArray:
         obj.x = obj.x if obj.x is not None else -1234.5 
