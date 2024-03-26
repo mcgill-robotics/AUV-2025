@@ -22,9 +22,11 @@
 		<param name="auv_dvl_offset_z" value="-0.3" />
 
 		<param name="update_state_on_clock" value="false" />
+		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
     </group>
     <group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
+		<node name="state_aggregator" pkg="state_estimation" type="state_estimation" respawn="true" output="screen"/>
     </group>
 
 	<param name="hydrophones_dx" value="0.1"/>
@@ -36,5 +38,5 @@
 			respawn="true">
 	</node>
 
-	<node name="state_aggregator" pkg="state_estimation" type="state_estimation" respawn="true" output="screen"/>
+	
 </launch>
