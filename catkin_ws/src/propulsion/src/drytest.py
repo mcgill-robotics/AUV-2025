@@ -27,6 +27,7 @@ def force_to_microseconds(force):
             return int(negativeForceCurve(force/9.81))
         else: return 1500 #middle value is 1500
 
+# TODO: update if necessary
 pins = {1:4, 2:5, 3:2, 4:6, 5:8, 6:3, 7:7, 8:1}
 reset = [1500,1500,1500,1500,1500,1500,1500,1500]
 

@@ -67,7 +67,6 @@ T_inv = np.linalg.pinv(T)
 rospy.sleep(7.0) #TODO: FIX - wait for 7 sec to sync with arduino?
 
 
-
 def wrench_to_thrust(w):
     '''
     A callback function that maps a Wrench into a force produced by T200 thruster at 14V (N)
@@ -115,14 +114,17 @@ def forces_to_pwm_publisher(forces_msg):
     pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(forces_msg.HEAVE_STERN_PORT,MAX_FWD_FORCE,MAX_BKWD_FORCE)
     
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
-    # so as not to trip individual fuse, thruster current draw is limited to < 4.3 A
-    # 1228 <= PWM <= 1768 
+    # so as not to trip individual fuse (limit current draw)
+    
+    thruster_lower_limit = rospy.get_param("thruster_PWM_lower_limit")
+    thruster_upper_limit = rospy.get_param("thruster_PWM_upper_limit")
+    
     for i in range(len(pwm_arr)):
-        if pwm_arr[i] > 1768:
-            pwm_arr[i] = 1768
+        if pwm_arr[i] > thruster_upper_limit:
+            pwm_arr[i] = thruster_upper_limit
             print("INDIVIDUAL FUSE EXCEEDED: T", i+1)
-        elif pwm_arr[i] < 1228:
-            pwm_arr[i] = 1228
+        elif pwm_arr[i] < thruster_lower_limit:
+            pwm_arr[i] = thruster_lower_limit
             print("INDIVIDUAL FUSE EXCEEDED: T", i+1)
 
     pwm_msg = ThrusterMicroseconds(pwm_arr)
