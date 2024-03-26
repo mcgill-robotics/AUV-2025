@@ -31,17 +31,11 @@ ros::Publisher pub_depth_status;
 DepthSensor* depth;
 Imu* imu;
 Dvl* dvl;
+void broad_cast_pose(const geometry_msgs::Pose& msg);
 
 double RAD_TO_DEG = 180.0 / 3.14159265;
 
 void update_state(const ros::TimerEvent& event) {
-    if(update_state_on_clock) {
-        if(event.current_expected == last_clock_msg) {
-            return;
-        }
-        last_clock_msg.sec = event.current_expected.sec;
-        last_clock_msg.nsec = event.current_expected.nsec;
-    }
     std_msgs::Bool depth_status_msg;
     depth_status_msg.data = depth->is_active();
     pub_depth_status.publish(depth_status_msg);
@@ -127,8 +121,42 @@ void update_state(const ros::TimerEvent& event) {
         pub_theta_x.publish(roll_msg);
         pub_theta_y.publish(pitch_msg);
         pub_theta_z.publish(yaw_msg);
+
+        broad_cast_pose(pose);
     }
 
+}
+
+void broad_cast_pose(const geometry_msgs::Pose& msg) {
+    if(update_state_on_clock) {
+        ros::Time now = ros::Time::now();
+        if(now == last_clock_msg) {
+            return;
+        }
+        last_clock_msg.sec = now.sec;
+        last_clock_msg.nsec = now.nsec;
+    }
+
+    static tf2_ros::TransformBroadcaster br;
+    geometry_msgs::TransformStamped transformStamped1;
+    transformStamped1.header.stamp = ros::Time::now();
+    transformStamped1.header.frame_id = "world";
+    transformStamped1.child_frame_id = "auv_base";
+    transformStamped1.transform.translation.x = msg.position.x;
+    transformStamped1.transform.translation.y = msg.position.y;
+    transformStamped1.transform.translation.z = msg.position.z;
+    transformStamped1.transform.rotation = msg.orientation;
+    br.sendTransform(transformStamped1);
+
+    geometry_msgs::TransformStamped transformStamped2;
+    transformStamped2.header.stamp = ros::Time::now();
+    transformStamped2.header.frame_id = "world_rotation";
+    transformStamped2.child_frame_id = "auv_rotation";
+    transformStamped2.transform.translation.x = 0;
+    transformStamped2.transform.translation.y = 0;
+    transformStamped2.transform.translation.z = 0;
+    transformStamped2.transform.rotation = msg.orientation;
+    br.sendTransform(transformStamped2);
 }
 
 void set_imu_params(IMU_PARAMS& params, ros::NodeHandle& n) {
@@ -176,9 +204,9 @@ void set_dvl_params(DVL_PARAMS& params, ros::NodeHandle& n) {
 int main(int argc, char **argv) {
     ros::init(argc,argv,"state_aggregator");
     ros::NodeHandle n;
-    if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
-        ros::console::notifyLoggerLevelsChanged();
-    }
+    // if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+    //     ros::console::notifyLoggerLevelsChanged();
+    // }
     ros::Duration(0.5).sleep();
 
     if(!n.getParam("update_state_on_clock",update_state_on_clock)) {

@@ -116,7 +116,6 @@ void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
     tf2::Quaternion q_ned_imu(msg->quaternion.x,msg->quaternion.y,msg->quaternion.z,msg->quaternion.w);
     q_nwu_auv = Q_NWU_NED * q_ned_imu * q_imu_auv;
     seen_quat = true;
-
     update_last_state();
 }
 
