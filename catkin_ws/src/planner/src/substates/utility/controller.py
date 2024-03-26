@@ -61,6 +61,9 @@ class Controller:
         self.pub_global_x = rospy.Publisher('/controls/force/global/x', Float64, queue_size=1)
         self.pub_global_y = rospy.Publisher('/controls/force/global/y', Float64, queue_size=1)
         self.pub_global_z = rospy.Publisher('/controls/force/global/z', Float64, queue_size=1)
+        
+        # Create publishers for the dropper topic and the claw state topic
+        self.claw_state_pub = rospy.Publisher("/actuators/grab", Bool, queue_size=1)
 
         self.pwm_pub = rospy.Publisher("/propulsion/microseconds",ThrusterMicroseconds,queue_size=1)
 
@@ -331,3 +334,12 @@ class Controller:
         orientation.z = sign*math.sqrt(1 - orientation.w**2)
         goal = self.get_state_goal([None,None,None,orientation.w,orientation.x,orientation.y,orientation.z],do_not_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+
+    def open_claw(self):
+
+        # Set the claw state to True (open)
+        self.claw_state_pub.publish(Bool(True))
+
+    def close_claw(self):
+        # Set the claw state to False (close)
+        self.claw_state_pub.publish(Bool(False))

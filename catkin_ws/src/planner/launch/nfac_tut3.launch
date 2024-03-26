@@ -1,3 +1,0 @@
-<launch>
-	<node pkg="planner" name="nfac" type="nfac_tut3.py" respawn="False" output="screen"/>
-</launch>
