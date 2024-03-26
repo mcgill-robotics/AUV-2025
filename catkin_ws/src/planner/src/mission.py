@@ -155,7 +155,7 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        laneMarkerMission()
+        buoyMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
