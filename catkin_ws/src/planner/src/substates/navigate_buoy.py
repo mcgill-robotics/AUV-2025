@@ -65,33 +65,32 @@ class NavigateBuoy(smach.State):
         self.control.move((new_position[0], new_position[1], new_position[2]))
 
 
-        # dtv = degreesToVector(buoy_object[4])
-        # offset = [] 
-        # for i in range(len(dtv)):
-        #     offset.append(offset_distance * dtv[i]) 
-        # homing_rotation = (0,0,buoy_object[4])
-        # homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
-
-        # self.control.rotateEuler(homing_rotation) # bring to exact angle 
-        # self.control.move(homing_position) # move in front of buoy
-
         # wait and keep measuring just to be safe
         print("Waiting 10 seconds to improve measurement accuracy")
         rospy.sleep(10)
 
-        # print("Re-centering and rotating in front of buoy.")
-        # self.mapping.updateObject(buoy_object)
-        # dtv = degreesToVector(buoy_object[4])
-        # offset = [] 
-        # for i in range(len(dtv)):
-        #     offset.append(offset_distance * dtv[i]) 
-        # homing_rotation = (0,0,buoy_object[4])
-        # homing_position = (buoy_object[1] + offset[0], buoy_object[2] + offset[1], buoy_object[3])
+        self.control.move((None, None, buoy_object[3]))
 
-        # self.control.rotateEuler(homing_rotation) # bring to exact angle 
-        # self.control.move(homing_position) # move in front of buoy
-        # print("Successfully centered in front of buoy")  
+        position_auv = [self.state.x, self.state.y, self.state.z]
+        position_buoy = [buoy_object[1], buoy_object[2],buoy_object[3]]
+
+        direction = np.array(position_buoy) - np.array(position_auv)
+        current_distance = np.linalg.norm(direction)
+
+        forward_vector = np.array([1, 0, 0])
+        auv_quat = self.state.quat
+        auv_forward_vector = quaternion.rotate_vectors(auv_quat, forward_vector)
+
+        rotation_quaternion = self.quaternion_between_vectors(np.array([auv_forward_vector[0], auv_forward_vector[1],auv_forward_vector[2]]), np.array([direction[0],direction[1],direction[2]]))
+
+        self.control.rotateDelta([rotation_quaternion.w, rotation_quaternion.x, rotation_quaternion.y, rotation_quaternion.z])
+
+        vector_auv_buoy = direction / current_distance * offset_distance
+        new_position = np.array([position_buoy[0],position_buoy[1],position_buoy[2]]) - np.array([vector_auv_buoy[0],vector_auv_buoy[1],vector_auv_buoy[2]])
+        print("Moving to new position: ", new_position)
+        self.control.move((new_position[0], new_position[1], new_position[2]))
         
+        # Start buoy navigation
         rad = self.radius
 
         if self.color == "red":
