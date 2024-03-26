@@ -385,7 +385,7 @@ detect_every = 5  #run the model every _ frames received (to not eat up too much
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
 
-sim = rospy.get_param("sim", True)
+sim = rospy.get_param("~sim", True)
 
 down_cam_model_filename = ""
 front_cam_model_filename = ""

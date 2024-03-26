@@ -22,9 +22,9 @@
     </group>
 
     <param name="log_model_prediction_info" value="false" />
-    
-
-    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
+    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen">
+        <param name="sim" value="$(arg sim)" />
+    </node>
 
     <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/>
     <node name="point_cloud" pkg="vision" type="point_cloud.py" respawn="true"  output="screen"/>

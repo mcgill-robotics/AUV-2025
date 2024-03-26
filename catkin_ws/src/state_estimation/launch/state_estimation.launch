@@ -5,7 +5,6 @@
 		<include file="$(find sensors)/launch/imu.launch"/>
 		<include file="$(find sensors)/launch/dvl.launch"/>
 		
-
 		<param name="q_imunominal_imu_w" value="1.0" />
 		<param name="q_imunominal_imu_x" value="0.0" />
 		<param name="q_imunominal_imu_y" value="0.0" />
@@ -29,6 +28,7 @@
 
 	<param name="hydrophones_dx" value="0.1"/>
 	<param name="hydrophones_dy" value="0.1"/>
+	
 	<node name="hydrophones_bearing"
 			pkg="state_estimation"
 			type="hydrophones_bearing.py"

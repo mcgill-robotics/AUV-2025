@@ -163,8 +163,8 @@ class StateQuaternionServer(BaseServer):
         
     def check_status(self, goal_position, goal_quaternion, do_x, do_y, do_z, do_quat):
 
-        tolerance_position = 0.2
-        tolerance_quat_w = 0.997
+        tolerance_position = rospy.get_param("pid_positional_tolerance")
+        tolerance_quat_w = rospy.get_param("pid_quaternion_w_tolerance")
 
         if goal_position[0] is not None:
             pos_x_error = self.calculatePosError(self.pose.position.x, goal_position[0])
