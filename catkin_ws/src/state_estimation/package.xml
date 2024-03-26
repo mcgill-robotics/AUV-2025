@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>auv_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
   <build_depend>sensors</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>rospy</build_depend>
@@ -21,10 +22,10 @@
   <build_depend>tf2</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>tf2_ros</build_depend>
-  <build_depend>tf</build_depend>
   <build_depend>sbg_driver</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
   <exec_depend>sensors</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -32,6 +33,5 @@
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
-  <exec_depend>tf</exec_depend>
   <exec_depend>sbg_driver</exec_depend>
 </package>
