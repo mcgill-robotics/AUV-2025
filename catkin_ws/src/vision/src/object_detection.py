@@ -142,9 +142,9 @@ def detect_on_image(raw_img, camera_id):
                 # TODO: add support for grabber objects            
                 
     for obj in detectionFrameArray:
-        obj.x = obj.x if obj.x is not None else -1234.5 
-        obj.theta_z = obj.theta_z if obj.theta_z is not None else -1234.5
-        obj.extra_field = obj.extra_field if obj.extra_field is not None else -1234.5
+        obj.x = obj.x if obj.x is not None else NULL_PLACEHOLDER 
+        obj.theta_z = obj.theta_z if obj.theta_z is not None else NULL_PLACEHOLDER
+        obj.extra_field = obj.extra_field if obj.extra_field is not None else NULL_PLACEHOLDER
     
 
     detectionFrameArray = cleanDetections(detectionFrameArray)
@@ -161,6 +161,8 @@ def detect_on_image(raw_img, camera_id):
     states[camera_id].resume()
 
 print_debug_info = rospy.get_param("log_model_prediction_info", False)
+
+NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
 #the int argument is used to index debug publisher, model, class names, and i
 subs = [

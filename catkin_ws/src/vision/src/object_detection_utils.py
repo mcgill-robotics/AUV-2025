@@ -16,6 +16,8 @@ from point_cloud import get_xyz_image
 from tf import transformations
 from sklearn.linear_model import RANSACRegressor
 from sklearn.cluster import DBSCAN
+import json
+import ast
 
 class State:
     def __init__(self):
@@ -71,10 +73,10 @@ class State:
         # Find the closest point to the camera
         initial_point_cloud_shape = point_cloud.shape
         point_cloud = point_cloud.reshape(-1,3)
-        point_cloud[point_cloud[:,0] < 0.5] = 10000 # ignore depth values which are less than 0.5m
+        point_cloud[point_cloud[:,0] < rospy.get_param("min_distance_for_valid_point_cloud_point")] = 10000 # ignore depth values which are less than 0.5m
         closest_point_index = np.argmin(point_cloud[:,0])
 
-        eps = 0.5  # Maximum distance between two samples for them to be considered as in the same neighborhood
+        eps = rospy.get_param("max_distance_for_point_cloud_fill_cleaning")  # Maximum distance between two samples for them to be considered as in the same neighborhood
         min_samples = 10  # The number of samples in a neighborhood for a point to be considered as a core point
 
         # Perform DBSCAN clustering
@@ -359,46 +361,37 @@ states = (State(), State())
 
 
 ############## PARAMETERS ##############
-min_prediction_confidence = 0.4
-max_dist_to_measure = 10
+min_prediction_confidence = rospy.get_param("min_prediction_confidence")
+max_dist_to_measure = rospy.get_param("max_object_detection_distance")
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
-pool_depth = -5
-octagon_table_height = 1.25 # 0.9m - 1.5m
-lane_marker_height = 0.4
+pool_depth = rospy.get_param("pool_depth")
+octagon_table_height = rospy.get_param("octagon_table_height")
+lane_marker_height = rospy.get_param("lane_marker_height")
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 129.4904
-down_cam_vfov = 100
-down_cam_x_offset = rospy.get_param("down_cam_x_offset", 0)
-down_cam_y_offset = rospy.get_param("down_cam_y_offset", 0)
-down_cam_z_offset = rospy.get_param("down_cam_z_offset", 0)
-down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset", 0)
+down_cam_hfov = rospy.get_param("down_cam_hfov")
+down_cam_vfov = rospy.get_param("down_cam_vfov")
+down_cam_x_offset = rospy.get_param("down_cam_x_offset")
+down_cam_y_offset = rospy.get_param("down_cam_y_offset")
+down_cam_z_offset = rospy.get_param("down_cam_z_offset")
+down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset")
 
-detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
+detect_every = rospy.get_param("object_detection_frame_interval")  #run the model every _ frames received (to not eat up too much RAM)
 
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
 
-sim = rospy.get_param("~sim", True)
-
-down_cam_model_filename = ""
-front_cam_model_filename = ""
-
 # Select the proper models & depth_scale_factor based on the sim argument
-if sim:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
-    depth_scale_factor = 1
-else:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
-    depth_scale_factor = 1000
+depth_scale_factor = rospy.get_param("depth_map_scale_factor")
+
+down_cam_model_filename = pwd + "/models/" + rospy.get_param("down_cam_model_filename")
+front_cam_model_filename = pwd + "/models/" + rospy.get_param("front_cam_model_filename")
 
 model = [
     YOLO(down_cam_model_filename),
@@ -412,12 +405,14 @@ for m in model:
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
-    ["Lane Marker", "Octagon Table"],
-    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
+    ast.literal_eval(rospy.get_param("down_cam_class_name_mappings")),
+    ast.literal_eval(rospy.get_param("front_cam_class_mappings")),
     ]
-max_counts_per_label = {"Abydos Symbol":0, "Buoy":1, "Earth Symbol":0, "Gate":1, "Lane Marker":2, "Octagon Table":1}
+max_counts_per_label = json.loads(rospy.get_param("max_counts_per_label"))
 
-if torch.cuda.is_available(): device=0
+
+
+if torch.cuda.is_available(): device = 0
 else: device = 'cpu'
 #count for number of images received per camera
 i = [

@@ -9,6 +9,7 @@ class ObjectMapper:
         #replace with map subscriber in future
         self.map = []
         self.obj_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, self.mapUpdateCb)
+        self.NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
     def mapUpdateCb(self,msg):
         self.map = []
@@ -18,9 +19,9 @@ class ObjectMapper:
             new_map_obj.append(obj.x)
             new_map_obj.append(obj.y)
             new_map_obj.append(obj.z)
-            if obj.theta_z == -1234.5: new_map_obj.append(None)
+            if obj.theta_z == self.NULL_PLACEHOLDER: new_map_obj.append(None)
             else: new_map_obj.append(obj.theta_z)
-            if obj.extra_field == -1234.5: new_map_obj.append(None)
+            if obj.extra_field == self.NULL_PLACEHOLDER: new_map_obj.append(None)
             else: new_map_obj.append(obj.extra_field)
             self.map.append(new_map_obj)
 
