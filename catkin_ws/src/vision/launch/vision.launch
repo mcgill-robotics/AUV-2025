@@ -1,11 +1,29 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
-        <include file="$(find vision)/launch/stream-down-cam.launch" />
-        <!-- <include file="$(find vision)/launch/stream-front-cam.launch" /> -->
+        <include file="$(find sensors)/launch/stream-down-cam.launch" />
+        <!-- <include file="$(find sensors)/launch/stream-front-cam.launch" /> -->
+        <param name="front_cam_x_offset" value="0" />
+        <param name="front_cam_y_offset" value="0" />
+        <param name="front_cam_z_offset" value="0" />
+        <param name="down_cam_x_offset" value="0" />
+        <param name="down_cam_y_offset" value="0" />
+        <param name="down_cam_z_offset" value="0" />
+        <param name="down_cam_yaw_offset" value="0" />
+    </group>
+    <group if="$(arg sim)">
+        <param name="front_cam_x_offset" value="0.312" />
+        <param name="front_cam_y_offset" value="0" />
+        <param name="front_cam_z_offset" value="0" />
+        <param name="down_cam_x_offset" value="0.02" />
+        <param name="down_cam_y_offset" value="0.01" />
+        <param name="down_cam_z_offset" value="-0.2" />
+        <param name="down_cam_yaw_offset" value="0" />
     </group>
 
     <param name="log_model_prediction_info" value="false" />
+    
+
     <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"/>
 
     <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/>

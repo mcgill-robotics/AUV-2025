@@ -7,8 +7,6 @@ from object_detection_utils import *
 import object_detection_utils
 import torch
 
-# structurally good
-# dont forget to change things here after modifying object_detection_utils.py
 #callback when an image is received
 #runs model on image, publishes detection frame and generates/publishes visualization of predictions
 def detect_on_image(raw_img, camera_id):
@@ -19,7 +17,7 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     states[camera_id].pause()
     
-    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z}
+    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "q": states[camera_id].q_auv, "theta_z": states[camera_id].theta_z}
     for v in current_states.values():
         if v is None:
             print("State information missing. Skipping detection.")
@@ -34,6 +32,7 @@ def detect_on_image(raw_img, camera_id):
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
+    states[camera_id].bgr_img = np.copy(img)
     
     #run model on img
     detections = model[camera_id].predict(img, device=device, verbose=print_debug_info) #change device for cuda
@@ -42,8 +41,6 @@ def detect_on_image(raw_img, camera_id):
     detectionFrameArray = []
     img_h, img_w, _ = img.shape
     if camera_id == 1:
-        #[COMP] change target symbol to match planner
-
         buoy_symbols = analyzeBuoy(detections)
         leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
