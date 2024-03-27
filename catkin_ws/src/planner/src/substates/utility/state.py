@@ -3,6 +3,8 @@
 import rospy
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
+import numpy as np
+import quaternion
 
 class StateTracker:
     def __init__(self):
@@ -13,6 +15,7 @@ class StateTracker:
         self.theta_y = None
         self.theta_z = None
         self.pose = None
+        self.quat = None    
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
@@ -22,6 +25,7 @@ class StateTracker:
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
     def updatePose(self,msg):
         self.pose = msg
+        self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def updateX(self, msg):
         self.x = float(msg.data)
     def updateY(self, msg):
