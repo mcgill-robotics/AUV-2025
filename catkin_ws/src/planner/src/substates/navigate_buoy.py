@@ -13,8 +13,8 @@ class NavigateBuoy(smach.State):
         self.target_symbol = target_symbol
         self.buoy_width = buoy_width
         self.buoy_height = buoy_height
-        self.color = rospy.get_param("/color") 
-        self.radius = int(rospy.get_param("/buoy_radius"))
+        self.color = rospy.get_param("target_color") 
+        self.radius = int(rospy.get_param("buoy_circumnavigation_radius"))
 
     def quaternion_between_vectors(self, v1, v2):
         v1 = v1 / np.linalg.norm(v1)
