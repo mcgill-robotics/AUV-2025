@@ -91,10 +91,10 @@ class State:
         point_cloud = point_cloud.reshape(initial_point_cloud_shape)
         object_mask = object_mask.reshape(initial_point_cloud_shape[0:2])
         
-        # for debugging [ONLY UNCOMMENT IF NEEDED]
-        # debug_img = np.uint8(np.zeros((point_cloud.shape)))
-        # debug_img[object_mask] = np.array([0,0,255])
-        # rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
+        if rospy.get_param("debug_point_cloud_cleaning"):
+            debug_img = np.uint8(np.zeros((point_cloud.shape)))
+            debug_img[object_mask] = np.array([0,0,255])
+            rospy.Publisher('/vision/debug/point_cloud_clean', Image, queue_size=0).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
         
         return point_cloud
 
@@ -406,7 +406,7 @@ for m in model:
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
     ast.literal_eval(rospy.get_param("down_cam_class_name_mappings")),
-    ast.literal_eval(rospy.get_param("front_cam_class_mappings")),
+    ast.literal_eval(rospy.get_param("front_cam_class_name_mappings")),
     ]
 max_counts_per_label = json.loads(rospy.get_param("max_counts_per_label"))
 

@@ -89,14 +89,14 @@ class StateQuaternionServer(BaseServer):
                 
 
             if(self.goal.do_z.data):
-                self.previous_goal_z = goal_position[2]
                 self.pub_z_enable.publish(Bool(True))
 
                 safe_goal = max(min(goal_position[2], rospy.get_param("max_safe_goal_depth")), rospy.get_param("min_safe_goal_depth"))
                 if (safe_goal != goal_position[2]): print("WARN: Goal changed from {}m to {}m for safety.".format(goal_position[2], safe_goal))
-                self.pub_z_pid.publish(safe_goal)
+                self.previous_goal_z = safe_goal
+                goal_position[2] = safe_goal
                 self.pub_heave.publish(0)
-                self.pub_z_pid.publish(goal_position[2]) 
+                self.pub_z_pid.publish(safe_goal)
             elif (self.previous_goal_z is not None):
                 goal_position[2] = self.previous_goal_z
                 self.pub_z_enable.publish(Bool(True))
