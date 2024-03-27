@@ -5,16 +5,14 @@ import numpy as np
 import quaternion
 
 class NavigateBuoy(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, buoy_width, buoy_height):
+    def __init__(self, control, state, mapping):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
-        self.target_symbol = target_symbol
-        self.buoy_width = buoy_width
-        self.buoy_height = buoy_height
         self.color = rospy.get_param("target_color") 
-        self.radius = int(rospy.get_param("buoy_circumnavigation_radius"))
+        self.radius = rospy.get_param("buoy_circumnavigation_radius")
+        self.offset_distance = rospy.get_param("buoy_centering_offset_distance")
 
     def quaternion_between_vectors(self, v1, v2):
         v1 = v1 / np.linalg.norm(v1)
@@ -41,7 +39,6 @@ class NavigateBuoy(smach.State):
             return 'failure'
         
         print("Centering and rotating in front of buoy.")
-        offset_distance = 2
 
         self.control.move((None, None, buoy_object[3]))
 
@@ -59,7 +56,7 @@ class NavigateBuoy(smach.State):
 
         self.control.rotateDelta([rotation_quaternion.w, rotation_quaternion.x, rotation_quaternion.y, rotation_quaternion.z])
 
-        vector_auv_buoy = direction / current_distance * offset_distance
+        vector_auv_buoy = direction / current_distance * self.offset_distance
         new_position = np.array([position_buoy[0],position_buoy[1],position_buoy[2]]) - np.array([vector_auv_buoy[0],vector_auv_buoy[1],vector_auv_buoy[2]])
         print("Moving to new position: ", new_position)
         self.control.move((new_position[0], new_position[1], new_position[2]))
@@ -85,7 +82,7 @@ class NavigateBuoy(smach.State):
 
         self.control.rotateDelta([rotation_quaternion.w, rotation_quaternion.x, rotation_quaternion.y, rotation_quaternion.z])
 
-        vector_auv_buoy = direction / current_distance * offset_distance
+        vector_auv_buoy = direction / current_distance * self.offset_distance
         new_position = np.array([position_buoy[0],position_buoy[1],position_buoy[2]]) - np.array([vector_auv_buoy[0],vector_auv_buoy[1],vector_auv_buoy[2]])
         print("Moving to new position: ", new_position)
         self.control.move((new_position[0], new_position[1], new_position[2]))
@@ -95,18 +92,18 @@ class NavigateBuoy(smach.State):
 
         if self.color == "red":
             self.control.moveDeltaLocal((0,-rad,0))
-            self.control.moveDeltaLocal((2 + rad,0,0))
+            self.control.moveDeltaLocal((self.offset_distance + rad,0,0))
             self.control.rotateDeltaEuler((0,0,90))
             self.control.moveDeltaLocal((2*rad,0,0))
             self.control.rotateDeltaEuler((0,0,90))
-            self.control.moveDeltaLocal((2 + rad,0,0))
+            self.control.moveDeltaLocal((self.offset_distance + rad,0,0))
         else:
             self.control.moveDeltaLocal((0,rad,0))
-            self.control.moveDeltaLocal((2 + rad,0,0))
+            self.control.moveDeltaLocal((self.offset_distance + rad,0,0))
             self.control.rotateDeltaEuler((0,0,-90))
             self.control.moveDeltaLocal((2*rad,0,0))
             self.control.rotateDeltaEuler((0,0,-90))
-            self.control.moveDeltaLocal((2 + rad,0,0))
+            self.control.moveDeltaLocal((self.offset_distance + rad,0,0))
 
         print("Successfully completed buoy task!")
         
