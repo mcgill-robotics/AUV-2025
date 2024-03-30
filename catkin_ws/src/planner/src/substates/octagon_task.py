@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import smach
+import rospy
 
 class NavigateOctagon(smach.State):
-    def __init__(self, control, state, mapping):
+    def __init__(self, control, mapping, state):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
@@ -11,8 +12,8 @@ class NavigateOctagon(smach.State):
     def execute(self, ud):
         print("Starting octagon navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
-        self.control.rotateEuler((0,0,None))
+        self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
+        self.control.flatten()
 
         auv_current_position = (self.state.x, self.state.y)
        
@@ -23,7 +24,7 @@ class NavigateOctagon(smach.State):
             return 'failure'
         
         print("Moving to the center of the octagon.")
-        self.control.move((octagon_obj[1], octagon_obj[2], -2), face_destination=True)
+        self.control.move((octagon_obj[1], octagon_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
         print("Surfacing.")
         self.control.kill()
 
@@ -38,6 +39,6 @@ class GoToOctagon(smach.State):
 
     def execute(self, ud):
         print("Moving up to avoid the buoy.")
-        self.control.move((None, None, -1))
+        self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
         self.control.move((self.search_point[0], self.search_point[1], None), face_destination=True)
         return 'success'

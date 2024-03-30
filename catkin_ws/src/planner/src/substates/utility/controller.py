@@ -66,7 +66,7 @@ class Controller:
         self.pub_global_z = rospy.Publisher('/controls/force/global/z', Float64, queue_size=1)
         
         # Create publishers for the dropper topic and the claw state topic
-        self.claw_state_pub = rospy.Publisher("/actuators/grab", Bool, queue_size=1)
+        self.claw_state_pub = rospy.Publisher("/actuators/grabber/close", Bool, queue_size=1)
 
         self.pwm_pub = rospy.Publisher("/propulsion/microseconds",ThrusterMicroseconds,queue_size=1)
 

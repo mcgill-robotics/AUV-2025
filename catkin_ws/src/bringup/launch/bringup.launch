@@ -4,7 +4,6 @@
     <arg name="vision" default="true" />
 	<arg name="actions" default="false" />
 
-
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
 		<arg name="actions" value="$(arg actions)" />

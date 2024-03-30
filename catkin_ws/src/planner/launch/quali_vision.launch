@@ -2,5 +2,6 @@
 	<!-- <include file="$(find bringup)/launch/bringup.launch">
 		<arg name="bag" value="true" />
 	</include> -->
+	<include file="$(find planner)/launch/params.launch"/>
 	<node pkg="planner" name="quali_vision" type="quali_vision.py" respawn="False" output="screen"/>
 </launch>

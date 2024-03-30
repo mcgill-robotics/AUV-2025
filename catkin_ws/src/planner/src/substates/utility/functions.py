@@ -1,6 +1,7 @@
 import math
 from tf import transformations
 import numpy as np
+import quaternion
 
 def degreesToVector(yawDegrees):
         angleRadians = yawDegrees * math.pi / 180
@@ -26,7 +27,7 @@ def normalize_vector(vector2D):
 def dotProduct(v1, v2):
         return v1[0]*v2[0] + v1[1]*v2[1]
 
-def quaternion_between_vectors(self, v1, v2):
+def quaternion_between_vectors(v1, v2):
         v1 = v1 / np.linalg.norm(v1)
         v2 = v2 / np.linalg.norm(v2)
         

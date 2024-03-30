@@ -95,11 +95,7 @@ if __name__ == "__main__":
 
     bridge = CvBridge()
 
-    is_sim = rospy.get_param('/sim', False)
-    if is_sim:
-        depth_scale_factor = 1
-    else:
-        depth_scale_factor = 1000
+    depth_scale_factor = rospy.get_param("depth_map_scale_factor")
 
     camera_info_sub = rospy.Subscriber('/vision/front_cam/camera_info', CameraInfo, camera_info_callback)
     depth_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, depth_callback)
