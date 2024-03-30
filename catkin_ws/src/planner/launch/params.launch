@@ -9,6 +9,6 @@
     <param name="bfs_expansion_size" value="1" />
     <param name="mission_wait_time" value="30" /> <!-- time to wait before actually starting mission (for comp) -->
     <param name="buoy_centering_offset_distance" value="2"/>
-	<param name="buoy_circumnavigation_radius" value="1.5"/>
+	<param name="buoy_circumnavigation_radius" value="1"/>
     <param name="quali_gate_width" value="3" />
 </launch>
