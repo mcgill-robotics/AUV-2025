@@ -1,0 +1,5 @@
+<launch>
+    <param name="target_symbol" value="red" />
+    <param name="nominal_depth_target" value="-2" /> <!-- Z value we want the AUV to go when it "centers" itself (default depth so to speak) -->
+    <param name="quali_gate_width" value="3" />
+</launch>
