@@ -47,7 +47,7 @@ def buoyMission():
         smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class="Buoy", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure':'failure'})
         
     res = sm.execute()
@@ -155,7 +155,7 @@ if __name__ == '__main__':
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        laneMarkerMission()
+        buoyMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
