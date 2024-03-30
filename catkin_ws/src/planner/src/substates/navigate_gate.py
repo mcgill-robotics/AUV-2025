@@ -3,7 +3,7 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, goThrough, gate_width):
+    def __init__(self, control, mapping, state, target_symbol, goThrough, gate_width):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

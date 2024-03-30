@@ -5,7 +5,7 @@ import numpy as np
 import quaternion
 
 class NavigateBuoy(smach.State):
-    def __init__(self, control, state, mapping):
+    def __init__(self, control, mapping, state):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

@@ -93,19 +93,19 @@ def semiFinals():
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=1), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(control, state, mapping, origin_class="Gate"), 
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(control, mapping, state, origin_class="Gate"), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
 
         smach.StateMachine.add('find_buoy', LinearSearch(control, mapping, target_class="Buoy", min_objects=1), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control, state, mapping), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control, mapping, state), 
                 transitions={'success': 'find_second_lane_marker', 'failure':'failure'})
         
         smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=2), 
                 transitions={'success': 'navigate_second_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(control, state, mapping, origin_class="Buoy"), 
+        smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(control, mapping, state, origin_class="Buoy"), 
                 transitions={'success': 'find_octagon', 'failure': 'failure'})
         
         smach.StateMachine.add('find_octagon', LinearSearch(control, mapping, target_class="Octagon Table", min_objects=1), 
@@ -130,13 +130,16 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         sm = None
 
+        print("Waiting {} seconds before starting mission...".format(rospy.get_param("mission_wait_time")))
         rospy.sleep(rospy.get_param("mission_wait_time"))
+        print("Starting mission.")
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         # gateMission()
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
+        # laneMarkerMission()
         buoyMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)

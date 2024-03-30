@@ -3,7 +3,7 @@ import smach
 import rospy
 
 class NavigateOctagon(smach.State):
-    def __init__(self, control, state, mapping):
+    def __init__(self, control, mapping, state):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping

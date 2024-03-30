@@ -5,7 +5,7 @@ import smach
 from .utility.functions import *
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, control, state, mapping, origin_class):
+    def __init__(self, control, mapping, state, origin_class):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
