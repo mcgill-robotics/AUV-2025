@@ -6,30 +6,28 @@ import time
 
 #ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
 class LinearSearch(smach.State):
-    def __init__(self, timeout, forward_speed, control, mapping, target_class, min_objects, search_depth):
+    def __init__(self, control, mapping, target_class, min_objects):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.detectedObject = False
         self.target_class = target_class
         self.min_objects = min_objects
-        self.timeout = timeout
-        self.search_depth = search_depth
-        self.forward_speed = forward_speed
+        self.timeout = rospy.get_param("object_search_timeout")
 
     def execute(self, ud):
         print("Starting linear search.")
-        self.control.move((None, None, self.search_depth))
-        self.control.rotateEuler((0,0,None))
+        self.control.move((None, None, rospy.get_param("nominal_depth")))
+        self.control.flatten()
 
         startTime = time.time()
         while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
-            self.control.moveDeltaLocal((2,0,0))
+            self.control.moveDeltaLocal((rospy.get_param("linear_search_step_size"),0,0))
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.control.freeze_pose()
                 print("Found object! Waiting 10 seconds to get more observations of object.")
-                rospy.sleep(10)
+                rospy.sleep(rospy.get_param("object_observation_time"))
                 return 'success'
             rospy.sleep(0.1)
         self.control.freeze_pose()

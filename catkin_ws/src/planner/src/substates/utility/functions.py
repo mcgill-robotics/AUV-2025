@@ -1,6 +1,7 @@
 import math
 from tf import transformations
 import numpy as np
+import quaternion
 
 def degreesToVector(yawDegrees):
         angleRadians = yawDegrees * math.pi / 180

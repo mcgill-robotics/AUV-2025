@@ -7,18 +7,17 @@ import threading
 
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class InPlaceSearch(smach.State):
-    def __init__(self, timeout, control, mapping, target_class, min_objects, search_depth):
+    def __init__(self, control, mapping, target_class, min_objects):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
-        self.timeout = timeout
+        self.timeout = rospy.get_param("object_search_timeout")
         self.target_class = target_class
         self.min_objects = min_objects
         self.detectedObject = False
-        self.search_depth = search_depth
 
     def doRotation(self):
-        turn_amt = (0,0,-30)
+        turn_amt = (0,0,rospy.get_param("in_place_search_rotation_increment"))
         num_turns = 0
         num_full_turns = 0
 
@@ -26,8 +25,8 @@ class InPlaceSearch(smach.State):
             if (num_turns >= 360/abs(turn_amt[2])):
                 num_turns = 0
                 num_full_turns += 1
-                if num_full_turns == 1: self.control.move((None,None, self.search_depth + 1))
-                elif num_full_turns == 2: self.control.move((None,None, self.search_depth - 1))
+                if num_full_turns == 1: self.control.move((None,None, rospy.get_param("nominal_depth") + 1))
+                elif num_full_turns == 2: self.control.move((None,None, rospy.get_param("nominal_depth") - 1))
                 else: return
             #move forward
             print("Rotating by {}.".format(turn_amt))
@@ -38,8 +37,8 @@ class InPlaceSearch(smach.State):
     def execute(self, ud):
         print("Starting in-place search.")
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, self.search_depth))
-        self.control.rotateEuler((0,0,None))
+        self.control.move((None, None, rospy.get_param("nominal_depth")))
+        self.control.flatten()
 
         self.searchThread = threading.Thread(target=self.doRotation)
         self.searchThread.start()
@@ -50,8 +49,8 @@ class InPlaceSearch(smach.State):
                 self.detectedObject = True
                 self.searchThread.join()
                 self.control.freeze_pose()
-                print("Found object! Waiting 10 seconds to get more observations of object.")
-                rospy.sleep(10)
+                print("Found object! Waiting to get more observations of object.")
+                rospy.sleep(rospy.get_param("object_observation_time"))
                 return 'success'
         self.detectedObject = True
         self.searchThread.join()

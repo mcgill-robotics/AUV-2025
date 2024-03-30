@@ -14,22 +14,10 @@ class NavigateBuoy(smach.State):
         self.radius = rospy.get_param("buoy_circumnavigation_radius")
         self.offset_distance = rospy.get_param("buoy_centering_offset_distance")
 
-    def quaternion_between_vectors(self, v1, v2):
-        v1 = v1 / np.linalg.norm(v1)
-        v2 = v2 / np.linalg.norm(v2)
-        
-        dot_product = np.dot(v1, v2)
-        cross_product = np.cross(v1, v2)
-        angle = np.arccos(dot_product)
-        axis = cross_product / np.linalg.norm(cross_product)
-        rotation_quaternion = quaternion.from_rotation_vector(axis * angle)
-    
-        return rotation_quaternion
-
     def execute(self, ud):
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
-        self.control.rotateEuler((0,0,None))
+        self.control.move((None, None, rospy.get_param("nominal_depth")))
+        self.control.flatten()
 
         print("Starting buoy navigation.")
         
@@ -52,7 +40,7 @@ class NavigateBuoy(smach.State):
         auv_quat = self.state.quat
         auv_forward_vector = quaternion.rotate_vectors(auv_quat, forward_vector)
 
-        rotation_quaternion = self.quaternion_between_vectors(np.array([auv_forward_vector[0], auv_forward_vector[1],auv_forward_vector[2]]), np.array([direction[0],direction[1],direction[2]]))
+        rotation_quaternion = quaternion_between_vectors(np.array([auv_forward_vector[0], auv_forward_vector[1],auv_forward_vector[2]]), np.array([direction[0],direction[1],direction[2]]))
 
         self.control.rotateDelta([rotation_quaternion.w, rotation_quaternion.x, rotation_quaternion.y, rotation_quaternion.z])
 
@@ -63,8 +51,8 @@ class NavigateBuoy(smach.State):
 
 
         # wait and keep measuring just to be safe
-        print("Waiting 10 seconds to improve measurement accuracy")
-        rospy.sleep(10)
+        print("Waiting to improve measurement accuracy")
+        rospy.sleep(rospy.get_param("object_observation_time"))
 
         self.control.move((None, None, buoy_object[3]))
 
@@ -78,7 +66,7 @@ class NavigateBuoy(smach.State):
         auv_quat = self.state.quat
         auv_forward_vector = quaternion.rotate_vectors(auv_quat, forward_vector)
 
-        rotation_quaternion = self.quaternion_between_vectors(np.array([auv_forward_vector[0], auv_forward_vector[1],auv_forward_vector[2]]), np.array([direction[0],direction[1],direction[2]]))
+        rotation_quaternion = quaternion_between_vectors(np.array([auv_forward_vector[0], auv_forward_vector[1],auv_forward_vector[2]]), np.array([direction[0],direction[1],direction[2]]))
 
         self.control.rotateDelta([rotation_quaternion.w, rotation_quaternion.x, rotation_quaternion.y, rotation_quaternion.z])
 

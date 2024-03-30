@@ -5,7 +5,7 @@ import smach
 from .utility.functions import *
 
 class NavigateLaneMarker(smach.State):
-    def __init__(self, origin_class, control, state, mapping):
+    def __init__(self, control, state, mapping, origin_class):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
@@ -15,10 +15,10 @@ class NavigateLaneMarker(smach.State):
     def execute(self, ud):
         print("Starting lane marker navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        self.control.move((None, None, -2))
-        self.control.rotateEuler((0,0,None))
+        self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
+        self.control.flatten()
         
-        if self.origin_class == "": # use auv current position as origin
+        if self.origin_class == "": # use 0,0 position as origin
             origin_position = (0,0)
         else:
             origin_obj = self.mapping.getClosestObject(cls=self.origin_class, pos=(self.state.x, self.state.y))
@@ -37,15 +37,15 @@ class NavigateLaneMarker(smach.State):
                 return 'failure'
             rospy.sleep(5.0)
             self.mapping.updateObject(lane_marker_obj)
-            self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2), face_destination=True)
+            self.control.move((lane_marker_obj[1], lane_marker_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
         
         #Waiting 10 seconds and repeating to make sure it's correct
-        print("Waiting 10 seconds to ensure correct measurement of lane marker")
+        print("Waiting to ensure correct measurement of lane marker")
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2), face_destination=True)
-        rospy.sleep(10)
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
+        rospy.sleep(rospy.get_param("object_observation_time"))
         self.mapping.updateObject(lane_marker_obj)
-        self.control.move((lane_marker_obj[1], lane_marker_obj[2], -2), face_destination=True)
+        self.control.move((lane_marker_obj[1], lane_marker_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
 
         heading1 = lane_marker_obj[4]
         heading2 = lane_marker_obj[5]

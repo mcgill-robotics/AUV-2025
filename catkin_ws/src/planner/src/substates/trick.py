@@ -13,7 +13,7 @@ class Trick(smach.State):
     def execute(self,ud):
         #STAY IN SAME POSITION AND AT FLAT ORIENTATION
         self.control.freeze_position()
-        self.control.rotateEuler((0,0,None))
+        self.control.flatten()
 
         if self.trick_type == "roll":
             return self.execute_roll()
@@ -22,7 +22,7 @@ class Trick(smach.State):
         elif self.trick_type == "yaw":
             return self.execute_yaw()
         #re-stabilize
-        self.control.rotateEuler((0,0,None))
+        self.control.flatten()
     
     def execute_roll(self):
         print("Starting roll trick")
