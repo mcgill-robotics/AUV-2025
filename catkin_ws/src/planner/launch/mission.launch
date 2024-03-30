@@ -1,4 +1,7 @@
 <launch>
 	<include file="$(find planner)/launch/params.launch"/>
 	<node pkg="planner" name="mission" type="mission.py" respawn="False" output="screen"/>
+	<param name="buoy_circumnavigation_radius" value="1.5"/>
+	<param name="target_color" value="red"/>
+	<param name="buoy_centering_offset_distance" value="2"/>
 </launch>
