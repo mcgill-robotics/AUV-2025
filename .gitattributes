@@ -1,4 +1,3 @@
 * text eol=lf
 *.png binary
 *.pt binary
-catkin_ws/src/sim/builds/** filter=lfs diff=lfs merge=lfs -text

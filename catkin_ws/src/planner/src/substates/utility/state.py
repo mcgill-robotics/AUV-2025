@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose
+import numpy as np
+import quaternion
 
 class StateTracker:
     def __init__(self):
@@ -13,6 +15,7 @@ class StateTracker:
         self.theta_y = None
         self.theta_z = None
         self.pose = None
+        self.quat = None    
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
@@ -20,8 +23,10 @@ class StateTracker:
         self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
+        self.claw_contact_sub = rospy.Publisher("/actuators/grabber/contact", Bool, self.updateGrabberContact)
     def updatePose(self,msg):
         self.pose = msg
+        self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
     def updateX(self, msg):
         self.x = float(msg.data)
     def updateY(self, msg):
@@ -34,6 +39,8 @@ class StateTracker:
         self.theta_y = float(msg.data)
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
+    def updateGrabberContact(self, msg):
+        self.grabber_contact = msg.data
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()

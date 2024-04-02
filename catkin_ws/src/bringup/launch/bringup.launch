@@ -4,31 +4,23 @@
     <arg name="vision" default="true" />
 	<arg name="actions" default="false" />
 
-
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
 		<arg name="actions" value="$(arg actions)" />
 	</include>
+
 	<include file="$(find propulsion)/launch/propulsion.launch">
 		<arg name="sim" value="$(arg sim)" />
 	</include>
 	
-    <group if="$(arg sim)">
-		<include file="$(find state_estimation)/launch/state_estimation.launch">
-			<arg name="sim" value="true" />
-		</include>
-    </group>
-	<group unless="$(arg sim)">
-		<include file="$(find state_estimation)/launch/state_estimation.launch">
-			<arg name="sim" value="false" />
-		</include>
-    </group>
+	<include file="$(find state_estimation)/launch/state_estimation.launch">
+		<arg name="sim" value="$(arg sim)" />
+	</include>
 
     <group if="$(arg vision)">
 		<include file="$(find vision)/launch/vision.launch">
 			<arg name="sim" value="$(arg sim)" />
 		</include>
     </group>
-
 	
 </launch>

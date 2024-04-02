@@ -17,7 +17,7 @@ def detect_on_image(raw_img, camera_id):
     i[camera_id] = 0
     states[camera_id].pause()
     
-    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "theta_x": states[camera_id].theta_x, "theta_y": states[camera_id].theta_y, "theta_z": states[camera_id].theta_z}
+    current_states = {"x:": states[camera_id].x, "y:": states[camera_id].y, "z": states[camera_id].z, "q": states[camera_id].q_auv, "theta_z": states[camera_id].theta_z}
     for v in current_states.values():
         if v is None:
             print("State information missing. Skipping detection.")
@@ -28,27 +28,18 @@ def detect_on_image(raw_img, camera_id):
         print("Point cloud not yet published.")
         states[camera_id].resume()
         return
+    
     #convert image to cv2
     img = bridge.imgmsg_to_cv2(raw_img, "bgr8")
     debug_img = np.copy(img)
+    states[camera_id].bgr_img = np.copy(img)
     
     #run model on img
-    detections = model[camera_id].predict(img, device=device) #change device for cuda
+    detections = model[camera_id].predict(img, device=device, verbose=print_debug_info) #change device for cuda
 
     #initialize empty array for object detection frame message
     detectionFrameArray = []
-    '''label = []
-    obj_x = []
-    obj_y = []
-    obj_z = []
-    obj_theta_z = []
-    extra_field = []'''
-    confidence = []
     img_h, img_w, _ = img.shape
-    if camera_id == 1:
-        #[COMP] change target symbol to match planner
-        buoy_symbols = analyzeBuoy(detections)
-        leftmost_gate_symbol = analyzeGate(detections)
     #nested for loops get all predictions made by model
     for detection in detections:
         if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
@@ -57,7 +48,7 @@ def detect_on_image(raw_img, camera_id):
             conf = float(list(box.conf)[0])
             #only consider prediction if confidence is at least min_prediction_confidence
             if conf < min_prediction_confidence:
-                print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
+                if print_debug_info: print("Confidence too low for camera {} ({}%)".format(camera_id, conf*100))
                 continue
             
             bbox = list(box.xywh[0])
@@ -71,7 +62,7 @@ def detect_on_image(raw_img, camera_id):
             if camera_id == 0: # DOWN CAM
                 if global_class_name == "Lane Marker":
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     headings, center, debug_img = measureLaneMarker(img, bbox, debug_img)
                     if None in headings:
                         detectionFrame.extra_field = None
@@ -99,7 +90,7 @@ def detect_on_image(raw_img, camera_id):
                     
                 elif global_class_name == "Octagon Table": # OCTAGON TABLE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionDownCam(bbox[0], bbox[1], img_h, img_w, octagon_table_top_z)
                     detectionFrame.x = pred_obj_x
                     detectionFrame.y = pred_obj_y
@@ -109,12 +100,14 @@ def detect_on_image(raw_img, camera_id):
 
                     # Add the detection frame to the array
                     detectionFrameArray.append(detectionFrame)
+                # TODO: add support for grabber objects here
+                # TODO: add support for dropper bin here
 
                 
             else: # FORWARD CAM
                 if global_class_name == "Lane Marker" or global_class_name == "Octagon Table": # LANE MARKER OR OCTAGON TABLE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
                     detectionFrame.y = pred_obj_y
@@ -125,19 +118,7 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrameArray.append(detectionFrame)
                 elif global_class_name == "Gate": # GATE
                     detectionFrame.label = global_class_name
-                    confidence.append(conf)
-                    theta_z = measureAngle(bbox)
-                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
-                    detectionFrame.x = pred_obj_x
-                    detectionFrame.y = pred_obj_y
-                    detectionFrame.z = pred_obj_z
-                    detectionFrame.theta_z = theta_z
-                    detectionFrame.extra_field = leftmost_gate_symbol # 1 for earth, 0 for the other one
-
-                    detectionFrameArray.append(detectionFrame)
-                elif global_class_name == "Buoy": # BUOY
-                    detectionFrame.label = global_class_name
-                    confidence.append(conf)
+                    detectionFrame.confidence = conf
                     theta_z = measureAngle(bbox)
                     pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
                     detectionFrame.x = pred_obj_x
@@ -147,28 +128,26 @@ def detect_on_image(raw_img, camera_id):
                     detectionFrame.extra_field = None
 
                     detectionFrameArray.append(detectionFrame)
+                elif global_class_name == "Buoy": # BUOY
+                    detectionFrame.label = global_class_name
+                    detectionFrame.confidence = conf
+                    pred_obj_x, pred_obj_y, pred_obj_z = getObjectPositionFrontCam(bbox)
+                    detectionFrame.x = pred_obj_x
+                    detectionFrame.y = pred_obj_y
+                    detectionFrame.z = pred_obj_z
+                    detectionFrame.theta_z = None
+                    detectionFrame.extra_field = None
 
-                    for symbol_class_name, symbol_x, symbol_y, symbol_z, confidence in buoy_symbols:
-                        detectionFrame = VisionObject()
-                        detectionFrame.label = symbol_class_name
-                        detectionFrame.x = symbol_x
-                        detectionFrame.y = symbol_y
-                        detectionFrame.z = symbol_z
-                        confidence.append(confidence)
-                        detectionFrame.theta_z = theta_z
-                        detectionFrame.extra_field = None
-
-                        detectionFrameArray.append(detectionFrame)
-
-                    
+                    detectionFrameArray.append(detectionFrame)
+                # TODO: add support for grabber objects            
                 
     for obj in detectionFrameArray:
-        obj.x = obj.x if obj.x is not None else -1234.5 
-        obj.theta_z = obj.theta_z if obj.theta_z is not None else -1234.5
-        obj.extra_field = obj.extra_field if obj.extra_field is not None else -1234.5
+        obj.x = obj.x if obj.x is not None else NULL_PLACEHOLDER 
+        obj.theta_z = obj.theta_z if obj.theta_z is not None else NULL_PLACEHOLDER
+        obj.extra_field = obj.extra_field if obj.extra_field is not None else NULL_PLACEHOLDER
     
 
-    detectionFrameArray = cleanDetections(detectionFrameArray, confidence)
+    detectionFrameArray = cleanDetections(detectionFrameArray)
 
     if len(detectionFrameArray) > 0:
         #create object detection frame message and publish it
@@ -181,6 +160,9 @@ def detect_on_image(raw_img, camera_id):
     visualisation_pubs[camera_id].publish(debug_img)   
     states[camera_id].resume()
 
+print_debug_info = rospy.get_param("log_model_prediction_info", False)
+
+NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
 #the int argument is used to index debug publisher, model, class names, and i
 subs = [

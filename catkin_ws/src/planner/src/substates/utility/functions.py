@@ -1,6 +1,7 @@
 import math
 from tf import transformations
 import numpy as np
+import quaternion
 
 def degreesToVector(yawDegrees):
         angleRadians = yawDegrees * math.pi / 180
@@ -26,6 +27,17 @@ def normalize_vector(vector2D):
 def dotProduct(v1, v2):
         return v1[0]*v2[0] + v1[1]*v2[1]
 
+def quaternion_between_vectors(v1, v2):
+        v1 = v1 / np.linalg.norm(v1)
+        v2 = v2 / np.linalg.norm(v2)
+        
+        dot_product = np.dot(v1, v2)
+        cross_product = np.cross(v1, v2)
+        angle = np.arccos(dot_product)
+        axis = cross_product / np.linalg.norm(cross_product)
+        rotation_quaternion = quaternion.from_rotation_vector(axis * angle)
+        
+        return rotation_quaternion
 
 def euler_to_quaternion(roll, pitch, yaw):
         q = transformations.quaternion_from_euler(math.pi*roll/180, math.pi*pitch/180, math.pi*yaw/180, 'rxyz')

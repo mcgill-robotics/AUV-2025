@@ -16,13 +16,12 @@ from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
 
-
 def endMission(msg):
     print(msg)
     control.freeze_pose()
 
 def endPlanner(msg="Shutting down mission planner."):
-    pub_mission_display.publish("Exit")
+    pub_mission_display.publish("End")
     print(msg)
     control.kill()
 
@@ -31,12 +30,11 @@ def gateMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(control, mapping, target_class="Gate", min_objects=1), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
-    # display_mission.updateMission("Gate Task {}".format(res))
     endMission("Finished gate mission. Result {}".format(res))
 
 def buoyMission():
@@ -44,14 +42,13 @@ def buoyMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_buoy', InPlaceSearch(timeout=120, target_class="Buoy", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+        smach.StateMachine.add('find_buoy', InPlaceSearch(control, mapping, target_class="Buoy", min_objects=1),
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state), 
                 transitions={'success': 'success', 'failure':'failure'})
         
     res = sm.execute()
-    # display_mission.updateMission("Buoy Task {}".format(res))
     endMission("Finished buoy mission. Result {}".format(res))
 
 def tricks(t):
@@ -62,7 +59,6 @@ def tricks(t):
         smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
-    # display_mission.updateMission("Tricks {}".format(res))
     endMission("Finished trick. Result {}".format(res))
 
 def laneMarkerMission():
@@ -70,20 +66,19 @@ def laneMarkerMission():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure'])
     with sm:
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping, search_depth=-1), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=1), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="", control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(control, mapping, state, origin_class=""), 
                 transitions={'success': 'success', 'failure': 'failure'})
         res = sm.execute()
-    # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
 
 def semiFinals():
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+        smach.StateMachine.add('find_gate', InPlaceSearch(control, mapping, target_class="Gate", min_objects=1), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
         smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_width=gate_width), 
@@ -95,25 +90,25 @@ def semiFinals():
         smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=1, control=control, mapping=mapping, search_depth=-1), 
+        smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=1), 
                 transitions={'success': 'navigate_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(origin_class="Gate", control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('navigate_lane_marker', NavigateLaneMarker(control, mapping, state, origin_class="Gate"), 
                 transitions={'success': 'find_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('find_buoy', LinearSearch(timeout=120, forward_speed=5, target_class="Buoy", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+        smach.StateMachine.add('find_buoy', LinearSearch(control, mapping, target_class="Buoy", min_objects=1), 
                 transitions={'success': 'navigate_buoy', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control=control, mapping=mapping, state=state, target_symbol=target_symbol, buoy_width=buoy_width, buoy_height=buoy_height), 
+        smach.StateMachine.add('navigate_buoy', NavigateBuoy(control, mapping, state), 
                 transitions={'success': 'find_second_lane_marker', 'failure':'failure'})
         
-        smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(timeout=120, expansionAmt=0.5, target_class="Lane Marker", min_objects=2, control=control, mapping=mapping, search_depth=-1), 
+        smach.StateMachine.add('find_second_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=2), 
                 transitions={'success': 'navigate_second_lane_marker', 'failure': 'failure'})
 
-        smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(origin_class="Buoy", control=control, mapping=mapping, state=state), 
+        smach.StateMachine.add('navigate_second_lane_marker', NavigateLaneMarker(control, mapping, state, origin_class="Buoy"), 
                 transitions={'success': 'find_octagon', 'failure': 'failure'})
         
-        smach.StateMachine.add('find_octagon', LinearSearch(timeout=120, forward_speed=5, target_class="Octagon Table", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
+        smach.StateMachine.add('find_octagon', LinearSearch(control, mapping, target_class="Octagon Table", min_objects=1), 
                 transitions={'success': 'navigate_octagon', 'failure':'failure'})
         
         smach.StateMachine.add('navigate_octagon', NavigateOctagon(control=control, mapping=mapping, state=state), 
@@ -121,10 +116,6 @@ def semiFinals():
     res = sm.execute()
     endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
-buoy_width = 1.2
-buoy_height = 1.2
-gate_width = 3
-target_symbol = "Earth Symbol" # "Abydos Symbol"
 wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
@@ -139,23 +130,17 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         sm = None
 
-
-        # control.move((None,None,-1))
-        # control.moveDelta((0,0,0))
-        # control.rotateEuler((0,0,None))
-        # while True:
-        #     control.rotateEuler((0,0,0))
-        #     control.rotateEuler((0,0,90))
-        #     control.rotateEuler((0,90,90))
-        #     control.rotateEuler((-90,0,0))
-            
+        print("Waiting {} seconds before starting mission...".format(rospy.get_param("mission_wait_time")))
+        rospy.sleep(rospy.get_param("mission_wait_time"))
+        print("Starting mission.")
 
         # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
         # gateMission()
         #qualiVisionMission()
         #buoyMission()  
         #tricks()  
-        laneMarkerMission()
+        # laneMarkerMission()
+        buoyMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
