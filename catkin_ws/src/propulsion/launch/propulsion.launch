@@ -6,5 +6,9 @@
             <param name="baud" value="57600"/>
         </node>
     </group>
+
+    <param name="thruster_PWM_lower_limit" value="1228" />
+    <param name="thruster_PWM_upper_limit" value="1768" />
+
 	<node name="thrust_mapper" pkg="propulsion" type="thrust_mapper.py" respawn="true" output="screen"/>
 </launch>

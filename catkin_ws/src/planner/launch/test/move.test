@@ -1,5 +1,4 @@
 <launch>
-	<include file="$(find sim)/launch/headless.launch"/>
 	<include file="$(find sim)/launch/sim.launch">
 		<arg name="vision" value="false" />
 	</include>

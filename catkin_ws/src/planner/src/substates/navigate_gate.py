@@ -3,7 +3,7 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, target_symbol, goThrough, gate_width):
+    def __init__(self, control, mapping, state, target_symbol, goThrough, gate_width):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
@@ -18,7 +18,7 @@ class NavigateGate(smach.State):
         print("Starting gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         self.control.move((None, None, -1))
-        self.control.rotateEuler((0,0,None))
+        self.control.flatten()
 
         gate_object = self.mapping.getClosestObject(cls="Gate", pos=(self.state.x, self.state.y))
         if gate_object is None:
@@ -36,8 +36,8 @@ class NavigateGate(smach.State):
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         # wait and repeat just to be safe
-        print("Waiting 10 seconds to improve measurement accuracy")
-        rospy.sleep(10)
+        print("Waiting to improve measurement accuracy")
+        rospy.sleep(rospy.get_param("object_observation_time"))
 
         print("Re-centering and rotating in front of gate.")
         self.mapping.updateObject(gate_object)
