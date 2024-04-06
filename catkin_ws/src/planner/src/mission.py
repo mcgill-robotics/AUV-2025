@@ -33,7 +33,7 @@ def gateMission():
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(control, mapping, target_class="Gate", min_objects=1), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, gate_width=gate_width), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     endMission("Finished gate mission. Result {}".format(res))
@@ -81,10 +81,10 @@ def pingerMission():
         sm = smach.StateMachine(outcomes=['success', 'failure'])
         with sm:
                 # Turn towards pinger bearing and move towards it until you find an object
-                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=4), 
+                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state), 
                         transitions={'success': 'success', 'failure':'failure', 'search': 'breadth_first_search'})
                 # TODO [COMP]: Specify target class
-                smach.StateMachine.add('breadth_first_search', BreadthFirstSearch(timeout=120, target_class="", expansionAmt=0.5, min_objects=1, control=control, mapping=mapping, search_depth=-1), 
+                smach.StateMachine.add('breadth_first_search', BreadthFirstSearch(target_class="", min_objects=1, control=control, mapping=mapping), 
                         transitions={'success': 'success', 'failure':'failure'})
                 res = sm.execute()
         # display_mission.updateMission("Pinger {}".format(res))
@@ -97,13 +97,13 @@ def semiFinals():
         smach.StateMachine.add('find_gate', InPlaceSearch(control, mapping, target_class="Gate", min_objects=1), 
                 transitions={'success': 'navigate_gate_no_go_through', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False, target_symbol=target_symbol, gate_width=gate_width), 
+        smach.StateMachine.add('navigate_gate_no_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=False), 
                 transitions={'success': 'tricks', 'failure': 'failure'})
         
         smach.StateMachine.add('tricks', Trick(control=control, trick_type="yaw", num_full_spins=2), 
                 transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
         
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True), 
                 transitions={'success': 'find_lane_marker', 'failure': 'failure'})
         
         smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(control, mapping, target_class="Lane Marker", min_objects=1), 
@@ -145,7 +145,6 @@ if __name__ == '__main__':
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
-        pinger_num = 1 # [COMP] change this to an integer depending on which pinger is being used
         sm = None
 
         print("Waiting {} seconds before starting mission...".format(rospy.get_param("mission_wait_time")))

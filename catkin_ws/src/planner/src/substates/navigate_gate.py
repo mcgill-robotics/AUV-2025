@@ -3,13 +3,13 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, state, mapping, goThrough, gate_width):
+    def __init__(self, control, state, mapping, goThrough):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.goThrough = goThrough
-        self.gate_width = gate_width
+        self.gate_width = rospy.get_param("gate_width")
 
     def execute(self, ud):
         print("Starting gate navigation.") 

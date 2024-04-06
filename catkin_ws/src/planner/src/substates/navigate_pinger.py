@@ -8,13 +8,13 @@ from auv_msgs.msg import PingerBearing
 # Given a pinger number (integer), navigate the AUV towards the object corresponding to that pinger number
 class GoToPinger(smach.State):
 
-    def __init__(self, control, state, mapping, pinger_num):
+    def __init__(self, control, state, mapping):
         super().__init__(outcomes=['success', 'failure', 'search'])
         self.control = control
         self.mapping = mapping
         self.state = state
         # An integer from 0 to 3 corresponding to a specifc pinger & object
-        self.pinger_num = pinger_num
+        self.pinger_num = rospy.get_param("pinger_num")
 
     def execute(self, ud):
         print("Starting pinger navigation. Navigating to object with pinger number", self.pinger_num) 

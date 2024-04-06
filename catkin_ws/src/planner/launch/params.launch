@@ -7,8 +7,13 @@
     <param name="linear_search_step_size" value="2" />
     <param name="in_place_search_rotation_increment" value="30"/>
     <param name="bfs_expansion_size" value="1" />
-    <param name="mission_wait_time" value="30" /> <!-- time to wait before actually starting mission (for comp) -->
+    <param name="mission_wait_time" value="1" /> <!-- time to wait before actually starting mission (for comp) -->
     <param name="buoy_centering_offset_distance" value="2"/>
 	<param name="buoy_circumnavigation_radius" value="1"/>
     <param name="quali_gate_width" value="3" />
+    <param name="gate_width" value="3" />
+    <param name="num_seconds_to_roll" value="6" /> <!-- The number of seconds to keep rolling during tricks mission -->
+	<param name="red_side" value="right" /> <!-- The side of the object that red corresponds to -->
+	<param name="target_colour" value="red" /> <!-- The colour to target -->
+    <param name="pinger_num" value="1" /> <!-- An integer from 1-4 corresponding to the pinger number to target -->
 </launch>
