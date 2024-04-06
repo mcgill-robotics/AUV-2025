@@ -135,7 +135,8 @@ def semiFinals():
 wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
-    mission = input("Enter mission to run: ")
+    input_options = '\n\ttricks => Roll trick\n' + '\tpinger => Navigate Pinger\n' + '\tlaneMarker => Lane Marker Mission\n' + '\tbuoy => Buoy Mission\n' + '\tgate => Gate Mission\n'
+    mission = input("Enter mission to run. \nOptions: " + input_options + "Mission: ")
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
