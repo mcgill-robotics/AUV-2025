@@ -6,18 +6,20 @@ from substates.utility.vision import ObjectMapper
 from substates.navigate_gate import *
 
 rospy.init_node("quali_vision")
+
 controls = Controller(rospy.Time(0))
 state = StateTracker()
 mapping = ObjectMapper()
 
-quali_gate_width = 3
+quali_gate_width = rospy.get_param("quali_gate_width")
+target_symbol = rospy.get_param("target_symbol")
+nominal_depth = rospy.get_param("nominal_depth")
 
 print("Submerging")
-controls.moveDelta((0,0,-2.5))
+controls.move((None,None,nominal_depth))
 
 print("Navigating gate")
-# we do Earth symbol because it doesnt matter which we do
-gateNav = NavigateGate(controls, state, mapping, "Earth Symbol", goThrough=False, gate_width=quali_gate_width)
+gateNav = NavigateGate(controls, state, mapping, target_symbol, goThrough=False, gate_width=quali_gate_width)
 gateNav.execute(None)
 
 print("Moving to right side of gate")

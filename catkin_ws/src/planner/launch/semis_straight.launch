@@ -1,6 +1,0 @@
-<launch>
-	<include file="$(find bringup)/launch/bringup.launch">
-		<arg name="bag" value="true" />
-	</include>
-	<node pkg="planner" name="quali" type="semis_straight.py" respawn="False" output="screen"/>
-</launch>

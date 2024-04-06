@@ -67,11 +67,11 @@ def updateMap(obj_i, observation):
 
     if label == "Lane Marker": #LANE MARKER HAD TO DEALT WITH DIFFERENTLY FOR THETA Z AND EXTRA_FIELD
         #if no theta z measurement keep current theta z
-        if observed_theta_z == -1234.5 and observed_extra_field == -1234.5:
+        if observed_theta_z == NULL_PLACEHOLDER and observed_extra_field == NULL_PLACEHOLDER:
             new_theta_z = current_theta_z
             new_extra_field = current_extra_field
         #if there was no previous theta z but observation has a theta z set theta z to observation theta z
-        elif current_extra_field == -1234.5 and current_theta_z == -1234.5:
+        elif current_extra_field == NULL_PLACEHOLDER and current_theta_z == NULL_PLACEHOLDER:
             new_theta_z = observed_theta_z
             new_extra_field = observed_extra_field
         else:
@@ -102,10 +102,10 @@ def updateMap(obj_i, observation):
     else:
         #CALCULATE THETA Z
         #if no theta z measurement keep current theta z
-        if observed_theta_z == -1234.5:
+        if observed_theta_z == NULL_PLACEHOLDER:
             new_theta_z = current_theta_z
         #if there was no previous theta z but observation has a theta z set theta z to observation theta z
-        elif current_theta_z == -1234.5:
+        elif current_theta_z == NULL_PLACEHOLDER:
             new_theta_z = observed_theta_z
         else:
             while abs(observed_theta_z-current_theta_z) > 180:
@@ -116,14 +116,14 @@ def updateMap(obj_i, observation):
 
         #CALCULATE EXTRA FIELD WHEN APPLICABLE
         if label == "Gate": #GATE, symbol on left (0 or 1) -> take weighted average
-            if observed_extra_field == -1234.5:
+            if observed_extra_field == NULL_PLACEHOLDER:
                 new_extra_field = current_extra_field
-            elif current_extra_field == -1234.5:
+            elif current_extra_field == NULL_PLACEHOLDER:
                 new_extra_field = observed_extra_field
             else:
                 new_extra_field = (num_new_observations*observed_extra_field + num_observations*current_extra_field) / (num_observations + num_new_observations)
         else:
-            new_extra_field = -1234.5
+            new_extra_field = NULL_PLACEHOLDER
 
     object_map[obj_i][1] = new_x
     object_map[obj_i][2] = new_y
@@ -174,10 +174,12 @@ def publishMap():
     obj_pub.publish(map_msg_array)
 
 
-min_observations = 5
+min_observations = rospy.get_param("min_observations_for_mapping")
 object_map = []
 
-sameObjectRadiusPerLabel = { "Lane Marker": 1.5, "Earth Symbol":0.25, "Abydos Symbol": 0.25 }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
+NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
+
+sameObjectRadiusPerLabel = { "Lane Marker": rospy.get_param("same_object_radius_lane_marker") }  #in same units as state_x, y, z etc (only for objects which can appear more than once)
 
 rospy.init_node('object_map')
 obj_sub = rospy.Subscriber('vision/viewframe_detection', VisionObjectArray, objectDetectCb)

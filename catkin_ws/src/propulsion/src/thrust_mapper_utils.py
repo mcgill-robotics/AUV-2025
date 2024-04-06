@@ -1,4 +1,3 @@
-
 def force_to_pwm(force,MAX_FWD_FORCE,MAX_BKWD_FORCE):
     """
     Converts a force (N) to PWM (microseconds)

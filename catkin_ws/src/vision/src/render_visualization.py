@@ -153,9 +153,9 @@ def addHeading(x,y,z,vec_x,vec_y,vec_z,pub,color,override_id=None):
 
 def addMapMarkers(label,x,y,z,in_theta_z,in_extra_field,color=(1,0,0)):
     global marker_id
-    if in_extra_field == -1234.5: extra_field = -1
+    if in_extra_field == NULL_PLACEHOLDER: extra_field = -1
     else: extra_field = in_extra_field
-    if in_theta_z == -1234.5: theta_z = 0
+    if in_theta_z == NULL_PLACEHOLDER: theta_z = 0
     else: theta_z = in_theta_z
     addSphere(x, y, z, 0.1, publishToMap, color)
     if label == "Lane Marker": #LANE MARKER
@@ -437,5 +437,6 @@ y_setpoint_sub = rospy.Subscriber('y_setpoint', Float64, setpointYCb)
 z_setpoint_sub = rospy.Subscriber('z_setpoint', Float64, setpointZCb)
 quat_setpoint_sub = rospy.Subscriber('/controls/quaternion_pid/setpoint', Quaternion, setpointQuatCb)
 
+NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
 rospy.spin()

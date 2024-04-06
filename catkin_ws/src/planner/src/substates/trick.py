@@ -16,7 +16,7 @@ class Trick(smach.State):
     def execute(self,ud):
         #STAY IN SAME POSITION AND AT FLAT ORIENTATION
         self.control.freeze_position()
-        self.control.rotateEuler((0,0,None))
+        self.control.flatten()
 
         if self.trick_type == "roll":
             return self.execute_roll()

@@ -3,8 +3,6 @@
 
     <arg name="vision" default="true" />
 
-    <param name="sim" value="true" />
-
     <param name="q_imunominal_imu_w" value="1.0" />
     <param name="q_imunominal_imu_x" value="0.0" />
     <param name="q_imunominal_imu_y" value="0.0" />

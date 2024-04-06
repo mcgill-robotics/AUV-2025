@@ -16,6 +16,8 @@ from point_cloud import get_xyz_image
 from tf import transformations
 from sklearn.linear_model import RANSACRegressor
 from sklearn.cluster import DBSCAN
+import json
+import ast
 
 class State:
     def __init__(self):
@@ -71,10 +73,10 @@ class State:
         # Find the closest point to the camera
         initial_point_cloud_shape = point_cloud.shape
         point_cloud = point_cloud.reshape(-1,3)
-        point_cloud[point_cloud[:,0] < 0.5] = 10000 # ignore depth values which are less than 0.5m
+        point_cloud[point_cloud[:,0] < rospy.get_param("min_distance_for_valid_point_cloud_point")] = 10000 # ignore depth values which are less than 0.5m
         closest_point_index = np.argmin(point_cloud[:,0])
 
-        eps = 0.5  # Maximum distance between two samples for them to be considered as in the same neighborhood
+        eps = rospy.get_param("max_distance_for_point_cloud_fill_cleaning")  # Maximum distance between two samples for them to be considered as in the same neighborhood
         min_samples = 10  # The number of samples in a neighborhood for a point to be considered as a core point
 
         # Perform DBSCAN clustering
@@ -89,10 +91,10 @@ class State:
         point_cloud = point_cloud.reshape(initial_point_cloud_shape)
         object_mask = object_mask.reshape(initial_point_cloud_shape[0:2])
         
-        # for debugging [ONLY UNCOMMENT IF NEEDED]
-        # debug_img = np.uint8(np.zeros((point_cloud.shape)))
-        # debug_img[object_mask] = np.array([0,0,255])
-        # rospy.Publisher('/vision/debug/point_cloud_clean', Image).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
+        if rospy.get_param("debug_point_cloud_cleaning"):
+            debug_img = np.uint8(np.zeros((point_cloud.shape)))
+            debug_img[object_mask] = np.array([0,0,255])
+            rospy.Publisher('/vision/debug/point_cloud_clean', Image, queue_size=0).publish(bridge.cv2_to_imgmsg(debug_img, "bgr8"))
         
         return point_cloud
 
@@ -317,61 +319,6 @@ def measureAngle(bbox):
     
     return angle + states[1].theta_z
 
-def analyzeGate(detections):
-    # Return the class_id of the symbol on the left of the gate
-    # If no symbol return None
-    gate_elements_detected = {}
-    for detection in detections:
-        if torch.cuda.is_available(): boxes = detection.boxes.cpu().numpy()
-        else: boxes = detection.boxes.numpy()
-        for box in boxes:
-            bbox = list(box.xywh[0])
-            x_coord = bbox[0]
-            conf = float(list(box.conf)[0])
-            cls_id = int(list(box.cls)[0])
-            global_class_name = class_names[1][cls_id]
-            if (global_class_name in ["Earth Symbol", "Abydos Symbol", "Gate"]) and conf > min_prediction_confidence:
-                gate_elements_detected[cls_id] = 999999 if global_class_name == "Gate" else x_coord
-
-    if "Earth Symbol" not in gate_elements_detected.keys(): return None
-    elif "Abydos Symbol" not in gate_elements_detected.keys(): return None
-    elif "Gate" not in gate_elements_detected.keys(): return None
-
-    min_key = int(min(gate_elements_detected, key=gate_elements_detected.get))
-
-    if min_key == "Earth Symbol": return 1.0
-    else: return 0.0
-
-def analyzeBuoy(detections):
-    symbols = []
-    buoy_was_detected = False
-
-    for detection in detections:
-
-        if torch.cuda.is_available(): 
-            boxes = detection.boxes.cpu().numpy()
-        else: 
-            boxes = detection.boxes.numpy()
-
-        for box in boxes:
-            bbox = list(box.xywh[0])
-            conf = float(list(box.conf)[0])
-            cls_id = int(list(box.cls)[0])
-            global_class_name = class_names[1][cls_id]
-
-            if (global_class_name == "Buoy"):
-                buoy_was_detected = True
-
-            elif (global_class_name in ["Earth Symbol", "Abydos Symbol"]) and conf > min_prediction_confidence:
-                x,y,z = getObjectPositionFrontCam(bbox)
-                symbols.append([global_class_name, x, y, z, conf])
-
-    if buoy_was_detected: 
-        return symbols
-
-    else: 
-        return []
-
 # lots of noise in pool, the idea is for example if the down cam has two detections, it will remove the least confident one
 # selects highest confidence detection from duplicates and ignores objects with no position measurement
 def cleanDetections(detectionFrameArray):
@@ -414,46 +361,37 @@ states = (State(), State())
 
 
 ############## PARAMETERS ##############
-min_prediction_confidence = 0.4
-max_dist_to_measure = 10
+min_prediction_confidence = rospy.get_param("min_prediction_confidence")
+max_dist_to_measure = rospy.get_param("max_object_detection_distance")
 
 HEADING_COLOR = (255, 0, 0) # Blue
 BOX_COLOR = (255, 255, 255) # White
 TEXT_COLOR = (0, 0, 0) # Black
 
 # [COMP] MAKE SURE THESE DIMENSIONS ARE APPROPRIATE!
-pool_depth = -5
-octagon_table_height = 1.25 # 0.9m - 1.5m
-lane_marker_height = 0.4
+pool_depth = rospy.get_param("pool_depth")
+octagon_table_height = rospy.get_param("octagon_table_height")
+lane_marker_height = rospy.get_param("lane_marker_height")
 lane_marker_top_z = pool_depth + lane_marker_height
 octagon_table_top_z = pool_depth + octagon_table_height
 # [COMP] ensure FOV is correct
-down_cam_hfov = 129.4904
-down_cam_vfov = 100
-down_cam_x_offset = rospy.get_param("down_cam_x_offset", 0)
-down_cam_y_offset = rospy.get_param("down_cam_y_offset", 0)
-down_cam_z_offset = rospy.get_param("down_cam_z_offset", 0)
-down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset", 0)
+down_cam_hfov = rospy.get_param("down_cam_hfov")
+down_cam_vfov = rospy.get_param("down_cam_vfov")
+down_cam_x_offset = rospy.get_param("down_cam_x_offset")
+down_cam_y_offset = rospy.get_param("down_cam_y_offset")
+down_cam_z_offset = rospy.get_param("down_cam_z_offset")
+down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset")
 
-detect_every = 5  #run the model every _ frames received (to not eat up too much RAM)
+detect_every = rospy.get_param("object_detection_frame_interval")  #run the model every _ frames received (to not eat up too much RAM)
 
 ############## MODEL INSTANTIATION + PARAMETERS ##############
 pwd = os.path.realpath(os.path.dirname(__file__))
 
-sim = rospy.get_param("sim", True)
-
-down_cam_model_filename = ""
-front_cam_model_filename = ""
-
 # Select the proper models & depth_scale_factor based on the sim argument
-if sim:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
-    depth_scale_factor = 1
-else:
-    down_cam_model_filename = pwd + "/models/down_cam_model_sim.pt"
-    front_cam_model_filename = pwd + "/models/front_cam_model.pt"
-    depth_scale_factor = 1000
+depth_scale_factor = rospy.get_param("depth_map_scale_factor")
+
+down_cam_model_filename = pwd + "/models/" + rospy.get_param("down_cam_model_filename")
+front_cam_model_filename = pwd + "/models/" + rospy.get_param("front_cam_model_filename")
 
 model = [
     YOLO(down_cam_model_filename),
@@ -467,12 +405,14 @@ for m in model:
 
 # [COMP] update with class values for model which is trained on-site at comp
 class_names = [ #one array per camera, name index should be class id
-    ["Lane Marker", "Octagon Table"],
-    ["Abydos Symbol", "Buoy", "Earth Symbol", "Gate", "Lane Marker", "Octagon", "Octagon Table"],
+    ast.literal_eval(rospy.get_param("down_cam_class_name_mappings")),
+    ast.literal_eval(rospy.get_param("front_cam_class_name_mappings")),
     ]
-max_counts_per_label = {"Abydos Symbol":2, "Buoy":1, "Earth Symbol":2, "Gate":1, "Lane Marker":2, "Octagon Table":1}
+max_counts_per_label = json.loads(rospy.get_param("max_counts_per_label"))
 
-if torch.cuda.is_available(): device=0
+
+
+if torch.cuda.is_available(): device = 0
 else: device = 'cpu'
 #count for number of images received per camera
 i = [

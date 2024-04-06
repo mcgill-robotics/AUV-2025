@@ -3,17 +3,15 @@ import os
 import numpy as np
 import math
 from cv_bridge import CvBridge
+import rospy
 
-longest_downscaled_size = None
-blur1_amt = None
-color_tolerance = None
-blur2_amt = None
 bridge = CvBridge()
 
 #return True if basically the same color
 #otherwise return False
 #assuming color in BGR
 def areTheSame(c1, c2):
+    color_tolerance = rospy.get_param("lane_marker_color_tolerance")
     #make color brightnesses the same (just care about color ratios, not brightness/saturation) by making max value 255 in any channel
     c1 += min((255,255,255)-c1)
     c2 += min((255,255,255)-c2)
@@ -24,7 +22,9 @@ def areTheSame(c1, c2):
 
 #receives a cv2 image, returns a black and white cv2 image where the "reddest" pixels are black
 def thresholdRed(img, downscale_publisher=None, blur1_publisher=None, tol_publisher=None, blur2_publisher=None, thresh_publisher=None):
-    getParameters()
+    longest_downscaled_size = rospy.get_param("lane_marker_downscaling_size")
+    blur1_amt = rospy.get_param("lane_marker_blur_1_amt")
+    blur2_amt = rospy.get_param("lane_marker_blur_2_amt")
     if min(img.shape[0], img.shape[1]) > longest_downscaled_size:
         scaling_factor = longest_downscaled_size/min(img.shape[0], img.shape[1])
         downscaled_size = (int(img.shape[1]*scaling_factor), int(img.shape[0]*scaling_factor))
@@ -109,28 +109,6 @@ def angleBetweenLines(l1, l2):
         return 180.0-angle_diff
     else:
         return angle_diff
-
-def getParameters():
-    global longest_downscaled_size
-    global blur1_amt
-    global color_tolerance
-    global blur2_amt
-    # Read the values for downscaling, bluring and color tolerance from a text file
-    values = []
-    with open(pwd + '/config/thresholding_values.txt', 'r') as file:
-        # Read the file line by line
-        for line in file:
-            # Ignore lines that start with "#"
-            if line[0] != '#' :
-                # Extract the values from the line
-                value = line.strip()
-                if value != '\n' and value != '':
-                    values.append(float(value))
-    longest_downscaled_size = values[0]
-    blur1_amt = values[1]
-    color_tolerance = values[2]
-    blur2_amt = values[3]
-
 
 #given an image containing a lane marker, returns one slope per lane marker heading (relative to the image's x/y axis)
 #i.e should return two slopes

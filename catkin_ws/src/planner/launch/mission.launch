@@ -1,4 +1,8 @@
 <launch>
+	<!-- <include file="$(find bringup)/launch/bringup.launch">
+		<arg name="bag" value="true" />
+	</include> -->
+	<include file="$(find planner)/launch/params.launch"/>
 	<node pkg="planner" name="mission" type="mission.py" respawn="False" output="screen"/>
 	<param name="num_seconds_to_roll" value="6" />
 	<param name="red_side" value="right" />
