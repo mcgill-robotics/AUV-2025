@@ -3,6 +3,7 @@
 import rospy
 import smach
 import numpy as np
+import math
 
 class Trick(smach.State):
     def __init__(self, control, trick_type, state, num_full_spins=1):
@@ -25,40 +26,45 @@ class Trick(smach.State):
             return self.execute_yaw()
         #re-stabilize
         self.control.rotateEuler((0,0,None))
+
+    def get_roll(self):
+        # Extract roll angle from quaternion representation
+        # Assuming the quaternion is in the form (w, x, y, z)
+        q = self.orientation
+        roll_rad = math.atan2(2(q.wq.x + q.yq.z), 1 - 2(q.x2 + q.y2))
+        roll_deg = math.degrees(roll_rad)
+        return roll_deg
     
     def execute_roll(self):
-        # Get the number of seconds to roll the AUV as a parameter
-        num_seconds_to_roll = rospy.get_param('num_seconds_to_roll')
+        # Get the target roll angle in radians as a parameter
+        target_roll_angle = rospy.get_param('target_roll_angle')  # in radians
 
-        print("Starting roll trick. AUV will roll for {} seconds".format(num_seconds_to_roll))
+        print("Starting roll trick. AUV will roll until it reaches {} radians".format(target_roll_angle))
 
         # Move downwards a bit before rolling the AUV
         self.control.move((None, None, -1))
 
-        # Store the state that the AUV shuld return to
-        before_state = [self.control.orientation.w, self.control.orientation.x, self.control.orientation.y, self.control.orientation.z]
-
-        # Get current time to track how long the AUV has been rolling
-        start = rospy.get_time()
+        # Store the initial roll angle
+        initial_roll_angle = self.control.get_roll()
 
         # Start rolling the AUV
         self.control.torque([1, 0, 0])
 
-        # Stop rolling after num_seconds_to_roll seconds
+        # Check the roll angle continuously until it reaches the target angle
         while True:
-            if (rospy.get_time() - start > num_seconds_to_roll):
-                self.control.torque([0, 0, 0])
+            current_roll_angle = self.control.get_roll()
+
+            # Check if the absolute difference between current and initial roll angles is greater than target angle
+            if abs(current_roll_angle - initial_roll_angle) >= target_roll_angle:
+                self.control.torque([0, 0, 0])  # Stop rolling
                 break
 
-        print("Before state", before_state)
-        
-        # Rotate back to the original position
-        self.control.rotateDelta(before_state)
+            rospy.sleep(0.1)  # Adjust the sleep duration as needed to control the frequency of checking
 
         self.control.flatten()
-            
+
         print("Completed")
-        return 'success'   
+        return 'success' 
     
     def execute_pitch(self):
         print("Starting pitch trick")
