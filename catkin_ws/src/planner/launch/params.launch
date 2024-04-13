@@ -13,6 +13,8 @@
     <param name="quali_gate_width" value="3" />
     <param name="gate_width" value="3" />
     <param name="num_seconds_to_roll" value="6" /> <!-- The number of seconds to keep rolling during tricks mission -->
+    <param name="target_roll_angle" value="0" /> <!-- The number of seconds to keep rolling during tricks mission -->
+    <param name="num_rolls" value="1" /> <!-- The number of seconds to keep rolling during tricks mission -->
 	<param name="red_side" value="right" /> <!-- The side of the object that red corresponds to -->
 	<param name="target_colour" value="red" /> <!-- The colour to target -->
     <param name="pinger_num" value="1" /> <!-- An integer from 1-4 corresponding to the pinger number to target -->
