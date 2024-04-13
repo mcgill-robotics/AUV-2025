@@ -116,6 +116,8 @@ def semiFinals():
     res = sm.execute()
     endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
+
+
 wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
@@ -130,6 +132,7 @@ if __name__ == '__main__':
         control = Controller(rospy.Time(0))
         sm = None
 
+        competition()
         print("Waiting {} seconds before starting mission...".format(rospy.get_param("mission_wait_time")))
         rospy.sleep(rospy.get_param("mission_wait_time"))
         print("Starting mission.")

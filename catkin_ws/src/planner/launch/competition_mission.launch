@@ -1,0 +1,4 @@
+<launch>
+     <include file="$(find planner)/launch/params.launch"/>
+     <node pkg="planner" name="mission" type="competition.py" respawn="False" output="screen"/>
+</launch>
