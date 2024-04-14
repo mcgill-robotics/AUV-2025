@@ -11,4 +11,13 @@
     <param name="buoy_centering_offset_distance" value="2"/>
 	<param name="buoy_circumnavigation_radius" value="1"/>
     <param name="quali_gate_width" value="3" />
+    <!-- TIME LIMIT FOR EACH MISSION (in secs) -->
+    <param name="coin_flip_time_limit" value="60">
+    <param name="gate_time_limit" value="120">
+    <param name="lane_marker_time_limit" value="60">
+    <param name="tricks_time_limit" value="60">
+    <param name="buoy_time_limit" value="180">
+    <param name="dropper_time_limit" value="120"> 
+    <param name="torpedo_time_limit" value="120">
+    <param name="octagon_time_limit" value="600"> 
 </launch>
