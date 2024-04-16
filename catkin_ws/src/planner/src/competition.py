@@ -17,25 +17,14 @@ from substates.navigate_buoy import *
 from substates.octagon_task import *
 
 
-# TO-DO:
-#    1. The master planner's sequence is not correct 
-#    2. Actually test
-#    3. There are some undefined variables
-
-# Questions:
-#    1. If master planner -> if fail then go to next mission or fails everything?
-#    2. What to do if mission goes over time limit? -> request preempt or move on to the next task?
-#    3. How to decide the tricks? -> user input or rosparam
-
-
 class Missions:
      def __init__(self, master_planner):
           self.master_planner = master_planner
-
+          
           self.mapping = ObjectMapper()
           self.state = StateTracker()
           self.control = Controller(rospy.Time(0))
-          
+
           self.coin_flip_time_limit = rospy.get_param("coin_flip_time_limit")
           self.gate_time_limit = rospy.get_param("gate_time_limit")
           self.lane_marker_time_limit = rospy.get_param("lane_marker_time_limit")
@@ -46,8 +35,9 @@ class Missions:
           self.octagon_time_limit = rospy.get_param("octagon_time_limit")
           self.mission_wait_time = rospy.get_param("mission_wait_time")
 
-          self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+          self.gate_width = rospy.get_param("gate_width")
 
+          self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
 
      def gate(self):
           global sm
@@ -55,13 +45,14 @@ class Missions:
 
           self.pub_mission_display.publish("Gate")
 
-          endMissio
+          target_color = rospy.get_param("target_color")
+
           timer = rospy.Timer(rospy.Duration(self.gate_time_limit), endMission, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_gate', InPlaceSearch(self.control, self.mapping, target_class="Gate", min_objects=1), 
                     transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-               smach.StateMachine.add('navigate_gate_go_through', NavigateGate(self.control, self.mapping, self.state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
+               smach.StateMachine.add('navigate_gate_go_through', NavigateGate(self.control, self.mapping, self.state, goThrough=True, target=target_color, gate_width=gate_width), 
                     transitions={'success': f"{'tricks' if self.master_planner else 'success'}", 'failure':'failure'})
           if not self.master_planner:  
                res = sm.execute()
@@ -163,7 +154,7 @@ class Missions:
 
 
      def mission_timout(self):
-          endMission
+          endMission("Timeout - mission is taking too long")
 
 
      def endMission(msg):
@@ -248,3 +239,4 @@ if __name__ == '__main__':
           if sm is not None: sm.request_preempt()
      finally:
           endPlanner()
+

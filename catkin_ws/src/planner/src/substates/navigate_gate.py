@@ -3,14 +3,14 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, mapping, state, target_symbol, goThrough, gate_width):
+    def __init__(self, control, mapping, state, target, goThrough, gate_width):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
-        if target_symbol not in ["Earth Symbol", "Abydos Symbol"]:
-            raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
-        self.target_symbol = target_symbol
+        if target not in ["red", "blue"]:
+            raise ValueError("Target must be red or blue.")
+        self.target = target
         self.goThrough = goThrough
         self.gate_width = gate_width
 
@@ -57,7 +57,7 @@ class NavigateGate(smach.State):
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
-        if self.target_symbol == "Earth Symbol": 
+        if self.target == "red": 
             if symbol >= 0.5:
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
