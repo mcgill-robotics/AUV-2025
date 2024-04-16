@@ -20,6 +20,8 @@ class BreadthFirstSearch(smach.State):
     def doBreadthFirstSearch(self):
         movement = [0,self.expansionAmt,0]
         while not rospy.is_shutdown():
+            if self.preempt_requested():
+                break
             #move left
             print("Moving by {}.".format(movement))
             self.control.moveDeltaLocal(movement, face_destination=True)
@@ -39,7 +41,11 @@ class BreadthFirstSearch(smach.State):
         self.searchThread = threading.Thread(target=self.doBreadthFirstSearch)
         self.searchThread.start()
         startTime = time.time()
-        while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
+        while startTime + self.timeout > time.time() and not rospy.is_shutdown():
+            if self.preempt_requested():
+                print("BFS being preempted")
+                self.service_preempt()
+                return 'failure'
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.searchThread.join()

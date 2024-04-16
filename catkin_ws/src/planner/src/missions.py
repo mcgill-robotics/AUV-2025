@@ -42,27 +42,30 @@ class Missions:
      def gate(self):
           global sm
           if not self.master_planner: sm = smach.StateMachine(outcomes=["success", "failure"])
-
           self.pub_mission_display.publish("Gate")
-
           target_color = rospy.get_param("target_color")
 
-          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), endMission, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), self.endMission, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_gate', InPlaceSearch(self.control, self.mapping, target_class="Gate", min_objects=1), 
                     transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-               smach.StateMachine.add('navigate_gate_go_through', NavigateGate(self.control, self.mapping, self.state, goThrough=True, target=target_color, gate_width=gate_width), 
+               smach.StateMachine.add('navigate_gate_go_through', NavigateGate(self.control, self.mapping, self.state, target_color, True, self.gate_width), 
                     transitions={'success': f"{'tricks' if self.master_planner else 'success'}", 'failure':'failure'})
+
+          timer.shutdown()
+
           if not self.master_planner:  
                res = sm.execute()
-               endMission("Finished gate mission. Result {}".format(res))              
+               self.endMission("Finished gate mission. Result {}".format(res))              
           
 
-     def lane_marker(self, mission_after=None):
+     def lane_marker(self, alone=True, mission_after=None):
           global sm
+          if alone: sm = smach.StateMachine(outcomes=["success", "failure"])
           self.pub_mission_display.publish("Lane")
-          timer = rospy.Timer(rospy.Duration(self.lane_marker_time_limit), mission_timout, oneshot=True)
+          
+          timer = rospy.Timer(rospy.Duration(self.lane_marker_time_limit), self.mission_timout, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_lane_marker', BreadthFirstSearch(self.control, self.mapping, target_class="Lane Marker", min_objects=1), 
@@ -73,7 +76,7 @@ class Missions:
 
           if not self.master_planner:
                res = sm.execute()
-               endMission("Finished lane marker. Result {}".format(res))
+               self.endMission(f"Finished lane marker. Result {res}")
      
      def buoy(self):
           global sm
@@ -81,7 +84,7 @@ class Missions:
 
           self.pub_mission_display.publish("Buoy")  
 
-          timer = rospy.Timer(rospy.Duration(self.buoy_time_limit), mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.buoy_time_limit), self.mission_timout, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_buoy', InPlaceSearch(self.control, self.mapping, target_class="Buoy", min_objects=1),
@@ -92,7 +95,7 @@ class Missions:
           
           if not self.master_planner:     
                res = sm.execute()
-               endMission("Finished buoy mission. Result {}".format(res))
+               self.endMission("Finished buoy mission. Result {}".format(res))
 
 
      def dropper(self):
@@ -101,7 +104,7 @@ class Missions:
 
           self.pub_mission_display.publish("Dropper")
 
-          timer = rospy.Timer(rospy.Duration(self.dropper_time_limit), mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.dropper_time_limit), self.mission_timout, oneshot=True)
 
           """ NOTHING FOR DROPPER YET """
 
@@ -112,7 +115,7 @@ class Missions:
 
           self.pub_mission_display.publish("Octagon")
 
-          timer = rospy.Timer(rospy.Duration(self.octagon_time_limit), mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.octagon_time_limit), self.mission_timout, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_octagon', LinearSearch(self.control, self.mapping, target_class="Octagon Table", min_objects=1), 
@@ -123,7 +126,7 @@ class Missions:
 
           if not self.master_planner: # not necessary since octagon is last task, but clearer code
                res = sm.execute() 
-               endMission("Finished buoy mission. Result {}".format(res))
+               self.endMission("Finished buoy mission. Result {}".format(res))
 
      def torpedo(self):
           global sm
@@ -131,7 +134,7 @@ class Missions:
 
           self.pub_mission_display.publish("Torpedo")
 
-          timer = rospy.Timer(rospy.Duration(self.torpedo_time_limit), mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.torpedo_time_limit), self.mission_timout, oneshot=True)
 
           """ NOTHING FOR TORPEDO YET """
      
@@ -142,7 +145,7 @@ class Missions:
 
           self.pub_mission_display.publish("Tricks")    
 
-          timer = rospy.Timer(rospy.Duration(self.tricks), mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.tricks), self.mission_timout, oneshot=True)
 
           with sm:
                smach.StateMachine.add('trick', Trick(self.control, trick_type=trick, num_full_spins=num_full_spins), 
@@ -150,25 +153,28 @@ class Missions:
 
           if not self.master_planner:
                res = sm.execute()
-               endMission("Finished trick. Result {}".format(res))
+               self.endMission("Finished trick. Result {}".format(res))
 
 
-     def mission_timout(self):
-          endMission("Timeout - mission is taking too long")
+     def mission_timout(self, timer_obj):
+          global sm
+          self.pub_mission_display.publish("Timeout")
+          sm.request_preempt()
+          self.endMission("Timeout - mission is taking too long")
 
 
-     def endMission(msg):
+     def endMission(self, msg):
           print(msg)
           self.control.freeze_pose()
 
      
-     def endPlanner(msg="Shutting down mission planner."):
-          pub_mission_display.publish("End")
+     def endPlanner(self, msg="Shutting down mission planner."):
+          self.pub_mission_display.publish("End")
           print(msg)
-          control.kill()
+          self.control.kill()
           
      
-     def execute_master_planner():
+     def execute_master_planner(self):
           global sm
           sm = smach.StateMachine(outcomes=["success", "failure"])
 
@@ -180,63 +186,62 @@ class Missions:
           
           self.gate()
           self.tricks("SOMETHING")
-          self.lane_marker(mission_after="find_buoy")
+          self.lane_marker(alone=False, mission_after="find_buoy")
           self.buoy()
-          self.lane_marker(mission_after="find_octagon")
+          self.lane_marker(alone=False, mission_after="find_octagon")
 
           res = sm.execute()
 
           self.master_planner = False
 
-          endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
+          self.endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
 
 
 if __name__ == '__main__':
      rospy.init_node("competition_planner", log_level=rospy.DEBUG)
-     rospy.on_shutdown(endPlanner)
-
+     
      try:
           sm = None
           master_planner = False
           missions = Missions(master_planner)
-
+          
+          rospy.on_shutdown(missions.endPlanner)
+          
           mission_choice = ""
           while mission_choice != "0":
                mission_choice = input("""
-                    [0] Exit
-                    [1] Master Planner 
-                    [2] Gate
-                    [3] Lane Marker
-                    [4] Tricks
-                    [5] Buoy
-                    [6] Dropper
-                    [7] Octagon
-                    [8] Torpedo
-               Select one of the available options:
-               """)
+     [0] Exit
+     [1] Gate
+     [2] Lane Marker
+     [3] Tricks
+     [4] Buoy
+     [5] Dropper
+     [6] Octagon
+     [7] Torpedo
+     [8] Master Planner 
+     Select one of the available options: """)
                if mission_choice == "0":
                     break
                elif mission_choice == "1":
-                    missions.execute_master_planner()
-               elif mission_choice == "2":
                     missions.gate()
+               elif mission_choice == "2":
+                    missions.lane_marker()
                elif mission_choice == "3":
-                    missions.lane()
-               elif mission_choice == "4":
                     missions.tricks()
-               elif mission_choice == "5":
+               elif mission_choice == "4":
                     missions.buoy()
-               elif mission_choice == "6":
+               elif mission_choice == "5":
                     missions.dropper()
-               elif mission_choice == "7":
+               elif mission_choice == "6":
                     missions.octagon()
-               elif mission_choice == "8":
+               elif mission_choice == "7":
                     missions.torpedo()
+               elif mission_choice == "8":
+                    missions.execute_master_planner()
                else:
                     print("Invalid input!!!")
      except KeyboardInterrupt:
           #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
           if sm is not None: sm.request_preempt()
      finally:
-          endPlanner()
-
+          missions.endPlanner()
