@@ -15,8 +15,6 @@ class InPlaceSearch(smach.State):
         self.target_class = target_class
         self.min_objects = min_objects
         self.detectedObject = False
-
-    def is_preempted():
         
 
     def doRotation(self):
