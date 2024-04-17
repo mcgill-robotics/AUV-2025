@@ -4,6 +4,7 @@ import rospy
 import smach
 import time
 import threading
+from std_msgs.msg import String
 
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class InPlaceSearch(smach.State):
@@ -15,6 +16,7 @@ class InPlaceSearch(smach.State):
         self.target_class = target_class
         self.min_objects = min_objects
         self.detectedObject = False
+        self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
         
 
     def doRotation(self):
@@ -39,6 +41,11 @@ class InPlaceSearch(smach.State):
 
     def execute(self, ud):
         print("Starting in-place search.")
+        if self.target_class == "Gate":
+            self.pub_mission_display.publish("Gate")
+        else:
+            self.pub_mission_display.publish("Buoy")
+
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         self.control.move((None, None, rospy.get_param("nominal_depth")))
         self.control.flatten()

@@ -4,6 +4,7 @@ import rospy
 import smach
 import time
 import threading
+from std_msgs.msg import String
 
 #search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class BreadthFirstSearch(smach.State):
@@ -16,6 +17,7 @@ class BreadthFirstSearch(smach.State):
         self.target_class = target_class
         self.min_objects = min_objects
         self.expansionAmt = rospy.get_param("bfs_expansion_size")
+        self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
 
     def doBreadthFirstSearch(self):
         movement = [0,self.expansionAmt,0]
@@ -35,6 +37,7 @@ class BreadthFirstSearch(smach.State):
 
     def execute(self, ud):
         print("Starting breadth-first search.")
+        self.pub_mission_display.publish("Lane")
         self.control.move((None, None, rospy.get_param("nominal_depth")))
         self.control.flatten()
 
