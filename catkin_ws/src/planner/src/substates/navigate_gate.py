@@ -14,6 +14,13 @@ class NavigateGate(smach.State):
         self.goThrough = goThrough
         self.gate_width = gate_width
 
+    def is_preempted(self):
+        if self.preempt_requested():
+            print("IPS being preempted")
+            self.service_preempt()
+            return 'failure'
+
+
     def execute(self, ud):
         print("Starting gate navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
@@ -32,6 +39,7 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
+        self.is_preempted()
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
@@ -46,6 +54,7 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
+        self.is_preempted()
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
@@ -57,6 +66,7 @@ class NavigateGate(smach.State):
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
+        self.is_preempted()
         if self.target == "red": 
             if symbol >= 0.5:
                 print("Going through left side")
@@ -72,6 +82,7 @@ class NavigateGate(smach.State):
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
 
+        self.is_preempted()
         self.control.moveDeltaLocal((5.0,0.0,0.0))
 
         print("Successfully passed through gate!")

@@ -12,6 +12,12 @@ class NavigateLaneMarker(smach.State):
         self.state = state
         self.origin_class = origin_class
 
+    def is_preempted(self):
+        if self.preempt_requested():
+            print("IPS being preempted")
+            self.service_preempt()
+            return 'failure'
+
     def execute(self, ud):
         print("Starting lane marker navigation.") 
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
@@ -31,6 +37,7 @@ class NavigateLaneMarker(smach.State):
         
         attempts = 0
         while lane_marker_obj[4] is None or lane_marker_obj[5] is None and not rospy.is_shutdown():
+            self.is_preempted()
             attempts += 1
             if attempts > 5: 
                 print("Lane marker angle could not be measured! Failed.")
@@ -42,9 +49,11 @@ class NavigateLaneMarker(smach.State):
         #Waiting 10 seconds and repeating to make sure it's correct
         print("Waiting to ensure correct measurement of lane marker")
         self.mapping.updateObject(lane_marker_obj)
+        self.is_preempted()
         self.control.move((lane_marker_obj[1], lane_marker_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
         rospy.sleep(rospy.get_param("object_observation_time"))
         self.mapping.updateObject(lane_marker_obj)
+        self.is_preempted()
         self.control.move((lane_marker_obj[1], lane_marker_obj[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
 
         heading1 = lane_marker_obj[4]
@@ -61,6 +70,7 @@ class NavigateLaneMarker(smach.State):
         print("Rotating to lane marker target heading.")
 
         #   rotate to that heading
+        self.is_preempted()
         if heading1_dot < heading2_dot: self.control.rotateEuler((0,0,heading2))
         else: self.control.rotateEuler((0,0,heading1))
 

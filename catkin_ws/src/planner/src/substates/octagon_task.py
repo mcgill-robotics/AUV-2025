@@ -14,6 +14,10 @@ class NavigateOctagon(smach.State):
         #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
         self.control.flatten()
+        if self.preempt_requested():
+                print("IPS being preempted")
+                self.service_preempt()
+                return 'failure'
 
         auv_current_position = (self.state.x, self.state.y)
        
@@ -40,5 +44,9 @@ class GoToOctagon(smach.State):
     def execute(self, ud):
         print("Moving up to avoid the buoy.")
         self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
+        if self.preempt_requested():
+                print("IPS being preempted")
+                self.service_preempt()
+                return 'failure'
         self.control.move((self.search_point[0], self.search_point[1], None), face_destination=True)
         return 'success'

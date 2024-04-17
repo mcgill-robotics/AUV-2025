@@ -45,7 +45,7 @@ class Missions:
           self.pub_mission_display.publish("Gate")
           target_color = rospy.get_param("target_color")
 
-          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), self.endMission, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), self.mission_timout, oneshot=True)
 
           with sm:
                smach.StateMachine.add('find_gate', InPlaceSearch(self.control, self.mapping, target_class="Gate", min_objects=1), 

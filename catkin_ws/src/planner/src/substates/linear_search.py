@@ -22,6 +22,10 @@ class LinearSearch(smach.State):
 
         startTime = time.time()
         while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
+            if self.preempt_requested():
+                print("IPS being preempted")
+                self.service_preempt()
+                return 'failure'
             self.control.moveDeltaLocal((rospy.get_param("linear_search_step_size"),0,0))
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True

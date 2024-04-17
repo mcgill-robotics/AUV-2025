@@ -16,12 +16,17 @@ class InPlaceSearch(smach.State):
         self.min_objects = min_objects
         self.detectedObject = False
 
+    def is_preempted():
+        
+
     def doRotation(self):
         turn_amt = (0,0,rospy.get_param("in_place_search_rotation_increment"))
         num_turns = 0
         num_full_turns = 0
 
         while not rospy.is_shutdown():
+            if self.preempt_requested():
+                break
             if (num_turns >= 360/abs(turn_amt[2])):
                 num_turns = 0
                 num_full_turns += 1
@@ -45,6 +50,10 @@ class InPlaceSearch(smach.State):
         print("Starting rotation.")
         startTime = time.time()
         while startTime + self.timeout > time.time() and not rospy.is_shutdown(): 
+            if self.preempt_requested():
+                print("IPS being preempted")
+                self.service_preempt()
+                return 'failure'
             if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.detectedObject = True
                 self.searchThread.join()

@@ -46,7 +46,7 @@ The planner package has several 'missions' depending on the context in which the
 
 #### To execute the RoboSub2022 mission (under development):
 
-	roslaunch planner mission.launch
+	roslaunch planner missions.launch
   
 This will execute any missions which are called in src/mission.py
 
