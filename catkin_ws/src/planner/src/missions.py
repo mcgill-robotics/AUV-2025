@@ -309,7 +309,7 @@ class Missions:
                elif first_state_sequence[i] == self.octagon_first_state:          self.octagon(mission_after=mission_after)
                elif first_state_sequence[i] == self.torpedo_first_state:          self.torpedo(mission_after=mission_after)
           
-          sm.execute()
+          res = sm.execute()
           sm.close()
           self.multiple_missions = False
 
