@@ -258,7 +258,7 @@ if __name__ == '__main__':
                else:
                     # If master planner - write default values for missions selected and tricls - ignore user
                     if is_master_planner:
-                         # gate -> tricks (yaw x 3) -> lane marker -> buoy -> lane marker -> ...
+                         # gate -> tricks (yaw x 3) -> lane marker -> buoy -> lane marker -> ... @TODO
                          missions_selected = [1, 3, 2, 4, 2]
                          trick_selected = ["yaw"]
                          num_spins_trick_selected = [3]

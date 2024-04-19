@@ -10,7 +10,7 @@
     <param name="mission_wait_time" value="30"/> <!-- time to wait before actually starting mission (for comp) -->
     <param name="buoy_centering_offset_distance" value="2"/>
 	<param name="buoy_circumnavigation_radius" value="1"/>
-    <param name="quali_gate_width" value="3"/>
+    <param name="quali_gate_width" value="2"/>
     <param name="gate_width" value="3"/>
     <!-- TIME LIMIT FOR EACH MISSION (in secs) -->
     <param name="coin_flip_time_limit" value="60"/>
