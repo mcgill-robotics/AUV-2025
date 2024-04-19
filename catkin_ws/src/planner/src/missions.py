@@ -43,100 +43,64 @@ class Missions:
 
           self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
 
-          # Name of first state for each mission
-          self.gate_first_state = "find_gate"
-          self.lane_first_time_first_state = "find_lane_marker"
-          self.lane_second_time_first_state = "find_second_lane_marker"
-          self.buoy_first_state = "find_buoy"
-          self.octagon_first_state = "find_octagon"
-          self.trick_first_state = "trick"
-          self.dropper_first_state = ""
-          self.torpedo_first_state = ""
 
-
-
-     def gate(self, mission_after=None):
+     def gate(self, first_state_name, count, mission_after):
           global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()
           
           target_color = rospy.get_param("target_color")
 
-          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), self.mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.gate_time_limit), self.mission_timeout, oneshot=True)
 
-          target_state_name = mission_after if (self.multiple_missions and mission_after is not None) else "success"
+          first_state_name = first_state_name + count
+          second_state_name = "navigate_gate_go_through" + count
+          target_state_name = mission_after if mission_after is not None else "success"
 
-          smach.StateMachine.add(self.gate_first_state, InPlaceSearch(self.control, self.mapping, target_class="Gate", min_objects=1), 
-               transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-          smach.StateMachine.add('navigate_gate_go_through', NavigateGate(self.control, self.mapping, self.state, target_color, True, self.gate_width), 
-               transitions={'success': target_state_name, 'failure':'failure'})
+          smach.StateMachine.add(first_state_name, InPlaceSearch(self.control, self.mapping, target_class="Gate", min_objects=1), 
+               transitions={"success": second_state_name, "failure": "failure"})
+          smach.StateMachine.add(second_state_name, NavigateGate(self.control, self.mapping, self.state, target_color, True, self.gate_width), 
+               transitions={"success": target_state_name, "failure":"failure"})
 
-          timer.shutdown()
-
-          if not self.multiple_missions:  
-               res = sm.execute()
-               sm.close()
-               self.endMission("Finished gate mission. Result {}".format(res))              
+          timer.shutdown()           
           
 
-     def lane_marker(self, second_lane_marker=False, alone=True, mission_after=None):
+     def lane_marker(self, first_state_name, count, mission_after):
           global sm
-          if alone: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()          
           
-          timer = rospy.Timer(rospy.Duration(self.lane_marker_time_limit), self.mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.lane_marker_time_limit), self.mission_timeout, oneshot=True)
           
-          first_state_name = self.lane_second_time_first_state if second_lane_marker else self.lane_first_time_first_state
-          second_state_name = "navigate_second_lane_marker" if second_lane_marker else "navigate_lane_marker"
-          target_state_name = mission_after if (self.multiple_missions and mission_after is not None) else "success"
+          first_state_name = first_state_name + count
+          second_state_name = "navigate_lane_marker" + count
+          target_state_name = mission_after if mission_after is not None else "success"
 
           smach.StateMachine.add(first_state_name, BreadthFirstSearch(self.control, self.mapping, target_class="Lane Marker", min_objects=1), 
-                    transitions={'success': second_state_name, 'failure': 'failure'})
-
+                    transitions={"success": second_state_name, "failure": "failure"})
           smach.StateMachine.add(second_state_name, NavigateLaneMarker(self.control, self.mapping, self.state, origin_class=""), 
-                    transitions={"success": target_state_name, 'failure': 'failure'})
+                    transitions={"success": target_state_name, "failure": "failure"})
 
           timer.shutdown()
 
-          if not self.multiple_missions:
-               res = sm.execute()
-               sm.close()
-               self.endMission(f"Finished lane marker. Result {res}")
      
-     def buoy(self, mission_after=None):
+     def buoy(self, first_state_name, count, mission_after):
           global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()
 
-          timer = rospy.Timer(rospy.Duration(self.buoy_time_limit), self.mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.buoy_time_limit), self.mission_timeout, oneshot=True)
 
-          target_state_name = "find_second_lane_marker" if self.multiple_missions else "success"
+          first_state_name = first_state_name + count
+          second_state_name = "navigate_buoy" + count
+          target_state_name = mission_after if mission_after is not None else "success"
 
-          smach.StateMachine.add(self.buoy_first_state, InPlaceSearch(self.control, self.mapping, target_class="Buoy", min_objects=1),
-                    transitions={'success': 'navigate_buoy', 'failure': 'failure'})
-          smach.StateMachine.add('navigate_buoy', NavigateBuoy(self.control, self.mapping, self.state), 
-                    transitions={'success': target_state_name, 'failure':'failure'})
+          smach.StateMachine.add(first_state_name, InPlaceSearch(self.control, self.mapping, target_class="Buoy", min_objects=1),
+                    transitions={"success": second_state_name, "failure": "failure"})
+          smach.StateMachine.add(second_state_name, NavigateBuoy(self.control, self.mapping, self.state), 
+                    transitions={"success": target_state_name, "failure":"failure"})
           
           timer.shutdown()
-          
-          if not self.multiple_missions:     
-               res = sm.execute()
-               sm.close()
-               self.endMission("Finished buoy mission. Result {}".format(res))
 
 
-     def dropper(self, mission_after=None):          
-          # self.pub_mission_display.publish("Dropper")
-
+     def dropper(self, first_state_name, count, mission_after):          
           global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()
 
-          timer = rospy.Timer(rospy.Duration(self.dropper_time_limit), self.mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.dropper_time_limit), self.mission_timeout, oneshot=True)
 
           """
           ADD SOME TRANSITIONS HERE
@@ -144,75 +108,55 @@ class Missions:
 
           timer.shutdown()
 
-          if not self.multiple_missions:     
-               res = sm.execute()
-               sm.close()
-               self.endMission("Finished dropper mission. Result {}".format(res))
 
-
-     def octagon(self, mission_after=None):
+     def octagon(self, first_state_name, count, mission_after):
           global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()
 
-          timer = rospy.Timer(rospy.Duration(self.octagon_time_limit), self.mission_timout, oneshot=True)
+          first_state_name = first_state_name + count
+          second_state_name = "navigate_octagon" + count
+          target_state_name = mission_after if mission_after is not None else "success"
 
-          smach.StateMachine.add(self.octagon_first_state, LinearSearch(self.control, self.mapping, target_class="Octagon Table", min_objects=1), 
-               transitions={'success': 'navigate_octagon', 'failure':'failure'})
-          smach.StateMachine.add('navigate_octagon', NavigateOctagon(self.control, self.mapping, self.state), 
-               transitions={'success': 'success', 'failure':'failure'}) # last task of the competition - no need for if self.multiple_missions
+          timer = rospy.Timer(rospy.Duration(self.octagon_time_limit), self.mission_timeout, oneshot=True)
+
+          smach.StateMachine.add(first_state_name, LinearSearch(self.control, self.mapping, target_class="Octagon Table", min_objects=1), 
+               transitions={"success": second_state_name, "failure":"failure"})
+          smach.StateMachine.add(second_state_name, NavigateOctagon(self.control, self.mapping, self.state), 
+               transitions={"success": target_state_name, "failure":"failure"}) # last task of the competition - no need for if self.multiple_missions
 
           timer.shutdown()
 
-          if not self.multiple_missions: # not necessary since octagon is last task, but clearer code
-               res = sm.execute() 
-               sm.close()
-               self.endMission("Finished buoy mission. Result {}".format(res))
 
-     def torpedo(self, mission_after=None):
-          # self.pub_mission_display.publish("Torpedo")
+     def torpedo(self, first_state_name, count, mission_after):
           global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()
 
-          timer = rospy.Timer(rospy.Duration(self.torpedo_time_limit), self.mission_timout, oneshot=True)
+          timer = rospy.Timer(rospy.Duration(self.torpedo_time_limit), self.mission_timeout, oneshot=True)
 
           """
           ADD SOME TRANSITIONS HERE
           """
 
           timer.shutdown()
-
-          if not self.multiple_missions:     
-               res = sm.execute()
-               sm.close()
-               self.endMission("Finished torpedo mission. Result {}".format(res))
      
 
-     def trick(self, trick, num_full_spins, mission_after=None):
-          global sm
-          if not self.multiple_missions: 
-               sm = smach.StateMachine(outcomes=["success", "failure"])
-               sm.open()            
+     def trick(self, first_state_name, count, mission_after, trick, num_full_spins):
+          global sm                      
 
-          timer = rospy.Timer(rospy.Duration(self.tricks_time_limit), self.mission_timout, oneshot=True)
+          first_state_name = first_state_name + count
+          target_state_name = mission_after if mission_after is not None else "success"
 
-          target_state_name = mission_after if (self.multiple_missions and mission_after is not None) else "success"
+          timer = rospy.Timer(rospy.Duration(self.tricks_time_limit), self.mission_timeout, oneshot=True)
 
-          smach.StateMachine.add(self.trick_first_state, Trick(self.control, trick, num_full_spins), 
-               transitions={'success': target_state_name, 'failure':'failure'})
+          smach.StateMachine.add(first_state_name, Trick(self.control, trick, num_full_spins), 
+               transitions={"success": target_state_name, "failure":"failure"})
           
           timer.shutdown()
 
-          if not self.multiple_missions:
-               res = sm.execute()
-               sm.close()
-               self.endMission("Finished trick. Result {}".format(res))
+
+     def bins(self, first_state_name, count, mission_after):
+          pass
 
      
-     def quali(self):
+     def quali(self, first_state_name, count, mission_after):
           print("Submerging")
           self.controls.move((None, None, self.nominal_depth))
 
@@ -236,88 +180,8 @@ class Missions:
           print("Returning to origin")
           self.controls.moveDeltaLocal((17, 0, 0))
 
-     
-     def execute_master_planner(self):
-          self.pub_mission_display.publish("Master")
 
-          global sm
-          sm = smach.StateMachine(outcomes=["success", "failure"])
-          sm.open()
-
-          self.multiple_missions = True
-
-          print(f"Waiting {self.mission_wait_time} seconds before starting master planner...")
-          rospy.sleep(self.mission_wait_time)
-          print("Starting master planner")
-          
-          self.gate(mission_after=self.trick_first_state)
-          self.trick("yaw", 3, mission_after=self.lane_first_time_first_state)
-          self.lane_marker(alone=False, mission_after=self.buoy_first_state)
-          self.buoy(mission_after=self.lane_second_time_first_state)
-          self.lane_marker(second_lane_marker=True, alone=False)
-
-          res = sm.execute()
-          sm.close()
-
-          self.multiple_missions = False
-
-          self.endPlanner("Finished Robosub with result: " + str(res) + "!!!!!!!!!")
-
-     
-     def custom(self, custom_choices):
-          self.pub_mission_display.publish("Custom")
-
-          global sm
-          sm = smach.StateMachine(outcomes=["success", "failure"])
-          sm.open()
-
-          self.multiple_missions = True
-
-          first_state_sequence = []
-          lane_first_time = True
-
-          for i in range(len(custom_choices)):
-               if custom_choices[i] == "1":   first_state_sequence.append(self.gate_first_state)
-               elif custom_choices[i] == "2": 
-                    if lane_first_time:       first_state_sequence.append(self.lane_first_time_first_state)
-                    else:                     first_state_sequence.append(self.lane_second_time_first_state)
-                    lane_first_time = False
-               elif custom_choices[i] == "3": first_state_sequence.append(self.trick_first_state)
-               elif custom_choices[i] == "4": first_state_sequence.append(self.buoy_first_state)
-               elif custom_choices[i] == "5": first_state_sequence.append(self.dropper_first_state)
-               elif custom_choices[i] == "6": first_state_sequence.append(self.octagon_first_state)
-               elif custom_choices[i] == "7": first_state_sequence.append(self.torpedo_first_state)
-               else:
-                    print("Invalid input!!!")
-                    sm.close()
-                    return
-
-          len_first_state_sequence = len(first_state_sequence)
-
-          for i in range(len_first_state_sequence):
-               # Check if last mission
-               if i == len_first_state_sequence - 1:
-                    mission_after = None
-               else:
-                    mission_after = first_state_sequence[i + 1]
-               if first_state_sequence[i] == self.gate_first_state:               self.gate(mission_after=mission_after)
-               elif first_state_sequence[i] == self.lane_first_time_first_state:  self.lane_marker(alone=False, mission_after=mission_after)
-               elif first_state_sequence[i] == self.lane_second_time_first_state: self.lane_marker(alone=False, mission_after=mission_after, second_lane_marker=True)
-               elif first_state_sequence[i] == self.trick_first_state:            self.trick("yaw", 3, mission_after=mission_after)
-               elif first_state_sequence[i] == self.buoy_first_state:             self.buoy(mission_after=mission_after)
-               elif first_state_sequence[i] == self.dropper_first_state:          self.dropper(mission_after=mission_after)
-               elif first_state_sequence[i] == self.octagon_first_state:          self.octagon(mission_after=mission_after)
-               elif first_state_sequence[i] == self.torpedo_first_state:          self.torpedo(mission_after=mission_after)
-          
-          res = sm.execute()
-          sm.close()
-          self.multiple_missions = False
-
-          self.endPlanner("Finished custom mission with result: " + str(res))
-
-
-
-     def mission_timout(self, timer_obj):
+     def mission_timeout(self, timer_obj):
           global sm
           self.pub_mission_display.publish("Timeout")
           sm.request_preempt()
@@ -338,58 +202,130 @@ class Missions:
 
 if __name__ == '__main__':
      rospy.init_node("competition_planner", log_level=rospy.DEBUG)
+
+     sm = None
+     missions = Missions()
+     
+     rospy.on_shutdown(missions.endPlanner)
+
+     mission_options = [
+          # (mission option, corresponding function, default first state name, num of times selected by user)
+          ["[0] Exit", None, None, 0],
+          ["[1] Gate", missions.gate, "find_gate", 0],
+          ["[2] Lane Marker", missions.lane_marker, "find_lane_marker", 0],
+          ["[3] Trick", missions.trick, "trick", 0],
+          ["[4] Buoy", missions.buoy, "find_buoy", 0],
+          ["[5] Octagon", missions.octagon, "find_octagon", 0],
+          ["[6] Torpedo", missions.torpedo, "", 0],
+          ["[7] Dropper", missions.dropper, "", 0],
+          ["[8] Bins", missions.bins, "", 0],
+          ["[9] Quali", missions.quali, None, 0],
+          ["[10] Master Planner", None, None, 0]
+     ]
+
+     trick_options = [
+          ["[0] Roll", "roll"],
+          ["[1] Pitch", "pitch"],
+          ["[2] Yaw", "yaw"]
+     ]
      
      try:
-          sm = None
-          missions = Missions()
-          
-          rospy.on_shutdown(missions.endPlanner)
-          
-          mission_choice = ""
-          while mission_choice != "0":
-               mission_choice = input("""
-     [0] Exit
-     [1] Gate
-     [2] Lane Marker
-     [3] Trick
-     [4] Buoy
-     [5] Dropper
-     [6] Octagon
-     [7] Torpedo
-     [8] Master Planner 
-     [9] Quali
-     [10] Custom
-     Select one of the available missions: """)
-               if mission_choice == "0": break
-               elif mission_choice == "1": missions.gate()
-               elif mission_choice == "2": missions.lane_marker()
-               elif mission_choice == "3":
+          done = False
+          while not done:
+               # Print all mission options
+               for option in mission_options:
+                    print(option[0])
 
-                    trick_choice = input("""
-     [0] Roll
-     [1] Pitch
-     [2] Yaw
-     Select one of the available trick: """)
-                    trick_times_choice = input("""
-     Write the number of times to perform this trick (e.g., 2):  """)
-                    trick = ""
-                    if trick_choice == "0": trick = "roll"
-                    elif trick_choice == "1": trick = "pitch"
-                    elif trick_choice == "2": trick = "yaw"
-                    else: continue
-                    missions.trick(trick, int(trick_times_choice))
+               # Check if all selected options are valid
+               invalid_answer = True
+               while invalid_answer:
+                    missions_selected = list(map(int, input("Select missions (separated by comma [1,2,3]): ").split(",")))
+                    if len(missions_selected) > 0 and all(0 <= selected < len(mission_options) for selected in missions_selected):
+                         invalid_answer = False
+                    else:
+                         print("Invalid answer!!!")
+               
+               is_master_planner = False
+               if 10 in missions_selected:
+                    is_master_planner = True
 
-               elif mission_choice == "4": missions.buoy()
-               elif mission_choice == "5": missions.dropper()
-               elif mission_choice == "6": missions.octagon()
-               elif mission_choice == "7": missions.torpedo()
-               elif mission_choice == "8": missions.execute_master_planner()
-               elif mission_choice == "9": missions.quali()
-               elif mission_choice == "10": 
-                    custom_sequence_choice = input("""
-     Select the missions from 1-7 (e.g., 123): """) 
-                    missions.custom(custom_sequence_choice)
-               else: print("Invalid input!!!")
+               sm = smach.StateMachine(outcomes=["success", "failure"])
+               sm.open()  
+               
+               # Exit
+               if 0 in missions_selected: 
+                    done = True
+               else:
+                    # If master planner - write default values for missions selected and tricls - ignore user
+                    if is_master_planner:
+                         # gate -> tricks (yaw x 3) -> lane marker -> buoy -> lane marker -> ...
+                         missions_selected = [1, 3, 2, 4, 2]
+                         trick_selected = ["yaw"]
+                         num_spins_trick_selected = [3]
+                         is_master_planner = False
+                    else:
+                         # Check if trick is in selected missions -> if yes, ask which tricks and how many times
+                         total_num_tricks = missions_selected.count(3)
+                         trick_selected = []
+                         num_spins_trick_selected = []
+                         if total_num_tricks > 0:
+                              # Print all trick options
+                              for trick in trick_options:
+                                   print(trick)
+                              # Check if the number of tricks are the same across all answers
+                              invalid_answer = True
+                              while invalid_answer:
+                                   trick_input = list(map(int, input("Select tricks (separated by comma [0,1,1]): ").split(",")))
+                                   trick_selected = [trick_options[i][1] for i in trick_input]
+                                   num_spins_trick_selected = list(map(int, input("Select number of times to perform each trick (separated by comma): ").split(",")))
+                                   if len(trick_selected) != total_num_tricks or len(num_spins_trick_selected) != total_num_tricks:
+                                        print("Invalid number of tricks!!!")
+                                   else: 
+                                        invalid_answer = False
+
+                    len_mission_selected = len(missions_selected)
+                    # If more than one mission
+                    if len_mission_selected > 1:
+                         missions.multiple_missions = True
+
+                    trick_i = 0
+                    for i in range(len_mission_selected):
+                         # increment specific mission count
+                         mission_options[missions_selected[i]][3] += 1
+
+                         current_mission_name = mission_options[missions_selected[i]][2]
+                         current_mission_cout = mission_options[missions_selected[i]][3]
+                         # if last mission -> no mission after; else -> get state name of next mission
+                         if i == len_mission_selected - 1:
+                              mission_after = None
+                         else:
+                              next_mission_selected = missions_selected[i + 1]
+                              mission_after = mission_options[next_mission_selected][2] + str(mission_options[next_mission_selected][3] + 1)
+                         
+                         # If current mission is trick
+                         if missions_selected[i] == 3:
+                              current_trick = trick_selected[trick_i] # trick name (e.g., "roll")
+                              times_current_trick = num_spins_trick_selected[trick_i] # num of times to perform trick (e.g. roll twice)
+                              mission_options[missions_selected[i]][1](
+                                   first_state_name=current_mission_name, 
+                                   count=str(current_mission_cout),
+                                   mission_after=mission_after,
+                                   trick=current_trick, 
+                                   num_full_spins=times_current_trick
+                              ) 
+                              trick_i += 1
+                         else:
+                              mission_options[missions_selected[i]][1](
+                                   first_state_name=current_mission_name,
+                                   count=str(current_mission_cout),
+                                   mission_after=mission_after
+                              )  
+
+               res = sm.execute()
+               sm.close()
+               missions.endPlanner("Finished planner with result: " + str(res) + "!!!!!!!!!")
+                    
+                         
      except KeyboardInterrupt:
           #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
           if sm is not None: sm.request_preempt()
