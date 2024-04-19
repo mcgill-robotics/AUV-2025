@@ -21,4 +21,5 @@
     <param name="dropper_time_limit" value="120"/> 
     <param name="torpedo_time_limit" value="120"/>
     <param name="octagon_time_limit" value="600"/> 
+    <param name="overall_time_limit" value="600"/>  <!-- after this time head straight to octagon and surface -->
 </launch>
