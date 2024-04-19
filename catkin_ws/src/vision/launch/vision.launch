@@ -44,7 +44,7 @@
     <param name="min_distance_for_valid_point_cloud_point" value="0.5" />
     <param name="max_counts_per_label" value='{"Buoy":1, "Gate":1, "Lane Marker":2, "Octagon Table":1}'/>
     <param name="down_cam_class_name_mappings" value="['Lane Marker', 'Octagon Table']"/>
-    <param name="front_cam_class_name_mappings" value="['N/A', 'Buoy', 'N/A', 'Gate', 'Lane Marker', 'Octagon', 'Octagon Table']"/>
+    <param name="front_cam_class_name_mappings" value="['Buoy', 'Gate', 'Lane Marker']"/>
     <param name="lane_marker_downscaling_size" value="100" /> <!-- largest size of either axis of image after downscaling -->
     <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
     <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
