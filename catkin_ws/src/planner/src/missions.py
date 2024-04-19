@@ -110,7 +110,9 @@ class Missions:
         global sm
 
         timer = rospy.Timer(
-            rospy.Duration(self.buoy_time_limit), self.mission_timeout, oneshot=True
+            rospy.Duration(self.buoy_time_limit), 
+            self.mission_timeout,
+            oneshot=True
         )
 
         first_state_name = first_state_name + count
@@ -140,8 +142,8 @@ class Missions:
         )
 
         """
-          ADD SOME TRANSITIONS HERE
-          """
+        ADD SOME TRANSITIONS HERE
+        """
 
         timer.shutdown()
 
@@ -191,8 +193,8 @@ class Missions:
         target_state_name = mission_after if mission_after is not None else "success"
 
         timer = rospy.Timer(
-            rospy.Duration(self.tricks_time_limit),
-            lambda t: self.mission_timeout(t, preempt_variable),
+            rospy.Duration(self.tricks_time_limit), 
+            self.mission_timeout, 
             oneshot=True,
         )
 
@@ -286,18 +288,8 @@ if __name__ == "__main__":
             # Check if all selected options are valid
             invalid_answer = True
             while invalid_answer:
-                missions_selected = list(
-                    map(
-                        int,
-                        input("Select missions (separated by comma [1,2,3]): ").split(
-                            ","
-                        ),
-                    )
-                )
-                if len(missions_selected) > 0 and all(
-                    0 <= selected < len(mission_options)
-                    for selected in missions_selected
-                ):
+                missions_selected = list(map(int, input("Select missions (separated by comma [1,2,3]): ").split(",")))
+                if len(missions_selected) > 0 and all(0 <= selected < len(mission_options) for selected in missions_selected):
                     invalid_answer = False
                 else:
                     print("Invalid answer!!!")
@@ -327,9 +319,7 @@ if __name__ == "__main__":
                     mission_after = None
                 else:
                     next_mission_selected = missions_selected[i + 1]
-                    mission_after = mission_options[next_mission_selected][2] + str(
-                        mission_options[next_mission_selected][3] + 1
-                    )
+                    mission_after = mission_options[next_mission_selected][2] + str(mission_options[next_mission_selected][3] + 1)
 
                 # If current mission is trick
                 mission_options[missions_selected[i]][1](
