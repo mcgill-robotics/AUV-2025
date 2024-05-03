@@ -61,11 +61,11 @@ After build is complete, make the packages visible to ROS
 
 Compile teensy (for debugging embedded code)
 
-	catkin build --no-deps  propulsion --make-args compile_teensy
+	catkin build --no-deps  propulsion --make-args propulsion_embedded_compile_teensy
 
 Flash teensy
 
-	catkin build --no-deps  propulsion --make-args upload_teensy
+	catkin build --no-deps  propulsion --make-args propulsion_embedded_upload_teensy
 
 Launch all package nodes
 
