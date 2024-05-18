@@ -13,6 +13,7 @@ KERNEL=$(echo $CMD_OUTPUT | grep -oP 'KERNEL=="\K[^"]+' | head -n 1 | sed 's/[0-
 SUBSYSTEM=$(echo $CMD_OUTPUT | grep -oP 'SUBSYSTEM=="\K[^"]+' | head -n 1)
 IDVENDOR=$(echo $CMD_OUTPUT | grep -oP 'idVendor}=="\K[^"]+' | head -n 1)
 IDPRODUCT=$(echo $CMD_OUTPUT | grep -oP 'idProduct}=="\K[^"]+' | head -n 1)
+# USE serial ATTR
 
 if [[ -e "$dev_name.rules" ]]; then
     echo "WARN: Rules file $dev_name.rules already exists. Overwrite? [Y/n] "
