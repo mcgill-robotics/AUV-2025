@@ -6,10 +6,9 @@ import numpy as np
 from auv_msgs.msg import DeadReckonReport, UnityState
 from geometry_msgs.msg import Quaternion, Vector3
 from sbg_driver.msg import SbgImuData, SbgEkfQuat
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Int32 # IDK
 from tf import transformations
 import quaternion
-
 DEG_PER_RAD = (180 / np.pi)
 
 def cb_unity_state(msg):
@@ -34,7 +33,7 @@ def cb_unity_state(msg):
 
     # DVL - NWU
     if isDVLActive:
-        pub_dvl_sensor_status.publish(Bool(True))
+        pub_dvl_sensor_status.publish(Int32(True))
         q_NWU_auv = q_NWU_NED * q_NED_imunominal  * q_imunominal_auv
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
@@ -58,10 +57,12 @@ def cb_unity_state(msg):
         dvl_msg.pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
         dvl_msg.yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
         pub_dvl_sensor.publish(dvl_msg)
+    else:
+        pub_dvl_sensor_status.publish(Int32(False))
 
     # IMU - NED
     if isIMUActive:
-        pub_imu_sensor_status.publish(Bool(True))
+        pub_imu_sensor_status.publish(Int32(True))
         sbg_quat_msg = SbgEkfQuat()
 
         q_NED_imu = q_NED_imunominal * q_imunominal_imu
@@ -72,13 +73,17 @@ def cb_unity_state(msg):
         sbg_data_msg = SbgImuData()
         sbg_data_msg.gyro = Vector3(twist_angular_x, twist_angular_y, twist_angular_z)
         pub_imu_data_sensor.publish(sbg_data_msg)
+    else:
+        pub_imu_sensor_status.publish(Int32(False))
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        pub_depth_sensor_status.publish(Bool(True))
+        pub_depth_sensor_status.publish(Int32(True))
         depth_msg = Float64()
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
+    else:
+        pub_depth_sensor_status.publish(Int32(False))
 
     
 
@@ -88,7 +93,6 @@ if __name__ == '__main__':
     rospy.init_node('unity_bridge')
 
     # Load parameters
-    
     q_dvlnominal_dvl_w = rospy.get_param("q_dvlnominal_dvl_w")
     q_dvlnominal_dvl_x = rospy.get_param("q_dvlnominal_dvl_x")
     q_dvlnominal_dvl_y = rospy.get_param("q_dvlnominal_dvl_y")
@@ -118,9 +122,9 @@ if __name__ == '__main__':
 
     # TODO: ADD DVL VELOCITY
     
-    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
-    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
-    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Int32, queue_size=1)
+    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Int32, queue_size=1)
+    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Int32, queue_size=1)
 
     pub_dvl_sensor = rospy.Publisher('/sensors/dvl/pose', DeadReckonReport, queue_size=1)
     pub_depth_sensor = rospy.Publisher('/sensors/depth/z', Float64, queue_size=1)

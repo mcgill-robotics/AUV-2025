@@ -8,7 +8,7 @@ from tf2_ros import TransformBroadcaster
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
 from sensors import DepthSensor, IMU, DVL
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Int32
 from rosgraph_msgs.msg import Clock
 
 DEG_PER_RAD = 180 / np.pi
@@ -101,9 +101,9 @@ if __name__ == '__main__':
     pub_theta_z = rospy.Publisher('/state/theta/z', Float64, queue_size=1)
     pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)
 
-    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Bool, queue_size=1)
-    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Bool, queue_size=1)
-    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Bool, queue_size=1)
+    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Int32, queue_size=1)
+    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Int32, queue_size=1)
+    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Int32, queue_size=1)
 
     tf_broadcaster = TransformBroadcaster()
 
