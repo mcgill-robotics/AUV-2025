@@ -44,17 +44,17 @@ void Sensor::update_last_state() {
     last_unique_state_time = ros::Time::now();
 }
 
-bool Sensor::is_active() {
-    if(ros::Time::now() == ros::Time(0,0)) return false; //this equality might be sus but idk
+int Sensor::is_active() {
+    if(ros::Time::now() == ros::Time(0,0)) return 0; //this equality might be sus but idk
     ros::Time now = ros::Time::now();
     if ((now - last_unique_state_time) > time_before_considered_inactive) {
         if(now - last_error_message_time > ros::Duration(1.0)) {
             last_error_message_time = ros::Time::now();
             ROS_WARN("%s has been inactive for %s seconds",sensor_name.c_str(),std::to_string(time_before_considered_inactive.sec).c_str());
         } 
-        return false;
+        return 0;
     }
-    return true;
+    return 1;
 }
 
 Dvl::Dvl(DVL_PARAMS params, std::string name, bool u_o_c, Imu* _imu) : Sensor(name, u_o_c), imu(_imu) {
@@ -96,7 +96,7 @@ void Dvl::dr_cb(const auv_msgs::DeadReckonReport::ConstPtr& msg) {
     update_last_state();
 }
 
-bool Dvl::is_active() {
+int Dvl::is_active() {
     return valid_q_nwu_dvlref && Sensor::is_active();
 }
 
@@ -119,7 +119,7 @@ void Imu::quat_cb(const sbg_driver::SbgEkfQuat::ConstPtr& msg) {
     update_last_state();
 }
 
-bool Imu::is_active() {
+int Imu::is_active() {
     return Sensor::is_active() && seen_ang_vel && seen_quat;
 }
 

@@ -51,15 +51,15 @@ class Sensor():
             self.last_state = current_state
         
     def isActive(self):
-        if rospy.get_time() == 0: return False
-        if not self.hasValidData(): return False #check that state is complete
+        if rospy.get_time() == 0: return 0
+        if not self.hasValidData(): return 0 #check that state is complete
         if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive: #check that state has changed in last N seconds
             if rospy.get_time() - self.last_error_message_time > 1:
                 self.last_error_message_time = rospy.get_time()
                 rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
-            return False
+            return 0
         else:
-            return True
+            return 1
 
     def hasValidData(self):
         raise NotImplementedError    

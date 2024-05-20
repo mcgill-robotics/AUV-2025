@@ -33,7 +33,7 @@ def cb_unity_state(msg):
 
     # DVL - NWU
     if isDVLActive:
-        pub_dvl_sensor_status.publish(Int32(True))
+        pub_dvl_sensor_status.publish(1)
         q_NWU_auv = q_NWU_NED * q_NED_imunominal  * q_imunominal_auv
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
@@ -58,11 +58,11 @@ def cb_unity_state(msg):
         dvl_msg.yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
         pub_dvl_sensor.publish(dvl_msg)
     else:
-        pub_dvl_sensor_status.publish(Int32(False))
+        pub_dvl_sensor_status.publish(0)
 
     # IMU - NED
     if isIMUActive:
-        pub_imu_sensor_status.publish(Int32(True))
+        pub_imu_sensor_status.publish(1)
         sbg_quat_msg = SbgEkfQuat()
 
         q_NED_imu = q_NED_imunominal * q_imunominal_imu
@@ -74,16 +74,16 @@ def cb_unity_state(msg):
         sbg_data_msg.gyro = Vector3(twist_angular_x, twist_angular_y, twist_angular_z)
         pub_imu_data_sensor.publish(sbg_data_msg)
     else:
-        pub_imu_sensor_status.publish(Int32(False))
+        pub_imu_sensor_status.publish(0)
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        pub_depth_sensor_status.publish(Int32(True))
+        pub_depth_sensor_status.publish(1)
         depth_msg = Float64()
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
     else:
-        pub_depth_sensor_status.publish(Int32(False))
+        pub_depth_sensor_status.publish(0)
 
     
 
