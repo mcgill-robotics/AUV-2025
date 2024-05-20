@@ -87,6 +87,15 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+# Install ZED camera deps
+COPY zed_sdk_install_jetson.run zed_sdk_install_jetson.run
+RUN apt-get update && \
+    apt-get install -y zstd \
+    && apt-get install -y ros-noetic-usb-cam \
+    && pip3 install bitstring \
+    && ./zed_sdk_install_jetson.run -- silent \
+    && rm zed_sdk_install_jetson.run
+
 RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
     cd torchvision && \
     git checkout release/0.16 && \
