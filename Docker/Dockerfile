@@ -25,8 +25,22 @@ RUN apt-get update && apt-get install -y wget \
 
 RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
     && pip install --no-cache-dir --upgrade numpy \
-    && pip3 install scikit-learn \
-    && rm -f /usr/local/bin/cmake  \
+    && pip3 install scikit-learn
+
+# Install ZED camera deps
+RUN 
+RUN apt-get update \
+    && apt-get install -y wget  \
+    && wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/cu118/ubuntu20 \
+    && apt-get install -y zstd \
+    && apt-get install -y ros-noetic-usb-cam \
+    && pip3 install bitstring \
+    && ls \
+    && chmod +x zed_sdk_install_ubuntu.run \
+    && ./zed_sdk_install_ubuntu.run -- silent \
+    && rm zed_sdk_install_ubuntu.run
+
+RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip \
