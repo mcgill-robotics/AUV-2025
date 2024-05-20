@@ -1,20 +1,23 @@
 services:
-  clarke:
+  douglas:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev
       - type: bind
         source: ../../../AUV-2024
         target: /AUV-2024
+    privileged: true
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
+      - UDEV=on
 
     runtime: nvidia
-    devices:
-      - /dev/auv_imu:/dev/auv_imu
-    # image: "mcgillrobotics/auv_2024:main"
     command: bash -c "tail -f /dev/null"
+    # ports:
+      # - "22:22"
+      # - "10000:10000"
     network_mode: host
     restart: always
     build: .
