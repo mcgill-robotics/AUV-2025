@@ -3,23 +3,16 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, mapping, state, target, goThrough, gate_width):
+    def __init__(self, control, mapping, state, target_symbol, goThrough, gate_width):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
-        if target not in ["red", "blue"]:
-            raise ValueError("Target must be red or blue.")
-        self.target = target
+        if target_symbol not in ["Earth Symbol", "Abydos Symbol"]:
+            raise ValueError("Target symbol must be one of Earth Symbol or Abydos Symbol.")
+        self.target_symbol = target_symbol
         self.goThrough = goThrough
         self.gate_width = gate_width
-
-    def is_preempted(self):
-        if self.preempt_requested():
-            print("IPS being preempted")
-            self.service_preempt()
-            return 'failure'
-
 
     def execute(self, ud):
         print("Starting gate navigation.") 
@@ -39,7 +32,6 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.is_preempted()
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
@@ -54,7 +46,6 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.is_preempted()
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
@@ -66,8 +57,7 @@ class NavigateGate(smach.State):
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
-        self.is_preempted()
-        if self.target == "red": 
+        if self.target_symbol == "Earth Symbol": 
             if symbol >= 0.5:
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
@@ -82,7 +72,6 @@ class NavigateGate(smach.State):
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
 
-        self.is_preempted()
         self.control.moveDeltaLocal((5.0,0.0,0.0))
 
         print("Successfully passed through gate!")

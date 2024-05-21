@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-from std_msgs.msg import String
 
 class Trick(smach.State):
     def __init__(self, control, trick_type, num_full_spins=1):
@@ -10,11 +9,9 @@ class Trick(smach.State):
         self.control = control
         self.trick_type = trick_type
         self.num_full_spins = int(num_full_spins)
-        self.pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
 
     def execute(self,ud):
         #STAY IN SAME POSITION AND AT FLAT ORIENTATION
-        self.pub_mission_display.publish("Trick")  
         self.control.freeze_position()
         self.control.flatten()
 
