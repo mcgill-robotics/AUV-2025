@@ -20,10 +20,13 @@ def update_state(msg):
         if last_clock_msg_s == msg.clock.secs and last_clock_msg_ns == msg.clock.nsecs: return
         last_clock_msg_s = msg.clock.secs
         last_clock_msg_ns = msg.clock.nsecs
-        
+
     pub_dvl_sensor_status.publish(dvl.isActive())
     pub_imu_sensor_status.publish(imu.isActive())
     pub_depth_sensor_status.publish(depth_sensor.isActive())
+    pub_front_camera_sensor_status.publish(front_camera.isActive())
+    pub_down_camera_sensor_status.publish(down_camera.isActive())
+
     x = None
     y = None
     z = None
@@ -104,6 +107,8 @@ if __name__ == '__main__':
     pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Int32, queue_size=1)
     pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Int32, queue_size=1)
     pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Int32, queue_size=1)
+    pub_front_camera_sensor_status = rospy.Publisher("/sensors/front_camera/status", Int32, queue_size=1)
+    pub_down_camera_sensor_status = rospy.Publisher("/sensors/down_camera/status", Int32, queue_size=1)
 
     tf_broadcaster = TransformBroadcaster()
 
@@ -112,6 +117,8 @@ if __name__ == '__main__':
     depth_sensor = DepthSensor()
     imu = IMU()
     dvl = DVL(imu)
+    front_camera = FrontCamera()
+    down_camera = DownCamera()
     
     #by axis, then in order of priority
     sensor_priorities = {
