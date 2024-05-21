@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import CameraInfo
 from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
@@ -189,3 +190,50 @@ class DVL(Sensor):
 
     def hasValidData(self):
         return self.x is not None and self.y is not None and self.z is not None
+
+class Camera():
+    def __init__(self, sensor_name):
+        self.time_before_considered_inactive = 1 #seconds
+        self.last_error_message_time = rospy.get_time()
+        self.sensor_name = sensor_name
+        self.current_frame = 0
+        self.last_frame = -1
+        self.last_unique_state_time = -1 * self.time_before_considered_inactive
+
+    def updateLastFrame(self, frame):
+        if self.current_frame != self.last_frame:
+            self.last_unique_state_time = rospy.get_time()
+            self.last_state = current_state
+        self.current_frame = frame
+
+    def isActive(self):
+        if rospy.get_time() == 0: return 0
+        if not self.hasValidData(): return 0 #check that camera data is complete
+        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive: #check that state has changed in last N seconds
+            if rospy.get_time() - self.last_error_message_time > 1:
+                self.last_error_message_time = rospy.get_time()
+                rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
+            return 0
+        else:
+            return 1
+
+    def hasValidData(self):
+        raise NotImplementedError    
+
+class FrontCamera(Camera):
+    def __init__(self):
+        super().__init__("Front Camera")
+        rospy.Subscriber("/vision/front_cam/camera_info", CameraInfo, front_camera_cb)
+        
+    def front_camera_cb(self, msg):
+        frame = msg.header.seq
+        self.updateLastFrame(frame)
+
+class DownCamera(Camera):
+    def __init__(self):
+        super().__init__("Down Camera")
+        rospy.Subscriber("/vision/down_cam/camera_info", CameraInfo, down_camera_cb)
+    
+    def down_camera_cb(self, msg):
+        frame = msg.header.seq
+        self.updateLastFrame(frame)
