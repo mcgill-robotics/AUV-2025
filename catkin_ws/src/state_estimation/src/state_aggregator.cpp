@@ -7,7 +7,6 @@
 #include <sstream>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
-#include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <iostream>
 #include <tf2_ros/static_transform_broadcaster.h>

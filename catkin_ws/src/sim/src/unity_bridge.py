@@ -6,7 +6,7 @@ import numpy as np
 from auv_msgs.msg import DeadReckonReport, UnityState
 from geometry_msgs.msg import Quaternion, Vector3
 from sbg_driver.msg import SbgImuData, SbgEkfQuat
-from std_msgs.msg import Float64, Int32 # IDK
+from std_msgs.msg import Float64, Int32
 from tf import transformations
 import quaternion
 DEG_PER_RAD = (180 / np.pi)

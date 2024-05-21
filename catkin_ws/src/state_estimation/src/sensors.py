@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from auv_msgs.msg import DeadReckonReport
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64
 from sensor_msgs.msg import CameraInfo
 from tf import transformations
 
