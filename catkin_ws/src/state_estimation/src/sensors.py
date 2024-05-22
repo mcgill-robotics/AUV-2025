@@ -36,7 +36,7 @@ class Sensor():
         self.last_unique_state_time = -1 * self.time_before_considered_inactive
         self.last_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
     
-    def updateLastState(self):
+    def updateLastRecord(self):
         current_state = [self.x,self.y,self.z,self.q_nwu_auv,self.angular_velocity]
         different = False
         for i in range(len(current_state)):	
@@ -73,7 +73,7 @@ class DepthSensor(Sensor):
 
     def depth_cb(self, depth_msg):
         self.z = depth_msg.data + self.z_pos_mount_offset
-        self.updateLastState()
+        self.updateLastRecord()
     
     def hasValidData(self):
         return self.z is not None
@@ -100,14 +100,14 @@ class IMU(Sensor):
         # anuglar velocity vector relative to AUV frame 
         temp_angular_velocity = self.q_imu_auv * np.quaternion(0, ang_vel_imu[0], ang_vel_imu[1], ang_vel_imu[2]) * self.q_imu_auv.conjugate()
         self.angular_velocity = np.array([temp_angular_velocity.x, temp_angular_velocity.y, temp_angular_velocity.z])
-        self.updateLastState()
+        self.updateLastRecord()
 
     def quat_cb(self, msg):
         q_ned_imu = np.quaternion(msg.quaternion.w, msg.quaternion.x, msg.quaternion.y, msg.quaternion.z)
         # print(q_ned_imu)
         q_nwu_imu = Q_NWU_NED * q_ned_imu
         self.q_nwu_auv = q_nwu_imu * self.q_imu_auv
-        self.updateLastState()
+        self.updateLastRecord()
 
     def hasValidData(self):
         return self.q_nwu_auv is not None and self.angular_velocity is not None
@@ -186,48 +186,40 @@ class DVL(Sensor):
         #     self.pitch = pitch
         #     self.yaw = yaw
 
-        self.updateLastState()
+        self.updateLastRecord()
 
     def hasValidData(self):
         return self.x is not None and self.y is not None and self.z is not None
 
-class Camera():
-    def __init__(self, sensor_name):
-        self.time_before_considered_inactive = 1 #seconds
-        self.last_error_message_time = rospy.get_time()
-        self.sensor_name = sensor_name
-        self.current_frame = 0
-        self.last_frame = -1
-        self.last_unique_state_time = -1 * self.time_before_considered_inactive
 
-    def updateLastFrame(self, frame):
+""" Camera classes have not been tested yet """
+class Camera(Sensor):
+    def __init__(self, camera_name):
+        super().__init__(camera_name)
+
+        self.current_frame_id = 0
+        self.last_frame_id = -1
+    
+    # Override parent class method
+    def updateLastRecord(self):
         if self.current_frame != self.last_frame:
+            if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_state_time = rospy.get_time()
-            self.last_state = current_state
-        self.current_frame = frame
+            self.last_frame_id = self.current_frame_id
 
-    def isActive(self):
-        if rospy.get_time() == 0: return 0
-        if not self.hasValidData(): return 0 #check that camera data is complete
-        if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive: #check that state has changed in last N seconds
-            if rospy.get_time() - self.last_error_message_time > 1:
-                self.last_error_message_time = rospy.get_time()
-                rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
-            return 0
-        else:
-            return 1
-
+    # Override parent class method
     def hasValidData(self):
-        raise NotImplementedError    
+        return self.current_frame_id is not None and self.last_frame_id is not None
 
 class FrontCamera(Camera):
     def __init__(self):
         super().__init__("Front Camera")
         rospy.Subscriber("/vision/front_cam/camera_info", CameraInfo, front_camera_cb)
-        
+
     def front_camera_cb(self, msg):
-        frame = msg.header.seq
-        self.updateLastFrame(frame)
+        self.current_frame_id = msg.header.seq
+        self.updateLastRecord()
 
 class DownCamera(Camera):
     def __init__(self):
@@ -235,5 +227,48 @@ class DownCamera(Camera):
         rospy.Subscriber("/vision/down_cam/camera_info", CameraInfo, down_camera_cb)
     
     def down_camera_cb(self, msg):
-        frame = msg.header.seq
-        self.updateLastFrame(frame)
+        self.current_frame_id = msg.header.seq
+        self.updateLastRecord()
+
+
+class PressureSensor(Sensor):
+    """ INCOMPLETE - JUST DRAFT """
+    def __init__(self):
+        super().__init__("Pressure Sensor")
+
+        self.current_pressure = 0
+        self.last_pressure = -1
+
+        rospy.Subscriber("/sensors/pressure_sensor/data", Float64, pressure_sensor_cb)
+
+    # Override parent class method
+    def updateLastRecord(self):
+        if self.current_pressure != self.last_pressure:
+            if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
+            self.last_unique_state_time = rospy.get_time()
+            self.last_pressure = current_pressure
+
+    def pressure_sensor_cb(self, msg):
+        self.current_pressure = msg.data
+        self.updateLastRecord()
+
+    def hasValidData(self):
+        return self.current_pressure is not None and self.last_pressure is not None
+
+class Hydrophones(Sensor):
+    """ INCOMPLETE - JUST DRAFT """
+    def __init__(self):
+        super().__init__("Hydrophones")
+
+        self.current_bearing = 0
+        self.last_bearing = -1
+
+        rospy.Subscriber("/sensors/hydrophones/data", Float64, hydrophones_cb)
+
+    def hydrophones_cb(self, msg):
+        self.current_bearing = msg.data
+        self.updateLastRecord()
+
+    def hasValidData(self):
+        return False
