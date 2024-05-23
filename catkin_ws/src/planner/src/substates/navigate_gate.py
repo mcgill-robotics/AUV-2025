@@ -3,16 +3,17 @@ import smach
 from .utility.functions import *
 
 class NavigateGate(smach.State):
-    def __init__(self, control, mapping, state, target, goThrough, gate_width):
+    def __init__(self, control, mapping, state, goThrough):
         super().__init__(outcomes=['success', 'failure'])
         self.control = control
         self.mapping = mapping
         self.state = state
         if target not in ["red", "blue"]:
             raise ValueError("Target must be red or blue.")
-        self.target = target
         self.goThrough = goThrough
-        self.gate_width = gate_width
+        self.target_colour = rospy.get_param("target_colour")
+        self.gate_width = rospy.get_param("gate_width")
+        self.red_gate_side = rospy.get_param("red_side")
 
     def is_preempted(self):
         if self.preempt_requested():
@@ -63,19 +64,22 @@ class NavigateGate(smach.State):
         if not self.goThrough:
             return 'success'
 
+        print("Red is on the {} side. Target colour is {}".format(self.red_gate_side, self.target_colour))
+
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
         self.is_preempted()
+
         if self.target == "red": 
-            if symbol >= 0.5:
+            if red_gate_side == "left":
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else: 
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
         else: 
-            if symbol <= 0.5:
+            if red_gate_side == "right":
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else: 

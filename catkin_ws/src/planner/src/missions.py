@@ -14,6 +14,7 @@ from substates.utility.vision import *
 from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
+from substates.navigate_pinger import *
 from substates.octagon_task import *
 
 
@@ -31,12 +32,14 @@ class Missions:
         self.dropper_time_limit = rospy.get_param("dropper_time_limit")
         self.torpedo_time_limit = rospy.get_param("torpedo_time_limit")
         self.octagon_time_limit = rospy.get_param("octagon_time_limit")
+        self.pinger_time_limit = rospy.get_param("pinger_time_limit")
 
         self.gate_width = rospy.get_param("gate_width")
         self.quali_gate_width = rospy.get_param("quali_gate_width")
 
-        self.target_color = rospy.get_param("target_color")
         self.nominal_depth = rospy.get_param("nominal_depth")
+
+        self.pinger_number = rospy.get_param("pinger_number") 
 
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
@@ -63,12 +66,10 @@ class Missions:
         smach.StateMachine.add(
             second_state_name,
             NavigateGate(
-                self.control,
-                self.mapping,
-                self.state,
-                self.target_color,
-                True,
-                self.gate_width,
+                control=self.control,
+                mapping=self.mapping,
+                state=self.state,
+                goThrough=True
             ),
             transitions={"success": target_state_name, "failure": "failure"},
         )
@@ -81,7 +82,7 @@ class Missions:
         timer = rospy.Timer(
             rospy.Duration(self.lane_marker_time_limit),
             self.mission_timeout,
-            oneshot=True,
+            oneshot=True
         )
 
         first_state_name = first_state_name + count
@@ -105,6 +106,31 @@ class Missions:
         )
 
         timer.shutdown()
+
+    def pinger(self, first_state_name, count, mission_after)
+        global sm
+
+        Timer = rospy.Timer(
+            rospy.Duration(self.pinger_time_limit),
+            self.mission_timeout,
+            oneshot=True,
+        )
+
+        first_state_name = first_state_name + count
+        target_state_name = mission_after if mission_after is not None else "success"
+
+        smach.StateMachine.add(
+            first_state_name,
+            NavigatePinger(
+                control=self.control, 
+                state=self.state, 
+                mapping=self.mapping, 
+                pinger_number=self.pinger_number
+            )
+            transitions={"success": target_state_name, "failure": "failure"}
+        )
+
+        self.pinger_number += 1
 
     def buoy(self, first_state_name, count, mission_after):
         global sm
@@ -215,12 +241,10 @@ class Missions:
 
         print("Navigating gate")
         gateNav = NavigateGate(
-            self.controls,
-            self.state,
-            self.mapping,
-            self.target_color,
-            goThrough=False,
-            gate_width=self.quali_gate_width,
+            control=self.controls,
+            mapping=self.mapping,
+            state=self.state,
+            goThrough=False
         )
         gateNav.execute(None)
 
@@ -267,6 +291,7 @@ if __name__ == "__main__":
         ["Trick", missions.trick, "trick", 0],
         ["Buoy", missions.buoy, "find_buoy", 0],
         ["Octagon", missions.octagon, "find_octagon", 0],
+        ["Pinger", mission.pinger, "navigate_pinger", 0],
         ["Torpedo", missions.torpedo, "", 0],
         ["Dropper", missions.dropper, "", 0],
         ["Bins", missions.bins, "", 0],
