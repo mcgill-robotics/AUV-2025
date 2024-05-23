@@ -26,8 +26,8 @@ def update_state(msg):
     pub_depth_sensor_status.publish(depth_sensor.isActive())
     pub_front_camera_sensor_status.publish(front_camera.isActive())
     pub_down_camera_sensor_status.publish(down_camera.isActive())
+    pub_hydrophones_sensor_status.publish(hydrophones.isActive())
     # pub_pressure_sensor_status.publish(pressure_sensor.isActive())
-    # pub_hydrophones_sensor_status.publish(hydrophones.isActive())
     # pub_actuator_sensor_status.publish(actuator.isActive())
 
     x = None
@@ -96,6 +96,7 @@ def broadcast_auv_pose(pose):
 
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')
+    print("\n\nAAAAAAAAA\n\n")
 
     pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
     
@@ -112,8 +113,8 @@ if __name__ == '__main__':
     pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Int32, queue_size=1)
     pub_front_camera_sensor_status = rospy.Publisher("/sensors/front_camera/status", Int32, queue_size=1)
     pub_down_camera_sensor_status = rospy.Publisher("/sensors/down_camera/status", Int32, queue_size=1)
+    pub_hydrophones_sensor_status = rospy.Publisher("/sensors/hydrophones/status", Int32, queue_size=1)
     # pub_pressure_sensor_status = rospy.Publisher("/sensors/pressure_sensor/status", Int32, queue_size=1)
-    # pub_hydrophones_sensor_status = rospy.Publisher("/sensors/hydrophones/status", Int32, queue_size=1)
     # pub_actuator_sensor_status  = rospy.Publisher("/sensors/actuator/status", Int32, queue_size=1)
 
     tf_broadcaster = TransformBroadcaster()
@@ -125,8 +126,8 @@ if __name__ == '__main__':
     dvl = DVL(imu)
     front_camera = FrontCamera()
     down_camera = DownCamera()
+    hydrophones = Hydrophones()
     # pressure_sensor = PressureSensor()
-    # hydrophones = Hydrophones()
     # actuator = Actuator() 
     
     #by axis, then in order of priority

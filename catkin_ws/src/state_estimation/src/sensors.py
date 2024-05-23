@@ -6,10 +6,10 @@ import quaternion
 import math
 from collections.abc import Iterable
 
-from auv_msgs.msg import DeadReckonReport
+from auv_msgs.msg import DeadReckonReport, PingerTimeDifference
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from std_msgs.msg import Float64
-from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import Image
 from tf import transformations
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
@@ -192,7 +192,6 @@ class DVL(Sensor):
         return self.x is not None and self.y is not None and self.z is not None
 
 
-""" Camera classes have not been tested yet """
 class Camera(Sensor):
     def __init__(self, camera_name):
         super().__init__(camera_name)
@@ -215,60 +214,70 @@ class Camera(Sensor):
 class FrontCamera(Camera):
     def __init__(self):
         super().__init__("Front Camera")
-        rospy.Subscriber("/vision/front_cam/camera_info", CameraInfo, front_camera_cb)
+        rospy.Subscriber("/vision/front_cam/color/image_raw", Image, front_camera_cb)
 
     def front_camera_cb(self, msg):
-        self.current_frame_id = msg.header.seq
+        self.current_frame_id = msg.header.frame_id
         self.updateLastRecord()
 
 class DownCamera(Camera):
     def __init__(self):
         super().__init__("Down Camera")
-        rospy.Subscriber("/vision/down_cam/camera_info", CameraInfo, down_camera_cb)
+        rospy.Subscriber("/vision/down_cam/image_raw", Image, down_camera_cb)
     
     def down_camera_cb(self, msg):
-        self.current_frame_id = msg.header.seq
+        self.current_frame_id = msg.header.frame_id
         self.updateLastRecord()
 
 
 class PressureSensor(Sensor):
-    """ INCOMPLETE - JUST DRAFT """
     def __init__(self):
         super().__init__("Pressure Sensor")
 
-        self.current_pressure = 0
-        self.last_pressure = -1
+        self.current_depth = 0
+        self.last_depth = None
 
-        rospy.Subscriber("/sensors/pressure_sensor/data", Float64, pressure_sensor_cb)
+        rospy.Subscriber("/sensors/pressure_sensor/depth", Float64, pressure_sensor_cb)
 
     # Override parent class method
     def updateLastRecord(self):
-        if self.current_pressure != self.last_pressure:
+        if :
             if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
                 rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_state_time = rospy.get_time()
             self.last_pressure = current_pressure
 
     def pressure_sensor_cb(self, msg):
-        self.current_pressure = msg.data
+        self.current_depth = msg.data
         self.updateLastRecord()
 
     def hasValidData(self):
-        return self.current_pressure is not None and self.last_pressure is not None
+        return self.current_depth is not None and self.last_pressure is not None
 
 class Hydrophones(Sensor):
-    """ INCOMPLETE - JUST DRAFT """
     def __init__(self):
         super().__init__("Hydrophones")
 
-        self.current_bearing = 0
-        self.last_bearing = -1
+        self.are_pingers_active = [False, False, False, False] 
+        self.current_dt_pingers = [None, None, None, None]
+        self.last_dt_pingers = [None, None, None, None]
 
-        rospy.Subscriber("/sensors/hydrophones/data", Float64, hydrophones_cb)
+        rospy.Subscriber("/sensors/hydrophones/pinger_time_difference", PingerTimeDifference, hydrophones_cb)
+
+    # Override parent class method
+    def updateLastRecord(self):
+        if self.last_dt_pingers != self.current_dt_pingers:
+            if rospy.get_time() - self.last_unique_state_time > self.time_before_considered_inactive:
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
+            self.last_unique_state_time = rospy.get_time()
+            self.last_frame_id = self.current_frame_id
 
     def hydrophones_cb(self, msg):
-        self.current_bearing = msg.data
+        self.are_pingers_active = [msg.is_pinger1_active, msg.is_pinger2_active, msg.is_pinger3_active, msg.is_pinger4_active]
+        self.dt_pingers = [msg.dt_pinger1, msg.dt_pinger2, msg.dt_pinger3, msg.dt_pinger4]
         self.updateLastRecord()
 
     def hasValidData(self):
-        return False
+        indexes_true = [i for i, e in enumerate(self.are_pingers_active) if e]
+        indexes_non_zero = [i for i, e in enumerate(self.current_dt_pingers) if e != [0, 0, 0, 0]]
+        return len(indexes_true) != 0 and indexes_true == indexes_non_zero

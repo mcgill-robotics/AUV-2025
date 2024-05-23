@@ -1,8 +1,8 @@
 <launch>
-    <arg name="sim" default="false" />
+	<arg name="sim" default="false" />
 	<param name="update_rate" value="100" />
-    <group unless="$(arg sim)">
-        <include file="$(find sensors)/launch/depth_sensor.launch"/>
+    	<group unless="$(arg sim)">
+     	<include file="$(find sensors)/launch/depth_sensor.launch"/>
 		<include file="$(find sensors)/launch/imu.launch"/>
 		<include file="$(find sensors)/launch/dvl.launch"/>
 		
@@ -23,21 +23,21 @@
 
 		<param name="update_state_on_clock" value="false" />
 		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
-    </group>
-    <group if="$(arg sim)">
+	</group>
+	<group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
-		<node name="state_aggregator" pkg="state_estimation" type="state_estimation" respawn="true" output="screen"/>
-    </group>
+		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
+	</group>
 
 	<param name="hydrophones_dx" value="0.1"/>
 	<param name="hydrophones_dy" value="0.1"/>
 	<param name="hydrophones_dz" value="-0.1"/>	<!-- For 4 Hydrophones -->
 
 	<node name="hydrophones_bearing"
-			pkg="state_estimation"
-			type="hydrophones_bearing.py"
-			output="screen"
-			respawn="true">
+		pkg="state_estimation"
+		type="hydrophones_bearing.py"
+		output="screen"
+		respawn="true">
 	</node>
 	
 </launch>
