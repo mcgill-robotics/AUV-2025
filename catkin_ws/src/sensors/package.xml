@@ -25,6 +25,8 @@
   <build_depend>message_generation</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sbg_driver</build_depend>
+  <build_depend>zed_wrapper</build_depend>
+  
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rosserial_arduino</exec_depend>
@@ -33,6 +35,7 @@
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sbg_driver</exec_depend>
+  <exec_depend>zed_wrapper</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>python-bitstring-pip</exec_depend>
