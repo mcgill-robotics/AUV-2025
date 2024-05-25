@@ -1,6 +1,3 @@
 <launch>
-	<node name="depth_sensor_serial_server" pkg="rosserial_python" type="serial_node.py" respawn="true">
-		<param name="port" value="/dev/depth"/>
-		<param name="baud" value="57600"/>
-	</node>
+	<include file="$(find propulsion)/launch/display.launch"> <!-- since depth sensor and display board are on the same microcontroller -->
 </launch>
