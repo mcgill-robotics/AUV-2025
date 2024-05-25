@@ -19,10 +19,10 @@ if [[ -e "$dev_name.rules" ]]; then
     echo "WARN: Rules file $dev_name.rules already exists. Overwrite? [Y/n] "
     read tmp
     if [[ "$tmp" == "y" || "$tmp" == "Y" ]]; then
-        echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
     fi
 else
-    echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
 fi
 
 echo "Copy $dev_name.rules file to /etc/udev/rules.d (requires sudo)? [Y/n] "
