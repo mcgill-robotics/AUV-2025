@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(sensors)
 
-set(MSG_DEP_SET std_msgs auv_msgs)
+set(MSG_DEP_SET std_msgs sensor_msgs auv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
   ${MSG_DEP_SET}

@@ -1,8 +1,10 @@
 <launch>
-    <arg name="sim" default="false" />
-    <arg name="bag" default="false" />
-    <arg name="vision" default="true" />
+    	<arg name="sim" default="false" />
+    	<arg name="bag" default="false" />
+    	<arg name="vision" default="true" />
 	<arg name="actions" default="false" />
+
+	<include file="$(find sensors)/launch/sensors_status.launch"/>
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />

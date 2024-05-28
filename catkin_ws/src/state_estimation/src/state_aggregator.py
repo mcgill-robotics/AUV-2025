@@ -7,7 +7,7 @@ from tf import transformations
 from tf2_ros import TransformBroadcaster
 
 from geometry_msgs.msg import Pose, Quaternion, Vector3, TransformStamped, Point
-from sensors import DepthSensor, IMU, DVL
+from sensors import DepthSensor, IMU, IMUFrontCamera, DVL
 from std_msgs.msg import Float64, Int32
 from rosgraph_msgs.msg import Clock
 
@@ -21,43 +21,44 @@ def update_state(msg):
         last_clock_msg_s = msg.clock.secs
         last_clock_msg_ns = msg.clock.nsecs
 
-    pub_dvl_sensor_status.publish(dvl.isActive())
-    pub_imu_sensor_status.publish(imu.isActive())
-    pub_depth_sensor_status.publish(depth_sensor.isActive())
-    pub_front_camera_sensor_status.publish(front_camera.isActive())
-    pub_down_camera_sensor_status.publish(down_camera.isActive())
-    pub_hydrophones_sensor_status.publish(hydrophones.isActive())
-    # pub_pressure_sensor_status.publish(pressure_sensor.isActive())
-    # pub_actuator_sensor_status.publish(actuator.isActive())
-
     x = None
     y = None
     z = None
     quaternion = None
     global last_error_message_time
 
+    dvl_reading = dvl.get_reading()
+    imu_reading = imu.get_reading()
+    imu_front_camera_reading = imu_front_camera.get_reading()
+    depth_sensor_reading = depth_sensor.get_reading()
+
     for sensor in sensor_priorities["x"]:
-        if sensor.isActive():
-            x = sensor.x
+        if sensor.get_is_active():
+            x = sensor.get_reading()["x"]
             break
     for sensor in sensor_priorities["y"]:
-        if sensor.isActive():
-            y = sensor.y
+        if sensor.get_is_active():
+            y = sensor.get_reading()["y"]
             break
     for sensor in sensor_priorities["z"]:
-        if sensor.isActive():
-            z = sensor.z
+        if sensor.get_is_active():
+            z = sensor.get_reading()["z"]
             break
     for sensor in sensor_priorities["orientation"]:
-        if sensor.isActive():
-            quaternion = Quaternion(x = sensor.q_nwu_auv.x, y = sensor.q_nwu_auv.y, z = sensor.q_nwu_auv.z, w = sensor.q_nwu_auv.w)
-            euler_dvlref_dvl = transformations.euler_from_quaternion([sensor.q_nwu_auv.x, sensor.q_nwu_auv.y, sensor.q_nwu_auv.z, sensor.q_nwu_auv.w])
+        if sensor.get_is_active():
+            sensor_reading = sensor.get_reading()
+            reading_quaternion = sensor_reading["quaternion"]
+            reading_angular_velocity = sensor_reading["angular_velocity"] 
+            
+            quaternion = Quaternion(x = reading_quaternion.x, y = reading_quaternion.y, z = reading_quaternion.z, w = reading_quaternion.w)
+            euler_dvlref_dvl = transformations.euler_from_quaternion([reading_quaternion.x, reading_quaternion.y, reading_quaternion.z, reading_quaternion.w])
             roll = euler_dvlref_dvl[0] * DEG_PER_RAD
             pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
             yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
 
-            angular_velocity = Vector3(sensor.angular_velocity[0], sensor.angular_velocity[1], sensor.angular_velocity[2])
+            angular_velocity = Vector3(reading_angular_velocity[0], reading_angular_velocity[1], reading_angular_velocity[2])
             break
+
     if x is not None and y is not None and z is not None and quaternion is not None:
         pub_x.publish(x)
         pub_y.publish(y)
@@ -94,9 +95,9 @@ def broadcast_auv_pose(pose):
     t_rot.transform.rotation = pose.orientation
     tf_broadcaster.sendTransform(t_rot)
 
+
 if __name__ == '__main__':
     rospy.init_node('state_aggregator')
-    print("\n\nAAAAAAAAA\n\n")
 
     pub_pose = rospy.Publisher('/state/pose', Pose, queue_size=1)
     
@@ -106,16 +107,7 @@ if __name__ == '__main__':
     pub_theta_x = rospy.Publisher('/state/theta/x', Float64, queue_size=1)
     pub_theta_y = rospy.Publisher('/state/theta/y', Float64, queue_size=1)
     pub_theta_z = rospy.Publisher('/state/theta/z', Float64, queue_size=1)
-    pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)
-
-    pub_imu_sensor_status = rospy.Publisher("/sensors/imu/status", Int32, queue_size=1)
-    pub_depth_sensor_status = rospy.Publisher("/sensors/depth/status", Int32, queue_size=1)
-    pub_dvl_sensor_status = rospy.Publisher("/sensors/dvl/status", Int32, queue_size=1)
-    pub_front_camera_sensor_status = rospy.Publisher("/sensors/front_camera/status", Int32, queue_size=1)
-    pub_down_camera_sensor_status = rospy.Publisher("/sensors/down_camera/status", Int32, queue_size=1)
-    pub_hydrophones_sensor_status = rospy.Publisher("/sensors/hydrophones/status", Int32, queue_size=1)
-    # pub_pressure_sensor_status = rospy.Publisher("/sensors/pressure_sensor/status", Int32, queue_size=1)
-    # pub_actuator_sensor_status  = rospy.Publisher("/sensors/actuator/status", Int32, queue_size=1)
+    pub_ang_vel = rospy.Publisher('/state/angular_velocity', Vector3, queue_size=1)    
 
     tf_broadcaster = TransformBroadcaster()
 
@@ -123,19 +115,15 @@ if __name__ == '__main__':
     
     depth_sensor = DepthSensor()
     imu = IMU()
-    dvl = DVL(imu)
-    front_camera = FrontCamera()
-    down_camera = DownCamera()
-    hydrophones = Hydrophones()
-    # pressure_sensor = PressureSensor()
-    # actuator = Actuator() 
+    imu_front_camera = IMUFrontCamera()
+    dvl = DVL(imu, imu_front_camera)
     
     #by axis, then in order of priority
     sensor_priorities = {
         "x" : [dvl],
         "y" : [dvl],
         "z" : [depth_sensor, dvl],
-        "orientation" : [imu],
+        "orientation" : [imu, imu_front_camera],
     }
 
     update_state_on_clock = rospy.get_param("update_state_on_clock")

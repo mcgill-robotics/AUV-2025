@@ -1,0 +1,3 @@
+<launch>
+     <node name="sensors_status" pkg="sensors" type="sensors_status.py" output="screen" respawn="true"/>
+</launch>
