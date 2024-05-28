@@ -26,8 +26,13 @@
 	</group>
 	<group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
+<<<<<<< HEAD
 		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
 	</group>
+=======
+		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator" respawn="true" output="screen"/>
+    </group>
+>>>>>>> noetic
 
 	<param name="hydrophones_dx" value="0.1"/>
 	<param name="hydrophones_dy" value="0.1"/>
