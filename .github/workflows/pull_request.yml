@@ -26,4 +26,4 @@ jobs:
         run: |
             cd catkin_ws
             source devel/setup.bash
-            rostest planner simple.test
+            xvfb-run -a rostest planner simple.test
