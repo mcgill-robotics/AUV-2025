@@ -26,7 +26,7 @@
     </group>
     <group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
-		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator" respawn="true" output="screen"/>
+		<node name="state_aggregator" pkg="state_estimation" type="state_estimation" respawn="true" output="screen"/>
     </group>
 
 	<param name="hydrophones_dx" value="0.1"/>
