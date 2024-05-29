@@ -20,7 +20,7 @@ generate_arduino_firmware(${PROJECT_NAME}
   # feels like a bit of a hack, look into above documentation for neater solution
   SRCS ${ROS_LIB_DIR}/time.cpp ${CMAKE_SOURCE_DIR}/depth_sensor/MS5803.cpp
   HDRS ${CMAKE_SOURCE_DIR}/depth_sensor/MS5803.h
-  PORT /dev/ttyACM1 #TODO - udev rules map to dev/thrusters
+  PORT /dev/power
 )
 
 # IMU 
@@ -32,7 +32,7 @@ generate_arduino_firmware(${PROJECT_NAME}
   #BOTH LINES COPIED FROM DEPTH SENSOR NEEDS TO BE LOOKED INTO
   SRCS ${ROS_LIB_DIR}/time.cpp ${CMAKE_SOURCE_DIR}/imu/Quaternion.cpp ${CMAKE_SOURCE_DIR}/imu/XimuReceiver.cpp 
   HDRS ${CMAKE_SOURCE_DIR}/imu/Quaternion.h ${CMAKE_SOURCE_DIR}/imu/XimuReceiver.h
-  PORT /dev/ttyACM1
+  PORT /dev/imu
 )]]
 
 # DISPLAY
@@ -42,5 +42,5 @@ generate_arduino_firmware(${PROJECT_NAME}
 #   BOARD mega2560
 
 #   SRCS ${ROS_LIB_DIR}/time.cpp
-#   PORT /dev/ttyACM0
+#   PORT /dev/display
 # )
