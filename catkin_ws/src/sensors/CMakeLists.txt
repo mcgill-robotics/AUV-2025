@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   rosserial_client
   geometry_msgs
   sbg_driver
-  zed_wrapper
 )
 
 catkin_package( CATKIN_DEPENDS
@@ -22,7 +21,6 @@ catkin_package( CATKIN_DEPENDS
   rosserial_client
   geometry_msgs
   sbg_driver
-  zed_wrapper
 )
 
 rosserial_generate_ros_lib(
