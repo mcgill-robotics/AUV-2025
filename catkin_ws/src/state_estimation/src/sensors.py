@@ -18,8 +18,12 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 
 
 class Sensor():
-    def __init__(self, is_active=0):
+    def __init__(self, sensor_name, is_active=0):
         self.is_active = is_active
+        self.sensor_name = sensor_name
+
+    def get_sensor_name(self):
+        return self.sensor_name
 
     # @abstractmethod
     def sensor_status_cb(self, msg):
@@ -36,7 +40,7 @@ class Sensor():
 # Depth Sensor class inheriting from Sensor
 class DepthSensor(Sensor):
     def __init__(self):
-        super().__init__()
+        super().__init__("Depth Sensor")
         
         self.z = 0
         self.z_pos_mount_offset = 0
@@ -45,7 +49,7 @@ class DepthSensor(Sensor):
         rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
 
     def sensor_status_cb(self, msg):
-        self.is_active = msg
+        self.is_active = msg.data
 
     def depth_cb(self, msg):
         self.z = msg.data + self.z_pos_mount_offset
@@ -59,7 +63,7 @@ class DepthSensor(Sensor):
 # IMU class inheriting from Sensor
 class IMU(Sensor):
     def __init__(self):
-        super().__init__()
+        super().__init__("IMU")
         
         q_imunominal_imu_w = rospy.get_param("q_imunominal_imu_w")
         q_imunominal_imu_x = rospy.get_param("q_imunominal_imu_x")
@@ -77,7 +81,7 @@ class IMU(Sensor):
         rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
 
     def sensor_status_cb(self, msg):
-        self.is_active = msg
+        self.is_active = msg.data
 
     def ang_vel_cb(self, msg):
         # angular velocity vector relative to imu frame 
@@ -101,7 +105,7 @@ class IMU(Sensor):
 # IMUFrontCamera class inheriting from Sensor
 class IMUFrontCamera(Sensor):
     def __init__(self):
-        super().__init__()
+        super().__init__("IMU Front Camera")
 
         self.q_nwu_auv = np.quaternion(1, 0, 0, 0)
         self.angular_velocity = np.array([0,0,0])
@@ -110,7 +114,7 @@ class IMUFrontCamera(Sensor):
         rospy.Subscriber("/zed/zed_node/imu/data", Imu, self.front_camera_imu_cb)
 
     def sensor_status_cb(self, msg):
-        self.is_active = msg
+        self.is_active = msg.data
 
     def front_camera_imu_cb(self, msg):
         self.q_nwu_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -126,7 +130,7 @@ class IMUFrontCamera(Sensor):
 # DVL class inheriting from Sensor
 class DVL(Sensor):
     def __init__(self, imu, imu_front_camera):
-        super().__init__()
+        super().__init__("DVL")
 
         self.x = 0
         self.y = 0
@@ -154,7 +158,7 @@ class DVL(Sensor):
         rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dead_reckon_cb)
 
     def sensor_status_cb(self, msg):
-        self.is_active = msg
+        self.is_active = msg.data
 
     def dead_reckon_cb(self, msg):
         # quaternion/position of dvl relative to dvlref 

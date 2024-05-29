@@ -28,7 +28,10 @@ class Sensor():
           self.last_unique_reading_time = -1 * self.time_before_considered_inactive
           self.current_reading = None
           self.last_reading = None
-          
+
+          self.is_active = False
+          self.sensor_warning_interval = rospy.get_param("sensor_warning_interval") # seconds
+          self.last_inactive_message_time = rospy.get_time()          
     
      def update_last_reading(self):
           if self.current_reading != self.last_reading:
@@ -38,15 +41,18 @@ class Sensor():
                self.last_reading = self.current_reading
         
      def get_is_active(self):
-          if rospy.get_time() == 0: return 0
-          if not self.has_valid_data(): return 0 # check that reading is complete
-          if rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive: # check that reading has changed in last N seconds
-               if rospy.get_time() - self.last_error_message_time > 1:
-                    self.last_error_message_time = rospy.get_time()
-                    rospy.logwarn("{} has been inactive for {} seconds.".format(self.sensor_name, self.time_before_considered_inactive))
+          if rospy.get_time() == 0 or not self.has_valid_data() or rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive: 
+               if self.is_active and rospy.get_time() - self.last_inactive_message_time > self.sensor_warning_interval:
+                    self.active = False
+                    self.last_inactive_message_time = rospy.get_time()
+                    rospy.logwarn("{} is inactive.".format(self.sensor_name))
                return 0
           else:
+               self.is_active = True
                return 1
+     
+     def get_sensor_name(self):
+          return self.sensor_name
 
      # @abstractmethod
      def has_valid_data(self):
@@ -65,7 +71,7 @@ class DepthSensor(Sensor):
           rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
 
      def depth_cb(self, msg):
-          self.current_reading = msg
+          self.current_reading = msg.data
           self.update_last_reading()
      
      def has_valid_data(self):
@@ -95,9 +101,19 @@ class IMU(Sensor):
 
      def ang_vel_cb(self, msg):
           gyro = msg.gyro
-          self.current_reading[1] = np.array([gyro.x, gyro.y, gyro.z])
+          self.current_reading[1] = [gyro.x, gyro.y, gyro.z]
           self.update_last_reading()
 
+     # @override 
+     def update_last_reading(self):
+          if self.current_reading != self.last_reading:
+               if rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive:
+                    rospy.loginfo("{} has become active.".format(self.sensor_name))
+               self.last_unique_reading_time = rospy.get_time()
+               self.last_reading[0] = self.current_reading[0] # np.quaternion
+               self.last_reading[1] = self.current_reading[1][:] # gyro (list) -> deepcopy 
+
+     # @override 
      def has_valid_data(self):
           return self.current_reading[0] is not None and self.current_reading[1] is not None
 
@@ -121,7 +137,16 @@ class IMUFrontCamera(Sensor):
           self.current_reading[1] = np.array([msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]) 
           self.update_last_reading()
 
-     # Override parent class method
+     # @override 
+     def update_last_reading(self):
+          if self.current_reading != self.last_reading:
+               if rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive:
+                    rospy.loginfo("{} has become active.".format(self.sensor_name))
+               self.last_unique_reading_time = rospy.get_time()
+               self.last_reading[0] = self.current_reading[0] # np.quaternion
+               self.last_reading[1] = self.current_reading[1][:] # gyro (list) -> deepcopy 
+
+     # @override 
      def has_valid_data(self):
           return self.current_reading[0] is not None and self.current_reading[1] is not None
 
@@ -144,6 +169,15 @@ class DVL(Sensor):
           self.current_reading = [msg.x, msg.y, msg.z, msg.roll, msg.pitch, msg.yaw]
           self.update_last_reading()
 
+     # @override 
+     def update_last_reading(self):
+          if self.current_reading != self.last_reading:
+               if rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive:
+                    rospy.loginfo("{} has become active.".format(self.sensor_name))
+               self.last_unique_reading_time = rospy.get_time()
+               self.last_reading = self.current_reading[:] # pose (list) -> deepcopy
+
+     # @override 
      def has_valid_data(self):
           return None not in self.current_reading
 
@@ -160,9 +194,11 @@ class FrontCameraImage(Sensor):
           rospy.Subscriber("/vision/front_cam/color/image_raw", Image, self.front_camera_cb)
          
      def front_camera_cb(self, msg):
-          self.current_reading = msg.header.frame_id
+          time = msg.header.stamp
+          self.current_reading = time.secs * 10e9 + time.nsecs
           self.update_last_reading()
 
+     # @override 
      def has_valid_data(self):
           return self.current_reading is not None
 
@@ -179,9 +215,11 @@ class DownCamera(Sensor):
           rospy.Subscriber("/vision/down_cam/image_raw", Image, self.down_camera_cb)
      
      def down_camera_cb(self, msg):
-          self.current_reading = msg.header.frame_id
+          time = msg.header.stamp
+          self.current_reading = time.secs * 10e9 + time.nsecs
           self.update_last_reading()
 
+     # @override 
      def has_valid_data(self):
           return self.current_reading is not None
 
@@ -202,6 +240,15 @@ class Hydrophones(Sensor):
           self.current_reading = [msg.dt_pinger1, msg.dt_pinger2, msg.dt_pinger3, msg.dt_pinger4]
           self.update_last_reading()
 
+     # @override 
+     def update_last_reading(self):
+          if self.current_reading != self.last_reading:
+               if rospy.get_time() - self.last_unique_reading_time > self.time_before_considered_inactive:
+                    rospy.loginfo("{} has become active.".format(self.sensor_name))
+               self.last_unique_reading_time = rospy.get_time()
+               self.last_reading = self.current_reading[:] # pose (list) -> deepcopy
+
+     # @override 
      def has_valid_data(self):
           indexes_true = [i for i, e in enumerate(self.are_pingers_active) if e]
           indexes_non_zero = [i for i, e in enumerate(self.current_reading) if e != [0, 0, 0, 0]]
@@ -230,6 +277,7 @@ class Actuator(Sensor):
           # self.current_reading = msg.position
           self.update_last_reading()
      
+     # @override 
      def has_valid_data(self):
           return self.status and self.current_reading is not None
 
