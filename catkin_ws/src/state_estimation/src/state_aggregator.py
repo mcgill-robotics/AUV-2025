@@ -16,8 +16,7 @@ DEG_PER_RAD = 180 / np.pi
 def swap_main_sensor_message(axis_index, sensor_index, sensor_name):
     global last_warning_message_time
 
-    if rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
-        if sensor_index != 0:
+    if sensor_index != 0 and rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
             last_warning_message_time[axis_index] = rospy.get_time()
             rospy.logwarn("Using {} for {}.".format(sensor_name, axis_names[axis_index]))
 
