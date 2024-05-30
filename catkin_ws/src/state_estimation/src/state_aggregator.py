@@ -13,10 +13,10 @@ from rosgraph_msgs.msg import Clock
 
 DEG_PER_RAD = 180 / np.pi
 
-def swap_main_sensor_message(axis_index, sensor_index, sensor_name):
+def swap_main_sensor_message(axis_index, sensor_name):
     global last_warning_message_time
 
-    if sensor_index != 0 and rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
+    if rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
             last_warning_message_time[axis_index] = rospy.get_time()
             rospy.logwarn("Using {} for {}.".format(sensor_name, axis_names[axis_index]))
 
@@ -42,7 +42,8 @@ def update_state(msg):
         for sensor_index, sensor in enumerate(sensor_priorities[axis_names[axis_index]]):
             if sensor.get_is_active():
                 position[axis_index] = sensor.get_reading()[axis_names[axis_index]]
-                swap_main_sensor_message(axis_index, sensor_index, sensor.get_sensor_name()) 
+                if sensor_index != 0:
+                    swap_main_sensor_message(axis_index, sensor.get_sensor_name()) 
                 break
 
     for sensor_index, sensor in enumerate(sensor_priorities["orientation"]):
