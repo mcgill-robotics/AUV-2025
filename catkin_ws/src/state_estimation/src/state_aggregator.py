@@ -54,7 +54,8 @@ def update_state(msg):
             yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
 
             angular_velocity = Vector3(reading_angular_velocity[0], reading_angular_velocity[1], reading_angular_velocity[2])
-            swap_main_sensor_message(len(axis_names)-1, sensor_index, sensor.get_sensor_name()) 
+            if sensor_index != 0:
+                swap_main_sensor_message(len(axis_names)-1, sensor.get_sensor_name()) 
             break
 
     if position[0] is not None and position[1] is not None and position[2] is not None and quaternion is not None:
