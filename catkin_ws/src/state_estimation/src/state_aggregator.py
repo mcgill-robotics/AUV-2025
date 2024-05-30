@@ -33,11 +33,6 @@ def update_state(msg):
     quaternion = None
     global last_error_message_time
 
-    dvl_reading = dvl.get_reading()
-    imu_reading = imu.get_reading()
-    imu_front_camera_reading = imu_front_camera.get_reading()
-    depth_sensor_reading = depth_sensor.get_reading()
-
     for axis_index in range(len(position)):
         for sensor_index, sensor in enumerate(sensor_priorities[axis_names[axis_index]]):
             if sensor.get_is_active():
