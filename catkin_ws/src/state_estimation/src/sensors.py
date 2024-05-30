@@ -25,9 +25,8 @@ class Sensor():
     def get_sensor_name(self):
         return self.sensor_name
 
-    # @abstractmethod
     def sensor_status_cb(self, msg):
-        raise NotImplementedError("Subclass must implement abstract method")
+        self.is_active = msg.data
 
     # @abstractmethod
     def get_reading(self):
@@ -47,9 +46,6 @@ class DepthSensor(Sensor):
 
         rospy.Subscriber("/sensors/depth/status", Int32, self.sensor_status_cb)
         rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
-
-    def sensor_status_cb(self, msg):
-        self.is_active = msg.data
 
     def depth_cb(self, msg):
         self.z = msg.data + self.z_pos_mount_offset
@@ -80,9 +76,6 @@ class IMU(Sensor):
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
         rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
 
-    def sensor_status_cb(self, msg):
-        self.is_active = msg.data
-
     def ang_vel_cb(self, msg):
         # angular velocity vector relative to imu frame 
         ang_vel_imu = np.array([msg.gyro.x, msg.gyro.y, msg.gyro.z])
@@ -112,9 +105,6 @@ class IMUFrontCamera(Sensor):
 
         rospy.Subscriber("/sensors/imu_front_camera/status", Int32, self.sensor_status_cb)
         rospy.Subscriber("/zed/zed_node/imu/data", Imu, self.front_camera_imu_cb)
-
-    def sensor_status_cb(self, msg):
-        self.is_active = msg.data
 
     def front_camera_imu_cb(self, msg):
         self.q_nwu_auv = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
@@ -156,9 +146,6 @@ class DVL(Sensor):
         
         rospy.Subscriber("/sensors/dvl/status", Int32, self.sensor_status_cb)
         rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dead_reckon_cb)
-
-    def sensor_status_cb(self, msg):
-        self.is_active = msg.data
 
     def dead_reckon_cb(self, msg):
         # quaternion/position of dvl relative to dvlref 
