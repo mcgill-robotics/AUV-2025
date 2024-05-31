@@ -13,10 +13,14 @@ from rosgraph_msgs.msg import Clock
 
 DEG_PER_RAD = 180 / np.pi
 
-def swap_main_sensor_message(axis_index, sensor_name):
+def print_sensor_source_warning(axis_index, sensor_index, sensor_name):
+    # Print a warning message whenever the main sensor (from priority list) stops working and 
+    # the data used for pose switches to a secondary sensor
     global last_warning_message_time
 
-    if rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
+    # sensor_index = 0 when the sensor used the first in the list (highest priority)
+    # only print warning messages in 5 seconds interval
+    if sensor_index != 0 and rospy.get_time() - last_warning_message_time[axis_index] > sensor_swap_warning_interval:
             last_warning_message_time[axis_index] = rospy.get_time()
             rospy.logwarn("Using {} for {}.".format(sensor_name, axis_names[axis_index]))
 
@@ -33,16 +37,15 @@ def update_state(msg):
     quaternion = None
     global last_error_message_time
 
-    for axis_index in range(len(position)):
-        for sensor_index, sensor in enumerate(sensor_priorities[axis_names[axis_index]]):
-            if sensor.get_is_active():
-                position[axis_index] = sensor.get_reading()[axis_names[axis_index]]
-                if sensor_index != 0:
-                    swap_main_sensor_message(axis_index, sensor.get_sensor_name()) 
-                break
+    # imu used for DVL x, y, z calculations
+    current_imu_for_DVL = None
 
     for sensor_index, sensor in enumerate(sensor_priorities["orientation"]):
         if sensor.get_is_active():
+            # set the imu currently being used to be used in DVL calculations
+            current_imu_for_DVL = sensor
+            dvl.set_imu(sensor)
+
             sensor_reading = sensor.get_reading()
             reading_quaternion = sensor_reading["quaternion"]
             reading_angular_velocity = sensor_reading["angular_velocity"] 
@@ -54,9 +57,15 @@ def update_state(msg):
             yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
 
             angular_velocity = Vector3(reading_angular_velocity[0], reading_angular_velocity[1], reading_angular_velocity[2])
-            if sensor_index != 0:
-                swap_main_sensor_message(len(axis_names)-1, sensor.get_sensor_name()) 
+            print_sensor_source_warning(len(axis_names)-1, sensor_index, sensor.get_sensor_name()) 
             break
+
+    for axis_index in range(len(position)):
+        for sensor_index, sensor in enumerate(sensor_priorities[axis_names[axis_index]]):
+            if sensor.get_is_active():
+                position[axis_index] = sensor.get_reading()[axis_names[axis_index]]
+                print_sensor_source_warning(axis_index, sensor_index, sensor.get_sensor_name()) 
+                break
 
     if position[0] is not None and position[1] is not None and position[2] is not None and quaternion is not None:
         pub_x.publish(position[0])
@@ -116,7 +125,7 @@ if __name__ == '__main__':
     depth_sensor = DepthSensor()
     imu = IMU()
     imu_front_camera = IMUFrontCamera()
-    dvl = DVL(imu, imu_front_camera)
+    dvl = DVL()
     
     #by axis, then in order of priority
     sensor_priorities = {

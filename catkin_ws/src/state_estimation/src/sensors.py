@@ -42,7 +42,7 @@ class DepthSensor(Sensor):
         super().__init__("Depth Sensor")
         
         self.z = 0
-        self.z_pos_mount_offset = 0
+        self.z_pos_mount_offset = rospy.get_param("z_pos_mount_offset")
 
         rospy.Subscriber("/sensors/depth/status", Int32, self.sensor_status_cb)
         rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
@@ -119,7 +119,7 @@ class IMUFrontCamera(Sensor):
 
 # DVL class inheriting from Sensor
 class DVL(Sensor):
-    def __init__(self, imu, imu_front_camera):
+    def __init__(self):
         super().__init__("DVL")
 
         self.x = 0
@@ -140,45 +140,45 @@ class DVL(Sensor):
         auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
         self.auv_dvl_offset = np.array([auv_dvl_offset_x, auv_dvl_offset_y, auv_dvl_offset_z])
 
-        self.imu = imu
-        self.imu_front_camera = imu_front_camera
+        self.current_imu = None
         self.q_dvlref_nwu = None
         
         rospy.Subscriber("/sensors/dvl/status", Int32, self.sensor_status_cb)
         rospy.Subscriber("/sensors/dvl/pose", DeadReckonReport, self.dead_reckon_cb)
 
+    def set_imu(self, imu):
+        self.current_imu = imu
+
     def dead_reckon_cb(self, msg):
         # quaternion/position of dvl relative to dvlref 
         # q_dvlref_dvl = quaternion.from_euler_angles(msg.roll * RAD_PER_DEG, msg.pitch * RAD_PER_DEG, msg.yaw * RAD_PER_DEG)
-        q_dvlref_dvl = transformations.quaternion_from_euler(msg.roll * RAD_PER_DEG, msg.pitch * RAD_PER_DEG, msg.yaw * RAD_PER_DEG)
-        q_dvlref_dvl = np.quaternion(q_dvlref_dvl[3], q_dvlref_dvl[0], q_dvlref_dvl[1], q_dvlref_dvl[2])
-        q_dvlref_auv = q_dvlref_dvl * self.q_dvl_auv
-        pos_dvlref_dvl = np.array([msg.x, msg.y, msg.z])
+        if self.current_imu is not None:
+            q_dvlref_dvl = transformations.quaternion_from_euler(msg.roll * RAD_PER_DEG, msg.pitch * RAD_PER_DEG, msg.yaw * RAD_PER_DEG)
+            q_dvlref_dvl = np.quaternion(q_dvlref_dvl[3], q_dvlref_dvl[0], q_dvlref_dvl[1], q_dvlref_dvl[2])
+            q_dvlref_auv = q_dvlref_dvl * self.q_dvl_auv
+            pos_dvlref_dvl = np.array([msg.x, msg.y, msg.z])
 
-        is_imu_active = self.imu.get_is_active()
-        is_imu_front_camera_active = self.imu_front_camera.get_is_active()
+            is_current_imu_active = self.current_imu.get_is_active()
 
-        imu_q_nwu_auv = self.imu.q_nwu_auv
-        imu_front_camera_q_nwu_auv = self.imu_front_camera.q_nwu_auv
+            current_imu_q_nwu_auv = self.current_imu.q_nwu_auv
 
-        # update dvl ref frame using imu
-        if is_imu_active:
-            q_nwu_auv = self.imu.q_nwu_auv
-            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.conjugate() 
-        elif is_imu_front_camera_active:
-            q_nwu_auv = self.imu_front_camera.q_nwu_auv
-            self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.conjugate() 
+            # update dvl ref frame using imu
+            if is_current_imu_active:
+                q_nwu_auv = self.current_imu.q_nwu_auv
+                self.q_dvlref_nwu = q_dvlref_auv * q_nwu_auv.conjugate() 
 
-        if self.q_dvlref_nwu is None: return
+            if self.q_dvlref_nwu is None: return
 
-        temp_pos_auv = self.q_dvlref_nwu.conjugate() * np.quaternion(0, pos_dvlref_dvl[0], pos_dvlref_dvl[1],pos_dvlref_dvl[2]) * self.q_dvlref_nwu
-        pos_auv = np.array([temp_pos_auv.x, temp_pos_auv.y, temp_pos_auv.z])
-        if is_imu_active or not is_imu_front_camera_active:
-            temp_dvl_auv_offset_rotated = imu_q_nwu_auv * np.quaternion(0,self.auv_dvl_offset[0],self.auv_dvl_offset[1], self.auv_dvl_offset[2]) * imu_q_nwu_auv.conjugate()
+            temp_pos_auv = self.q_dvlref_nwu.conjugate() * np.quaternion(0, pos_dvlref_dvl[0], pos_dvlref_dvl[1],pos_dvlref_dvl[2]) * self.q_dvlref_nwu
+            pos_auv = np.array([temp_pos_auv.x, temp_pos_auv.y, temp_pos_auv.z])
+
+            temp_dvl_auv_offset_rotated = current_imu_q_nwu_auv * np.quaternion(0, self.auv_dvl_offset[0], self.auv_dvl_offset[1], self.auv_dvl_offset[2]) * current_imu_q_nwu_auv.conjugate()
+
+            dvl_auv_offset_rotated = np.array([temp_dvl_auv_offset_rotated.x, temp_dvl_auv_offset_rotated.y, temp_dvl_auv_offset_rotated.z])
+            pos_auv -= dvl_auv_offset_rotated
         else:
-            temp_dvl_auv_offset_rotated = imu_front_camera_q_nwu_auv * np.quaternion(0,self.auv_dvl_offset[0],self.auv_dvl_offset[1], self.auv_dvl_offset[2]) * imu_front_camera_q_nwu_auv.conjugate()
-        dvl_auv_offset_rotated = np.array([temp_dvl_auv_offset_rotated.x, temp_dvl_auv_offset_rotated.y, temp_dvl_auv_offset_rotated.z])
-        pos_auv -= dvl_auv_offset_rotated
+            pos_auv = np.array([msg.x, msg.y, msg.z])
+
         self.x = pos_auv[0]
         self.y = pos_auv[1]
         self.z = pos_auv[2]

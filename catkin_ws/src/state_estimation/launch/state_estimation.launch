@@ -1,6 +1,7 @@
 <launch>
 	<arg name="sim" default="false" />
 	<param name="update_rate" value="100" />
+	<param name="z_pos_mount_offset" value="0" />
     	<group unless="$(arg sim)">
      	<include file="$(find sensors)/launch/depth_sensor.launch"/>
 		<include file="$(find sensors)/launch/imu.launch"/>
