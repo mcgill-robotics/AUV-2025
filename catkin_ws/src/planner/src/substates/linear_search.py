@@ -33,4 +33,3 @@ class LinearSearch(smach.State):
         self.control.freeze_pose()
         print("Linear search timed out.")
         return 'failure'
-

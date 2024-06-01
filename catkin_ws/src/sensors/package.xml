@@ -25,6 +25,8 @@
   <build_depend>message_generation</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sbg_driver</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>python3-numpy</build_depend>
   
 
   <exec_depend>roscpp</exec_depend>
@@ -39,5 +41,7 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>python-bitstring-pip</exec_depend>
   <exec_depend>python3-serial</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
 </package>
 

@@ -1,7 +1,7 @@
 #include <ros.h>
 #include <std_msgs/Float64.h>
-#include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int32.h>
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
@@ -38,19 +38,19 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 ros::NodeHandle nh;
 
 String mission = "Gate";
-bool isDvlActive = false;
-bool isImuActive = false;
-bool isDepthActive = false;
+int isDvlActive = 0;
+int isImuActive = 0;
+int isDepthActive = 0;
 int battery = 25;
 
 
-void dvl_status_cb(const std_msgs::Bool& msg) {
+void dvl_status_cb(const std_msgs::Int32& msg) {
   isDvlActive = msg.data;
 }
-void depth_status_cb(const std_msgs::Bool& msg) {
+void depth_status_cb(const std_msgs::Int32& msg) {
   isDepthActive = msg.data;
 }
-void imu_status_cb(const std_msgs::Bool& msg) {
+void imu_status_cb(const std_msgs::Int32& msg) {
   isImuActive = msg.data;
 }
 
@@ -58,9 +58,9 @@ void mission_cb(const std_msgs::String& msg) {
   mission = msg.data;
 }
 
-ros::Subscriber<std_msgs::Bool> sub_dvl_status("/sensors/dvl/status", &dvl_status_cb);
-ros::Subscriber<std_msgs::Bool> sub_depth_status("/sensors/depth/status", &depth_status_cb);
-ros::Subscriber<std_msgs::Bool> sub_imu_status("/sensors/imu/status", &imu_status_cb);
+ros::Subscriber<std_msgs::Int32> sub_dvl_status("/sensors/dvl/status", &dvl_status_cb);
+ros::Subscriber<std_msgs::Int32> sub_depth_status("/sensors/depth/status", &depth_status_cb);
+ros::Subscriber<std_msgs::Int32> sub_imu_status("/sensors/imu/status", &imu_status_cb);
 ros::Subscriber<std_msgs::String> sub_mission("/mission_display", &mission_cb);
 
 
