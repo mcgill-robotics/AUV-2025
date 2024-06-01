@@ -60,7 +60,7 @@ MAX_FWD_FORCE = 4.52 * 9.81
 MAX_BKWD_FORCE = -3.52 * 9.81
 
 # Matrix representation of the system of equations representing the thrust to wrench conversion
-# Ex: Force_X = (1)Surge_Port_Thruster + (1)Surge_Starboard_Thrust
+# Ex: Force_X = (1)FRONT_LEFT_Thruster + (1)FRONT_RIGHTboard_Thrust
 
 # matrix transformation wrench -> thrust
 T_inv = np.linalg.pinv(T)
@@ -86,14 +86,14 @@ def wrench_to_thrust(w):
     converted_w = np.matmul(T_inv, a)
     tf = ThrusterForces()
 
-    tf.SURGE_PORT = converted_w[0]
-    tf.SURGE_STAR = converted_w[1]
-    tf.SWAY_BOW = converted_w[2]
-    tf.SWAY_STERN = converted_w[3]
-    tf.HEAVE_BOW_PORT = converted_w[4]
-    tf.HEAVE_BOW_STAR = converted_w[5]
-    tf.HEAVE_STERN_STAR = converted_w[6]
-    tf.HEAVE_STERN_PORT = converted_w[7]
+    tf.FRONT_LEFT = converted_w[0]
+    tf.FRONT_RIGHT = converted_w[1]
+    tf.BACK_LEFT = converted_w[2]
+    tf.BACK_RIGHT = converted_w[3]
+    tf.HEAVE_FRONT_LEFT = converted_w[4]
+    tf.HEAVE_FRONT_RIGHT = converted_w[5]
+    tf.HEAVE_BACK_LEFT = converted_w[6]
+    tf.HEAVE_BACK_RIGHT = converted_w[7]
 
     # this is used by the sim
     pub_forces.publish(tf)
@@ -107,29 +107,29 @@ def forces_to_pwm_publisher(forces_msg):
     Publish pwm signals
     """
     pwm_arr = [None] * 8
-    pwm_arr[ThrusterMicroseconds.SURGE_PORT] = force_to_pwm(
-        forces_msg.SURGE_PORT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(
+        forces_msg.FRONT_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.SURGE_STAR] = force_to_pwm(
-        forces_msg.SURGE_STAR, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(
+        forces_msg.FRONT_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.SWAY_BOW] = force_to_pwm(
-        forces_msg.SWAY_BOW, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(
+        forces_msg.BACK_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.SWAY_STERN] = force_to_pwm(
-        forces_msg.SWAY_STERN, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(
+        forces_msg.BACK_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_PORT] = force_to_pwm(
-        forces_msg.HEAVE_BOW_PORT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(
+        forces_msg.HEAVE_FRONT_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.HEAVE_BOW_STAR] = force_to_pwm(
-        forces_msg.HEAVE_BOW_STAR, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm(
+        forces_msg.HEAVE_FRONT_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_STAR] = force_to_pwm(
-        forces_msg.HEAVE_STERN_STAR, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(
+        forces_msg.HEAVE_BACK_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
-    pwm_arr[ThrusterMicroseconds.HEAVE_STERN_PORT] = force_to_pwm(
-        forces_msg.HEAVE_STERN_PORT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm(
+        forces_msg.HEAVE_BACK_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
     )
 
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
