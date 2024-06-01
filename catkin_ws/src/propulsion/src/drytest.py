@@ -2,6 +2,8 @@
 
 import rospy
 from auv_msgs.msg import ThrusterMicroseconds
+from geometry_msgs.msg import Wrench
+import keyboard
 
 force_amt = 0.0025  # 0.5%
 
@@ -10,6 +12,16 @@ force_amt = 0.0025  # 0.5%
 # forces produced by T200 thruster at 14V (N)
 MAX_FWD_FORCE = 4.52 * 9.81
 MAX_BKWD_FORCE = -3.52 * 9.81
+
+# TODO: update if necessary
+reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
+
+reset_cmd = ThrusterMicroseconds(reset)
+pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
+effort_pub = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
+rospy.sleep(7)
+
+rospy.init_node("thrusters_test")
 
 
 def negativeForceCurve(force):
@@ -50,18 +62,8 @@ def force_to_microseconds(force):
         return 1500  # middle value is 1500
 
 
-# TODO: update if necessary
-pins = {1: 4, 2: 5, 3: 2, 4: 6, 5: 8, 6: 3, 7: 7, 8: 1}
-reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
-
-reset_cmd = ThrusterMicroseconds(reset)
-pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
-rospy.sleep(7)
-
-
 def forwards_test(t):
     print("----------T{}----------".format(t))
-    print("expected output is on PWM {}".format(pins[t]))
     while not rospy.is_shutdown():
         print("- spinning at " + str(100 * force_amt) + "% max forwards force for 5s")
 
@@ -79,10 +81,6 @@ def forwards_test(t):
 
 
 def simultaneous_forwards_test():
-    print_str = "|"
-    for t in range(8):
-        print_str += " T{} - PWM {} |".format(t + 1, pins[t + 1])
-    print(print_str)
     while not rospy.is_shutdown():
         print("- spinning at " + str(100 * force_amt) + "% max forwards force for 5s")
 
@@ -105,8 +103,8 @@ def reset_thrusters():
 
 def re_arm():
     rospy.sleep(1)
-    msg1 = ThrusterMicroseconds([1500]*8)
-    msg2 = ThrusterMicroseconds([1540]*8)
+    msg1 = ThrusterMicroseconds([1500] * 8)
+    msg2 = ThrusterMicroseconds([1540] * 8)
 
     pub.publish(msg1)
     rospy.sleep(0.5)
@@ -114,9 +112,8 @@ def re_arm():
     rospy.sleep(0.5)
     pub.publish(msg1)
 
-rospy.init_node("thrusters_test")
-rospy.on_shutdown(reset_thrusters)
 
+rospy.on_shutdown(reset_thrusters)
 while not rospy.is_shutdown():
     print("========== Thrusters Test ==========")
     print(
@@ -126,7 +123,8 @@ while not rospy.is_shutdown():
     print("2. select thruster to test")
     print("3. test thrusters simultaneously")
     print("4. re-arm")
-    print("5. exit")
+    print("5. Keyboard control")
+    print("6. exit")
     choice = input()
 
     if choice == "1":
@@ -146,5 +144,73 @@ while not rospy.is_shutdown():
         simultaneous_forwards_test()
     elif choice == "4":
         re_arm()
+    elif choice == "5":
+        print("NOTE: Uses thrust mapper")
+        print(" > WASD for SURGE/SWAY")
+        print(" > Q/E for UP/DOWN")
+        print(" > IJKL for PITCH/YAW")
+        print(" > U/O for ROLL")
+        print(" > ESC to exit")
+        while True:
+            desired_effort = Wrench()
+            desired_effort.force.x = 0
+            desired_effort.force.y = 0
+            desired_effort.force.z = 0
+            desired_effort.torque.x = 0
+            desired_effort.torque.y = 0
+            desired_effort.torque.z = 0
+
+            if keyboard.is_pressed("esc"):
+                break
+            if keyboard.is_pressed("w"):
+                desired_effort.force.x = (
+                    desired_effort.force.x + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("s"):
+                desired_effort.force.x = (
+                    desired_effort.force.x - force_amt * MAX_BKWD_FORCE
+                )
+            if keyboard.is_pressed("a"):
+                desired_effort.force.y = (
+                    desired_effort.force.y + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("d"):
+                desired_effort.force.y = (
+                    desired_effort.force.y - force_amt * MAX_BKWD_FORCE
+                )
+            if keyboard.is_pressed("q"):
+                desired_effort.force.z = (
+                    desired_effort.force.z + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("e"):
+                desired_effort.force.z = (
+                    desired_effort.force.z - force_amt * MAX_BKWD_FORCE
+                )
+            if keyboard.is_pressed("o"):
+                desired_effort.torque.y = (
+                    desired_effort.torque.x + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("u"):
+                desired_effort.torque.y = (
+                    desired_effort.torque.x - force_amt * MAX_BKWD_FORCE
+                )
+            if keyboard.is_pressed("i"):
+                desired_effort.torque.y = (
+                    desired_effort.torque.y + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("k"):
+                desired_effort.torque.y = (
+                    desired_effort.torque.y - force_amt * MAX_BKWD_FORCE
+                )
+            if keyboard.is_pressed("j"):
+                desired_effort.torque.z = (
+                    desired_effort.torque.z + force_amt * MAX_FWD_FORCE
+                )
+            if keyboard.is_pressed("l"):
+                desired_effort.torque.z = (
+                    desired_effort.torque.z - force_amt * MAX_BKWD_FORCE
+                )
+
+            effort_pub.publish(desired_effort)
     else:
         break
