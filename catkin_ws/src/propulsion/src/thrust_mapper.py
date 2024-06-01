@@ -14,44 +14,20 @@ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 import math
 
-# distances in m
-dx_1 = 0.397 # T1 -> T2
-dx_2 = 0.395 # T7 -> T8, T5 -> T6 
-dy_1 = 0.514 # T6 -> T7, T5 -> T8
-dy_2 = 0.779 # perpendicular T3 -> T4
+# constant parameters of the thruster positions
+l = rospy.get_param("distance_thruster_thruster_length")
+w = rospy.get_param("distance_thruster_thruster_width")
+alpha = rospy.get_param("angle_thruster")
+a = rospy.get_param("distance_thruster_middle_length")
 
-Dx = 0.67
-d_A3_x = 0.055
-d_og_x = 23/49*Dx
-d_g3_x = (Dx - d_og_x) + d_A3_x # perpendicular COM -> T3
-d_g4_x = d_og_x + d_A3_x # perpendicular COM -> T4
+T = np.array([[np.cos(alpha), np.cos(alpha), -np.cos(alpha), -np.cos(alpha), 0, 0, 0, 0],
+                        [-np.sin(alpha), np.sin(alpha), -np.sin(alpha), np.sin(alpha), 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 1],
+                        [0, 0, 0, 0, w/2, -w/2, w/2, -w/2],
+                        [0, 0, 0, 0, -a, -a, a, a],
+                        [-w/2*np.cos(alpha) - l/2*np.sin(alpha), w/2*np.cos(alpha) + l/2*np.sin(alpha), 
+                         w/2*np.cos(alpha) + l/2*np.sin(alpha), -w/2*np.cos(alpha) - l/2*np.sin(alpha), 0, 0, 0, 0]])
 
-d_47_x = 0.15
-d_g3_x = 0.46
-d_g4_x = 0.32
-
-d_g7_x = d_g4_x - d_47_x
-d_g5_x = d_g3_x - d_47_x
-
-
-T = np.matrix(
-        [[    -1.,     -1.,   0.,   0.,      0.,     0.,     0.,       0.],
-        [      0.,      0.,   1.,  -1.,      0.,     0.,     0.,       0.],
-        [      0.,      0.,   0.,   0.,     -1.,    -1.,    -1.,      -1.],
-        [      0.,      0.,   0.,   0., -dx_2/2, dx_2/2,  dx_2/2, -dx_2/2],
-        [      0.,      0.,   0.,   0.,  dy_1/2, dy_1/2, -dy_1/2, -dy_1/2],
-        [  dx_1/2, -dx_1/2, dy_2/2, dy_2/2,      0.,     0.,      0.,      0.]]
-        )
-
-
-# T = np.matrix(
-#         [[    -1.,     -1.,   0.,   0.,      0.,     0.,     0.,       0.],
-#         [      0.,      0.,   1.,  -1.,      0.,     0.,     0.,       0.],
-#         [      0.,      0.,   0.,   0.,     -1.,    -1.,    -1.,      -1.],
-#         [      0.,      0.,   0.,   0., -dx_2/2, dx_2/2,  dx_2/2, -dx_2/2],
-#         [      0.,      0.,   0.,   0.,  d_g5_x, d_g5_x, -d_g7_x, d_g7_x],
-#         [  dx_1/2, -dx_1/2, d_g3_x, d_g4_x,      0.,     0.,      0.,      0.]]
-#         )
 
 # forces produced by T200 thruster at 14V (N)
 THRUST_LIMIT = 1.0  # Limit thruster speed while dry-testing
