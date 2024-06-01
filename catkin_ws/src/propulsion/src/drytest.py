@@ -168,7 +168,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("s"):
                 desired_effort.force.x = (
-                    desired_effort.force.x - force_amt * MAX_FWD_FORCE
+                    desired_effort.force.x - force_amt * MAX_BKWD_FORCE
                 )
             if keyboard.is_pressed("a"):
                 desired_effort.force.y = (
@@ -176,7 +176,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("d"):
                 desired_effort.force.y = (
-                    desired_effort.force.y - force_amt * MAX_FWD_FORCE
+                    desired_effort.force.y - force_amt * MAX_BKWD_FORCE
                 )
             if keyboard.is_pressed("q"):
                 desired_effort.force.z = (
@@ -184,7 +184,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("e"):
                 desired_effort.force.z = (
-                    desired_effort.force.z - force_amt * MAX_FWD_FORCE
+                    desired_effort.force.z - force_amt * MAX_BKWD_FORCE
                 )
             if keyboard.is_pressed("o"):
                 desired_effort.torque.y = (
@@ -192,7 +192,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("u"):
                 desired_effort.torque.y = (
-                    desired_effort.torque.x - force_amt * MAX_FWD_FORCE
+                    desired_effort.torque.x - force_amt * MAX_BKWD_FORCE
                 )
             if keyboard.is_pressed("i"):
                 desired_effort.torque.y = (
@@ -200,7 +200,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("k"):
                 desired_effort.torque.y = (
-                    desired_effort.torque.y - force_amt * MAX_FWD_FORCE
+                    desired_effort.torque.y - force_amt * MAX_BKWD_FORCE
                 )
             if keyboard.is_pressed("j"):
                 desired_effort.torque.z = (
@@ -208,7 +208,7 @@ while not rospy.is_shutdown():
                 )
             if keyboard.is_pressed("l"):
                 desired_effort.torque.z = (
-                    desired_effort.torque.z - force_amt * MAX_FWD_FORCE
+                    desired_effort.torque.z - force_amt * MAX_BKWD_FORCE
                 )
 
             effort_pub.publish(desired_effort)
