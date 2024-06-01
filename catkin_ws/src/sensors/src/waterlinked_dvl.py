@@ -40,6 +40,7 @@ def parse_velocity_report(line):
     #        fom: {fom}, covariance: {covariance}, time valid: {time_of_validity}, time_of_transmission: {time_of_transmission}, \
     #         time_since_last_report: {time_since_last_report}, state: {state}")
 
+
 def parse_dead_reckon_report(line):
     tokens = line.split(",")
     time_stamp = float(tokens[1])
@@ -64,8 +65,6 @@ def parse_dead_reckon_report(line):
     return report
     # print(f"\nx: {x}, y: {y}, z: {z}, std: {std}, roll: {roll}, \
     #        pitch: {pitch}, yaw: {yaw}, status: {status}")
-    
-
 
 
 def main():
@@ -78,25 +77,35 @@ def main():
     baudrate = rospy.get_param("~baudrate")
 
     conn = serial.Serial(port)
-    # dvl's baud has been set to 115200 but its default is 9600. 
+    conn.timeout = 10
+    # dvl's baud has been set to 115200 but its default is 9600.
     # There is a way to set the baudrate of the dvl through a command.
     conn.baudrate = baudrate
-
 
     if not conn.isOpen():
         conn.open()
 
     conn.send_break()
     conn.flush()
-    
+
     conn.write("wcr\r\n".encode("utf-8"))
-    conn.flush()  
-  
-    print("hello world")
+    conn.flush()
+
+    while conn.is_open and not rospy.is_shutdown():
+        try:
+            line = conn.readline().decode("utf-8")
+            if line.startswith("wra"):
+                print("INFO: DVL dead reckoning reset successful.")
+                break
+            elif line.startswith("wrn"):
+                print("WARN: DVL dead reckoning reset failed.")
+                break
+        except Exception as e:
+            print(e)
+            break
 
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
-    print(conn.is_open)
     while conn.is_open and not rospy.is_shutdown():
         # raw_data = conn.read(1).decode("utf-8")
         # print(raw_data,"")
@@ -104,14 +113,14 @@ def main():
         try:
             line = conn.readline().decode("utf-8")
             # print(line)
-            if(line.startswith("wrz")):
+            if line.startswith("wrz"):
                 pub_vr.publish(parse_velocity_report(line))
-            elif(line.startswith("wrp")):
+            elif line.startswith("wrp"):
                 pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
 
-         
+
 if __name__ == "__main__":
     try:
         main()
