@@ -1,0 +1,3 @@
+<launch>
+	<node name="joystick" pkg="controls" type="joystick.py" respawn="false" output="screen"/>
+</launch>
