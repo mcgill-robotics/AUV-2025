@@ -39,7 +39,7 @@ def update_state(msg):
         last_clock_msg_s = msg.clock.secs
         last_clock_msg_ns = msg.clock.nsecs
 
-    position = [0, 0, 0]
+    position = [None, None, None]
     quaternion = None
     global last_error_message_time
 
@@ -95,21 +95,42 @@ def update_state(msg):
                 )
                 break
 
-    # if position[0] is not None and position[1] is not None and position[2] is not None and quaternion is not None:
-    pub_x.publish(position[0])
-    pub_y.publish(position[1])
-    pub_z.publish(position[2])
-    pub_theta_x.publish(roll)
-    pub_theta_y.publish(pitch)
-    pub_theta_z.publish(yaw)
-    pub_ang_vel.publish(angular_velocity)
+    if position[0] is not None:
+        pub_x.publish(position[0])
+    else:
+        position[0] = 0  # for publishing the Pose message
+    if position[1] is not None:
+        pub_y.publish(position[1])
+    else:
+        position[1] = 0  # for publishing the Pose message
+    if position[2] is not None:
+        pub_z.publish(position[2])
+    else:
+        position[2] = 0  # for publishing the Pose message
+    if quaternion is not None:
+        pub_theta_x.publish(roll)
+        pub_theta_y.publish(pitch)
+        pub_theta_z.publish(yaw)
+        pub_ang_vel.publish(angular_velocity)
+    else:
+        quaternion = Quaternion(x=0, y=0, z=0, w=1)  # for publishing the Pose message
+
     pose = Pose(Point(x=position[0], y=position[1], z=position[2]), quaternion)
     pub_pose.publish(pose)
     broadcast_auv_pose(pose)
-    # elif rospy.get_time() - last_error_message_time > 1:
-    #     last_error_message_time = rospy.get_time()
-    #     rospy.logerr("Missing sensor data for proper state estimation! Available states: [ X: {} Y: {} Z: {} Q: {} ]"
-    #         .format(position[0] is not None, position[1] is not None, position[2] is not None, quaternion is not None))
+
+    if rospy.get_time() - last_error_message_time > 1 and (
+        None in position or quaternion is None
+    ):
+        last_error_message_time = rospy.get_time()
+        rospy.logerr(
+            "Missing sensor data for proper state estimation! Available states: [ X: {} Y: {} Z: {} Q: {} ]".format(
+                position[0] is not None,
+                position[1] is not None,
+                position[2] is not None,
+                quaternion is not None,
+            )
+        )
 
 
 def broadcast_auv_pose(pose):

@@ -45,8 +45,8 @@ def gateMission():
                 mapping=mapping,
                 state=state,
                 goThrough=True,
-                target_symbol=target_symbol,
-                gate_width=gate_width,
+                target_symbol=None,  # TODO!!!
+                gate_width=None,  # TODO!!!
             ),
             transitions={"success": "success", "failure": "failure"},
         )
@@ -131,8 +131,8 @@ def semiFinals():
                 mapping=mapping,
                 state=state,
                 goThrough=False,
-                target_symbol=target_symbol,
-                gate_width=gate_width,
+                target_symbol=None,  # TODO!!!
+                gate_width=None,  # TODO!!!
             ),
             transitions={"success": "tricks", "failure": "failure"},
         )
@@ -150,8 +150,8 @@ def semiFinals():
                 mapping=mapping,
                 state=state,
                 goThrough=True,
-                target_symbol=target_symbol,
-                gate_width=gate_width,
+                target_symbol=None,  # TODO!!!
+                gate_width=None,  # TODO!!!
             ),
             transitions={"success": "find_lane_marker", "failure": "failure"},
         )
