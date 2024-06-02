@@ -33,6 +33,7 @@ def reset_thrusters():
 
 rospy.on_shutdown(reset_thrusters)
 while not rospy.is_shutdown():
+    print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
     print(" > WASD for SURGE/SWAY")
     print(" > Q/E for UP/DOWN")
     print(" > IJKL for PITCH/YAW")

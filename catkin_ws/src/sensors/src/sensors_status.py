@@ -8,8 +8,6 @@ from auv_msgs.msg import DeadReckonReport, PingerTimeDifference
 from sbg_driver.msg import SbgEkfQuat, SbgImuData
 from std_msgs.msg import Float64, Int32
 from sensor_msgs.msg import Image, Imu
-from tf import transformations
-from rosgraph_msgs.msg import Clock
 
 Q_NWU_NED = np.quaternion(0, 1, 0, 0)
 Q_IMUNOMINAL_AUV = np.quaternion(0, 1, 0, 0)
@@ -21,54 +19,44 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 class Sensor:
     def __init__(self, sensor_name):
         self.time_before_considered_inactive = 1  # seconds
-        self.last_error_message_time = rospy.get_time()
         self.sensor_name = sensor_name
+        self.sensor_warning_interval = rospy.get_param(
+            "sensor_warning_interval"
+        )  # seconds
 
         # initialize a sensor as "inactive"
         self.last_unique_reading_time = -1 * self.time_before_considered_inactive
         self.current_reading = None
         self.last_reading = None
-
         self.is_active = False
-        self.sensor_warning_interval = rospy.get_param(
-            "sensor_warning_interval"
-        )  # seconds
+        self.last_error_message_time = rospy.get_time()
         self.last_inactive_message_time = rospy.get_time()
 
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
-            if (
-                rospy.get_time() - self.last_unique_reading_time
-                > self.time_before_considered_inactive
-            ):
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_reading_time = rospy.get_time()
             self.last_reading = self.current_reading
 
     def get_is_active(self):
         if (
-            rospy.get_time() == 0
-            or not self.has_valid_data()
+            not self.has_valid_data()
             or rospy.get_time() - self.last_unique_reading_time
             > self.time_before_considered_inactive
         ):
             if (
-                self.is_active
-                and rospy.get_time() - self.last_inactive_message_time
+                rospy.get_time() - self.last_inactive_message_time
                 > self.sensor_warning_interval
             ):
-                self.active = False
                 self.last_inactive_message_time = rospy.get_time()
                 rospy.logwarn("{} is inactive.".format(self.sensor_name))
+            self.active = False
             return 0
         else:
+            if not self.is_active:
+                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.is_active = True
             return 1
 
-    def get_sensor_name(self):
-        return self.sensor_name
-
-    # @abstractmethod
     def has_valid_data(self):
         raise NotImplementedError("Subclass must implement abstract method")
 
@@ -82,7 +70,6 @@ class DepthSensor(Sensor):
 
     def __init__(self):
         super().__init__("Depth Sensor")
-
         rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
 
     def depth_cb(self, msg):
@@ -103,10 +90,8 @@ class IMU(Sensor):
 
     def __init__(self):
         super().__init__("IMU")
-
         self.current_reading = [np.quaternion(1, 0, 0, 0), [0, 0, 0]]
         self.last_reading = [np.quaternion(1, 0, 0, 0), [0, 0, 0]]
-
         rospy.Subscriber("/sensors/imu/quaternion", SbgEkfQuat, self.quat_cb)
         rospy.Subscriber("/sensors/imu/angular_velocity", SbgImuData, self.ang_vel_cb)
 
@@ -120,27 +105,20 @@ class IMU(Sensor):
         self.current_reading[1] = [gyro.x, gyro.y, gyro.z]
         self.update_last_reading()
 
-    # @override
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
-            if (
-                rospy.get_time() - self.last_unique_reading_time
-                > self.time_before_considered_inactive
-            ):
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_reading_time = rospy.get_time()
             self.last_reading[0] = self.current_reading[0]  # np.quaternion
             self.last_reading[1] = self.current_reading[1][:]  # gyro (list) -> deepcopy
 
-    # @override
     def has_valid_data(self):
         return (
             self.current_reading[0] is not None and self.current_reading[1] is not None
         )
 
 
-# IMUFrontCamera class inheriting from Sensor
-class IMUFrontCamera(Sensor):
+# FrontCameraIMU class inheriting from Sensor
+class FrontCameraIMU(Sensor):
     """
     self.current_reading == [quaternion, angular_velocity]
     quaternion: np.quaternion(w, x, y, z)
@@ -164,19 +142,12 @@ class IMUFrontCamera(Sensor):
         )
         self.update_last_reading()
 
-    # @override
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
-            if (
-                rospy.get_time() - self.last_unique_reading_time
-                > self.time_before_considered_inactive
-            ):
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_reading_time = rospy.get_time()
             self.last_reading[0] = self.current_reading[0]  # np.quaternion
             self.last_reading[1] = self.current_reading[1][:]  # gyro (list) -> deepcopy
 
-    # @override
     def has_valid_data(self):
         return (
             self.current_reading[0] is not None and self.current_reading[1] is not None
@@ -202,18 +173,11 @@ class DVL(Sensor):
         self.current_reading = [msg.x, msg.y, msg.z, msg.roll, msg.pitch, msg.yaw]
         self.update_last_reading()
 
-    # @override
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
-            if (
-                rospy.get_time() - self.last_unique_reading_time
-                > self.time_before_considered_inactive
-            ):
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_reading_time = rospy.get_time()
             self.last_reading = self.current_reading[:]  # pose (list) -> deepcopy
 
-    # @override
     def has_valid_data(self):
         return None not in self.current_reading
 
@@ -234,10 +198,9 @@ class FrontCameraImage(Sensor):
 
     def front_camera_cb(self, msg):
         time = msg.header.stamp
-        self.current_reading = time.secs * 10e9 + time.nsecs
+        self.current_reading = time.secs * 1e9 + time.nsecs
         self.update_last_reading()
 
-    # @override
     def has_valid_data(self):
         return self.current_reading is not None
 
@@ -256,10 +219,9 @@ class DownCamera(Sensor):
 
     def down_camera_cb(self, msg):
         time = msg.header.stamp
-        self.current_reading = time.secs * 10e9 + time.nsecs
+        self.current_reading = time.secs * 1e9 + time.nsecs
         self.update_last_reading()
 
-    # @override
     def has_valid_data(self):
         return self.current_reading is not None
 
@@ -294,18 +256,11 @@ class Hydrophones(Sensor):
         ]
         self.update_last_reading()
 
-    # @override
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
-            if (
-                rospy.get_time() - self.last_unique_reading_time
-                > self.time_before_considered_inactive
-            ):
-                rospy.loginfo("{} has become active.".format(self.sensor_name))
             self.last_unique_reading_time = rospy.get_time()
-            self.last_reading = self.current_reading[:]  # pose (list) -> deepcopy
+            self.last_reading = self.current_reading[:]
 
-    # @override
     def has_valid_data(self):
         indexes_true = [i for i, e in enumerate(self.are_pingers_active) if e]
         indexes_non_zero = [
@@ -337,12 +292,11 @@ class Actuator(Sensor):
         # self.current_reading = msg.position
         self.update_last_reading()
 
-    # @override
     def has_valid_data(self):
         return self.status and self.current_reading is not None
 
 
-def update_state(msg):
+def update_state(_):
     pub_depth_sensor_status.publish(depth_sensor.get_is_active())
     pub_imu_sensor_status.publish(imu.get_is_active())
     pub_imu_front_camera_sensor_status.publish(imu_front_camera.get_is_active())
@@ -350,7 +304,7 @@ def update_state(msg):
     pub_front_camera_sensor_status.publish(front_camera_image.get_is_active())
     pub_down_camera_sensor_status.publish(down_camera.get_is_active())
     pub_hydrophones_sensor_status.publish(hydrophones.get_is_active())
-    pub_actuator_sensor_status.publish(Int32(0))  # (actuator.get_is_active())
+    pub_actuator_sensor_status.publish(actuator.get_is_active())
 
 
 if __name__ == "__main__":
@@ -358,7 +312,7 @@ if __name__ == "__main__":
 
     depth_sensor = DepthSensor()
     imu = IMU()
-    imu_front_camera = IMUFrontCamera()
+    imu_front_camera = FrontCameraIMU()
     dvl = DVL()
     front_camera_image = FrontCameraImage()
     down_camera = DownCamera()
@@ -386,16 +340,9 @@ if __name__ == "__main__":
         "/sensors/actuator/status", Int32, queue_size=1
     )
 
-    update_state_on_clock = rospy.get_param("update_state_on_clock")
-
-    if update_state_on_clock:
-        rospy.Subscriber("/clock", Clock, update_state)
-        last_clock_msg_s = None
-        last_clock_msg_ns = None
-    else:
-        timer = rospy.Timer(
-            rospy.Duration(1.0 / rospy.get_param("update_rate")), update_state
-        )
-        rospy.on_shutdown(timer.shutdown)
+    timer = rospy.Timer(
+        rospy.Duration(1.0 / rospy.get_param("sensor_status_update_rate")), update_state
+    )
+    rospy.on_shutdown(timer.shutdown)
 
     rospy.spin()
