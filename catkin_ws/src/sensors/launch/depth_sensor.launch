@@ -1,3 +1,0 @@
-<launch>
-	<include file="$(find propulsion)/launch/display.launch"> <!-- since depth sensor and display board are on the same microcontroller -->
-</launch>
