@@ -1,7 +1,7 @@
 <launch>
 	<arg name="sim" default="false" />
 	<arg name="bag" default="false" />
-	<arg name="vision" default="true" />
+	<arg name="vision" default="false" />
 	<arg name="actions" default="false" />
 
 	<include file="$(find sensors)/launch/sensors_status.launch"/>

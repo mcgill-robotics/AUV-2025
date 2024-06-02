@@ -12,7 +12,6 @@ import rospy
 from thrust_mapper_utils import *
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
-import math
 
 # constant parameters of the thruster positions
 l = rospy.get_param("distance_thruster_thruster_length")
@@ -20,13 +19,25 @@ w = rospy.get_param("distance_thruster_thruster_width")
 alpha = rospy.get_param("angle_thruster")
 a = rospy.get_param("distance_thruster_middle_length")
 
-T = np.array([[np.cos(alpha), np.cos(alpha), -np.cos(alpha), -np.cos(alpha), 0, 0, 0, 0],
-                        [-np.sin(alpha), np.sin(alpha), -np.sin(alpha), np.sin(alpha), 0, 0, 0, 0],
-                        [0, 0, 0, 0, 1, 1, 1, 1],
-                        [0, 0, 0, 0, w/2, -w/2, w/2, -w/2],
-                        [0, 0, 0, 0, -a, -a, a, a],
-                        [-w/2*np.cos(alpha) - l/2*np.sin(alpha), w/2*np.cos(alpha) + l/2*np.sin(alpha), 
-                         w/2*np.cos(alpha) + l/2*np.sin(alpha), -w/2*np.cos(alpha) - l/2*np.sin(alpha), 0, 0, 0, 0]])
+T = np.array(
+    [
+        [np.cos(alpha), np.cos(alpha), -np.cos(alpha), -np.cos(alpha), 0, 0, 0, 0],
+        [-np.sin(alpha), np.sin(alpha), -np.sin(alpha), np.sin(alpha), 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, w / 2, -w / 2, w / 2, -w / 2],
+        [0, 0, 0, 0, -a, -a, a, a],
+        [
+            -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
+            w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
+            w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
+            -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
+            0,
+            0,
+            0,
+            0,
+        ],
+    ]
+)
 
 
 # forces produced by T200 thruster at 14V (N)

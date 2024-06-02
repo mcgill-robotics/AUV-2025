@@ -2,7 +2,7 @@
 
 import rospy
 from auv_msgs.msg import ThrusterMicroseconds
-from geometry_msgs.msg import Wrench
+from std_msgs.msg import Float64
 import keyboard
 
 low_force_amt = 0.0025  # 0.25%
@@ -15,7 +15,12 @@ MAX_BKWD_FORCE = -3.52 * 9.81
 reset_cmd = ThrusterMicroseconds([1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500])
 rospy.init_node("joystick")
 rospy.sleep(7)
-effort_pub = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
+x_pub = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
+y_pub = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
+z_pub = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
+roll_pub = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
+pitch_pub = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
+yaw_pub = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
 
 
 pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
@@ -34,65 +39,45 @@ while not rospy.is_shutdown():
     print(" > U/O for ROLL")
     print(" > hold SPACE for max. force")
     while True:
-        desired_effort = Wrench()
-        desired_effort.force.x = 0
-        desired_effort.force.y = 0
-        desired_effort.force.z = 0
-        desired_effort.torque.x = 0
-        desired_effort.torque.y = 0
-        desired_effort.torque.z = 0
+        desired_x_force = 0
+        desired_y_force = 0
+        desired_z_force = 0
+        desired_x_torque = 0
+        desired_y_torque = 0
+        desired_z_torque = 0
 
         current_force_amt = force_amt if keyboard.is_pressed("space") else low_force_amt
 
         if keyboard.is_pressed("esc"):
             break
         if keyboard.is_pressed("w"):
-            desired_effort.force.x = (
-                desired_effort.force.x + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_x_force += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("s"):
-            desired_effort.force.x = (
-                desired_effort.force.x - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_x_force += current_force_amt * MAX_BKWD_FORCE
         if keyboard.is_pressed("a"):
-            desired_effort.force.y = (
-                desired_effort.force.y + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_y_force += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("d"):
-            desired_effort.force.y = (
-                desired_effort.force.y - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_y_force += current_force_amt * MAX_BKWD_FORCE
         if keyboard.is_pressed("q"):
-            desired_effort.force.z = (
-                desired_effort.force.z + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_z_force += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("e"):
-            desired_effort.force.z = (
-                desired_effort.force.z - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_z_force += current_force_amt * MAX_BKWD_FORCE
         if keyboard.is_pressed("o"):
-            desired_effort.torque.y = (
-                desired_effort.torque.x + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_y_torque += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("u"):
-            desired_effort.torque.y = (
-                desired_effort.torque.x - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_y_torque += current_force_amt * MAX_BKWD_FORCE
         if keyboard.is_pressed("i"):
-            desired_effort.torque.y = (
-                desired_effort.torque.y + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_y_torque += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("k"):
-            desired_effort.torque.y = (
-                desired_effort.torque.y - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_y_torque += current_force_amt * MAX_BKWD_FORCE
         if keyboard.is_pressed("j"):
-            desired_effort.torque.z = (
-                desired_effort.torque.z + current_force_amt * MAX_FWD_FORCE
-            )
+            desired_z_torque += current_force_amt * MAX_FWD_FORCE
         if keyboard.is_pressed("l"):
-            desired_effort.torque.z = (
-                desired_effort.torque.z - current_force_amt * MAX_BKWD_FORCE
-            )
+            desired_z_torque += current_force_amt * MAX_BKWD_FORCE
 
-        effort_pub.publish(desired_effort)
+        x_pub.publish(desired_x_force)
+        y_pub.publish(desired_y_force)
+        z_pub.publish(desired_z_force)
+        roll_pub.publish(desired_x_torque)
+        pitch_pub.publish(desired_y_torque)
+        yaw_pub.publish(desired_z_torque)

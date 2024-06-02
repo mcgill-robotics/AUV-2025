@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-  
+
 import rospy
 import rostest
 import unittest
 import numpy as np
 from object_detection_utils import findIntersection
+
 
 class find_intersection_test(unittest.TestCase):
     # When the vector points straight down, the function should return a point on the plane.
@@ -29,6 +30,7 @@ class find_intersection_test(unittest.TestCase):
         result = findIntersection(vector, plane_z_pos)
         self.assertIsNone(result)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # rospy.init_node("find_intersection_test") - Already initialized in object_detection_utils.py
-    rostest.rosrun("vision", 'find_intersection_test', find_intersection_test)
+    rostest.rosrun("vision", "find_intersection_test", find_intersection_test)
