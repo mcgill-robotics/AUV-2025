@@ -25,7 +25,6 @@
   <build_depend>message_generation</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sbg_driver</build_depend>
-  <build_depend>zed_wrapper</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>python3-numpy</build_depend>
   

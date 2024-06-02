@@ -1,1 +1,0 @@
-docker buildx build --platform linux/amd64,linux/arm64 -t mcgillrobotics/auv_2024:unity .
