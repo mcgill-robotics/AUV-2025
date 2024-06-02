@@ -4,14 +4,17 @@ import rospy
 import math
 from auv_msgs.msg import VisionObjectArray
 
+
 class ObjectMapper:
     def __init__(self):
-        #replace with map subscriber in future
+        # replace with map subscriber in future
         self.map = []
-        self.obj_sub = rospy.Subscriber('vision/object_map', VisionObjectArray, self.mapUpdateCb)
+        self.obj_sub = rospy.Subscriber(
+            "vision/object_map", VisionObjectArray, self.mapUpdateCb
+        )
         self.NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
-    def mapUpdateCb(self,msg):
+    def mapUpdateCb(self, msg):
         self.map = []
         for obj in msg.array:
             new_map_obj = []
@@ -19,25 +22,29 @@ class ObjectMapper:
             new_map_obj.append(obj.x)
             new_map_obj.append(obj.y)
             new_map_obj.append(obj.z)
-            if obj.theta_z == self.NULL_PLACEHOLDER: new_map_obj.append(None)
-            else: new_map_obj.append(obj.theta_z)
-            if obj.extra_field == self.NULL_PLACEHOLDER: new_map_obj.append(None)
-            else: new_map_obj.append(obj.extra_field)
+            if obj.theta_z == self.NULL_PLACEHOLDER:
+                new_map_obj.append(None)
+            else:
+                new_map_obj.append(obj.theta_z)
+            if obj.extra_field == self.NULL_PLACEHOLDER:
+                new_map_obj.append(None)
+            else:
+                new_map_obj.append(obj.extra_field)
             self.map.append(new_map_obj)
 
-    def getClass(self,cls=None):
+    def getClass(self, cls=None):
         objs_with_class = []
         for obj in self.map:
             if obj[0] == cls or cls is None:
                 objs_with_class.append(obj)
         return objs_with_class
 
-    def getClosestObject(self,pos,cls=None):
+    def getClosestObject(self, pos, cls=None):
         closest_object_dist = 999999
         closest_object = None
         for obj in self.map:
             if obj[0] == cls or cls is None:
-                dist = math.sqrt((obj[1]-pos[0])**2 + (obj[2]-pos[1])**2)
+                dist = math.sqrt((obj[1] - pos[0]) ** 2 + (obj[2] - pos[1]) ** 2)
                 if dist < closest_object_dist:
                     closest_object = obj
                     closest_object_dist = dist
