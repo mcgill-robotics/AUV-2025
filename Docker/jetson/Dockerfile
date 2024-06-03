@@ -51,7 +51,7 @@ RUN sudo apt-get update \
     && apt-get update && apt-get install -y wget \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip
+    && apt-get install -y python3-catkin-tools python3-pip tmux
 
 RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
@@ -74,12 +74,6 @@ RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrin
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
 
-COPY requirements.txt requirements.txt
-
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
-    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt 
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
             libjpeg-dev \
@@ -95,6 +89,28 @@ RUN apt-get update && \
     && pip3 install bitstring \
     && ./zed_sdk_install_jetson.run -- silent \
     && rm zed_sdk_install_jetson.run
+
+COPY ../build_zed.bash .
+RUN chmod +x build_zed.bash \
+    && /bin/bash -c './build_zed.bash' \
+    && rm build_zed.bash \
+    && echo "source /zed/catkin_ws/install/setup.bash" >> ~/.bashrc
+
+RUN apt update \
+    && apt install -y openssh-server xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && echo"Port 222" >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    && echo 'root:jetson' | chpasswd \
+    && systemctl restart sshd.service
+
+
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
+    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt 
 
 RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
     cd torchvision && \
