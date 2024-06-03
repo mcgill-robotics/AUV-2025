@@ -42,13 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV IGNITION_VERSION=fortress
 
 # Install all needed deps and compile the mesa llvmpipe driver from source.
-RUN sudo apt-get update \
-    && apt-get install -y software-properties-common \
-    && apt-get update \
-    && add-apt-repository ppa:kisak/kisak-mesa \
-    && apt-get update \
-    && apt-get -y upgrade \
-    && apt-get update && apt-get install -y wget \
+RUN apt-get update && apt-get install -y wget \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
     && apt-get install -y python3-catkin-tools python3-pip tmux
@@ -62,17 +56,6 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
     ros-noetic-smach-ros
-
-RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ignition-fortress \
-    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-    && apt-get update \
-    && apt-get install -y ros-noetic-gazebo-ros git libgflags-dev libignition-gazebo3-dev\
-    && sudo apt-get autoremove -y  \
-    && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -120,4 +103,5 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
     cd ../ && \
     rm -rf torchvision \
-    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
+    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
+    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
