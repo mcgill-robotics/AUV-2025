@@ -1,4 +1,9 @@
-def force_to_pwm(force, MAX_FWD_FORCE, MAX_BKWD_FORCE):
+# forces produced by T200 thruster at 14V (N)
+MAX_FWD_FORCE = 4.52 * 9.81
+MAX_BKWD_FORCE = -3.52 * 9.81
+
+
+def force_to_pwm(force):
     """
     Converts a force (N) to PWM (microseconds)
     """

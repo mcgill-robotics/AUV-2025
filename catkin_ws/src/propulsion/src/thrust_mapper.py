@@ -40,10 +40,6 @@ T = np.array(
 )
 
 
-# forces produced by T200 thruster at 14V (N)
-MAX_FWD_FORCE = 4.52 * 9.81
-MAX_BKWD_FORCE = -3.52 * 9.81
-
 # Matrix representation of the system of equations representing the thrust to wrench conversion
 # Ex: Force_X = (1)FRONT_LEFT_Thruster + (1)FRONT_RIGHTboard_Thrust
 
