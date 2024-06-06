@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # use like sudo ./install_package_recusrive.sh <package_name>
 # Run the command and capture the output
 install_package() {

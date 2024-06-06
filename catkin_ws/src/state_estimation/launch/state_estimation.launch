@@ -2,12 +2,7 @@
 	<arg name="sim" default="false" />
 	<param name="update_rate" value="100" />
 	<param name="z_pos_mount_offset" value="0" />
-    	<group unless="$(arg sim)">
-     	<include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
-		<include file="$(find sensors)/launch/imu.launch"/>
-		<include file="$(find sensors)/launch/dvl.launch"/>
-		
-
+	<group unless="$(arg sim)">
 		<param name="q_imunominal_imu_w" value="1.0" />
 		<param name="q_imunominal_imu_x" value="0.0" />
 		<param name="q_imunominal_imu_y" value="0.0" />

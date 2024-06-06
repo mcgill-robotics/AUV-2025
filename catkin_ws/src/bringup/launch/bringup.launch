@@ -3,8 +3,12 @@
 	<arg name="bag" default="false" />
 	<arg name="vision" default="false" />
 	<arg name="actions" default="false" />
-
-	<include file="$(find sensors)/launch/sensors_status.launch"/>
+	
+	<group unless="$(arg sim)">
+		<include file="$(find sensors)/launch/sensors.launch">
+			<arg name="vision" value="$(arg vision)" />
+		</include>
+	</group>
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
