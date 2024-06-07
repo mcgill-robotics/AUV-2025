@@ -88,29 +88,21 @@ def forces_to_pwm_publisher(forces_msg):
     Publish pwm signals
     """
     pwm_arr = [None] * 8
-    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(
-        forces_msg.FRONT_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
-    )
-    pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(
-        forces_msg.FRONT_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
-    )
-    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(
-        forces_msg.BACK_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
-    )
-    pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(
-        forces_msg.BACK_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
-    )
+    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT)
+    pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(forces_msg.FRONT_RIGHT)
+    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT)
+    pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(forces_msg.BACK_RIGHT)
     pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(
-        forces_msg.HEAVE_FRONT_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+        forces_msg.HEAVE_FRONT_LEFT
     )
     pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_FRONT_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+        forces_msg.HEAVE_FRONT_RIGHT
     )
     pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(
-        forces_msg.HEAVE_BACK_LEFT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+        forces_msg.HEAVE_BACK_LEFT
     )
     pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_BACK_RIGHT, MAX_FWD_FORCE, MAX_BKWD_FORCE
+        forces_msg.HEAVE_BACK_RIGHT
     )
 
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
