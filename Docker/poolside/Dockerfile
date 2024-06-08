@@ -19,7 +19,7 @@ RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.
     && ./zed_sdk_install_ubuntu.run -- silent skip_cuda \
     && rm zed_sdk_install_ubuntu.run
 
-COPY ../build_zed.bash .
+COPY build_zed.bash .
 
 RUN chmod +x build_zed.bash \
     && /bin/bash -c './build_zed.bash' \
