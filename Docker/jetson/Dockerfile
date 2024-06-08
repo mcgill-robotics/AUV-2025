@@ -18,6 +18,27 @@ ENV LC_ALL C.UTF-8
 
 ENV ROS_DISTRO noetic
 
+# Install ZED camera deps
+# this one was fucking up so moving it first to get it out of the way
+
+RUN apt-get update && \
+    apt-get install -y zstd \
+    && pip3 install bitstring
+
+
+RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/l4t35.3/jetsons \
+    && chmod +x zed_sdk_install_ubuntu.run && ./zed_sdk_install_ubuntu.run -- silent \
+    && rm zed_sdk_install_ubuntu.run
+
+RUN apt update \
+    && apt install -y openssh-server xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && echo "Port 222" >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    && echo 'root:jetson' | chpasswd
+    
 # install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-core=1.5.0-1* \
@@ -45,7 +66,7 @@ ENV IGNITION_VERSION=fortress
 RUN apt-get update && apt-get install -y wget \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip tmux
+    && apt-get install -y python3-catkin-tools python3-pip tmux vim
 
 RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
@@ -55,7 +76,8 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-cv-bridge \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
-    ros-noetic-smach-ros
+    ros-noetic-smach-ros \
+    ros-noetic-usb-cam
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -64,31 +86,11 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install ZED camera deps
-COPY zed_sdk_install_jetson.run zed_sdk_install_jetson.run
-RUN apt-get update && \
-    apt-get install -y zstd \
-    && apt-get install -y ros-noetic-usb-cam \
-    && pip3 install bitstring \
-    && ./zed_sdk_install_jetson.run -- silent \
-    && rm zed_sdk_install_jetson.run
-
-COPY ../build_zed.bash .
+COPY build_zed.bash .
 RUN chmod +x build_zed.bash \
     && /bin/bash -c './build_zed.bash' \
     && rm build_zed.bash \
     && echo "source /zed/catkin_ws/install/setup.bash" >> ~/.bashrc
-
-RUN apt update \
-    && apt install -y openssh-server xauth \
-    && mkdir /var/run/sshd \
-    && mkdir /root/.ssh \
-    && chmod 700 /root/.ssh \
-    && echo"Port 222" >> /etc/ssh/sshd_config \
-    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
-    && echo 'root:jetson' | chpasswd \
-    && systemctl restart sshd.service
-
 
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
