@@ -8,12 +8,6 @@ import keyboard
 
 force_amt = 0.0025  # 0.5%
 
-# copied from thrust_mapper
-
-# forces produced by T200 thruster at 14V (N)
-MAX_FWD_FORCE = 4.52 * 9.81
-MAX_BKWD_FORCE = -3.52 * 9.81
-
 # TODO: update if necessary
 reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
 
