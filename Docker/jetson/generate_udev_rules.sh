@@ -19,10 +19,18 @@ if [[ -e "$dev_name.rules" ]]; then
     echo "WARN: Rules file $dev_name.rules already exists. Overwrite? [Y/n] "
     read tmp
     if [[ "$tmp" == "y" || "$tmp" == "Y" ]]; then
-        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        if [[ $SUBSYSTEM == "video4linux" ]]; then
+            sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        else
+            sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        fi
     fi
 else
-    sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    if [[ $SUBSYSTEM == "video4linux" ]]; then
+        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    else
+        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    fi
 fi
 
 echo "Copy $dev_name.rules file to /etc/udev/rules.d (requires sudo)? [Y/n] "
