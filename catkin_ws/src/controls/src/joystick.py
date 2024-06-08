@@ -5,9 +5,6 @@ from auv_msgs.msg import ThrusterMicroseconds
 from std_msgs.msg import Float64
 import keyboard
 
-low_force_amt = 0.0025  # 0.25%
-force_amt = 1.0
-
 # forces produced by T200 thruster at 14V (N)
 MAX_FWD_FORCE = 4.52 * 9.81
 MAX_BKWD_FORCE = -3.52 * 9.81
@@ -47,7 +44,11 @@ while not rospy.is_shutdown():
         desired_y_torque = 0
         desired_z_torque = 0
 
-        current_force_amt = force_amt if keyboard.is_pressed("space") else low_force_amt
+        current_force_amt = (
+            float(rospy.get_param("joystick_max_force"))
+            if keyboard.is_pressed("space")
+            else float(rospy.get_param("joystick_dry_test_force"))
+        )
 
         if keyboard.is_pressed("esc"):
             break

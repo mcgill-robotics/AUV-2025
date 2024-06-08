@@ -1,3 +1,5 @@
 <launch>
 	<node name="joystick" pkg="controls" type="joystick.py" respawn="false" output="screen"/>
+    <param name="joystick_max_force" value ="0.5" />
+    <param name="joystick_dry_test_force" value ="0.0025" />
 </launch>
