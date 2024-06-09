@@ -91,6 +91,8 @@ def main():
     conn.write("wcr\r\n".encode("utf-8"))
     conn.flush()
 
+    print("Reset dead reckoning.")
+
     while conn.is_open and not rospy.is_shutdown():
         try:
             line = conn.readline().decode("utf-8")
@@ -107,9 +109,6 @@ def main():
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
     while conn.is_open and not rospy.is_shutdown():
-        # raw_data = conn.read(1).decode("utf-8")
-        # print(raw_data,"")
-
         try:
             line = conn.readline().decode("utf-8")
             # print(line)
