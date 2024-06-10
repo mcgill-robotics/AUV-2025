@@ -9,11 +9,11 @@
       <param name="base_link_frame" value="base_link"/>
       <param name="world_frame" value="odom"/>
 
-      <param name="odom0" value="/sensors/dvl/odom"/>
+      <param name="twist0" value="/sensors/dvl/odom"/>
       <param name="imu0" value="/sensors/imu/data"/> 
       <param name="depth0" value="/sensors/depth/data"/>
 
-      <rosparam param="odom0_config">[true,  true,  true, 
+      <rosparam param="twist0_config">[false,  false,  false, 
                                       true, true, true, 
                                       true, true, true, 
                                       false, false, false,
@@ -31,7 +31,7 @@
                                        false, false, false,
                                        false, false, false]</rosparam>
 
-      <param name="odom0_differential" value="true"/>
+      <param name="twist0_differential" value="true"/>
       <param name="imu0_differential" value="false"/>
       <param name="depth0_differential" value="false"/>
 
