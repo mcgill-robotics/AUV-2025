@@ -7,8 +7,8 @@ from tf import transformations
 from auv_msgs.msg import ThrusterMicroseconds
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Quaternion, Pose
-
-
+import numpy as np
+import quaternion
 
 # Forces produced by T200 thruster at 14V (N).
 
@@ -27,33 +27,34 @@ class Joystick:
 
         self.modes_execution = {
             self.mode_force :  self.execute_force_mode,
-            self.mode_pid_local : self.execute_pid_local_mode,
-            self.mode_pid_global : self.execute_pid_global_mode
+            self.mode_pid_local : self.execute_pid_mode,
+            self.mode_pid_global : self.execute_pid_mode
         }
 
         self.is_esc_pressed = False      
 
         self.pid_position_delta = rospy.get_param("joystick_pid_position_delta")   
-        self.pid_orientation_delta = rospy.get_param("joystick_pid_orientation_delta")   
+        self.pid_quaternion_delta_w = rospy.get_param("joystick_pid_quaternion_delta_w")   
+        self.pid_quaternion_delta_xyz = rospy.get_param("joystick_pid_quaternion_delta_xyz")   
 
         self.x = None
         self.y = None
         self.z = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
-        self.orientation = None
+        self.quaternion = None
 
         rospy.Subscriber("/state/pose", Pose, self.callback_pose)
-        rospy.Subscriber("/state/theta/x", Float64, self.callback_theta_x)
-        rospy.Subscriber("/state/theta/y", Float64, self.callback_theta_y)
-        rospy.Subscriber("/state/theta/z", Float64, self.callback_theta_z)
+
 
     def callback_pose(self, msg):
         self.x = msg.position.x
         self.y = msg.position.y
         self.z = msg.position.z
-        self.orientation = msg.orientation
+        self.quaternion = np.quaternion(
+            x=msg.orientation.x,
+            y=msg.orientation.y,
+            z=msg.orientation.z,
+            w=msg.orientation.w
+        )
 
     def callback_theta_x(self, msg):
         self.theta_x = msg.data
@@ -166,13 +167,15 @@ class Joystick:
         )
         self.pub_microseconds.publish(reset_cmd)
         print("Safely shutting down thrusters")
-
-    def euler_to_quaternion(self, roll, pitch, yaw):
-        # Returns [w, x, y, z]
-        q = transformations.quaternion_from_euler(
-            math.pi * roll / 180, math.pi * pitch / 180, math.pi * yaw / 180, "rxyz"
+    
+    def local_to_global(self, target_position):
+        pivot_quat = self.quaterion
+        global_goal = (
+            pivot_quat
+            * np.quaternion(0, target_position[0], target_position[1], target_position[2])
+            * pivot_quat.inverse()
         )
-        return [q[3], q[0], q[1], q[2]]
+        return [global_goal.x, global_goal.y, global_goal.z]
 
     def execute_force_mode(self) -> None:
         current_force_amt = (
@@ -220,13 +223,17 @@ class Joystick:
         self.pub_pitch.publish(desired_y_torque)
         self.pub_yaw.publish(desired_z_torque)
 
-    def execute_pid_local_mode(self) -> None:
-        target_x = self.x
-        target_y = self.y
-        target_z = self.x
-        target_theta_x = self.theta_x
-        target_theta_y = self.theta_y
-        target_theta_z = self.theta_z
+    def execute_pid_mode(self) -> None:
+        if self.current_mode == self.mode_pid_global:
+            target_x = self.x
+            target_y = self.y
+            target_z = self.x
+            target_quaterion = self.quaternion
+        else:
+            target_x = 0
+            target_y = 0
+            target_z = 0
+            target_quaterion = np.quaterion(1, 0, 0, 0)
 
         if keyboard.is_pressed("w"): target_x += self.pid_position_delta
         if keyboard.is_pressed("s"): target_x -= self.pid_position_delta
@@ -234,23 +241,64 @@ class Joystick:
         if keyboard.is_pressed("d"): target_y -= self.pid_position_delta
         if keyboard.is_pressed("q"): target_z += self.pid_position_delta
         if keyboard.is_pressed("e"): target_z -= self.pid_position_delta
-        if keyboard.is_pressed("o"): target_theta_x += self.pid_orientation_delta
-        if keyboard.is_pressed("u"): target_theta_x -= self.pid_orientation_delta
-        if keyboard.is_pressed("i"): target_theta_y += self.pid_orientation_delta
-        if keyboard.is_pressed("k"): target_theta_y -= self.pid_orientation_delta
-        if keyboard.is_pressed("j"): target_theta_z += self.pid_orientation_delta
-        if keyboard.is_pressed("l"): target_theta_z -= self.pid_orientation_delta
+        if keyboard.is_pressed("o"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                self.pid_quaternion_delta_xyz,
+                0.0,
+                0.0
+            )
+        if keyboard.is_pressed("u"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                -self.pid_quaternion_delta_xyz,
+                0.0,
+                0.0
+            )
+        if keyboard.is_pressed("i"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                0.0,
+                self.pid_quaternion_delta_xyz,
+                0.0
+            )
+        if keyboard.is_pressed("k"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                0.0,
+                -self.pid_quaternion_delta_xyz,
+                0.0
+            )
+        if keyboard.is_pressed("j"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                0.0,
+                0.0,
+                self.pid_quaternion_delta_xyz
+            )
+        if keyboard.is_pressed("l"): 
+            target_quaterion *= np.quaternion(
+                self.pid_quaternion_delta_w,
+                0.0,
+                0.0,
+                -self.pid_quaternion_delta_xyz
+            )
 
-        quat = self.euler_to_quaternion(target_theta_x, target_theta_y, target_theta_z)
+        # Convert local quaterion to global.
+        if self.current_mode == self.mode_pid_local:
+            target_quaterion = self.quaternion.inverse() * target_quaterion
+
         self.pub_pid_x.publish(Float64(target_x))
         self.pub_pid_y.publish(Float64(target_y))
         self.pub_pid_z.publish(Float64(target_z))
         self.pub_pid_quat.publish(
-            Quaternion(w=quat[0], x=quat[1], y=quat[2], z=quat[2])
+            Quaternion(
+                w=target_quaterion.w, 
+                x=target_quaterion.x, 
+                y=target_quaterion.y, 
+                z=target_quaterion.z
+            )
         )
-
-    def execute_pid_global_mode(self) -> None:
-        pass
         
     def execute(self) -> None:
         self.establish_force_publishers()
