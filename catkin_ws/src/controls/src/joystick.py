@@ -9,6 +9,7 @@ from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Quaternion, Pose
 import numpy as np
 import quaternion
+from tf import transformations
 
 # Forces produced by T200 thruster at 14V (N).
 
@@ -41,6 +42,16 @@ class Joystick:
         self.y = None
         self.z = None
         self.quaternion = None
+        
+        self.max_width = 5
+        self.terminal_cursor_up = "\033[A"
+        self.horizontal_box = chr(0x2550)
+        self.vertical_box = chr(0x2551)
+        self.top_left_box = chr(0x2554)
+        self.top_right_box = chr(0x2557)
+        self.bottom_left_box = chr(0x255A)
+        self.bottom_right_box = chr(0x255D)
+        self.space_indentation = " " * 11
 
         rospy.Subscriber("/state/pose", Pose, self.callback_pose)
 
@@ -149,7 +160,7 @@ class Joystick:
             mode_swap(self.mode_pid_global, True)
         )
 
-    def print_options_msg(self) -> None: 
+    def print_key_options_msg(self) -> None: 
         print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
         print(" > WASD for SURGE/SWAY")
         print(" > Q/E for UP/DOWN")
@@ -160,6 +171,23 @@ class Joystick:
         print(f" > To switch to [{self.local_mode}] mode, press 2")
         print(f" > To switch to [{self.mode_pid_global}] mode, press 3")
         print(f" > CURRENT MODE: [{self.current_mode}]")
+
+
+    def print_pid_values(self, targets):
+        x, y, z, roll, pitch, yaw = [self.format_number(num) for num in targets]
+        print(f"{self.self.top_left_box}{self.horizontal_box*8}Current PID setpoint{self.horizontal_box*8}{self.top_right_box}")
+        print(f"{self.vertical_box}{self.space_indentation}    x = {x}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.vertical_box}{self.space_indentation}    y = {y}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.vertical_box}{self.space_indentation}    z = {z}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.vertical_box}{self.space_indentation} roll = {roll}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.vertical_box}{self.space_indentation}pitch = {pitch}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.vertical_box}{self.space_indentation}  yaw = {yaw}{self.space_indentation}{self.vertical_box}")
+        print(f"{self.bottom_left_box}{self.horizontal_box*36}{self.bottom_right_box}", end="\r")
+        print(self.terminal_cursor_up * 7, end="\r")
+
+    def format_number(self, number):
+        formatted_number = f"{abs(number):.4f}"[:self.max_width].rjust(self.max_width, "0")
+        return f"{'-' if number < 0 else ' '}{formatted_number}"
 
     def reset_thrusters(self) -> None:
         reset_cmd = ThrusterMicroseconds(
@@ -224,6 +252,9 @@ class Joystick:
         self.pub_yaw.publish(desired_z_torque)
 
     def execute_pid_mode(self) -> None:
+        if all(axis is not None for axis in [self.x, self.y, self.z, self.quaternion]):
+            rospy.logwarn("Incomplete pose data for [PID] mode")
+            return
         if self.current_mode == self.mode_pid_global:
             target_x = self.x
             target_y = self.y
@@ -284,9 +315,15 @@ class Joystick:
                 -self.pid_quaternion_delta_xyz
             )
 
-        # Convert local quaterion to global.
         if self.current_mode == self.mode_pid_local:
-            target_quaterion = self.quaternion.inverse() * target_quaterion
+            # Convert local desired postion (target_[xyz]) to
+            # NWU positon 
+            target_x, target_y, target_z = self.local_to_global(
+                [target_x, target_y, target_z]
+            )  
+            # Convert local desired rotation (target_quaterion)  
+            # to NWU rotation (self.quaternion).
+            target_quaterion = self.quaternion * target_quaterion
 
         self.pub_pid_x.publish(Float64(target_x))
         self.pub_pid_y.publish(Float64(target_y))
@@ -300,11 +337,22 @@ class Joystick:
             )
         )
         
+        target_roll, target_pitch, target_yaw = transformations.euler_from_quaternion(
+            target_quaterion.w,
+            target_quaterion.z,
+            target_quaterion.y,
+            target_quaterion.x
+        ) 
+        targets = [target_x, target_y, target_z, target_roll, target_pitch, target_yaw]
+        self.print_pid_values(targets)
+        
+        
     def execute(self) -> None:
         self.establish_force_publishers()
         self.establish_pid_publishers()
         self.establish_pid_enable_publishers()
         self.establish_key_hooks()
+        self.print_key_options_msg()
 
         while not rospy.is_shutdown() and self.is_esc_pressed:
             self.modes_execution[self.current_mode]() 
@@ -314,7 +362,7 @@ class Joystick:
 if __name__ == "__main__":
     rospy.init_node("joystick")
     joystick = Joystick()
-    # To safely shut down the thrusters.
+    # Safely shut down the thrusters.
     rospy.on_shutdown(joystick.reset_thrusters)  
     joystick.execute()
 
