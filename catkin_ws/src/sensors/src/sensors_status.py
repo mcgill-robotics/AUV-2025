@@ -231,9 +231,18 @@ class Hydrophones(Sensor):
     def __init__(self):
         super().__init__("Hydrophones")
 
-        self.are_pingers_active = [False, False, False, False]
-        self.current_reading = [None, None, None, None]
-        self.last_reading = [None, None, None, None]
+        # @TODO(Felipe): Subsbitute frequency_types values by 
+        #                real pinger values (waiting for Sam
+        #                to respond)  
+        self.frequency_types = [
+            rospy.get_param("pinger_frequency_1"), 
+            rospy.get_param("pinger_frequency_2"), 
+            rospy.get_param("pinger_frequency_3"), 
+            rospy.get_param("pinger_frequency_4")
+        ]
+        self.current_reading = [None] * len(self.frequency_types)
+        self.last_reading = [None] * len(self.frequency_types)
+        self.frequency_index = -1
 
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
@@ -242,19 +251,10 @@ class Hydrophones(Sensor):
         )
 
     def hydrophones_cb(self, msg):
-        self.are_pingers_active = [
-            msg.is_pinger1_active,
-            msg.is_pinger2_active,
-            msg.is_pinger3_active,
-            msg.is_pinger4_active,
-        ]
-        self.current_reading = [
-            msg.dt_pinger1,
-            msg.dt_pinger2,
-            msg.dt_pinger3,
-            msg.dt_pinger4,
-        ]
-        self.update_last_reading()
+        self.frequency_index = self.frequency_types.index(msg.frequency)
+        if self.frequency_index != -1:
+            self.current_reading[self.frequency_index] = msg.times
+            self.update_last_reading()
 
     def update_last_reading(self):
         if self.current_reading != self.last_reading:
@@ -262,11 +262,9 @@ class Hydrophones(Sensor):
             self.last_reading = self.current_reading[:]
 
     def has_valid_data(self):
-        indexes_true = [i for i, e in enumerate(self.are_pingers_active) if e]
-        indexes_non_zero = [
-            i for i, e in enumerate(self.current_reading) if e != [0, 0, 0, 0]
-        ]
-        return len(indexes_true) != 0 and indexes_true == indexes_non_zero
+        return True
+        # return (self.frequency_index == -1 and 
+        #     all(element > 0 for element in self.current_reading[self.frequency_index]))
 
 
 # Actuator class inheriting from Sensor

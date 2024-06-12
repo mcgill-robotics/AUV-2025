@@ -9,6 +9,10 @@
 			<arg name="vision" value="$(arg vision)" />
 		</include>
 	</group>
+	<group if="$(arg sim)">
+		<include file="$(find sensors)/launch/sensors_status.launch"/>
+	</group>
+
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />

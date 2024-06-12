@@ -1,5 +1,10 @@
 <launch>
      <param name="sensor_warning_interval" value="5"/> <!-- secs -->
      <param name="sensor_status_update_rate" value="10"/> <!-- Hz -->
+     <!-- Frequency of each pinger -->
+	<param name="pinger_frequency_1" value="1"/>
+	<param name="pinger_frequency_2" value="2"/>
+	<param name="pinger_frequency_3" value="3"/>
+	<param name="pinger_frequency_4" value="4"/>
      <node name="sensors_status" pkg="sensors" type="sensors_status.py" output="screen" respawn="true"/>
 </launch>
