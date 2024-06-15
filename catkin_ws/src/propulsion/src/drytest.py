@@ -6,7 +6,7 @@ from thrust_mapper_utils import *
 from geometry_msgs.msg import Wrench
 import keyboard
 
-force_amt = 0.0025  # 0.5%
+force_amt = 0.05  # 0.5%
 
 # TODO: update if necessary
 reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
@@ -22,12 +22,12 @@ rospy.init_node("thrusters_test")
 def forwards_test(t):
     print("----------T{}----------".format(t))
     while not rospy.is_shutdown():
-        print("- spinning at " + str(100 * force_amt) + "% max forwards force for 5s")
+        print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
 
         cmd = reset.copy()
         cmd[t - 1] = force_to_pwm(force_amt * MAX_FWD_FORCE)
         pub.publish(cmd)
-        rospy.sleep(5.0)
+        rospy.sleep(1.0)
         pub.publish(reset_cmd)
 
         print("1. repeat test")
@@ -39,11 +39,11 @@ def forwards_test(t):
 
 def simultaneous_forwards_test():
     while not rospy.is_shutdown():
-        print("- spinning at " + str(100 * force_amt) + "% max forwards force for 5s")
+        print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
 
         cmd = [force_to_pwm(force_amt * MAX_FWD_FORCE)] * 8
         pub.publish(cmd)
-        rospy.sleep(5.0)
+        rospy.sleep(1.0)
         pub.publish(reset_cmd)
 
         print("1. repeat test")

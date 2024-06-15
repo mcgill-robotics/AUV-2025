@@ -8,13 +8,14 @@ def force_to_pwm(force):
     Converts a force (N) to PWM (microseconds)
     """
 
+    force = float(force)
     force = min(max(force, MAX_BKWD_FORCE), MAX_FWD_FORCE)
 
     # Different conversion for negative and positive forces
-    if force > 0.0:
+    if force > 0.0001:
         return int(positiveForceCurve(force / 9.81))
 
-    elif force < 0.0:
+    elif force < 0.0001:
         return int(negativeForceCurve(force / 9.81))
 
     # Intersection is (0.0, 1500)
