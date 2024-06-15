@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     axis_names = list(sensor_priorities.keys())
 
-    sensor_swap_warning_interval = rospy.get_param("sensor_warning_interval")  # secs
+    sensor_swap_warning_interval = rospy.get_param("sensor_swap_warning_interval")  # secs
     last_warning_message_time = [rospy.get_time()] * 4  # index by axis
 
     update_state_on_clock = rospy.get_param("update_state_on_clock")
