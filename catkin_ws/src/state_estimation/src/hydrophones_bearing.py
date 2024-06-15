@@ -10,14 +10,12 @@ from std_msgs.msg import Int32
 
 
 def calculate_time_measurements(delta_time):
-    distance = []
-    for dt in delta_time: 
-        distance.append(c * dt)
+    distance = delta_time * c
     return distance
 
-def solve_bearing_vector(distance):
-    position = [hydrophones_dx, hydrophones_dy] if len(distance) == 2 else [hydrophones_dx, hydrophones_dy, hydrophones_dz]
-    bearing_vector = [distance[i] / position[i] if position[i] != 0 else position[i] for i in range(len(distance))]
+def solve_bearing_vector(distance, is_three_hydrophones):
+    position = np.array([hydrophones_dx, hydrophones_dy, 0] if is_three_hydrophones else [hydrophones_dx, hydrophones_dy, hydrophones_dz])
+    bearing_vector = np.where(position != 0, distance / position, 0)
     return bearing_vector
 
 
@@ -26,17 +24,22 @@ def cb_hydrophones_time_difference(msg):
         return  
      
     frequency_index = frequency_types.index(msg.frequency)     
-    dt_hydrophones = [x * time_unit for x in msg.times]
+    dt_hydrophones = np.array(msg.times) * time_unit
     
+    is_three_hydrophones = False
     if len(dt_hydrophones) == 2:
-        dt_hydrophones.append(0)
+        dt_hydrophones = np.append(dt_hydrophones, 0)
+        is_three_hydrophones = True
     
     measurements = calculate_time_measurements(dt_hydrophones)
-    bearing_vector_local = solve_bearing_vector(measurements)
+    bearing_vector_local = solve_bearing_vector(measurements, is_three_hydrophones)
     bearing_vector_global = quaternion.rotate_vectors(
         auv_rotation,
         np.array(bearing_vector_local)
     )
+
+    if is_three_hydrophones:
+        bearing_vector_global[2] = 0
 
     PingerBearing_msg = PingerBearing()
     PingerBearing_msg.frequency_index = frequency_index
