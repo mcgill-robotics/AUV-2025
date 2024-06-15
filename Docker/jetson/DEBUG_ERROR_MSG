@@ -1,6 +1,0 @@
-roslaunch sensors stream-front-cameras.launch
-
------
-
-[ERROR] [1717861241.882973455]: Failed to load nodelet [/zed2i/zed_node] of type [zed_nodelets/ZEDWrapperNodelet] even after refreshing the cache: Failed to load library /AUV-2024/catkin_ws/devel/lib//libZEDNodelets.so. Make sure that you are calling the PLUGINLIB_EXPORT_CLASS macro in the library code, and that names are consistent between this macro and your XML. Error string: Could not load library (Poco exception = libnvbuf_utils.so.1.0.0: cannot open shared object file: No such file or directory)
-[ERROR] [1717861241.883117391]: The error before refreshing the cache was: Failed to load library /AUV-2024/catkin_ws/devel/lib//libZEDNodelets.so. Make sure that you are calling the PLUGINLIB_EXPORT_CLASS macro in the library code, and that names are consistent between this macro and your XML. Error string: Could not load library (Poco exception = libnvbuf_utils.so.1.0.0: cannot open shared object file: No such file or directory)
