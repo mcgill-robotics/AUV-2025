@@ -3,6 +3,7 @@
 import rospy
 import serial
 from auv_msgs.msg import DeadReckonReport, VelocityReport
+import time
 
 
 def parse_velocity_report(line):
@@ -118,6 +119,9 @@ def main():
                 pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
+            time.sleep(1)
+            conn.close()
+            exit()
 
 
 if __name__ == "__main__":
