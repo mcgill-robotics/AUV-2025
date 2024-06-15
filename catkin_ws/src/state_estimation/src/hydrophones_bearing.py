@@ -17,20 +17,17 @@ def calculate_time_measurements(delta_time):
 
 def solve_bearing_vector(distance):
     position = [hydrophones_dx, hydrophones_dy] if len(distance) == 2 else [hydrophones_dx, hydrophones_dy, hydrophones_dz]
-    bearing_vector = [distance[i] / position[i] if position[i] != 0 else position[i] for i in len(distance)]
+    bearing_vector = [distance[i] / position[i] if position[i] != 0 else position[i] for i in range(len(distance))]
     return bearing_vector
 
 
 def cb_hydrophones_time_difference(msg):
-    print(is_active)
-    if not is_active:
-        return   
-
-
-    frequency_index = frequency_types.index(msg.frequency)        
+    if not is_active or msg.frequency not in frequency_types:
+        return  
+     
+    frequency_index = frequency_types.index(msg.frequency)     
     dt_hydrophones = [x * time_unit for x in msg.times]
     
-    # If calculates are in 2D, set z=0.
     if len(dt_hydrophones) == 2:
         dt_hydrophones.append(0)
     
@@ -40,13 +37,12 @@ def cb_hydrophones_time_difference(msg):
         auv_rotation,
         np.array(bearing_vector_local)
     )
-    
 
     PingerBearing_msg = PingerBearing()
-    PingerBearing_msg.pinger_index = frequency_index
-    PingerBearing_msg.pinger1_bearing.x = bearing_vector_global[0]
-    PingerBearing_msg.pinger1_bearing.y = bearing_vector_global[1]
-    PingerBearing_msg.pinger1_bearing.z = bearing_vector_global[2]
+    PingerBearing_msg.frequency_index = frequency_index
+    PingerBearing_msg.pinger_bearing.x = bearing_vector_global[0]
+    PingerBearing_msg.pinger_bearing.y = bearing_vector_global[1]
+    PingerBearing_msg.pinger_bearing.z = bearing_vector_global[2]
     PingerBearing_msg.state_x = auv_position[0]
     PingerBearing_msg.state_y = auv_position[1]
     PingerBearing_msg.state_z = auv_position[2]

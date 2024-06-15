@@ -9,7 +9,7 @@
 	<param name="pinger_frequency_3" value="3"/>
 	<param name="pinger_frequency_4" value="4"/>
 
-	<param name="hydrophones_time_unit" value="10e-8"/>
+	<param name="hydrophones_time_unit" value="0.0000001"/>
 
 	<node name="hydrophones_bearing"
 		pkg="state_estimation"
