@@ -8,7 +8,7 @@ from std_msgs.msg import Int32
 def is_tether_active(_):
      # Just for linux. If you want Windows, change
      # -c to -n
-     command = f"ping -c 1 {ip_address}"
+     command = f"ping -c 1 {ip_address} > /dev/null" 
      response = os.system(command)
      # "response == 0" = successful 
      if response == 0:
@@ -29,3 +29,5 @@ if __name__ == "__main__":
      timer = rospy.Timer(rospy.Duration(ping_interval), is_tether_active)
 
      rospy.on_shutdown(timer.shutdown)
+
+     rospy.spin()
