@@ -2,7 +2,7 @@
 	<arg name="sim" default="false" />
 	<param name="update_rate" value="100" />
 	<param name="z_pos_mount_offset" value="0" />
-	<param name="sensor_swap_warning_interval" value="5" />
+	<param name="sensor_swap_warning_interval" value="5"/> <!-- secs -->
 	<group unless="$(arg sim)">
 		<param name="q_imunominal_imu_w" value="1.0" />
 		<param name="q_imunominal_imu_x" value="0.0" />
