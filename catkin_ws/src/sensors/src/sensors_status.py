@@ -18,11 +18,11 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 
 class Sensor:
     def __init__(self, sensor_name):
-        self.time_before_considered_inactive = 1  # seconds
+        self.time_before_considered_inactive = rospy.get_param("time_before_considered_inactive")
         self.sensor_name = sensor_name
         self.sensor_warning_interval = rospy.get_param(
             "sensor_warning_interval"
-        )  # seconds
+        )
 
         # initialize a sensor as "inactive"
         self.last_unique_reading_time = -1 * self.time_before_considered_inactive
@@ -251,20 +251,21 @@ class Hydrophones(Sensor):
         )
 
     def hydrophones_cb(self, msg):
-        self.frequency_index = self.frequency_types.index(msg.frequency)
-        if self.frequency_index != -1:
+        if msg.frequency in self.frequency_types:
+            self.frequency_index = self.frequency_types.index(msg.frequency)
             self.current_reading[self.frequency_index] = msg.times
             self.update_last_reading()
+        else:
+            self.frequency_index = -1
 
     def update_last_reading(self):
-        if self.current_reading != self.last_reading:
+        if self.current_reading[self.frequency_index] != self.last_reading[self.frequency_index]:
             self.last_unique_reading_time = rospy.get_time()
-            self.last_reading = self.current_reading[:]
+            self.last_reading[self.frequency_index] = self.current_reading[self.frequency_index][:]
 
     def has_valid_data(self):
-        return True
-        # return (self.frequency_index == -1 and 
-        #     all(element > 0 for element in self.current_reading[self.frequency_index]))
+        return self.frequency_index != -1
+
 
 
 # Actuator class inheriting from Sensor

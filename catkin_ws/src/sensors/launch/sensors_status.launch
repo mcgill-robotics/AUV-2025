@@ -1,6 +1,7 @@
 <launch>
      <param name="sensor_warning_interval" value="5"/> <!-- secs -->
      <param name="sensor_status_update_rate" value="10"/> <!-- Hz -->
+     <param name="time_before_considered_inactive" value="5"/>
      <!-- Frequency of each pinger -->
 	<param name="pinger_frequency_1" value="1"/>
 	<param name="pinger_frequency_2" value="2"/>
