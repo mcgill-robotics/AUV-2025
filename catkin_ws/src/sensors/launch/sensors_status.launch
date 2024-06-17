@@ -1,0 +1,5 @@
+<launch>
+     <param name="sensor_warning_interval" value="5"/> <!-- secs -->
+     <param name="sensor_status_update_rate" value="10"/> <!-- Hz -->
+     <node name="sensors_status" pkg="sensors" type="sensors_status.py" output="screen" respawn="true"/>
+</launch>

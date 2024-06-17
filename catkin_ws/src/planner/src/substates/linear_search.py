@@ -3,7 +3,6 @@
 import rospy
 import smach
 import time
-from std_msgs.msg import String
 
 
 # ASSUMES AUV IS FACING DIRECTION TO SEARCH IN
@@ -16,22 +15,14 @@ class LinearSearch(smach.State):
         self.target_class = target_class
         self.min_objects = min_objects
         self.timeout = rospy.get_param("object_search_timeout")
-        self.pub_mission_display = rospy.Publisher(
-            "/mission_display", String, queue_size=1
-        )
 
     def execute(self, ud):
         print("Starting linear search.")
-        self.pub_mission_display.publish("Search")
         self.control.move((None, None, rospy.get_param("nominal_depth")))
         self.control.flatten()
 
         startTime = time.time()
         while startTime + self.timeout > time.time() and not rospy.is_shutdown():
-            if self.preempt_requested():
-                print("LinearSearch being preempted")
-                self.service_preempt()
-                return "failure"
             self.control.moveDeltaLocal(
                 (rospy.get_param("linear_search_step_size"), 0, 0)
             )

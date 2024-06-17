@@ -16,14 +16,21 @@ target_symbol = rospy.get_param("target_symbol")
 nominal_depth = rospy.get_param("nominal_depth")
 
 print("Submerging")
-controls.move((None,None,nominal_depth))
+controls.move((None, None, nominal_depth))
 
 print("Navigating gate")
-gateNav = NavigateGate(controls, state, mapping, target_symbol, goThrough=False, gate_width=quali_gate_width)
+gateNav = NavigateGate(
+    controls,
+    state,
+    mapping,
+    target_symbol,
+    goThrough=False,
+    gate_width=quali_gate_width,
+)
 gateNav.execute(None)
 
 print("Moving to right side of gate")
-controls.moveDeltaLocal((0, -quali_gate_width/4, 0))
+controls.moveDeltaLocal((0, -quali_gate_width / 4, 0))
 
 print("Moving through gate")
 controls.moveDeltaLocal((14, 0, 0))
@@ -31,7 +38,7 @@ controls.moveDeltaLocal((14, 0, 0))
 print("Rotating around pole")
 controls.rotateDeltaEuler((0, 0, 90))
 
-controls.moveDeltaLocal((quali_gate_width/2, 0, 0))
+controls.moveDeltaLocal((quali_gate_width / 2, 0, 0))
 
 controls.rotateDeltaEuler((0, 0, 90))
 

@@ -7,6 +7,7 @@ from auv_msgs.msg import PingerBearing
 import numpy as np
 import quaternion
 
+
 class StateTracker:
     def __init__(self):
         self.x = None
@@ -29,23 +30,32 @@ class StateTracker:
         self.claw_contact_sub = rospy.Publisher("/actuators/grabber/contact", Bool, self.updateGrabberContact)
     def updatePose(self,msg):
         self.pose = msg
-        self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+        self.quat = np.quaternion(
+            msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z
+        )
+
     def updateX(self, msg):
         self.x = float(msg.data)
+
     def updateY(self, msg):
         self.y = float(msg.data)
+
     def updateZ(self, msg):
         self.z = float(msg.data)
+
     def updateThetaX(self, msg):
         self.theta_x = float(msg.data)
+
     def updateThetaY(self, msg):
         self.theta_y = float(msg.data)
+
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
     def updatePingerBearing(self, msg):
         self.pingers_bearing = msg
     def updateGrabberContact(self, msg):
         self.grabber_contact = msg.data
+
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()

@@ -13,16 +13,24 @@ KERNEL=$(echo $CMD_OUTPUT | grep -oP 'KERNEL=="\K[^"]+' | head -n 1 | sed 's/[0-
 SUBSYSTEM=$(echo $CMD_OUTPUT | grep -oP 'SUBSYSTEM=="\K[^"]+' | head -n 1)
 IDVENDOR=$(echo $CMD_OUTPUT | grep -oP 'idVendor}=="\K[^"]+' | head -n 1)
 IDPRODUCT=$(echo $CMD_OUTPUT | grep -oP 'idProduct}=="\K[^"]+' | head -n 1)
-# USE serial ATTR
+SERIALNO=$(echo $CMD_OUTPUT | grep -oP 'serial}=="\K[^"]+' | head -n 1)
 
 if [[ -e "$dev_name.rules" ]]; then
     echo "WARN: Rules file $dev_name.rules already exists. Overwrite? [Y/n] "
     read tmp
     if [[ "$tmp" == "y" || "$tmp" == "Y" ]]; then
-        echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        if [[ $SUBSYSTEM == "video4linux" ]]; then
+            sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        else
+            sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+        fi
     fi
 else
-    echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    if [[ $SUBSYSTEM == "video4linux" ]]; then
+        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    else
+        sudo echo "SUBSYSTEM==\"$SUBSYSTEM\", KERNEL==\"$KERNEL[0-9]*\", ATTRS{idVendor}==\"$IDVENDOR\", ATTRS{idProduct}==\"$IDPRODUCT\", ATTRS{serial}==\"$SERIALNO\", SYMLINK+=\"$dev_name\"" > $dev_name.rules
+    fi
 fi
 
 echo "Copy $dev_name.rules file to /etc/udev/rules.d (requires sudo)? [Y/n] "

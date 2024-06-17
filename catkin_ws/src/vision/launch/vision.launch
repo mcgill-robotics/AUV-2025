@@ -1,8 +1,6 @@
 <launch>
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
-        <include file="$(find sensors)/launch/stream-down-cam.launch" />
-        <!-- <include file="$(find sensors)/launch/stream-front-cam.launch" /> -->
         <param name="front_cam_x_offset" value="0" />
         <param name="front_cam_y_offset" value="0" />
         <param name="front_cam_z_offset" value="0" />
