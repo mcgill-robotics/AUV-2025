@@ -7,7 +7,7 @@
 #include <sstream>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
-#include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include <iostream>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -36,15 +36,15 @@ void broad_cast_pose(const geometry_msgs::Pose& msg);
 double RAD_TO_DEG = 180.0 / 3.14159265;
 
 void update_state(const ros::TimerEvent& event) {
-    std_msgs::Bool depth_status_msg;
+    std_msgs::Int32 depth_status_msg;
     depth_status_msg.data = depth->is_active();
     pub_depth_status.publish(depth_status_msg);
 
-    std_msgs::Bool imu_status_msg;
+    std_msgs::Int32 imu_status_msg;
     imu_status_msg.data = imu->is_active();
     pub_imu_status.publish(imu_status_msg);
 
-    std_msgs::Bool dvl_status_msg;
+    std_msgs::Int32 dvl_status_msg;
     dvl_status_msg.data = dvl->is_active();
     pub_dvl_status.publish(dvl_status_msg);
 
@@ -243,9 +243,9 @@ int main(int argc, char **argv) {
     pub_theta_y = n.advertise<std_msgs::Float64>("/state/theta/y",1);
     pub_theta_z = n.advertise<std_msgs::Float64>("/state/theta/z",1);
     pub_av = n.advertise<geometry_msgs::Vector3>("/state/angular_velocity",1);
-    pub_imu_status = n.advertise<std_msgs::Bool>("/sensors/imu/status",1);
-    pub_dvl_status = n.advertise<std_msgs::Bool>("/sensors/dvl/status",1);
-    pub_depth_status = n.advertise<std_msgs::Bool>("/sensors/depth/status",1);
+    pub_imu_status = n.advertise<std_msgs::Int32>("/sensors/imu/status",1);
+    pub_dvl_status = n.advertise<std_msgs::Int32>("/sensors/dvl/status",1);
+    pub_depth_status = n.advertise<std_msgs::Int32>("/sensors/depth/status",1);
 
 
     

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-  
+
 import rospy
 import rostest
 import unittest
 import math
 import numpy as np
 from object_detection_utils import eulerToVectorDownCam
+
 
 class euler_to_vector_test(unittest.TestCase):
     # When both angles are 0 degrees, the function should return a vector pointing straight down.
@@ -31,6 +32,7 @@ class euler_to_vector_test(unittest.TestCase):
         expected_vec = np.array([1, -1, -1]) / math.sqrt(3)
         self.assertTrue(np.allclose(vec, expected_vec))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # rospy.init_node("euler_to_vector_test") - Already initialized in object_detection_utils.py
-    rostest.rosrun("vision", 'euler_to_vector_test', euler_to_vector_test)
+    rostest.rosrun("vision", "euler_to_vector_test", euler_to_vector_test)

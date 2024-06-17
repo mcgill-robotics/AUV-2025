@@ -6,6 +6,7 @@ services:
       - type: bind
         source: ../../../AUV-2024
         target: /AUV-2024
+    image: "mcgillrobotics/auv_2024:jetson"
     privileged: true
     environment:
       - DISPLAY

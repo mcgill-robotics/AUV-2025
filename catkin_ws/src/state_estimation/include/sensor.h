@@ -14,7 +14,7 @@ class Sensor {
         Sensor(std::string name, bool update_on_clock);
         virtual ~Sensor();
         std::string sensor_name;
-        virtual bool is_active(void);
+        virtual int is_active(void);
         double x;
         double y;
         double z;
