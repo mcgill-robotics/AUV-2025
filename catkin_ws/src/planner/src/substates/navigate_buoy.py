@@ -1,5 +1,6 @@
 import rospy
 import smach
+from std_msgs.msg import String
 from .utility.functions import *
 import numpy as np
 import quaternion
@@ -14,9 +15,19 @@ class NavigateBuoy(smach.State):
         self.color = rospy.get_param("target_color")
         self.radius = rospy.get_param("buoy_circumnavigation_radius")
         self.offset_distance = rospy.get_param("buoy_centering_offset_distance")
+        self.pub_mission_display = rospy.Publisher(
+            "/mission_display", String, queue_size=1
+        )
+
+    def is_preempted(self):
+        if self.preempt_requested():
+            print("NavigateBuoy being preempted")
+            self.service_preempt()
+            return "failure"
 
     def execute(self, ud):
         # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.pub_mission_display.publish("Buoy")
         self.control.move((None, None, rospy.get_param("nominal_depth")))
         self.control.flatten()
 
@@ -31,6 +42,7 @@ class NavigateBuoy(smach.State):
 
         print("Centering and rotating in front of buoy.")
 
+        self.is_preempted()
         self.control.move((None, None, buoy_object[3]))
 
         position_auv = [self.state.x, self.state.y, self.state.z]
@@ -50,6 +62,7 @@ class NavigateBuoy(smach.State):
             np.array([direction[0], direction[1], direction[2]]),
         )
 
+        self.is_preempted()
         self.control.rotateDelta(
             [
                 rotation_quaternion.w,
@@ -64,12 +77,14 @@ class NavigateBuoy(smach.State):
             [position_buoy[0], position_buoy[1], position_buoy[2]]
         ) - np.array([vector_auv_buoy[0], vector_auv_buoy[1], vector_auv_buoy[2]])
         print("Moving to new position: ", new_position)
+        self.is_preempted()
         self.control.move((new_position[0], new_position[1], new_position[2]))
 
         # wait and keep measuring just to be safe
         print("Waiting to improve measurement accuracy")
         rospy.sleep(rospy.get_param("object_observation_time"))
 
+        self.is_preempted()
         self.control.move((None, None, buoy_object[3]))
 
         position_auv = [self.state.x, self.state.y, self.state.z]
@@ -89,6 +104,7 @@ class NavigateBuoy(smach.State):
             np.array([direction[0], direction[1], direction[2]]),
         )
 
+        self.is_preempted()
         self.control.rotateDelta(
             [
                 rotation_quaternion.w,
@@ -103,11 +119,13 @@ class NavigateBuoy(smach.State):
             [position_buoy[0], position_buoy[1], position_buoy[2]]
         ) - np.array([vector_auv_buoy[0], vector_auv_buoy[1], vector_auv_buoy[2]])
         print("Moving to new position: ", new_position)
+        self.is_preempted()
         self.control.move((new_position[0], new_position[1], new_position[2]))
 
         # Start buoy navigation
         rad = self.radius
 
+        self.is_preempted()
         if self.color == "red":
             self.control.moveDeltaLocal((0, -rad, 0))
             self.control.moveDeltaLocal((self.offset_distance + rad, 0, 0))

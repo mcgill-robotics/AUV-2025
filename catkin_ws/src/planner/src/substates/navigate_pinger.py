@@ -9,7 +9,7 @@ from auv_msgs.msg import PingerBearing
 class NavigatePinger(smach.State):
 
      def __init__(self, control, state, mapping, pinger_number):
-          super().__init__(outcomes=['success', 'failure', 'search'])
+          super().__init__(outcomes=["success", "failure", "search"])
           self.control = control
           self.mapping = mapping
           self.state = state
@@ -52,7 +52,7 @@ class NavigatePinger(smach.State):
 
                # If the pinger is reached and no object is found (after the first attempt), exit the loop and search for it
                if angle > 180 and give_up_threshold < 10:
-                    return 'search'
+                    return "search"
 
                # Rotate towards the pinger bearing and move forward a bit
                self.control.rotateEuler([0, 0, angle])
@@ -70,7 +70,7 @@ class NavigatePinger(smach.State):
           # Couldn't find the object with the specified pinger
           if pinger_object is None:
                print("No object found after", give_up_threshold, "tries. Giving up.")
-               return 'failure'
+               return "failure"
           else:
                # Move towards the object
                print("Object found! Centering and rotating in front of the {}".format(pinger_object[0]))
@@ -88,4 +88,4 @@ class NavigatePinger(smach.State):
           print("Successfully centered in front of the {}".format(pinger_object[0]))
           print("Successfully completed pinger task!")
 
-          return 'success'
+          return "success"

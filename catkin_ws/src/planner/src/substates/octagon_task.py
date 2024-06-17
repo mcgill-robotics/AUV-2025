@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import smach
 import rospy
+from std_msgs.msg import String
 
 
 class NavigateOctagon(smach.State):
@@ -9,12 +10,20 @@ class NavigateOctagon(smach.State):
         self.control = control
         self.mapping = mapping
         self.state = state
+        self.pub_mission_display = rospy.Publisher(
+            "/mission_display", String, queue_size=1
+        )
 
     def execute(self, ud):
         print("Starting octagon navigation.")
         # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
         self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
         self.control.flatten()
+        self.pub_mission_display.publish("Octagon")
+        if self.preempt_requested():
+            print("NavigateOctagon being preempted")
+            self.service_preempt()
+            return "failure"
 
         auv_current_position = (self.state.x, self.state.y)
 
@@ -35,19 +44,4 @@ class NavigateOctagon(smach.State):
         self.control.kill()
 
         print("Successfully navigated the octagon.")
-        return "success"
-
-
-class GoToOctagon(smach.State):
-    def __init__(self, search_point, control):
-        super().__init__(outcomes=["success", "failure"])
-        self.control = control
-        self.search_point = search_point
-
-    def execute(self, ud):
-        print("Moving up to avoid the buoy.")
-        self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
-        self.control.move(
-            (self.search_point[0], self.search_point[1], None), face_destination=True
-        )
         return "success"
