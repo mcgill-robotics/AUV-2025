@@ -8,12 +8,13 @@ class NavigateGate(smach.State):
         self.control = control
         self.mapping = mapping
         self.state = state
-        if target not in ["red", "blue"]:
-            raise ValueError("Target must be red or blue.")
         self.goThrough = goThrough
-        self.target_colour = rospy.get_param("target_colour")
+        self.target_color = rospy.get_param("target_color")
         self.gate_width = rospy.get_param("gate_width")
         self.red_gate_side = rospy.get_param("red_side")
+
+        if self.target_color not in ["red", "blue"]:
+            raise ValueError("Target must be red or blue.")
 
     def is_preempted(self):
         if self.preempt_requested():
@@ -64,7 +65,7 @@ class NavigateGate(smach.State):
         if not self.goThrough:
             return 'success'
 
-        print("Red is on the {} side. Target colour is {}".format(self.red_gate_side, self.target_colour))
+        print("Red is on the {} side. Target color is {}".format(self.red_gate_side, self.target_color))
 
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left

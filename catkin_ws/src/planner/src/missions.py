@@ -107,7 +107,7 @@ class Missions:
 
         timer.shutdown()
 
-    def pinger(self, first_state_name, count, mission_after)
+    def pinger(self, first_state_name, count, mission_after):
         global sm
 
         Timer = rospy.Timer(
@@ -126,7 +126,7 @@ class Missions:
                 state=self.state, 
                 mapping=self.mapping, 
                 pinger_number=self.pinger_number
-            )
+            ),
             transitions={"success": target_state_name, "failure": "failure"}
         )
 
@@ -277,7 +277,7 @@ class Missions:
 
 
 if __name__ == "__main__":
-    rospy.init_node("competition_planner", log_level=rospy.DEBUG)
+    rospy.init_node("competition_planner")
 
     sm = None
     missions = Missions()
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         ["Trick", missions.trick, "trick", 0],
         ["Buoy", missions.buoy, "find_buoy", 0],
         ["Octagon", missions.octagon, "find_octagon", 0],
-        ["Pinger", mission.pinger, "navigate_pinger", 0],
+        ["Pinger", missions.pinger, "navigate_pinger", 0],
         ["Torpedo", missions.torpedo, "", 0],
         ["Dropper", missions.dropper, "", 0],
         ["Bins", missions.bins, "", 0],
@@ -307,7 +307,7 @@ if __name__ == "__main__":
         done = False
         while not done:
             # Print all mission options
-            for i in range(mission_options):
+            for i in range(len(mission_options)):
                 print("[{}] ".format(i) + mission_options[i][0])
 
             # Check if all selected options are valid

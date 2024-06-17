@@ -26,7 +26,7 @@ class StateTracker:
         self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
         self.hydrophone_sub = rospy.Subscriber('/sensors/hydrophones/pinger_bearing', PingerBearing, self.updatePingerBearing)
-        self.claw_contact_sub = rospy.Publisher("/actuators/grabber/contact", Bool, self.updateGrabberContact)
+        self.claw_contact_sub = rospy.Subscriber("/actuators/grabber/contact", Bool, self.updateGrabberContact)
     def updatePose(self,msg):
         self.pose = msg
         self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
