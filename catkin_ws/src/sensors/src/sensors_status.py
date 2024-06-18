@@ -234,12 +234,15 @@ class Hydrophones(Sensor):
         # @TODO(Felipe): Subsbitute frequency_types values by 
         #                real pinger values (waiting for Sam
         #                to respond)  
-        self.frequency_types = [
-            rospy.get_param("pinger_frequency_1"), 
-            rospy.get_param("pinger_frequency_2"), 
-            rospy.get_param("pinger_frequency_3"), 
-            rospy.get_param("pinger_frequency_4")
-        ]
+        if rospy.has_param("pinger_frequency_1"):
+            self.frequency_types = [
+                rospy.get_param("pinger_frequency_1"), 
+                rospy.get_param("pinger_frequency_2"), 
+                rospy.get_param("pinger_frequency_3"), 
+                rospy.get_param("pinger_frequency_4")
+            ]
+        else:
+            self.frequency_types = [-1, -1, -1, -1]
         self.current_reading = [None] * len(self.frequency_types)
         self.last_reading = [None] * len(self.frequency_types)
         self.frequency_index = -1

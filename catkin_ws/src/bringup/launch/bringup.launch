@@ -4,7 +4,9 @@
 	<arg name="vision" default="false" />
 	<arg name="actions" default="false" />
 	
-
+	<include file="$(find state_estimation)/launch/state_estimation.launch">
+		<arg name="sim" value="$(arg sim)" />
+	</include>
 	
 	<group unless="$(arg sim)">
 		<include file="$(find sensors)/launch/sensors.launch">
@@ -21,10 +23,6 @@
 	</include>
 
 	<include file="$(find propulsion)/launch/propulsion.launch">
-		<arg name="sim" value="$(arg sim)" />
-	</include>
-	
-	<include file="$(find state_estimation)/launch/state_estimation.launch">
 		<arg name="sim" value="$(arg sim)" />
 	</include>
 
