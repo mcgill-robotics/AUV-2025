@@ -1,5 +1,5 @@
 services:
-  clarke:
+  douglas:
     environment:
       - DISPLAY=novnc:0.0 
     volumes:
