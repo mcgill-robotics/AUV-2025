@@ -34,9 +34,11 @@ def cb_unity_state(msg):
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
 
+    
+    q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
+
     # DVL - NWU
-    if isDVLActive:
-        q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
+    if  isDVLActive:     
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
         dvl_offset_NWU = quaternion.rotate_vectors(

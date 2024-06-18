@@ -15,7 +15,8 @@ def calculate_time_measurements(delta_time):
 
 def solve_bearing_vector(distance, is_three_hydrophones):
     position = np.array([hydrophones_dx, hydrophones_dy, 0] if is_three_hydrophones else [hydrophones_dx, hydrophones_dy, hydrophones_dz])
-    bearing_vector = np.where(position != 0, distance / position, 0)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        bearing_vector = np.where(position != 0, distance / position, 0)
     return bearing_vector
 
 
