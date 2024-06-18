@@ -46,7 +46,7 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
 
 # RUN apt update && apt install  openssh-server  xauth sudo -y \
 #     && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
-#     && echo 'robotics:clarke' | chpasswd \
+#     && echo 'robotics:douglas' | chpasswd \
 #     && echo "X11DisplayOffset 10" >> /etc/ssh/sshd_config \
 #     && echo "X11UseLocalhost yes" >> /etc/ssh/sshd_config \
 #     && service ssh start
@@ -62,7 +62,7 @@ RUN apt update \
     && grep "^X11UseLocalhost" /etc/ssh/sshd_config || echo "X11UseLocalhost no" >> /etc/ssh/sshd_config \
     && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
     # && useradd -rm -d /home/robotics -s /bin/bash -g root -G sudo -u 1000 robotics \
-    && echo 'root:clarke' | chpasswd \
+    && echo 'root:douglas' | chpasswd \
     && echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
 
 EXPOSE 22
