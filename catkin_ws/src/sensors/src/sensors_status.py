@@ -234,25 +234,28 @@ class Hydrophones(Sensor):
         # @TODO(Felipe): Subsbitute frequency_types values by 
         #                real pinger values (waiting for Sam
         #                to respond)  
-        if rospy.has_param("pinger_frequency_1"):
-            self.frequency_types = [
-                rospy.get_param("pinger_frequency_1"), 
-                rospy.get_param("pinger_frequency_2"), 
-                rospy.get_param("pinger_frequency_3"), 
-                rospy.get_param("pinger_frequency_4")
-            ]
-        else:
-            self.frequency_types = [-1, -1, -1, -1]
+        self.frequency_types = [-1, -1, -1, -1]
         self.current_reading = [None] * len(self.frequency_types)
         self.last_reading = [None] * len(self.frequency_types)
         self.frequency_index = -1
-
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
             PingerTimeDifference,
             self.hydrophones_cb,
         )
+        self.load_params()       
 
+    def load_params(self):
+        while not rospy.is_shutdown():
+            if rospy.has_param("pinger_frequency_1"):
+                self.frequency_types = [
+                    rospy.get_param("pinger_frequency_1"), 
+                    rospy.get_param("pinger_frequency_2"), 
+                    rospy.get_param("pinger_frequency_3"), 
+                    rospy.get_param("pinger_frequency_4")
+                ]
+                return
+        
     def hydrophones_cb(self, msg):
         if msg.frequency in self.frequency_types:
             self.frequency_index = self.frequency_types.index(msg.frequency)
