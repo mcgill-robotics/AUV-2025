@@ -106,6 +106,6 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
 
-RUN apt-get update && apt-get install -y tmux vim \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
