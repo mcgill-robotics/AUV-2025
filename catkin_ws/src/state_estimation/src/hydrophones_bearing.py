@@ -20,8 +20,11 @@ def solve_bearing_vector(distance, is_three_hydrophones):
 
 
 def cb_hydrophones_time_difference(msg):
-    if not is_active or msg.frequency not in frequency_types:
+    if not is_active:
         return  
+    if msg.frequency not in frequency_types:
+        print(f"Pinger frequency mismatch! Frequency received {msg.frequency} not in frequency types.")
+        return
           
     dt_hydrophones = np.array(msg.times) * time_unit
     
