@@ -107,3 +107,7 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
+
+RUN apt-get update && apt-get install -y tmux vim \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
