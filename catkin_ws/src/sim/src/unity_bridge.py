@@ -35,7 +35,7 @@ def cb_unity_state(msg):
     isDepthSensorActive = msg.isDepthSensorActive
 
     # DVL - NWU
-    if  isDVLActive:     
+    if isDVLActive:
         q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
