@@ -22,8 +22,7 @@ def solve_bearing_vector(distance, is_three_hydrophones):
 def cb_hydrophones_time_difference(msg):
     if not is_active or msg.frequency not in frequency_types:
         return  
-     
-    frequency_index = frequency_types.index(msg.frequency)     
+          
     dt_hydrophones = np.array(msg.times) * time_unit
     
     is_three_hydrophones = False
@@ -42,7 +41,7 @@ def cb_hydrophones_time_difference(msg):
         bearing_vector_global[2] = 0
 
     PingerBearing_msg = PingerBearing()
-    PingerBearing_msg.frequency_index = frequency_index
+    PingerBearing_msg.frequency = msg.frequency
     PingerBearing_msg.pinger_bearing.x = bearing_vector_global[0]
     PingerBearing_msg.pinger_bearing.y = bearing_vector_global[1]
     PingerBearing_msg.pinger_bearing.z = bearing_vector_global[2]
