@@ -105,6 +105,7 @@ def main():
         except Exception as e:
             print(e)
             break
+            exit()
 
     # Only grabbing data we care about but this dvl can be used for more.
     # Refer to work horse manual for more info
@@ -118,6 +119,7 @@ def main():
                 pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
+            exit()
 
 
 if __name__ == "__main__":
