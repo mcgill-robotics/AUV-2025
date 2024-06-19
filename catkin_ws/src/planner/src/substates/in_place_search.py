@@ -2,7 +2,6 @@
 
 import rospy
 import smach
-import time
 import threading
 from std_msgs.msg import String
 
@@ -10,13 +9,18 @@ from std_msgs.msg import String
 # search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class InPlaceSearch(smach.State):
     def __init__(self, control, mapping, target_class, min_objects):
-        super().__init__(outcomes=["success", "failure"])
+        super().__init__(outcomes=["success", "failure", "timeout"])
         self.control = control
         self.mapping = mapping
-        self.timeout = rospy.get_param("object_search_timeout")
+
         self.target_class = target_class
         self.min_objects = min_objects
         self.detectedObject = False
+        
+        self.thread_timer = None
+        self.timeout_occurred = False
+        self.time_limit = rospy.get_param("object_search_time_limit")
+        
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
         )
@@ -49,32 +53,43 @@ class InPlaceSearch(smach.State):
                 return  # stop grid search when object found
             num_turns += 1
 
-    def execute(self, ud):
-        print("Starting in-place search.")
-        self.pub_mission_display.publish("Search")
+    def timer_thread_func(self):
+        self.pub_mission_display.publish("IPS Time-out")
+        self.timeout_occurred = True
 
-        # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+    def execute(self, _):
+        print("Starting in-place search.")
+        self.pub_mission_display.publish("In-Place Search")
+
+        # Start the timer in a separate thread.
+        self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
+        self.thread_timer.start()
+
+        # Move to the middle of the pool depth and flat orientationt.
         self.control.move((None, None, rospy.get_param("nominal_depth")))
         self.control.flatten()
 
         self.searchThread = threading.Thread(target=self.doRotation)
         self.searchThread.start()
-        print("Starting rotation.")
-        startTime = time.time()
-        while startTime + self.timeout > time.time() and not rospy.is_shutdown():
-            if self.preempt_requested():
-                print("InPlaceSearch being preempted")
-                self.service_preempt()
-                return "failure"
-            if len(self.mapping.getClass(self.target_class)) >= self.min_objects:
+
+        while not rospy.is_shutdown():
+            if self.timeout_occurred:
+                self.detectedObject = True
+                self.searchThread.join()
+                self.control.freeze_pose()
+                print("In-place search timed out.")
+                return "timeout"
+            elif len(self.mapping.getClass(self.target_class)) >= self.min_objects:
+                self.thread_timer.cancel()
                 self.detectedObject = True
                 self.searchThread.join()
                 self.control.freeze_pose()
                 print("Found object! Waiting to get more observations of object.")
                 rospy.sleep(rospy.get_param("object_observation_time"))
                 return "success"
+            
         self.detectedObject = True
         self.searchThread.join()
         self.control.freeze_pose()
-        print("In-place search timed out.")
+        print("In-place search failed.")
         return "failure"

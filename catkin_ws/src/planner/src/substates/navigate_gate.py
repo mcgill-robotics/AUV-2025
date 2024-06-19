@@ -1,38 +1,53 @@
 import rospy
 import smach
 from .utility.functions import *
+import threading
+from std_msgs.msg import String
 
 class NavigateGate(smach.State):
     def __init__(self, control, mapping, state, goThrough):
-        super().__init__(outcomes=['success', 'failure'])
+        super().__init__(outcomes=["success", "failure", "timeout"])
         self.control = control
         self.mapping = mapping
         self.state = state
         self.goThrough = goThrough
+        
         self.target_color = rospy.get_param("target_color")
         self.gate_width = rospy.get_param("gate_width")
         self.red_gate_side = rospy.get_param("red_side")
 
         if self.target_color not in ["red", "blue"]:
             raise ValueError("Target must be red or blue.")
+        
+        self.thread_timer = None
+        self.timeout_occurred = False
+        self.time_limit = rospy.get_param("navigate_gate_time_limit")
+        
+        self.pub_mission_display = rospy.Publisher(
+            "/mission_display", String, queue_size=1
+        )
 
-    def is_preempted(self):
-        if self.preempt_requested():
-            print("IPS being preempted")
-            self.service_preempt()
-            return 'failure'
-
+    def timer_thread_func(self):
+        self.pub_mission_display.publish("Gate Time-out")
+        self.timeout_occurred = True
+        self.control.freeze_pose()
 
     def execute(self, ud):
         print("Starting gate navigation.") 
-        #MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
+        self.pub_mission_display.publish("Gate")
+
+        # Start the timer in a separate thread.
+        self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
+        self.thread_timer.start()
+
+        # Move to the middle of the pool depth and flat orientationt.
         self.control.move((None, None, -1))
         self.control.flatten()
 
         gate_object = self.mapping.getClosestObject(cls="Gate", pos=(self.state.x, self.state.y))
         if gate_object is None:
             print("No gate in object map! Failed.")
-            return 'failure'
+            return "failure"
     
         print("Centering and rotating in front of gate.")
         offset_distance = -3
@@ -41,8 +56,12 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.is_preempted()
+
+        if self.timeout_occurred:
+            return "timeout"
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
+        if self.timeout_occurred:
+            return "timeout"
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         # wait and repeat just to be safe
@@ -56,40 +75,46 @@ class NavigateGate(smach.State):
         offset = [] 
         for i in range(len(dtv)):
             offset.append(offset_distance * dtv[i]) 
-        self.is_preempted()
+
+        if self.timeout_occurred:
+            return "timeout"
         self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
+        if self.timeout_occurred:
+            return "timeout"
         self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
 
         print("Successfully centered in front of gate")
 
         if not self.goThrough:
-            return 'success'
+            return "success"
 
         print("Red is on the {} side. Target color is {}".format(self.red_gate_side, self.target_color))
 
         self.mapping.updateObject(gate_object)
         symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
-        self.is_preempted()
-
+        if self.timeout_occurred:
+            return "timeout"
         if self.target == "red": 
-            if red_gate_side == "left":
+            if self.red_gate_side == "left":
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else: 
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
         else: 
-            if red_gate_side == "right":
+            if self.red_gate_side == "right":
                 print("Going through left side")
                 self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
             else: 
                 print("Going through right side")
                 self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
 
-        self.is_preempted()
+        if self.timeout_occurred:
+            return "timeout"
         self.control.moveDeltaLocal((5.0,0.0,0.0))
 
+        self.control.freeze_pose()
+        self.thread_timer.cancel()
         print("Successfully passed through gate!")
-        
-        return 'success'
+        return "success"

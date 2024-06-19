@@ -4,7 +4,6 @@ import numpy as np
 import rospy
 from auv_msgs.msg import VisionObject, VisionObjectArray
 from object_detection_utils import *
-import object_detection_utils
 import torch
 
 
