@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 
-from auv_msgs.msg import DeadReckonReport, UnityState
+from auv_msgs.msg import DeadReckonReport, UnityState, PingerTimeDifference
 from geometry_msgs.msg import Quaternion, Vector3
 from sbg_driver.msg import SbgImuData, SbgEkfQuat
 from std_msgs.msg import Float64, Int32
@@ -11,7 +11,7 @@ from tf import transformations
 import quaternion
 
 DEG_PER_RAD = 180 / np.pi
-
+NUMBER_OF_PINGERS = 4
 
 def cb_unity_state(msg):
     pose_x = msg.position.z
@@ -30,13 +30,18 @@ def cb_unity_state(msg):
     twist_angular_y = msg.angular_velocity.x
     twist_angular_z = -msg.angular_velocity.y
 
+    frequencies = msg.frequencies
+    times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
+
     isDVLActive = msg.isDVLActive
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
+    isHydrophonesActive = msg.isHydrophonesActive
+
+    q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
 
     # DVL - NWU
     if isDVLActive:
-        q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
         # Position
         position_NWU_auv = np.array([pose_x, pose_y, pose_z])
         dvl_offset_NWU = quaternion.rotate_vectors(
@@ -89,6 +94,14 @@ def cb_unity_state(msg):
         depth_msg.data = pose_z
         pub_depth_sensor.publish(depth_msg)
 
+    # HYDROPHONES
+    if isHydrophonesActive:
+        for i in range(NUMBER_OF_PINGERS):
+            hydrophones_msg = PingerTimeDifference()
+            hydrophones_msg.frequency = frequencies[i]
+            hydrophones_msg.times = times[i]
+            pub_hydrophones_sensor.publish(hydrophones_msg)
+
 
 if __name__ == "__main__":
     rospy.init_node("unity_bridge")
@@ -136,6 +149,11 @@ if __name__ == "__main__":
     )
     pub_imu_data_sensor = rospy.Publisher(
         "/sensors/imu/angular_velocity", SbgImuData, queue_size=1
+    )
+    pub_hydrophones_sensor = rospy.Publisher(
+        "/sensors/hydrophones/pinger_time_difference", 
+        PingerTimeDifference, 
+        queue_size=1
     )
 
     # Set up subscribers and publishers
