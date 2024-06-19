@@ -10,8 +10,6 @@ services:
     privileged: true
     build: .
     command: bash -c "echo 'source /root/AUV-2024/scripts/set_env.bash' >> ~/.bashrc && tail -f /dev/null"
-    ports:
-      - "11311:11311"
     network_mode: host
     # deploy:
     #   resources:
