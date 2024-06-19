@@ -24,7 +24,6 @@ COPY build_zed.bash .
 RUN chmod +x build_zed.bash \
     && /bin/bash -c './build_zed.bash' \
     && rm build_zed.bash \
-    && echo "source /zed/catkin_ws/install/setup.bash" >> ~/.bashrc \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
