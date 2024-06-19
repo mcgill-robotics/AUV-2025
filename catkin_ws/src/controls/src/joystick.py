@@ -2,14 +2,18 @@
 
 import rospy
 import keyboard
-import math
 from tf import transformations
+import numpy as np
+import quaternion
+import cv2
+import os
+from cv_bridge import CvBridge
+
 from auv_msgs.msg import ThrusterMicroseconds
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Quaternion, Pose
-import numpy as np
-import quaternion
-from tf import transformations
+from sensor_msgs.msg import Image
+
 
 # Forces produced by T200 thruster at 14V (N).
 
@@ -34,6 +38,19 @@ class Joystick:
 
         self.is_esc_pressed = False      
 
+        self.folder_path = rospy.get_param("joystick_image_folder_path")
+        self.down_camera_path = os.path.join(self.folder_path, "down_camera")
+        self.front_camera_path = os.path.join(self.folder_path, "front_camera")
+        self.file_number = 1
+        
+        # Ensure the folder exists
+        os.makedirs(self.folder_path, exist_ok=True)
+        os.makedirs(self.down_camera_path, exist_ok=True)
+        os.makedirs(self.front_camera_path, exist_ok=True)
+
+        self.down_camera_frame = []
+        self.front_camera_frame = []
+
         self.pid_position_delta = rospy.get_param("joystick_pid_position_delta")   
         self.pid_quaternion_delta_w = rospy.get_param("joystick_pid_quaternion_delta_w")   
         self.pid_quaternion_delta_xyz = rospy.get_param("joystick_pid_quaternion_delta_xyz")   
@@ -53,10 +70,14 @@ class Joystick:
         self.bottom_right_box = chr(0x255D)
         self.space_indentation = " " * 11
 
-        rospy.Subscriber("/state/pose", Pose, self.callback_pose)
+        rospy.Subscriber("/state/pose", Pose, self.cb_pose)
+        rospy.Subscriber("/vision/down_cam/image_raw", Image, self.cb_down_camera)
+        rospy.Subscriber("/vision/front_cam/color/image_raw",
+            Image, self.cb_front_camera
+        )
 
 
-    def callback_pose(self, msg):
+    def cb_pose(self, msg):
         self.x = msg.position.x
         self.y = msg.position.y
         self.z = msg.position.z
@@ -67,14 +88,20 @@ class Joystick:
             w=msg.orientation.w
         )
 
-    def callback_theta_x(self, msg):
+    def cb_theta_x(self, msg):
         self.theta_x = msg.data
 
-    def callback_theta_y(self, msg):
+    def cb_theta_y(self, msg):
         self.theta_y = msg.data
 
-    def callback_theta_z(self, msg):
+    def cb_theta_z(self, msg):
         self.theta_z = msg.data
+
+    def cb_down_camera(self, msg):
+        self.down_camera_frame = msg
+
+    def cb_front_camera(self, msg):
+        self.front_camera_frame = msg
         
     def establish_force_publishers(self) -> None:
         # [FORCE] mode.
@@ -136,6 +163,13 @@ class Joystick:
         self.pub_pid_z_enable(Bool(enable))
         self.pub_pid_quat_enable(Bool(enable))
 
+    def take_screenshot(self, image, path):
+        bridge = CvBridge()
+        cv_image = bridge.imgmsg_to_cv2(image, desired_encoding="passthrough")
+        file_path = os.path.join(path, f"image_{self.file_number}.jpg")
+        cv2.imwrite(file_path, cv_image)
+        self.file_number += 1
+
     def establish_key_hooks(self) -> None:
         mode_swap = lambda mode, enable: (
             setattr(self, "current_mode", mode),
@@ -159,6 +193,15 @@ class Joystick:
             "3", 
             mode_swap(self.mode_pid_global, True)
         )
+        keyboard.on_press_key(
+            "4",
+            self.take_screenshot(self.down_camera_frame, self.down_camera_path)
+        )
+        keyboard.on_press_key(
+            "5",
+            self.take_screenshot(self.front_camera_frame, self.front_camera_path)
+        )
+
 
     def print_key_options_msg(self) -> None: 
         print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
@@ -166,11 +209,13 @@ class Joystick:
         print(" > Q/E for UP/DOWN")
         print(" > IJKL for PITCH/YAW")
         print(" > U/O for ROLL")
-        print(" > hold SPACE for max. force")
+        print(" > Hold SPACE for max. force")
         print(f" > To switch to [{self.mode_force}] mode, press 1")
         print(f" > To switch to [{self.local_mode}] mode, press 2")
         print(f" > To switch to [{self.mode_pid_global}] mode, press 3")
         print(f" > CURRENT MODE: [{self.current_mode}]")
+        print(" > For down camera screenshot, press 4")
+        print(" > For front camera screenshot, press 5")
 
 
     def print_pid_values(self, targets):
