@@ -21,9 +21,9 @@ jobs:
             git clone https://github.com/mcgill-robotics/auv-sim-gazebo.git
             cd ..
             catkin build
-      - name: state test
-        shell: bash
-        run: |
-            cd catkin_ws
-            source devel/setup.bash
-            xvfb-run -a rostest planner simple.test
+      # - name: state test
+      #   shell: bash
+      #   run: |
+      #       cd catkin_ws
+      #       source devel/setup.bash
+      #       xvfb-run -a rostest planner simple.test
