@@ -26,4 +26,8 @@ RUN chmod +x build_zed.bash \
     && rm build_zed.bash \
     && echo "source /zed/catkin_ws/install/setup.bash" >> ~/.bashrc \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /root/.cache/pip \
+    && rm -rf /root/.cache/pip
+
+RUN apt-get update && apt-get install -y tmux vim \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean

@@ -15,10 +15,10 @@ services:
       - UDEV=on
 
     runtime: nvidia
-    command: bash -c "tail -f /dev/null"
-    # ports:
-      # - "22:22"
-      # - "10000:10000"
+    command: bash -c "echo 'source /root/AUV-2024/scripts/set_env.bash' >> ~/.bashrc && tail -f /dev/null"
+    ports:
+      - 2222:22/tcp
+      - "11311:11311"
     network_mode: host
     restart: always
     build: .
