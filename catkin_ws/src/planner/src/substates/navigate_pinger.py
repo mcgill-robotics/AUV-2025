@@ -4,12 +4,14 @@ import rospy
 import smach
 from .utility.functions import *
 from auv_msgs.msg import PingerBearing
+import threading
+from std_msgs.msg import String
 
 # Given a pinger number (integer), navigate the AUV towards the object corresponding to that pinger number
 class NavigatePinger(smach.State):
 
      def __init__(self, control, state, mapping, pinger_number):
-          super().__init__(outcomes=["success", "failure", "search"])
+          super().__init__(outcomes=["success", "failure", "search", "timeout"])
           self.control = control
           self.mapping = mapping
           self.state = state
@@ -17,9 +19,26 @@ class NavigatePinger(smach.State):
           self.pinger_number = pinger_number
           self.nominal_depth = rospy.get_param("nominal_depth")
 
+          self.thread_timer = None
+          self.timeout_occurred = False
+          self.time_limit = rospy.get_param("navigate_pinger_time_limit")
+          
+          self.pub_mission_display = rospy.Publisher(
+               "/mission_display", String, queue_size=1
+          )
+
+     def timer_thread_func(self):
+          self.pub_mission_display.publish("Gate Time-out")
+          self.timeout_occurred = True
+          self.control.freeze_pose()
 
      def execute(self, ud):
           print("Starting pinger navigation. Navigating to object with pinger number", self.pinger_number) 
+          self.pub_mission_display.publish("Pinger")
+
+          # Start the timer in a separate thread.
+          self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
+          self.thread_timer.start()
 
           # Get all the pinger bearings into an array to access bearings by the pinger_number
           pinger_bearings = self.state.pinger_bearing

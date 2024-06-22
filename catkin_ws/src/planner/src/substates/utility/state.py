@@ -17,7 +17,8 @@ class StateTracker:
         self.theta_z = None
         self.pose = None
         self.quat = None    
-        self.pingers_bearing = None
+        self.pingers_bearing = [None, None, None, None]
+        self.frequency_types = [None, None, None, None]
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
@@ -27,25 +28,47 @@ class StateTracker:
         self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
         self.hydrophone_sub = rospy.Subscriber('/sensors/hydrophones/pinger_bearing', PingerBearing, self.updatePingerBearing)
         self.claw_contact_sub = rospy.Subscriber("/actuators/grabber/contact", Bool, self.updateGrabberContact)
+
     def updatePose(self,msg):
         self.pose = msg
         self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
+
     def updateX(self, msg):
         self.x = float(msg.data)
+
     def updateY(self, msg):
         self.y = float(msg.data)
+
     def updateZ(self, msg):
         self.z = float(msg.data)
+
     def updateThetaX(self, msg):
         self.theta_x = float(msg.data)
+
     def updateThetaY(self, msg):
         self.theta_y = float(msg.data)
+
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
+
     def updatePingerBearing(self, msg):
-        self.pingers_bearing = msg
+        if rospy.has_param("pinger_frequency_1"):
+            if None in self.frequency_types:
+                self.frequency_types = [
+                    rospy.get_param("pinger_frequency_1"), 
+                    rospy.get_param("pinger_frequency_2"), 
+                    rospy.get_param("pinger_frequency_3"), 
+                    rospy.get_param("pinger_frequency_4")
+                ]
+            if msg.frequency in self.frequency_types:
+                pinger_index = self.frequency_types.index(msg.frequency)
+                self.pingers_bearing[pinger_index] = 
+
+
+
     def updateGrabberContact(self, msg):
         self.grabber_contact = msg.data
+
     def stop(self):
         self.x_pos_sub.unregister()
         self.y_pos_sub.unregister()

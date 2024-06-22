@@ -23,12 +23,11 @@ class NavigateLaneMarker(smach.State):
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
         )
-
-    def is_preempted(self):
-        if self.preempt_requested():
-            print("NavigateLaneMarker being preempted")
-            self.service_preempt()
-            return "failure"
+    
+    def timer_thread_func(self):
+        self.pub_mission_display.publish("Lane Marker Time-out")
+        self.timeout_occurred = True
+        self.control.freeze_pose()
 
     def execute(self, ud):
         print("Starting lane marker navigation.")

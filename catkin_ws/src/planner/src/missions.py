@@ -25,17 +25,6 @@ class Missions:
         self.state = StateTracker()
         self.control = Controller(rospy.Time(0))
 
-        self.coin_flip_time_limit = rospy.get_param("coin_flip_time_limit")
-        self.gate_time_limit = rospy.get_param("gate_time_limit")
-        self.lane_marker_time_limit = rospy.get_param("lane_marker_time_limit")
-        self.tricks_time_limit = rospy.get_param("tricks_time_limit")
-        self.buoy_time_limit = rospy.get_param("buoy_time_limit")
-        self.dropper_time_limit = rospy.get_param("dropper_time_limit")
-        self.torpedo_time_limit = rospy.get_param("torpedo_time_limit")
-        self.octagon_time_limit = rospy.get_param("octagon_time_limit")
-        self.pinger_time_limit = rospy.get_param("pinger_time_limit")
-        self.bins_time_limit = rospy.get_param("bins_time_limit")
-
         self.gate_width = rospy.get_param("gate_width")
         self.quali_gate_width = rospy.get_param("quali_gate_width")
 
