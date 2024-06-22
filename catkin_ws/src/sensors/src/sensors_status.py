@@ -18,11 +18,11 @@ RAD_PER_DEG = 1 / DEG_PER_RAD
 
 class Sensor:
     def __init__(self, sensor_name):
-        self.time_before_considered_inactive = 1  # seconds
+        self.time_before_considered_inactive = rospy.get_param("time_before_considered_inactive")
         self.sensor_name = sensor_name
         self.sensor_warning_interval = rospy.get_param(
             "sensor_warning_interval"
-        )  # seconds
+        )
 
         # initialize a sensor as "inactive"
         self.last_unique_reading_time = -1 * self.time_before_considered_inactive
@@ -231,42 +231,53 @@ class Hydrophones(Sensor):
     def __init__(self):
         super().__init__("Hydrophones")
 
-        self.are_pingers_active = [False, False, False, False]
-        self.current_reading = [None, None, None, None]
-        self.last_reading = [None, None, None, None]
-
+        # @TODO(Felipe): Subsbitute frequency_types values by 
+        #                real pinger values (waiting for Sam
+        #                to respond)  
+        self.frequency_types = [-1, -1, -1, -1]
+        self.current_reading = [None] * len(self.frequency_types)
+        self.last_reading = [None] * len(self.frequency_types)
+        self.frequency_index = -1
+        self.time_tolerance = rospy.get_param("hydrophones_time_difference_tolerance")
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
             PingerTimeDifference,
             self.hydrophones_cb,
         )
+        self.load_frequency_params()       
 
+    def load_frequency_params(self):
+        """ 
+        These parameters are launched by hydrophones.launch in state_estimation.
+        Only continue Hydrophones status check if hydrophones was launched.
+        """
+        while not rospy.is_shutdown():
+            if rospy.has_param("pinger_frequency_1"):
+                self.frequency_types = [
+                    rospy.get_param("pinger_frequency_1"), 
+                    rospy.get_param("pinger_frequency_2"), 
+                    rospy.get_param("pinger_frequency_3"), 
+                    rospy.get_param("pinger_frequency_4")
+                ]
+                return
+        
     def hydrophones_cb(self, msg):
-        self.are_pingers_active = [
-            msg.is_pinger1_active,
-            msg.is_pinger2_active,
-            msg.is_pinger3_active,
-            msg.is_pinger4_active,
-        ]
-        self.current_reading = [
-            msg.dt_pinger1,
-            msg.dt_pinger2,
-            msg.dt_pinger3,
-            msg.dt_pinger4,
-        ]
-        self.update_last_reading()
+        times = msg.times
+        if (msg.frequency in self.frequency_types) and (max(times) - min(times) <= self.time_tolerance):
+            self.frequency_index = self.frequency_types.index(msg.frequency)
+            self.current_reading[self.frequency_index] = times
+            self.update_last_reading()
+        else:
+            self.frequency_index = -1
 
     def update_last_reading(self):
-        if self.current_reading != self.last_reading:
+        if self.current_reading[self.frequency_index] != self.last_reading[self.frequency_index]:
             self.last_unique_reading_time = rospy.get_time()
-            self.last_reading = self.current_reading[:]
+            self.last_reading[self.frequency_index] = self.current_reading[self.frequency_index][:]
 
     def has_valid_data(self):
-        indexes_true = [i for i, e in enumerate(self.are_pingers_active) if e]
-        indexes_non_zero = [
-            i for i, e in enumerate(self.current_reading) if e != [0, 0, 0, 0]
-        ]
-        return len(indexes_true) != 0 and indexes_true == indexes_non_zero
+        return self.frequency_index != -1
+
 
 
 # Actuator class inheriting from Sensor
