@@ -239,14 +239,19 @@ class Hydrophones(Sensor):
         self.current_reading = [None] * len(self.frequency_types)
         self.last_reading = [None] * len(self.frequency_types)
         self.frequency_index = -1
+        self.time_tolerance = rospy.get_param("hydrophones_time_difference_tolerance")
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
             PingerTimeDifference,
             self.hydrophones_cb,
         )
-        self.load_params()       
+        self.load_frequency_params()       
 
-    def load_params(self):
+    def load_frequency_params(self):
+        """ 
+        These parameters are launched by hydrophones.launch in state_estimation.
+        Only continue Hydrophones status check if hydrophones was launched.
+        """
         while not rospy.is_shutdown():
             if rospy.has_param("pinger_frequency_1"):
                 self.frequency_types = [
@@ -258,9 +263,10 @@ class Hydrophones(Sensor):
                 return
         
     def hydrophones_cb(self, msg):
-        if msg.frequency in self.frequency_types:
+        times = msg.times
+        if (msg.frequency in self.frequency_types) and (max(times) - min(times) <= self.time_tolerance):
             self.frequency_index = self.frequency_types.index(msg.frequency)
-            self.current_reading[self.frequency_index] = msg.times
+            self.current_reading[self.frequency_index] = times
             self.update_last_reading()
         else:
             self.frequency_index = -1
