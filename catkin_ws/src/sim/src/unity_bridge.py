@@ -108,6 +108,7 @@ if __name__ == "__main__":
     q_imunominalup_imuup_y = rospy.get_param("q_imunominalup_imuup_y")
     q_imunominalup_imuup_z = rospy.get_param("q_imunominalup_imuup_z")
 
+
     q_imunominalup_imuup = np.quaternion(
         q_imunominalup_imuup_w, q_imunominalup_imuup_x, q_imunominalup_imuup_y, q_imunominalup_imuup_z
     )
