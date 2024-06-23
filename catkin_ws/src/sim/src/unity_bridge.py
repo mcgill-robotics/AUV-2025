@@ -17,36 +17,38 @@ def cb_unity_state(msg):
     pose_x = msg.position.z
     pose_y = -msg.position.x
     pose_z = msg.position.y
-    q_NED_imunominalned_x = msg.orientation.x
-    q_NED_imunominalned_y = msg.orientation.y
-    q_NED_imunominalned_z = msg.orientation.z
-    q_NED_imunominalned_w = msg.orientation.w
+    q_ESD_imunominaldown_x = msg.orientation.x
+    q_ESD_imunominaldown_y = msg.orientation.y
+    q_ESD_imunominaldown_z = msg.orientation.z
+    q_ESD_imunominaldown_w = msg.orientation.w
 
-    q_NED_imunominalned = np.quaternion(
-        q_NED_imunominalned_w, q_NED_imunominalned_x, q_NED_imunominalned_y, q_NED_imunominalned_z
+    q_ESD_imunominaldown = np.quaternion(
+        q_ESD_imunominaldown_w, q_ESD_imunominaldown_x, q_ESD_imunominaldown_y, q_ESD_imunominaldown_z
     )
 
-    q_ENU_imunominalenu = q_ENU_NED * q_ENU_imunominalned * q_imunominalned_imunominal_enu
+    q_ENU_imunominalup = q_ENU_ESD * q_ESD_imunominaldown * q_imunominaldown_imunominalup
 
-    twist_angular_n = -msg.angular_velocity.z
-    twist_angular_w = msg.angular_velocity.x
-    twist_angular_u = -msg.angular_velocity.yaw
-    twist_enu = [-twist_angular_w,twist_angular_n,twist_angular_u]
+    twist_angular_e = msg.angular_velocity.z
+    twist_angular_n = msg.angular_velocity.x
+    twist_angular_u = -msg.angular_velocity.y
+    twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
+
 
     isDVLActive = msg.isDVLActive
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
 
-    velocity_nwu = [msg.velocity.x, msg.velocity.y, msg.velocity.z]
+    velocity_enu = [msg.velocity.z, -msg.velocity.x, msg.velocity.y]
 
-    acceleration_enu = [msg.linear_acceleration.x, msg.linear_acceleration.y,msg.linear_acceleration.z]
+    acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
+
 
     # DVL - NWU
     if isDVLActive:
 
-        q_NWU_dvlnwu = q_NWU_NED * q_NED_imunominalned * q_imunominalned_dvlnominalnwu * q_dvlnominalnwu_dvlnwu
+        q_ENU_dvlup =  q_ENU_imunominalup * q_imunominalup_dvlnominalup * q_dvlnominalup_dvlup
 
-        velocity_dvl = quaternion.rotate_vectors(q_NWU_dvlnwu.inverse(), velocity_nwu)
+        velocity_dvl = quaternion.rotate_vectors(q_ENU_dvlup.inverse(), velocity_enu)
 
         dvl_msg = TwistWithCovariance()
         dvl_msg.twist.linear = Vector3(*velocity_dvl)
@@ -58,19 +60,19 @@ def cb_unity_state(msg):
     if isIMUActive:
         imu_msg = Imu()
 
-        q_ENU_imu = q_ENU_imunominalenu * q_imunominalenu_imu
+        q_ENU_imuup = q_ENU_imunominalup * q_imunominalup_imuup
 
         imu_msg.orientation = Quaternion(
-            x=q_ENU_imu.x, y=q_ENU_imu.y, z=q_ENU_imu.z, w=q_ENU_imu.w
+            x=q_ENU_imuup.x, y=q_ENU_imuup.y, z=q_ENU_imuup.z, w=q_ENU_imuup.w
         )
 
 
         twist_imu = quaternion.rotate_vectors(
-            q_ENU_imu.inverse(), twist_enu
+            q_ENU_imuup.inverse(), twist_enu
         )
 
         acceleration_imu = quaternion.rotate_vectors(
-            q_ENU_imu.inverse(), acceleration_imu
+            q_ENU_imuup.inverse(), acceleration_enu
         )
 
         imu_msg.angular_velocity = Vector3(*twist_imu)
@@ -89,45 +91,42 @@ if __name__ == "__main__":
     rospy.init_node("unity_bridge")
 
     # Load parameters
-    q_dvlnominal_dvl_w = rospy.get_param("q_dvlnominal_dvl_w")
-    q_dvlnominal_dvl_x = rospy.get_param("q_dvlnominal_dvl_x")
-    q_dvlnominal_dvl_y = rospy.get_param("q_dvlnominal_dvl_y")
-    q_dvlnominal_dvl_z = rospy.get_param("q_dvlnominal_dvl_z")
-    q_dvlnominal_dvl = np.quaternion(
-        q_dvlnominal_dvl_w, q_dvlnominal_dvl_x, q_dvlnominal_dvl_y, q_dvlnominal_dvl_z
+    q_dvlnominalup_dvlup_w = rospy.get_param("q_dvlnominalup_dvlup_w")
+    q_dvlnominalup_dvlup_x = rospy.get_param("q_dvlnominalup_dvlup_x")
+    q_dvlnominalup_dvlup_y = rospy.get_param("q_dvlnominalup_dvlup_y")
+    q_dvlnominalup_dvlup_z = rospy.get_param("q_dvlnominalup_dvlup_z")
+    q_dvlnominalup_dvlup = np.quaternion(
+        q_dvlnominalup_dvlup_w, q_dvlnominalup_dvlup_x, q_dvlnominalup_dvlup_y, q_dvlnominalup_dvlup_z
     )
 
     auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
     auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
     auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
 
-    q_imunominal_imu_w = rospy.get_param("q_imunominal_imu_w")
-    q_imunominal_imu_x = rospy.get_param("q_imunominal_imu_x")
-    q_imunominal_imu_y = rospy.get_param("q_imunominal_imu_y")
-    q_imunominal_imu_z = rospy.get_param("q_imunominal_imu_z")
+    q_imunominalup_imuup_w = rospy.get_param("q_imunominalup_imuup_w")
+    q_imunominalup_imuup_x = rospy.get_param("q_imunominalup_imuup_x")
+    q_imunominalup_imuup_y = rospy.get_param("q_imunominalup_imuup_y")
+    q_imunominalup_imuup_z = rospy.get_param("q_imunominalup_imuup_z")
 
-    q_imunominal_imu = np.quaternion(
-        q_imunominal_imu_w, q_imunominal_imu_x, q_imunominal_imu_y, q_imunominal_imu_z
+    q_imunominalup_imuup = np.quaternion(
+        q_imunominalup_imuup_w, q_imunominalup_imuup_x, q_imunominalup_imuup_y, q_imunominalup_imuup_z
     )
+
+    q_imunominaldown_imunominalup = np.quaternion(0,1,0,0)
+    q_imunominalup_dvlnominalup = np.quaternion(1,0,0,0)
 
     # REFERENCE FRAME DEFINITIONS
-    random_vector = np.random.rand(4)
-    random_vector = random_vector / np.linalg.norm(random_vector)
-    # q_NWU_dvlref = np.quaternion(random_vector[0],random_vector[1],random_vector[2],random_vector[3])
-    q_NWU_dvlref = np.quaternion(0, 1, 0, 0)
-    q_imunominal_auv = np.quaternion(0, 1, 0, 0)
-    q_dvlnominal_auv = np.quaternion(0, 1, 0, 0)
-    q_ENU_NED = np.quaternion(0, 0.707, 0.707, 0)
-    q_NWU_NED = np.quaternion(0, 1, 0, 0)
-    q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv
+    q_ENU_ESD = np.quaternion(0, 1, 0, 0)
 
-    # TODO: ADD DVL VELOCITY
+
+    q_imunominaldown_dvlnominalup = np.quaternion(0,1,0,0)
+
 
     pub_dvl_sensor = rospy.Publisher(
-        "/sensors/dvl/pose", DeadReckonReport, queue_size=1
+        "/sensors/dvl/twist", TwistWithCovariance, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
-    pub_imu_quat_sensor = rospy.Publisher(
+    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", PoseWithCovariance, queue_size=1)
+    pub_imu_sensor = rospy.Publisher(
         "/sensors/imu", Imu, queue_size=1
     )
 
