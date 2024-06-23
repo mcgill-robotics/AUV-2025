@@ -4,8 +4,8 @@ import rospy
 import numpy as np
 
 from auv_msgs.msg import DeadReckonReport, UnityState
-from geometry_msgs.msg import Quaternion, Vector3
-from sbg_driver.msg import SbgImuData, SbgEkfQuat
+from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovariance, PoseWithCovariance 
+from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64, Int32
 from tf import transformations
 import quaternion
@@ -17,76 +17,71 @@ def cb_unity_state(msg):
     pose_x = msg.position.z
     pose_y = -msg.position.x
     pose_z = msg.position.y
-    q_NED_imunominal_x = msg.orientation.x
-    q_NED_imunominal_y = msg.orientation.y
-    q_NED_imunominal_z = msg.orientation.z
-    q_NED_imunominal_w = msg.orientation.w
+    q_NED_imunominalned_x = msg.orientation.x
+    q_NED_imunominalned_y = msg.orientation.y
+    q_NED_imunominalned_z = msg.orientation.z
+    q_NED_imunominalned_w = msg.orientation.w
 
-    q_NED_imunominal = np.quaternion(
-        q_NED_imunominal_w, q_NED_imunominal_x, q_NED_imunominal_y, q_NED_imunominal_z
+    q_NED_imunominalned = np.quaternion(
+        q_NED_imunominalned_w, q_NED_imunominalned_x, q_NED_imunominalned_y, q_NED_imunominalned_z
     )
 
-    twist_angular_x = -msg.angular_velocity.z
-    twist_angular_y = msg.angular_velocity.x
-    twist_angular_z = -msg.angular_velocity.y
+    q_ENU_imunominalenu = q_ENU_NED * q_ENU_imunominalned * q_imunominalned_imunominal_enu
+
+    twist_angular_n = -msg.angular_velocity.z
+    twist_angular_w = msg.angular_velocity.x
+    twist_angular_u = -msg.angular_velocity.yaw
+    twist_enu = [-twist_angular_w,twist_angular_n,twist_angular_u]
 
     isDVLActive = msg.isDVLActive
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
 
+    velocity_nwu = [msg.velocity.x, msg.velocity.y, msg.velocity.z]
+
+    acceleration_enu = [msg.linear_acceleration.x, msg.linear_acceleration.y,msg.linear_acceleration.z]
+
     # DVL - NWU
     if isDVLActive:
-        q_NWU_auv = q_NWU_NED * q_NED_imunominal * q_imunominal_auv
-        # Position
-        position_NWU_auv = np.array([pose_x, pose_y, pose_z])
-        dvl_offset_NWU = quaternion.rotate_vectors(
-            q_NWU_auv, np.array([auv_dvl_offset_x, auv_dvl_offset_y, auv_dvl_offset_z])
-        )
-        position_NWU_auv += dvl_offset_NWU
-        position_dvl_dvlref = quaternion.rotate_vectors(
-            q_NWU_dvlref.inverse(), position_NWU_auv
-        )
 
-        # Orientation
-        q_dvlref_dvl = q_NWU_dvlref.inverse() * q_NWU_auv * q_dvl_auv.inverse()
-        # euler_dvlref_auv = quaternion.as_euler_angles(q_dvlref_dvl)
-        euler_dvlref_dvl = transformations.euler_from_quaternion(
-            [q_dvlref_dvl.x, q_dvlref_dvl.y, q_dvlref_dvl.z, q_dvlref_dvl.w]
-        )
+        q_NWU_dvlnwu = q_NWU_NED * q_NED_imunominalned * q_imunominalned_dvlnominalnwu * q_dvlnominalnwu_dvlnwu
 
-        dvl_msg = DeadReckonReport()
+        velocity_dvl = quaternion.rotate_vectors(q_NWU_dvlnwu.inverse(), velocity_nwu)
 
-        dvl_msg.x = position_dvl_dvlref[0]
-        dvl_msg.y = position_dvl_dvlref[1]
-        dvl_msg.z = position_dvl_dvlref[2]
-        dvl_msg.std = 0.0
-        dvl_msg.status = 1
-        dvl_msg.roll = euler_dvlref_dvl[0] * DEG_PER_RAD
-        dvl_msg.pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
-        dvl_msg.yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
+        dvl_msg = TwistWithCovariance()
+        dvl_msg.twist.linear = Vector3(*velocity_dvl)
+
         pub_dvl_sensor.publish(dvl_msg)
+
 
     # IMU - NED
     if isIMUActive:
-        sbg_quat_msg = SbgEkfQuat()
+        imu_msg = Imu()
 
-        q_NED_imu = q_NED_imunominal * q_imunominal_imu
-        sbg_quat_msg.quaternion = Quaternion(
-            x=q_NED_imu.x, y=q_NED_imu.y, z=q_NED_imu.z, w=q_NED_imu.w
-        )
-        pub_imu_quat_sensor.publish(sbg_quat_msg)
+        q_ENU_imu = q_ENU_imunominalenu * q_imunominalenu_imu
 
-        twist_angular_x, twist_angular_y, twist_angular_z = quaternion.rotate_vectors(
-            q_NWU_auv.inverse(), [twist_angular_x, twist_angular_y, twist_angular_z]
+        imu_msg.orientation = Quaternion(
+            x=q_ENU_imu.x, y=q_ENU_imu.y, z=q_ENU_imu.z, w=q_ENU_imu.w
         )
-        sbg_data_msg = SbgImuData()
-        sbg_data_msg.gyro = Vector3(twist_angular_x, twist_angular_y, twist_angular_z)
-        pub_imu_data_sensor.publish(sbg_data_msg)
+
+
+        twist_imu = quaternion.rotate_vectors(
+            q_ENU_imu.inverse(), twist_enu
+        )
+
+        acceleration_imu = quaternion.rotate_vectors(
+            q_ENU_imu.inverse(), acceleration_imu
+        )
+
+        imu_msg.angular_velocity = Vector3(*twist_imu)
+        imu_msg.linear_acceleration = Vector3(*acceleration_imu)
+        
+        pub_imu_sensor.publish(imu_msg)
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        depth_msg = Float64()
-        depth_msg.data = pose_z
+        depth_msg = PoseWithCovariance() 
+        depth_msg.pose.position.z = pose_z
         pub_depth_sensor.publish(depth_msg)
 
 
@@ -122,6 +117,7 @@ if __name__ == "__main__":
     q_NWU_dvlref = np.quaternion(0, 1, 0, 0)
     q_imunominal_auv = np.quaternion(0, 1, 0, 0)
     q_dvlnominal_auv = np.quaternion(0, 1, 0, 0)
+    q_ENU_NED = np.quaternion(0, 0.707, 0.707, 0)
     q_NWU_NED = np.quaternion(0, 1, 0, 0)
     q_dvl_auv = q_dvlnominal_dvl.conjugate() * q_dvlnominal_auv
 
@@ -132,10 +128,7 @@ if __name__ == "__main__":
     )
     pub_depth_sensor = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
     pub_imu_quat_sensor = rospy.Publisher(
-        "/sensors/imu/quaternion", SbgEkfQuat, queue_size=1
-    )
-    pub_imu_data_sensor = rospy.Publisher(
-        "/sensors/imu/angular_velocity", SbgImuData, queue_size=1
+        "/sensors/imu", Imu, queue_size=1
     )
 
     # Set up subscribers and publishers
