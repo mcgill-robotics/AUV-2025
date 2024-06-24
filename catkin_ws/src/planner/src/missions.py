@@ -202,8 +202,8 @@ class Missions:
         )
 
         """
-          ADD SOME TRANSITIONS HERE
-          """
+        ADD SOME TRANSITIONS HERE
+        """
 
         timer.shutdown()
 

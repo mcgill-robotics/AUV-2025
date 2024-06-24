@@ -62,9 +62,7 @@ class StateTracker:
                 ]
             if msg.frequency in self.frequency_types:
                 pinger_index = self.frequency_types.index(msg.frequency)
-                self.pingers_bearing[pinger_index] = 
-
-
+                self.pingers_bearing[pinger_index] = msg.pinger_bearing
 
     def updateGrabberContact(self, msg):
         self.grabber_contact = msg.data

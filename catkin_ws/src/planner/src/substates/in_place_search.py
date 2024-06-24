@@ -56,6 +56,7 @@ class InPlaceSearch(smach.State):
     def timer_thread_func(self):
         self.pub_mission_display.publish("IPS Time-out")
         self.timeout_occurred = True
+        self.control.freeze_pose()
 
     def execute(self, _):
         print("Starting in-place search.")
@@ -76,7 +77,6 @@ class InPlaceSearch(smach.State):
             if self.timeout_occurred:
                 self.detectedObject = True
                 self.searchThread.join()
-                self.control.freeze_pose()
                 print("In-place search timed out.")
                 return "timeout"
             elif len(self.mapping.getClass(self.target_class)) >= self.min_objects:
