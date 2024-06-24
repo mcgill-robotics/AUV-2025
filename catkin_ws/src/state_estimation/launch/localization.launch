@@ -13,7 +13,7 @@
 
       <param name="twist0" value="/sensors/dvl/twist"/>
       <param name="imu0" value="/sensors/imu/data"/> 
-      <param name="pose0" value="/sensors/depth/z"/>
+      <param name="depth0" value="/sensors/depth/z"/>
 
       <param name="debug" value="true" />
 
@@ -29,18 +29,18 @@
                                      true,  true,  true,
                                      true, true, true]</rosparam>
       
-      <rosparam param="pose0_config">[false, false, true, 
+      <rosparam param="depth0_config">[false, false, true, 
                                        false, false, false, 
                                        false, false, false, 
                                        false, false, false,
                                        false, false, false]</rosparam>
 
       <param name="imu0_differential" value="false"/>
-      <param name="pose0_differential" value="false"/>
+      <param name="depth0_differential" value="false"/>
 
       <param name="twist0_relative" value="false"/>
       <param name="imu0_relative" value="false"/>
-      <param name="pose0_relative" value="false"/>
+      <param name="depth0_relative" value="false"/>
 
       <param name="imu0_remove_gravitational_acceleration" value="false"/>
 
