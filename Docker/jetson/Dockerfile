@@ -94,7 +94,7 @@ RUN chmod +x build_zed.bash \
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
-    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt 
+    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
 
 RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
     cd torchvision && \
@@ -107,6 +107,6 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
 
-RUN apt-get update && apt-get install -y tmux vim \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
