@@ -27,6 +27,6 @@ RUN chmod +x build_zed.bash \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
-RUN apt-get update && apt-get install -y tmux vim \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
