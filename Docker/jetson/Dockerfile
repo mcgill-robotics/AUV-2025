@@ -88,13 +88,13 @@ RUN apt-get update && \
     && apt-get clean
 
 # Install ZED camera deps
-COPY zed_sdk_install_jetson.run zed_sdk_install_jetson.run
-RUN apt-get update && \
-    apt-get install -y zstd \
-    && apt-get install -y ros-noetic-usb-cam \
-    && pip3 install bitstring \
-    && ./zed_sdk_install_jetson.run -- silent \
-    && rm zed_sdk_install_jetson.run
+# COPY zed_sdk_install_jetson.run zed_sdk_install_jetson.run
+# RUN apt-get update && \
+#     apt-get install -y zstd \
+#     && apt-get install -y ros-noetic-usb-cam \
+#     && pip3 install bitstring \
+#     && ./zed_sdk_install_jetson.run -- silent \
+#     && rm zed_sdk_install_jetson.run
 
 RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
     cd torchvision && \
@@ -106,6 +106,6 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
