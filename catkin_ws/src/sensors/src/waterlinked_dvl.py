@@ -119,6 +119,7 @@ def main():
                 pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
+            conn.close()
             exit()
 
 

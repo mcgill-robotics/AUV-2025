@@ -7,7 +7,7 @@
         type="waterlinked_dvl.py"
         output="screen"
         respawn="true"
-        respawn_delay="5">
+        respawn_delay="1">
     <!-- Set ROS parameters -->
     <param name="port" value="$(arg port)" type="str"/>
     <param name="baudrate" value="$(arg baudrate)" type="int"/>
