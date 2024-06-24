@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 
 from auv_msgs.msg import DeadReckonReport, UnityState
-from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovariance, PoseWithCovariance 
+from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64, Int32
 from tf import transformations
@@ -50,8 +50,11 @@ def cb_unity_state(msg):
 
         velocity_dvl = quaternion.rotate_vectors(q_ENU_dvlup.inverse(), velocity_enu)
 
-        dvl_msg = TwistWithCovariance()
-        dvl_msg.twist.linear = Vector3(*velocity_dvl)
+        dvl_msg = TwistWithCovarianceStamped()
+        dvl_msg.twist.twist.linear = Vector3(*velocity_dvl)
+
+        dvl_msg.header.stamp = rospy.Time.now()
+        dvl_msg.header.frame_id = "dvl"
 
         pub_dvl_sensor.publish(dvl_msg)
 
@@ -78,12 +81,19 @@ def cb_unity_state(msg):
         imu_msg.angular_velocity = Vector3(*twist_imu)
         imu_msg.linear_acceleration = Vector3(*acceleration_imu)
         
+        imu_msg.header.stamp = rospy.Time.now()
+        imu_msg.header.frame_id = "imu"
+
         pub_imu_sensor.publish(imu_msg)
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        depth_msg = PoseWithCovariance() 
-        depth_msg.pose.position.z = pose_z
+        depth_msg = PoseWithCovarianceStamped() 
+        depth_msg.pose.pose.position.z = pose_z
+
+        depth_msg.header.stamp = rospy.Time.now()
+        depth_msg.header.frame_id = "depth"
+
         pub_depth_sensor.publish(depth_msg)
 
 
@@ -124,11 +134,11 @@ if __name__ == "__main__":
 
 
     pub_dvl_sensor = rospy.Publisher(
-        "/sensors/dvl/twist", TwistWithCovariance, queue_size=1
+        "/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", PoseWithCovariance, queue_size=1)
+    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", PoseWithCovarianceStamped, queue_size=1)
     pub_imu_sensor = rospy.Publisher(
-        "/sensors/imu", Imu, queue_size=1
+        "/sensors/imu/data", Imu, queue_size=1
     )
 
     # Set up subscribers and publishers

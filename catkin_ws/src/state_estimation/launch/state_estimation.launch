@@ -3,42 +3,14 @@
 	<param name="update_rate" value="100" />
 	<param name="z_pos_mount_offset" value="0" />
 	<param name="sensor_swap_warning_interval" value="5"/> <!-- secs -->
-	<group unless="$(arg sim)">
-		<param name="q_imunominal_imu_w" value="1.0" />
-		<param name="q_imunominal_imu_x" value="0.0" />
-		<param name="q_imunominal_imu_y" value="0.0" />
-		<param name="q_imunominal_imu_z" value="0.0"/>
+	
+	<include file="$(find state_estimation)/launch/localization.launch"/>	
 
-		<param name="q_dvlnominal_dvl_w" value="1.0" />
-		<param name="q_dvlnominal_dvl_x" value="0.0" />
-		<param name="q_dvlnominal_dvl_y" value="0.0"/>
-		<param name="q_dvlnominal_dvl_z" value="0.0" />
-
-		<param name="auv_dvl_offset_x" value="0.0" />
-		<param name="auv_dvl_offset_y" value="0.0" />
-		<param name="auv_dvl_offset_z" value="-0.3" />
-
-		<param name="hydrophones_dx" value="0.1"/>
-		<param name="hydrophones_dy" value="0.1"/>
-		<param name="hydrophones_dz" value="-0.1"/>	<!-- For 4 Hydrophones -->
-		
-		<param name="update_state_on_clock" value="false" />
-		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
-	</group>
-	<group if="$(arg sim)">
-		<param name="update_state_on_clock" value="true" />
-		<node name="state_aggregator" pkg="state_estimation" type="state_aggregator.py" respawn="true" output="screen"/>
-		<param name="hydrophones_dx" value="0.1"/>
-		<param name="hydrophones_dy" value="0.1"/>
-		<param name="hydrophones_dz" value="-0.1"/>	<!-- For 4 Hydrophones -->
-	</group>
-
-
-	<node name="hydrophones_bearing"
+	<!-- <node name="hydrophones_bearing"
 		pkg="state_estimation"
 		type="hydrophones_bearing.py"
 		output="screen"
 		respawn="true">
 	</node>
-	
+	 -->
 </launch>
