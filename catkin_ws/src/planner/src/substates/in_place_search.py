@@ -56,6 +56,8 @@ class InPlaceSearch(smach.State):
     def timer_thread_func(self):
         self.pub_mission_display.publish("IPS Time-out")
         self.timeout_occurred = True
+        print("TIMEOUT FUNCTION")
+        self.control.preemptCurrentAction()
         self.control.freeze_pose()
 
     def execute(self, _):

@@ -17,6 +17,7 @@ from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.navigate_pinger import *
 from substates.octagon_task import *
+from substates.quali import *
 
 
 class Missions:
@@ -25,8 +26,6 @@ class Missions:
         self.state = StateTracker()
         self.control = Controller(rospy.Time(0))
 
-        self.gate_width = rospy.get_param("gate_width")
-        self.quali_gate_width = rospy.get_param("quali_gate_width")
 
         self.nominal_depth = rospy.get_param("nominal_depth")
 
@@ -50,7 +49,7 @@ class Missions:
             ),
             transitions={"success": second_state_name,
                          "timeout": target_state_name, 
-                         "failure": "failure"},
+                         "failure": "failure"}
         )
         smach.StateMachine.add(
             second_state_name,
@@ -62,7 +61,7 @@ class Missions:
             ),
             transitions={"success": target_state_name, 
                          "timeout": target_state_name,
-                         "failure": "failure"},
+                         "failure": "failure"}
         )
 
     def lane_marker(self, first_state_name, count, mission_after):
@@ -72,12 +71,6 @@ class Missions:
         second_state_name = "navigate_lane_marker" + count
         target_state_name = mission_after if mission_after is not None else "success"
 
-        timer = rospy.Timer(
-            rospy.Duration(self.lane_marker_time_limit), 
-            lambda event: self.mission_timeout("Lane Marker", self.lane_marker_time_limit, event), 
-            oneshot=True
-        )
-
         smach.StateMachine.add(
             first_state_name,
             BreadthFirstSearch(
@@ -86,7 +79,9 @@ class Missions:
                 target_class="Lane Marker",
                 min_objects=int(count),
             ),
-            transitions={"success": second_state_name, "failure": "failure"},
+            transitions={"success": second_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
         smach.StateMachine.add(
             second_state_name,
@@ -94,19 +89,11 @@ class Missions:
             transitions={"success": target_state_name, "failure": "failure"},
         )
 
-        timer.shutdown()
-
     def pinger(self, first_state_name, count, mission_after):
         global sm
 
         first_state_name = first_state_name + count
         target_state_name = mission_after if mission_after is not None else "success"
-
-        timer = rospy.Timer(
-            rospy.Duration(self.pinger_time_limit), 
-            lambda event: self.mission_timeout("Pinger", self.pinger_time_limit, event), 
-            oneshot=True
-        )
 
         smach.StateMachine.add(
             first_state_name,
@@ -116,7 +103,9 @@ class Missions:
                 mapping=self.mapping, 
                 pinger_number=self.pinger_number
             ),
-            transitions={"success": target_state_name, "failure": "failure"}
+            transitions={"success": target_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
 
         self.pinger_number += 1
@@ -128,41 +117,29 @@ class Missions:
         second_state_name = "navigate_buoy" + count
         target_state_name = mission_after if mission_after is not None else "success"
 
-        timer = rospy.Timer(
-            rospy.Duration(self.buoy_time_limit), 
-            lambda event: self.mission_timeout("Buoy", self.buoy_time_limit, event), 
-            oneshot=True
-        )
-
         smach.StateMachine.add(
             first_state_name,
             InPlaceSearch(
                 self.control, self.mapping, target_class="Buoy", min_objects=1
             ),
-            transitions={"success": second_state_name, "failure": "failure"},
+            transitions={"success": second_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateBuoy(self.control, self.mapping, self.state),
-            transitions={"success": target_state_name, "failure": "failure"},
+            transitions={"success": target_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
-
-        timer.shutdown()
 
     def dropper(self, first_state_name, count, mission_after):
         global sm
 
-        timer = rospy.Timer(
-            rospy.Duration(self.dropper_time_limit), 
-            lambda event: self.mission_timeout("Dropper", self.dropper_time_limit, event), 
-            oneshot=True
-        )
-
         """
         ADD SOME TRANSITIONS HERE
         """
-
-        timer.shutdown()
 
     def octagon(self, first_state_name, count, mission_after):
         global sm
@@ -171,41 +148,29 @@ class Missions:
         second_state_name = "navigate_octagon" + count
         target_state_name = mission_after if mission_after is not None else "success"
 
-        timer = rospy.Timer(
-            rospy.Duration(self.octagon_time_limit), 
-            lambda event: self.mission_timeout("Octagon", self.octagon_time_limit, event), 
-            oneshot=True
-        )
-
         smach.StateMachine.add(
             first_state_name,
             LinearSearch(
                 self.control, self.mapping, target_class="Octagon Table", min_objects=1
             ),
-            transitions={"success": second_state_name, "failure": "failure"},
+            transitions={"success": second_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateOctagon(self.control, self.mapping, self.state),
-            transitions={"success": target_state_name, "failure": "failure"},
+            transitions={"success": target_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
         )
-
-        timer.shutdown()
 
     def torpedo(self, first_state_name, count, mission_after):
         global sm
 
-        timer = rospy.Timer(
-            rospy.Duration(self.torpedo_time_limit), 
-            lambda event: self.mission_timeout("Torpedo", self.torpedo_time_limit, event), 
-            oneshot=True
-        )
-
         """
         ADD SOME TRANSITIONS HERE
         """
-
-        timer.shutdown()
 
     def trick(self, first_state_name, count, mission_after):
         global sm
@@ -213,63 +178,49 @@ class Missions:
         first_state_name = first_state_name + count
         target_state_name = mission_after if mission_after is not None else "success"
 
-        timer = rospy.Timer(
-            rospy.Duration(self.tricks_time_limit), 
-            lambda event: self.mission_timeout("Torpedo", self.tricks_time_limit, event), 
-            oneshot=True
-        )
-
         smach.StateMachine.add(
             first_state_name,
             Trick(self.control, "roll", 2),
-            transitions={"success": target_state_name, "failure": "failure"},
+            transitions={"success": target_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"},
         )
-
-        timer.shutdown()
 
     def bins(self, first_state_name, count, mission_after):
         global sm
-
-        timer = rospy.Timer(
-            rospy.Duration(self.bins_time_limit), 
-            lambda event: self.mission_timeout("Bins", self.bins_time_limit, event), 
-            oneshot=True
-        )
 
         """
         ADD SOME TRANSITIONS HERE
         """
 
-        timer.shutdown()
-
     def quali(self, first_state_name, count, mission_after):
-        print("Submerging")
-        self.controls.move((None, None, self.nominal_depth))
+        global sm
 
-        print("Navigating gate")
-        gateNav = NavigateGate(
-            control=self.controls,
-            mapping=self.mapping,
-            state=self.state,
-            goThrough=False
+        first_state_name = first_state_name + count
+        second_state_name = "navigate_quali" + count
+        target_state_name = mission_after if mission_after is not None else "success"
+        
+
+        smach.StateMachine.add(
+            first_state_name,
+            NavigateGate(
+                control=self.control,
+                mapping=self.mapping,
+                state=self.state,
+                goThrough=False
+            ),
+            transitions={"success": second_state_name,
+                         "timeout": target_state_name, 
+                         "failure": "failure"}
         )
-        gateNav.execute(None)
+        smach.StateMachine.add(
+            second_state_name,
+            Quali(control=self.control),
+            transitions={"success": target_state_name, 
+                         "timeout": target_state_name,
+                         "failure": "failure"}
+        )
 
-        print("Moving to right side of gate")
-        self.controls.moveDeltaLocal((0, -self.quali_gate_width / 4, 0))
-
-        print("Moving through gate")
-        self.controls.moveDeltaLocal((14, 0, 0))
-
-        print("Rotating around pole")
-        self.controls.rotateDeltaEuler((0, 0, 90))
-
-        self.controls.moveDeltaLocal((self.quali_gate_width / 2, 0, 0))
-
-        self.controls.rotateDeltaEuler((0, 0, 90))
-
-        print("Returning to origin")
-        self.controls.moveDeltaLocal((17, 0, 0))
 
     def endPlanner(self, msg="Shutting down mission planner."):
         self.pub_mission_display.publish("End")
@@ -295,7 +246,7 @@ if __name__ == "__main__":
         ["Torpedo", missions.torpedo, "", 0],
         ["Dropper", missions.dropper, "", 0],
         ["Bins", missions.bins, "", 0],
-        ["Quali", missions.quali, None, 0],
+        ["Quali", missions.quali, "navigate_gate_not_through", 0],
         ["Competition", None, None, 0],
     ]
 
@@ -304,7 +255,7 @@ if __name__ == "__main__":
         while not done:           
             missions_selected = get_user_missions_selected(mission_options)
 
-            sm = smach.StateMachine(outcomes=["success", "failure"])
+            sm = smach.StateMachine(outcomes=["success", "failure", "timeout"])
             sm.open()
 
             for i in range(len(missions_selected)):
