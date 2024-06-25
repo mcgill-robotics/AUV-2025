@@ -66,10 +66,19 @@ def cb_unity_state(msg):
     isDepthSensorActive = msg.isDepthSensorActive
     isHydrophonesActive = msg.isHydrophonesActive
 
-\
+
     velocity_enu = [msg.velocity.z, -msg.velocity.x, msg.velocity.y]
 
     acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
+
+    # HYDROPHONES
+    if isHydrophonesActive:
+        for i in range(NUMBER_OF_PINGERS):
+            hydrophones_msg = PingerTimeDifference()
+            hydrophones_msg.frequency = frequencies[i]
+            hydrophones_msg.times = times[i]
+            pub_hydrophones_sensor.publish(hydrophones_msg)
+
 
     if bypass:
         pose = Pose()
@@ -141,14 +150,6 @@ def cb_unity_state(msg):
         depth_msg.header.frame_id = "depth"
 
         pub_depth_sensor.publish(depth_msg)
-
-    # HYDROPHONES
-    if isHydrophonesActive:
-        for i in range(NUMBER_OF_PINGERS):
-            hydrophones_msg = PingerTimeDifference()
-            hydrophones_msg.frequency = frequencies[i]
-            hydrophones_msg.times = times[i]
-            pub_hydrophones_sensor.publish(hydrophones_msg)
 
 
 if __name__ == "__main__":
