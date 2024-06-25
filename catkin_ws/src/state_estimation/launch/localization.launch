@@ -45,4 +45,6 @@
       <param name="imu0_remove_gravitational_acceleration" value="false"/>
 
     </node>
+
+    <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
 </launch>

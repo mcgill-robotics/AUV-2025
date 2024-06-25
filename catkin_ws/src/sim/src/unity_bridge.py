@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 
 from auv_msgs.msg import DeadReckonReport, UnityState
-from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped, Pose
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64, Int32
 from tf import transformations
@@ -12,6 +12,28 @@ import quaternion
 
 DEG_PER_RAD = 180 / np.pi
 
+def publish_bypass(pose, ang_vel):
+    pub_pose.publish(pose)
+    pub_x.publish(pose.position.x)
+    pub_y.publish(pose.position.y)
+    pub_z.publish(pose.position.z)
+    pub_ang_vel.publish(ang_vel)
+
+    euler_dvlref_dvl = transformations.euler_from_quaternion(
+        [
+            pose.orientation.x,
+            pose.orientation.y,
+            pose.orientation.z,
+            pose.orientation.w,
+        ]
+    )
+    roll = euler_dvlref_dvl[0] * DEG_PER_RAD
+    pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
+    yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
+
+    pub_theta_x.publish(roll)
+    pub_theta_y.publish(pitch)
+    pub_theta_z.publish(yaw)
 
 def cb_unity_state(msg):
     pose_x = msg.position.z
@@ -42,6 +64,23 @@ def cb_unity_state(msg):
 
     acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
 
+    if bypass:
+        pose = Pose()
+        pose.position.x = pose_x
+        pose.position.y = pose_y
+        pose.position.z = pose_z
+
+        quat = Quaternion(x=q_ENU_imunominalup.x, y=q_ENU_imunominalup.y, z=q_ENU_imunominalup.z, w=q_ENU_imunominalup.w)
+        pose.orientation = quat
+
+        ang_vel_auv = quaternion.rotate_vectors(
+            q_ENU_imunominalup.inverse(), twist_enu
+        )
+        
+        ang_vel = Vector3(*ang_vel_auv)
+
+        publish_bypass(pose, ang_vel)
+        return
 
     # DVL - NWU
     if isDVLActive:
@@ -100,6 +139,8 @@ def cb_unity_state(msg):
 if __name__ == "__main__":
     rospy.init_node("unity_bridge")
 
+    bypass = rospy.get_param("~ekf")
+
     # Load parameters
     q_dvlnominalup_dvlup_w = rospy.get_param("q_dvlnominalup_dvlup_w")
     q_dvlnominalup_dvlup_x = rospy.get_param("q_dvlnominalup_dvlup_x")
@@ -140,6 +181,17 @@ if __name__ == "__main__":
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
     )
+
+    if bypass:
+        pub_pose = rospy.Publisher("/state/pose", Pose, queue_size=1)
+
+        pub_x = rospy.Publisher("/state/x", Float64, queue_size=1)
+        pub_y = rospy.Publisher("/state/y", Float64, queue_size=1)
+        pub_z = rospy.Publisher("/state/z", Float64, queue_size=1)
+        pub_theta_x = rospy.Publisher("/state/theta/x", Float64, queue_size=1)
+        pub_theta_y = rospy.Publisher("/state/theta/y", Float64, queue_size=1)
+        pub_theta_z = rospy.Publisher("/state/theta/z", Float64, queue_size=1)
+        pub_ang_vel = rospy.Publisher("/state/angular_velocity", Vector3, queue_size=1)
 
     # Set up subscribers and publishers
     rospy.Subscriber("/unity/state", UnityState, cb_unity_state)
