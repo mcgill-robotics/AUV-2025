@@ -155,7 +155,7 @@ def cb_unity_state(msg):
 if __name__ == "__main__":
     rospy.init_node("unity_bridge")
 
-    bypass = rospy.get_param("~ekf")
+    bypass = not rospy.get_param("~ekf")
 
     # Load parameters
     q_dvlnominalup_dvlup_w = rospy.get_param("q_dvlnominalup_dvlup_w")
@@ -203,16 +203,15 @@ if __name__ == "__main__":
         queue_size=1
     )
 
-    if bypass:
-        pub_pose = rospy.Publisher("/state/pose", Pose, queue_size=1)
+    pub_pose = rospy.Publisher("/state/pose", Pose, queue_size=1)
 
-        pub_x = rospy.Publisher("/state/x", Float64, queue_size=1)
-        pub_y = rospy.Publisher("/state/y", Float64, queue_size=1)
-        pub_z = rospy.Publisher("/state/z", Float64, queue_size=1)
-        pub_theta_x = rospy.Publisher("/state/theta/x", Float64, queue_size=1)
-        pub_theta_y = rospy.Publisher("/state/theta/y", Float64, queue_size=1)
-        pub_theta_z = rospy.Publisher("/state/theta/z", Float64, queue_size=1)
-        pub_ang_vel = rospy.Publisher("/state/angular_velocity", Vector3, queue_size=1)
+    pub_x = rospy.Publisher("/state/x", Float64, queue_size=1)
+    pub_y = rospy.Publisher("/state/y", Float64, queue_size=1)
+    pub_z = rospy.Publisher("/state/z", Float64, queue_size=1)
+    pub_theta_x = rospy.Publisher("/state/theta/x", Float64, queue_size=1)
+    pub_theta_y = rospy.Publisher("/state/theta/y", Float64, queue_size=1)
+    pub_theta_z = rospy.Publisher("/state/theta/z", Float64, queue_size=1)
+    pub_ang_vel = rospy.Publisher("/state/angular_velocity", Vector3, queue_size=1)
 
     # Set up subscribers and publishers
     rospy.Subscriber("/unity/state", UnityState, cb_unity_state)

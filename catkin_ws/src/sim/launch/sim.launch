@@ -52,7 +52,7 @@
     <include file="$(find sim)/launch/endpoint.launch"></include>
 
     <node name="unity_bridge" pkg="sim" type="unity_bridge.py" output="screen">
-        <param name="efk" value="$(arg ekf)" />
+        <param name="ekf" value="$(arg ekf)" />
     </node>
 
 </launch>
