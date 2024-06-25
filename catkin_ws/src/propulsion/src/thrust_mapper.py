@@ -23,7 +23,7 @@ T = np.array(
     [
         [np.cos(alpha), 0, 0, np.cos(alpha), np.cos(alpha), 0, 0, -np.cos(alpha)],
         [-np.sin(alpha), 0, 0, np.sin(alpha), -np.sin(alpha), 0, 0, -np.sin(alpha)],
-        [0, 1, 1, 0, 0, 1, 1, 0],
+        [0, -1, -1, 0, 0, -1, -1, 0],
         [0, w / 2, w / 2, 0, 0, -w / 2, -w / 2, 0],
         [0, -a, a, 0, 0, a, -a, 0],
         [

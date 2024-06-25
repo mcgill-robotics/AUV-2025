@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+# only set environment variables if the Jetson and router IPs are reachable
+if ping -c 1 192.168.0.105 &> /dev/null
+then
+  echo "Jetson IP reachable."
+else
+    echo "Jetson IP not reachable - not setting environment variables."
+    exit 0
+fi
+if ping -c 1 192.168.0.100 &> /dev/null
+then
+  echo "Router IP reachable."
+else
+    echo "Router IP not reachable - not setting environment variables."
+    exit 0
+fi
+
 # set ROS_IP to the IP adress of this host machine
 IP=$(ip addr show | grep wlp | grep inet | awk '{print $2}' | awk 'BEGIN{OFS=FS="/"};NF--');
 if [ -n "$IP" ]; then
