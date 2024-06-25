@@ -5,7 +5,9 @@
 	<arg name="actions" default="false" />
 	<arg name="ekf" default="true" />
 	
-
+	<include file="$(find state_estimation)/launch/state_estimation.launch">
+		<arg name="sim" value="$(arg sim)" />
+	</include>
 	
 	<group unless="$(arg sim)">
 		<include file="$(find sensors)/launch/sensors.launch">

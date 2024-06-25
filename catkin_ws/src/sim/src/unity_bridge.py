@@ -3,14 +3,16 @@
 import rospy
 import numpy as np
 
-from auv_msgs.msg import DeadReckonReport, UnityState
+from auv_msgs.msg import UnityState, PingerTimeDifference
 from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped, Pose
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Float64, Int32
+from std_msgs.msg import Float64
 from tf import transformations
 import quaternion
 
 DEG_PER_RAD = 180 / np.pi
+NUMBER_OF_PINGERS = 4
+
 
 def publish_bypass(pose, ang_vel):
     pub_pose.publish(pose)
@@ -56,10 +58,15 @@ def cb_unity_state(msg):
     twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
 
 
+    frequencies = msg.frequencies
+    times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
+
     isDVLActive = msg.isDVLActive
     isIMUActive = msg.isIMUActive
     isDepthSensorActive = msg.isDepthSensorActive
+    isHydrophonesActive = msg.isHydrophonesActive
 
+\
     velocity_enu = [msg.velocity.z, -msg.velocity.x, msg.velocity.y]
 
     acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
@@ -135,6 +142,14 @@ def cb_unity_state(msg):
 
         pub_depth_sensor.publish(depth_msg)
 
+    # HYDROPHONES
+    if isHydrophonesActive:
+        for i in range(NUMBER_OF_PINGERS):
+            hydrophones_msg = PingerTimeDifference()
+            hydrophones_msg.frequency = frequencies[i]
+            hydrophones_msg.times = times[i]
+            pub_hydrophones_sensor.publish(hydrophones_msg)
+
 
 if __name__ == "__main__":
     rospy.init_node("unity_bridge")
@@ -180,6 +195,11 @@ if __name__ == "__main__":
     pub_depth_sensor = rospy.Publisher("/sensors/depth/z", PoseWithCovarianceStamped, queue_size=1)
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
+    )
+    pub_hydrophones_sensor = rospy.Publisher(
+        "/sensors/hydrophones/pinger_time_difference", 
+        PingerTimeDifference, 
+        queue_size=1
     )
 
     if bypass:
