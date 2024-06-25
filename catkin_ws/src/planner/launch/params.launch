@@ -12,8 +12,8 @@
 	<param name="buoy_circumnavigation_radius" value="1"/>
     <param name="quali_gate_width" value="2"/>
     <param name="gate_width" value="3"/>
-    <param name="red_side" value="right" /> <!-- The side of the object that red corresponds to -->
-   
+    <param name="red_side" value="right"/> <!-- The side of the object that red corresponds to -->
+    <param name="num_full_spins" value="2"/>
     <!-- TIME LIMIT PARAMETERS -->
     <param name="object_search_time_limit" value="10" />
     <param name="navigate_gate_time_limit" value="10" />

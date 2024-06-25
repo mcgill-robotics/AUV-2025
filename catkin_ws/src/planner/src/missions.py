@@ -172,7 +172,7 @@ class Missions:
 
         smach.StateMachine.add(
             first_state_name,
-            Trick(self.control, "roll", 2),
+            Trick(self.control),
             transitions={"success": target_state_name, 
                          "timeout": target_state_name,
                          "failure": "failure"},
