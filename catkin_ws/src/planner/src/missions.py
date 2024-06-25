@@ -26,11 +26,6 @@ class Missions:
         self.state = StateTracker()
         self.control = Controller(rospy.Time(0))
 
-
-        self.nominal_depth = rospy.get_param("nominal_depth")
-
-        self.pinger_number = rospy.get_param("pinger_number") 
-
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
         )
@@ -101,14 +96,11 @@ class Missions:
                 control=self.control, 
                 state=self.state, 
                 mapping=self.mapping, 
-                pinger_number=self.pinger_number
             ),
             transitions={"success": target_state_name, 
                          "timeout": target_state_name,
                          "failure": "failure"}
         )
-
-        self.pinger_number += 1
 
     def buoy(self, first_state_name, count, mission_after):
         global sm
@@ -276,10 +268,6 @@ if __name__ == "__main__":
             )
 
     except KeyboardInterrupt:
-        # ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS).
-        if sm is not None:
-            sm.request_preempt()
-    finally:
-        missions.endPlanner()
+        missions.endPlanner()        
 
     rospy.spin()

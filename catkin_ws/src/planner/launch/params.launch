@@ -13,7 +13,6 @@
     <param name="quali_gate_width" value="2"/>
     <param name="gate_width" value="3"/>
     <param name="red_side" value="right" /> <!-- The side of the object that red corresponds to -->
-    <param name="pinger_number" value="1" /> <!-- The index - 1 of the first pinger to follow -->
    
     <!-- TIME LIMIT PARAMETERS -->
     <param name="object_search_time_limit" value="10" />
