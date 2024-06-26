@@ -234,34 +234,38 @@ class Hydrophones(Sensor):
         # @TODO(Felipe): Subsbitute frequency_types values by 
         #                real pinger values (waiting for Sam
         #                to respond)  
-        self.frequency_types = [-1, -1, -1, -1]
-        self.current_reading = [None] * len(self.frequency_types)
-        self.last_reading = [None] * len(self.frequency_types)
+        self.frequency_types = []
+        self.current_reading = [None] * 4
+        self.last_reading = [None] * 4
         self.frequency_index = -1
         self.time_tolerance = rospy.get_param("hydrophones_time_difference_tolerance")
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
             PingerTimeDifference,
             self.hydrophones_cb,
-        )
-        self.load_frequency_params()       
+        )      
 
     def load_frequency_params(self):
         """ 
         These parameters are launched by hydrophones.launch in state_estimation.
         Only continue Hydrophones status check if hydrophones was launched.
         """
-        while not rospy.is_shutdown():
-            if rospy.has_param("pinger_frequency_1"):
-                self.frequency_types = [
-                    rospy.get_param("pinger_frequency_1"), 
-                    rospy.get_param("pinger_frequency_2"), 
-                    rospy.get_param("pinger_frequency_3"), 
-                    rospy.get_param("pinger_frequency_4")
-                ]
-                return
+        if rospy.has_param("pinger_frequency_1"):
+            self.frequency_types = [
+                rospy.get_param("pinger_frequency_1"), 
+                rospy.get_param("pinger_frequency_2"), 
+                rospy.get_param("pinger_frequency_3"), 
+                rospy.get_param("pinger_frequency_4")
+            ]
+            return True
+        else:
+            return False
         
     def hydrophones_cb(self, msg):
+        if len(self.frequency_types) < 4:
+            if not self.load_frequency_params():
+                rospy.logwarn("Frequency params for hydrophones are not set!")
+                return
         times = msg.times
         if (msg.frequency in self.frequency_types) and (max(times) - min(times) <= self.time_tolerance):
             self.frequency_index = self.frequency_types.index(msg.frequency)
