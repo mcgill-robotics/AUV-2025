@@ -22,7 +22,7 @@
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1" />
         <param name="down_cam_model_filename" value="down_cam_model_sim.pt" />
-        <param name="front_cam_model_filename" value="2024_front_cam_model_sim.pt" />
+        <param name="front_cam_model_filename" value="front_cam_model.pt" />
     </group>
 
     <param name="same_object_radius_lane_marker" value="1.5" /> <!-- need one of these params for every object which might appear more than once in the pool !!!-->
