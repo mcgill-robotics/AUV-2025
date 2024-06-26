@@ -265,6 +265,7 @@ class Hydrophones(Sensor):
         if len(self.frequency_types) < 4:
             if not self.load_frequency_params():
                 rospy.logwarn("Frequency params for hydrophones are not set!")
+                rospy.sleep(1)
                 return
         times = msg.times
         if (msg.frequency in self.frequency_types) and (max(times) - min(times) <= self.time_tolerance):
