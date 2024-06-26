@@ -26,8 +26,14 @@ def cb_hydrophones_time_difference(msg):
     if msg.frequency not in frequency_types:
         print(f"Pinger frequency mismatch! Frequency received {msg.frequency} not in frequency types.")
         return
-          
-    dt_hydrophones = np.array(msg.times) * time_unit
+    
+    # Convert times received in 10e-7 to seconds
+    absolute_times = np.array(msg.times) * time_unit
+    
+    # Calculate time differences between hydrophone 0 and others.
+    dt_hydrophones = absolute_times - absolute_times[0]
+    # Only take time differences between microphone 0 and others.
+    dt_hydrophones = dt_hydrophones[1:]
     
     is_three_hydrophones = False
     if len(dt_hydrophones) == 2:
@@ -107,14 +113,7 @@ if __name__ == "__main__":
         "/sensors/hydrophones/pinger_bearing", PingerBearing, queue_size=1
     )
 
-    
-    
     # Speed of sound in water
-    c = 1480
-    
-    # Assume hx is the "origin" hydrophone
-    # If you change the values here, you must also change the values in the Unity editor
-    # hx is at the origin, hy is on the x-axis, hz is on the y-axis, H4 is on the z-axis
-    
+    c = 1480    
 
     rospy.spin()

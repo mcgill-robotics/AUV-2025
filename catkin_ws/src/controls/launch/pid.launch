@@ -52,20 +52,17 @@
 			</node>
 
 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
-				<param name="Kp" value="17" />
-				<param name="Ki" value="2.0" />
-				<param name="Kd" value="3.0" />
+				<param name="Kp" value="1.0" />
+				<param name="Ki" value="0.0" />
+				<param name="Kd" value="1.1"/>
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
 		<group if="$(arg sim)">  
 			<node name="z_pid" pkg="pid" type="controller" >
-				<param name="Kp" value="15" />
-				<param name="Ki" value="1.0" />
-				<param name="Kd" value="3.0" />
-				<param name="upper_limit" value="25" />
-				<param name="lower_limit" value="-25" />
-				<param name="windup_limit" value="25" />
+				<param name="Kp" value="20" />
+				<param name="Ki" value="0.0" />
+				<param name="Kd" value="0.1" />
 				<param name="max_loop_frequency" value="100.0" />
 				<param name="min_loop_frequency" value="100.0" />
 
@@ -77,11 +74,8 @@
 			
 			<node name="y_pid" pkg="pid" type="controller" >
 				<param name="Kp" value="20" /> 
-				<param name="Ki" value="0.25" />
-				<param name="Kd" value="5.0" />
-				<param name="upper_limit" value="10" />
-				<param name="lower_limit" value="-10" />
-				<param name="windup_limit" value="10" />
+				<param name="Ki" value="0" />
+				<param name="Kd" value="0.1" />
 				<param name="max_loop_frequency" value="100.0" />
 				<param name="min_loop_frequency" value="100.0" />
 
@@ -94,10 +88,7 @@
 			<node name="x_pid" pkg="pid" type="controller" >
 				<param name="Kp" value="20" /> 
 				<param name="Ki" value="0" />
-				<param name="Kd" value="5.0" />
-				<param name="upper_limit" value="10" />
-				<param name="lower_limit" value="-10" />
-				<param name="windup_limit" value="10" />
+				<param name="Kd" value="0.1" />
 				<param name="max_loop_frequency" value="100.0" />
 				<param name="min_loop_frequency" value="100.0" />
 
@@ -108,9 +99,9 @@
 			</node>
 
 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
-				<param name="Kp" value="3" />
+				<param name="Kp" value="20" />
 				<param name="Ki" value="0" />
-				<param name="Kd" value="1" />
+				<param name="Kd" value="0.1" />
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
