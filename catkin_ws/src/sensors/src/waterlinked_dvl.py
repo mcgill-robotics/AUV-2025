@@ -2,8 +2,7 @@
 
 import rospy
 import serial
-from auv_msgs.msg import DeadReckonReport, VelocityReport
-
+from geometry_msgs.msg import TwistWithCovarianceStamped
 
 def parse_velocity_report(line):
     tokens = line.split(",")
@@ -23,55 +22,50 @@ def parse_velocity_report(line):
     time_since_last_report = float(tokens[10])
     status = bool(tokens[11])
 
-    report = VelocityReport()
-    report.vx = vx
-    report.vy = vy
-    report.vz = vz
-    report.altitude = altitude
-    report.valid = valid
-    report.fom = fom
+    report = TwistWithCovarianceStamped()
+    report.twist.twist.linear.x = vx
+    report.twist.twist.linear.y = -vy
+    report.twist.twist.linear.z = -vz
     report.covariance = covariance
-    report.time_of_validity = time_of_validity
-    report.time_of_transmission = time_of_transmission
-    report.time = time_since_last_report
-    report.status = status
+    report.header.frame_id = "dvl"
+    report.header.stamp = rospy.Time.now()
+
     return report
     # print(f"\nvx: {vx}, vy: {vy}, vz: {vz}, valid: {valid}, altitude: {altitude}, \
     #        fom: {fom}, covariance: {covariance}, time valid: {time_of_validity}, time_of_transmission: {time_of_transmission}, \
     #         time_since_last_report: {time_since_last_report}, state: {state}")
 
 
-def parse_dead_reckon_report(line):
-    tokens = line.split(",")
-    time_stamp = float(tokens[1])
-    x = float(tokens[2])
-    y = float(tokens[3])
-    z = float(tokens[4])
-    std = float(tokens[5])
-    roll = float(tokens[6])
-    pitch = float(tokens[7])
-    yaw = float(tokens[8])
-    status = bool(tokens[9])
+# def parse_dead_reckon_report(line):
+#     tokens = line.split(",")
+#     time_stamp = float(tokens[1])
+#     x = float(tokens[2])
+#     y = float(tokens[3])
+#     z = float(tokens[4])
+#     std = float(tokens[5])
+#     roll = float(tokens[6])
+#     pitch = float(tokens[7])
+#     yaw = float(tokens[8])
+#     status = bool(tokens[9])
 
-    report = DeadReckonReport()
-    report.x = x
-    report.y = y
-    report.z = z
-    report.std = std
-    report.roll = roll
-    report.pitch = pitch
-    report.yaw = yaw
-    report.status = status
-    return report
-    # print(f"\nx: {x}, y: {y}, z: {z}, std: {std}, roll: {roll}, \
-    #        pitch: {pitch}, yaw: {yaw}, status: {status}")
+#     report = DeadReckonReport()
+#     report.x = x
+#     report.y = y
+#     report.z = z
+#     report.std = std
+#     report.roll = roll
+#     report.pitch = pitch
+#     report.yaw = yaw
+#     report.status = status
+#     return report
+#     # print(f"\nx: {x}, y: {y}, z: {z}, std: {std}, roll: {roll}, \
+#     #        pitch: {pitch}, yaw: {yaw}, status: {status}")
 
 
 def main():
     rospy.init_node("waterlinked_driver")
 
-    pub_dr = rospy.Publisher("/sensors/dvl/pose", DeadReckonReport, queue_size=1)
-    pub_vr = rospy.Publisher("/sensors/dvl/velocity", VelocityReport, queue_size=1)
+    pub_vr = rospy.Publisher("/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1)
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
@@ -115,8 +109,8 @@ def main():
             # print(line)
             if line.startswith("wrz"):
                 pub_vr.publish(parse_velocity_report(line))
-            elif line.startswith("wrp"):
-                pub_dr.publish(parse_dead_reckon_report(line))
+            # elif line.startswith("wrp"):
+            #     pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
             conn.close()

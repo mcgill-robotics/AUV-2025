@@ -13,7 +13,7 @@
 
       <param name="twist0" value="/sensors/dvl/twist"/>
       <param name="imu0" value="/sensors/imu/data"/> 
-      <param name="depth0" value="/sensors/depth/z"/>
+      <param name="depth0" value="/sensors/depth/pose"/>
 
       <param name="debug" value="true" />
 

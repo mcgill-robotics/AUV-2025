@@ -4,11 +4,12 @@ import rospy
 import numpy as np
 
 from auv_msgs.msg import UnityState, PingerTimeDifference
-from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped, Pose
+from geometry_msgs.msg import Quaternion, Vector3, TwistWithCovarianceStamped, PoseWithCovarianceStamped, Pose, TransformStamped
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64
 from tf import transformations
 import quaternion
+from tf2_ros import TransformBroadcaster
 
 DEG_PER_RAD = 180 / np.pi
 NUMBER_OF_PINGERS = 4
@@ -36,6 +37,26 @@ def publish_bypass(pose, ang_vel):
     pub_theta_x.publish(roll)
     pub_theta_y.publish(pitch)
     pub_theta_z.publish(yaw)
+
+    t = TransformStamped()
+    t.header.stamp = rospy.Time.now()
+    t.header.frame_id = "world"
+    t.child_frame_id = "auv_base"
+    t.transform.translation.x = pose.position.x
+    t.transform.translation.y = pose.position.y
+    t.transform.translation.z = pose.position.z
+    t.transform.rotation = pose.orientation
+    tf_broadcaster.sendTransform(t)
+
+    t_rot = TransformStamped()
+    t_rot.header.stamp = rospy.Time.now()
+    t_rot.header.frame_id = "world_rotation"
+    t_rot.child_frame_id = "auv_rotation"
+    t_rot.transform.translation.x = 0
+    t_rot.transform.translation.y = 0
+    t_rot.transform.translation.z = 0
+    t_rot.transform.rotation = pose.orientation
+    tf_broadcaster.sendTransform(t_rot)
 
 def cb_unity_state(msg):
     pose_x = msg.position.z
@@ -157,6 +178,8 @@ if __name__ == "__main__":
 
     bypass = not rospy.get_param("~ekf")
 
+    tf_broadcaster = TransformBroadcaster()
+
     # Load parameters
     q_dvlnominalup_dvlup_w = rospy.get_param("q_dvlnominalup_dvlup_w")
     q_dvlnominalup_dvlup_x = rospy.get_param("q_dvlnominalup_dvlup_x")
@@ -193,7 +216,7 @@ if __name__ == "__main__":
     pub_dvl_sensor = rospy.Publisher(
         "/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", PoseWithCovarianceStamped, queue_size=1)
+    pub_depth_sensor = rospy.Publisher("/sensors/depth/pose", PoseWithCovarianceStamped, queue_size=1)
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
     )

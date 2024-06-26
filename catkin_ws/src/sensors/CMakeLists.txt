@@ -23,6 +23,20 @@ catkin_package( CATKIN_DEPENDS
   rosserial_client
 )
 
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${roscpp_INCLUDE_DIRS}
+)
+
+add_executable(depth_republisher
+  src/depth_republish.cpp
+)
+
+target_link_libraries(
+  depth_republisher
+  ${roscpp_LIBRARIES} 
+  ${geometry_msgs_LIBRARIES}
+)
 
 install(PROGRAMS
   scripts/${PROJECT_NAME}
