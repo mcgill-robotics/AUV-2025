@@ -91,22 +91,22 @@ def forces_to_pwm_publisher(forces_msg):
     Publish pwm signals
     """
     pwm_arr = [None] * 8
-    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT) * thruster_mount_dirs[forces_msg.BACK_LEFT]
-    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(forces_msg.HEAVE_BACK_LEFT) * thruster_mount_dirs[forces_msg.HEAVE_BACK_LEFT]
-    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(forces_msg.HEAVE_FRONT_LEFT) * thruster_mount_dirs[forces_msg.HEAVE_FRONT_LEFT]
-    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT) * thruster_mount_dirs[forces_msg.FRONT_LEFT]
+    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
+    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
+    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(forces_msg.HEAVE_FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_LEFT])
+    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_LEFT])
     pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(
-        forces_msg.FRONT_RIGHT
-    ) * thruster_mount_dirs[forces_msg.FRONT_RIGHT]
+        forces_msg.FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_RIGHT]
+    )
     pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_FRONT_RIGHT
-    ) * thruster_mount_dirs[forces_msg.HEAVE_FRONT_RIGHT]
+        forces_msg.HEAVE_FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_RIGHT]
+    )
     pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_BACK_RIGHT
-    ) * thruster_mount_dirs[forces_msg.HEAVE_BACK_RIGHT]
+        forces_msg.HEAVE_BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_RIGHT]
+    )
     pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(
-        forces_msg.BACK_RIGHT
-    ) * thruster_mount_dirs[forces_msg.BACK_RIGHT]
+        forces_msg.BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.BACK_RIGHT]
+    )
 
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
     # so as not to trip individual fuse (limit current draw)
