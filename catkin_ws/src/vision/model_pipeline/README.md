@@ -1,4 +1,4 @@
-# Steps to train a model:
+# Steps to train a model
 1. Collect images samples (either sim or real).
 2. Either open or add the images to AUV2024 workspace on Roboflow.
     1. Ask a lead for the McGill Robotics account information.
