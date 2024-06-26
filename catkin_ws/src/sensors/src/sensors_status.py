@@ -94,7 +94,7 @@ class IMU(Sensor):
         self.last_reading = [np.quaternion(1, 0, 0, 0), [0, 0, 0]]
         rospy.Subscriber("/sensors/imu/data", Imu, self.imu_cb)
 
-    def quat_cb(self, msg):
+    def imu_cb(self, msg):
         q = msg.orientation
         ang_vel = msg.angular_velocity
         self.current_reading[0] = np.quaternion(q.w, q.x, q.y, q.z)
@@ -164,9 +164,9 @@ class DVL(Sensor):
         self.current_reading = [None, None, None]
         self.last_reading = [None, None, None]
 
-        rospy.Subscriber("/sensors/dvl/twist", TwistWithCovarianceStamped, self.dead_reckon_cb)
+        rospy.Subscriber("/sensors/dvl/twist", TwistWithCovarianceStamped, self.twist_cb)
 
-    def dead_reckon_cb(self, msg):
+    def twist_cb(self, msg):
         self.current_reading = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z]
         self.update_last_reading()
 

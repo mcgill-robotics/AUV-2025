@@ -38,6 +38,11 @@ def publish_bypass(pose, ang_vel):
     pub_theta_y.publish(pitch)
     pub_theta_z.publish(yaw)
 
+    global last_time
+    if rospy.Time.now() == last_time:
+        return
+    last_time = rospy.Time.now()
+
     t = TransformStamped()
     t.header.stamp = rospy.Time.now()
     t.header.frame_id = "world"
@@ -177,6 +182,8 @@ if __name__ == "__main__":
     rospy.init_node("unity_bridge")
 
     bypass = not rospy.get_param("~ekf")
+
+    last_time = rospy.Time.now()
 
     tf_broadcaster = TransformBroadcaster()
 
