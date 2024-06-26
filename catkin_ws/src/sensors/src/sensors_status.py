@@ -98,7 +98,7 @@ class IMU(Sensor):
         q = msg.orientation
         ang_vel = msg.angular_velocity
         self.current_reading[0] = np.quaternion(q.w, q.x, q.y, q.z)
-        self.current_reading[1] = np.array([ang_vel.x, ang_vel.y, ang_vel.z])
+        self.current_reading[1] = [ang_vel.x, ang_vel.y, ang_vel.z]
         self.update_last_reading()
 
 

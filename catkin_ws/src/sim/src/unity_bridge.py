@@ -10,10 +10,22 @@ from std_msgs.msg import Float64
 from tf import transformations
 import quaternion
 from tf2_ros import TransformBroadcaster
+from robot_localization.srv import SetPose
 
 DEG_PER_RAD = 180 / np.pi
 NUMBER_OF_PINGERS = 4
 
+def reset_pose(pose):
+    rospy.wait_for_service("set_pose")
+    try:
+        set_pose = rospy.ServiceProxy("set_pose", SetPose)
+        msg = PoseWithCovarianceStamped()
+        msg.pose.pose = pose
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "odom"
+        resp = set_pose(msg)
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: %s", e)
 
 def publish_bypass(pose, ang_vel):
     pub_pose.publish(pose)
@@ -64,6 +76,7 @@ def publish_bypass(pose, ang_vel):
     tf_broadcaster.sendTransform(t_rot)
 
 def cb_unity_state(msg):
+    global reseted
     pose_x = msg.position.z
     pose_y = -msg.position.x
     pose_z = msg.position.y
@@ -122,7 +135,18 @@ def cb_unity_state(msg):
         ang_vel = Vector3(*ang_vel_auv)
 
         publish_bypass(pose, ang_vel)
+        
         return
+    elif not reseted:
+        pose = Pose()
+        pose.position.x = pose_x
+        pose.position.y = pose_y
+        pose.position.z = pose_z
+
+        quat = Quaternion(x=q_ENU_imunominalup.x, y=q_ENU_imunominalup.y, z=q_ENU_imunominalup.z, w=q_ENU_imunominalup.w)
+        pose.orientation = quat
+        reset_pose(pose)
+        reseted = True
 
     # DVL - NWU
     if isDVLActive:
@@ -182,6 +206,7 @@ if __name__ == "__main__":
     rospy.init_node("unity_bridge")
 
     bypass = not rospy.get_param("~ekf")
+    reseted = False
 
     last_time = rospy.Time.now()
 

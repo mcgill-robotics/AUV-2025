@@ -1,9 +1,9 @@
 <launch>
     <param name="/use_sim_time" value="true" />
 
-    <arg name="vision" default="false" />
+    <arg name="vision" default="true" />
 
-    <arg name="ekf" default="false" />
+    <arg name="ekf" default="true" />
 
     <arg name="q_imunominalup_imuup_w" default="1.0" />
     <arg name="q_imunominalup_imuup_x" default="0.0" />
@@ -17,7 +17,7 @@
 
     <arg name="auv_dvl_offset_x" default="0.0" />
     <arg name="auv_dvl_offset_y" default="0.0" />
-    <arg name="auv_dvl_offset_z" default="-0.3" />
+    <arg name="auv_dvl_offset_z" default="0.0" />
 
     <param name="q_imunominalup_imuup_w" value="$(arg q_imunominalup_imuup_w)" />
     <param name="q_imunominalup_imuup_x" value="$(arg q_imunominalup_imuup_x)" />

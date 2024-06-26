@@ -25,6 +25,7 @@
   <build_depend>tf2_ros</build_depend>
   <build_depend>sbg_driver</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>robot_localization</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
@@ -38,4 +39,5 @@
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>sbg_driver</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
 </package>
