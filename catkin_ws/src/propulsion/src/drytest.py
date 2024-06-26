@@ -6,7 +6,7 @@ from thrust_mapper_utils import *
 from geometry_msgs.msg import Wrench
 import keyboard
 
-force_amt = 0.05  # 0.5%
+force_amt = 0.1  # 10%
 
 # TODO: update if necessary
 reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]

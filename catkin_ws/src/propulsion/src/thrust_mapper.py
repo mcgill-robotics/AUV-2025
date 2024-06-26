@@ -19,10 +19,13 @@ w = rospy.get_param("distance_thruster_thruster_width")
 alpha = rospy.get_param("angle_thruster")
 a = rospy.get_param("distance_thruster_middle_length")
 
+thruster_mount_dirs = [1, -1, 1, 1, 1, 1, 1, 1]
+
+
 T = np.array(
     [
-        [np.cos(alpha), 0, 0, np.cos(alpha), np.cos(alpha), 0, 0, -np.cos(alpha)],
-        [-np.sin(alpha), 0, 0, np.sin(alpha), -np.sin(alpha), 0, 0, -np.sin(alpha)],
+        [np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
+        [-np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
         [0, -1, -1, 0, 0, -1, -1, 0],
         [0, w / 2, w / 2, 0, 0, -w / 2, -w / 2, 0],
         [0, -a, a, 0, 0, a, -a, 0],
@@ -30,18 +33,18 @@ T = np.array(
             w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
             0,
             0,
-            w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
             -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
-            0,
-            0,
             w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
+            0,
+            0,
+            -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
         ],
     ]
 )
 
 
 # Matrix representation of the system of equations representing the thrust to wrench conversion
-# Ex: Force_X = (1)FRONT_LEFT_Thruster + (1)FRONT_RIGHTboard_Thrust
+# Ex: Force_X = (1)BACK_LEFT_Thruster + (1)HEAVE_BACK_LEFTboard_Thrust
 
 # matrix transformation wrench -> thrust
 T_inv = np.linalg.pinv(T)
@@ -67,14 +70,14 @@ def wrench_to_thrust(w):
     converted_w = np.matmul(T_inv, a)
     tf = ThrusterForces()
 
-    tf.FRONT_LEFT = converted_w[0][0]
-    tf.FRONT_RIGHT = converted_w[1][0]
-    tf.BACK_LEFT = converted_w[2][0]
-    tf.BACK_RIGHT = converted_w[3][0]
-    tf.HEAVE_FRONT_LEFT = converted_w[4][0]
+    tf.BACK_LEFT = converted_w[0][0]
+    tf.HEAVE_BACK_LEFT = converted_w[1][0]
+    tf.HEAVE_FRONT_LEFT = converted_w[2][0]
+    tf.FRONT_LEFT = converted_w[3][0]
+    tf.FRONT_RIGHT = converted_w[4][0]
     tf.HEAVE_FRONT_RIGHT = converted_w[5][0]
-    tf.HEAVE_BACK_LEFT = converted_w[6][0]
-    tf.HEAVE_BACK_RIGHT = converted_w[7][0]
+    tf.HEAVE_BACK_RIGHT = converted_w[6][0]
+    tf.BACK_RIGHT = converted_w[7][0]
 
     # this is used by the sim
     pub_forces.publish(tf)
@@ -88,21 +91,21 @@ def forces_to_pwm_publisher(forces_msg):
     Publish pwm signals
     """
     pwm_arr = [None] * 8
-    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT)
-    pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(forces_msg.FRONT_RIGHT)
-    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT)
-    pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(forces_msg.BACK_RIGHT)
-    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(
-        forces_msg.HEAVE_FRONT_LEFT
+    pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
+    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
+    pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(forces_msg.HEAVE_FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_LEFT])
+    pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_LEFT])
+    pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(
+        forces_msg.FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_RIGHT]
     )
     pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_FRONT_RIGHT
-    )
-    pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(
-        forces_msg.HEAVE_BACK_LEFT
+        forces_msg.HEAVE_FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_RIGHT]
     )
     pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm(
-        forces_msg.HEAVE_BACK_RIGHT
+        forces_msg.HEAVE_BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_RIGHT]
+    )
+    pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(
+        forces_msg.BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.BACK_RIGHT]
     )
 
     # TODO - these are temporary precautionary measures and may result in unwanted dynamics
