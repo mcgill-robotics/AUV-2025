@@ -8,4 +8,3 @@ Steps to train a model:
     a. Do NOT add any pre-processing/augmentation. We already do that in the training notebook.
 5. Change the parameters in the training notebook as needed.
 6. Run training notebook.
-    a. There is also the option of running training.py. Read the How-to section at the top of the file.
