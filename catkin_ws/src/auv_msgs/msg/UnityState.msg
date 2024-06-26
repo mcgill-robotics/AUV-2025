@@ -2,6 +2,7 @@ geometry_msgs/Vector3 position
 geometry_msgs/Quaternion orientation
 geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 angular_velocity
+geometry_msgs/Vector3 linear_acceleration
 int32[] frequencies
 uint32[] times_pinger_1
 uint32[] times_pinger_2
