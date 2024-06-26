@@ -26,7 +26,7 @@ def parse_velocity_report(line):
     report.twist.twist.linear.x = vx
     report.twist.twist.linear.y = -vy
     report.twist.twist.linear.z = -vz
-    report.covariance = covariance
+    report.twist.covariance = covariance
     report.header.frame_id = "dvl"
     report.header.stamp = rospy.Time.now()
 
