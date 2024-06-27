@@ -21,10 +21,7 @@ def solve_bearing_vector(distance, is_three_hydrophones):
 
 
 def cb_hydrophones_time_difference(msg):
-    if not is_active:
-        return  
-    if msg.frequency not in frequency_types:
-        print(f"Pinger frequency mismatch! Frequency received {msg.frequency} not in frequency types.")
+    if not is_active or msg.frequency == 0:
         return
     
     # Convert times received in 10e-7 to seconds
@@ -81,13 +78,6 @@ if __name__ == "__main__":
     hydrophones_dx = rospy.get_param("hydrophones_dx")
     hydrophones_dy = rospy.get_param("hydrophones_dy")
     hydrophones_dz = rospy.get_param("hydrophones_dz")
-
-    frequency_types = [
-            rospy.get_param("pinger_frequency_1"), 
-            rospy.get_param("pinger_frequency_2"), 
-            rospy.get_param("pinger_frequency_3"), 
-            rospy.get_param("pinger_frequency_4")
-    ]
 
     time_unit = rospy.get_param("hydrophones_time_unit")
 
