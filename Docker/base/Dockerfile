@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y wget \
     && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip python-is-python3 \
+    && apt-get install -y python3-catkin-tools python3-pip python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
     && apt-get install -y --no-install-recommends \
     ros-noetic-rosserial-arduino \
     ros-noetic-pid \

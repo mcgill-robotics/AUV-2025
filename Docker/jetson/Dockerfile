@@ -105,10 +105,11 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
     cd ../ && \
     rm -rf torchvision \
+    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
+    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
     && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
