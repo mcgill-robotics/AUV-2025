@@ -22,7 +22,7 @@ class Joystick:
         self.joystick_max_force = float(rospy.get_param("joystick_max_force"))
         self.joystick_dry_test_force = float(rospy.get_param("joystick_dry_test_force"))
 
-        self.missing_pose_interval = float(rospy.get_param("joystick_missing_pose_warning_interval"))
+        self.missing_pose_interval = float(rospy.get_param("joystick_missing_data_warning_interval"))
         self.last_warning_time = rospy.Time.now()
         
         # Mode names.
@@ -78,7 +78,7 @@ class Joystick:
         )
 
 
-    def cb_pose(self, msg):
+    def cb_pose(self, msg) -> None:
         self.x = msg.position.x
         self.y = msg.position.y
         self.z = msg.position.z
@@ -89,19 +89,19 @@ class Joystick:
             w=msg.orientation.w
         )
 
-    def cb_theta_x(self, msg):
+    def cb_theta_x(self, msg) -> None:
         self.theta_x = msg.data
 
-    def cb_theta_y(self, msg):
+    def cb_theta_y(self, msg) -> None:
         self.theta_y = msg.data
 
-    def cb_theta_z(self, msg):
+    def cb_theta_z(self, msg) -> None:
         self.theta_z = msg.data
 
-    def cb_down_camera(self, msg):
+    def cb_down_camera(self, msg) -> None:
         self.down_camera_frame = msg
 
-    def cb_front_camera(self, msg):
+    def cb_front_camera(self, msg) -> None:
         self.front_camera_frame = msg
         
     def establish_force_publishers(self) -> None:
@@ -158,13 +158,13 @@ class Joystick:
             "/controls/pid/quat/setpoint", Quaternion, queue_size=1
         )
 
-    def set_enable_pid(self, enable):
+    def set_enable_pid(self, enable) -> None:
         self.pub_pid_x_enable.publish(Bool(enable))
         self.pub_pid_y_enable.publish(Bool(enable))
         self.pub_pid_z_enable.publish(Bool(enable))
         self.pub_pid_quat_enable.publish(Bool(enable))
 
-    def take_screenshot(self, image, path):
+    def take_screenshot(self, image, path) -> None:
         if image is None:
             rospy.logwarn("No frame has been received from camera! Screenshot failed.")
             return
@@ -209,20 +209,20 @@ class Joystick:
 
     def print_key_options_msg(self) -> None: 
         print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
-        print(" > WASD for SURGE/SWAY")
-        print(" > Q/E for UP/DOWN")
-        print(" > IJKL for PITCH/YAW")
-        print(" > U/O for ROLL")
-        print(" > Hold SPACE for max. force")
-        print(f" > To switch to [{self.mode_force}] mode, press 1")
-        print(f" > To switch to [{self.mode_pid_local}] mode, press 2")
-        print(f" > To switch to [{self.mode_pid_global}] mode, press 3")
-        print(f" > CURRENT MODE: [{self.mode_current}]")
-        print(" > For down camera screenshot, press 4")
-        print(" > For front camera screenshot, press 5")
+        print(" > WASD for SURGE/SWAY.")
+        print(" > Q/E for UP/DOWN.")
+        print(" > IJKL for PITCH/YAW.")
+        print(" > U/O for ROLL.")
+        print(" > Hold SPACE for max force.")
+        print(f" > To switch to [{self.mode_force}] mode, press 1.")
+        print(f" > To switch to [{self.mode_pid_local}] mode, press 2.")
+        print(f" > To switch to [{self.mode_pid_global}] mode, press 3.")
+        print(f" > CURRENT MODE: [{self.mode_current}].")
+        print(" > For down camera screenshot, press 4.")
+        print(" > For front camera screenshot, press 5.")
 
 
-    def print_pid_values(self, targets):
+    def print_pid_values(self, targets) -> None:
         x, y, z, roll, pitch, yaw = [self.format_number(num) for num in targets]
         print(f"{self.self.top_left_box}{self.horizontal_box*8}Current PID setpoint{self.horizontal_box*8}{self.top_right_box}")
         print(f"{self.vertical_box}{self.space_indentation}    x = {x}{self.space_indentation}{self.vertical_box}")
@@ -234,7 +234,7 @@ class Joystick:
         print(f"{self.bottom_left_box}{self.horizontal_box*36}{self.bottom_right_box}", end="\r")
         print(self.terminal_cursor_up * 7, end="\r")
 
-    def format_number(self, number):
+    def format_number(self, number) -> str:
         formatted_number = f"{abs(number):.4f}"[:self.max_width].rjust(self.max_width, "0")
         return f"{'-' if number < 0 else ' '}{formatted_number}"
 
@@ -243,9 +243,9 @@ class Joystick:
             [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         )
         self.pub_microseconds.publish(reset_cmd)
-        print("Safely shutting down thrusters")
+        print("Safely shutting down thrusters.")
     
-    def local_to_global(self, target_position):
+    def local_to_global(self, target_position) :
         pivot_quat = self.quaternion
         global_goal = (
             pivot_quat
@@ -389,8 +389,7 @@ class Joystick:
             target_quaternion.y,
             target_quaternion.x
         ) 
-        targets = [target_x, target_y, target_z, target_roll, target_pitch, target_yaw]
-        self.print_pid_values(targets)
+        self.print_pid_values([target_x, target_y, target_z, target_roll, target_pitch, target_yaw])
         
         
     def execute(self) -> None:

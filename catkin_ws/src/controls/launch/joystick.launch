@@ -8,7 +8,7 @@
 
     <param name="joystick_image_folder_path" value="../joystick_images"/>
 
-    <param name="joystick_missing_pose_warning_interval" value="3"/>
+    <param name="joystick_missing_data_warning_interval" value="3"/>
 
 	<node name="joystick" pkg="controls" type="joystick.py" respawn="false" output="screen"/>
 </launch>
