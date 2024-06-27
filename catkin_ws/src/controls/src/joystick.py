@@ -15,20 +15,21 @@ from geometry_msgs.msg import Quaternion, Pose
 from sensor_msgs.msg import Image
 
 
-# Forces produced by T200 thruster at 14V (N).
-
-
-
 class Joystick:
     def __init__(self) -> None:
         self.MAX_FWD_FORCE = 4.52 * 9.81
         self.MAX_BKWD_FORCE = -3.52 * 9.81
+        self.joystick_max_force = float(rospy.get_param("joystick_max_force"))
+        self.joystick_dry_test_force = float(rospy.get_param("joystick_dry_test_force"))
+
+        self.missing_pose_interval = float(rospy.get_param("joystick_missing_pose_warning_interval"))
+        self.last_warning_time = rospy.Time.now()
         
         # Mode names.
         self.mode_force = "FORCE"
         self.mode_pid_global = "PID GLOBAL"
         self.mode_pid_local = "PID LOCAL"
-        self.current_mode = self.mode_force
+        self.mode_current = self.mode_force
 
         self.modes_execution = {
             self.mode_force :  self.execute_force_mode,
@@ -43,13 +44,13 @@ class Joystick:
         self.front_camera_path = os.path.join(self.folder_path, "front_camera")
         self.file_number = 1
         
-        # Ensure the folder exists
+        # Ensure the folder exists.
         os.makedirs(self.folder_path, exist_ok=True)
         os.makedirs(self.down_camera_path, exist_ok=True)
         os.makedirs(self.front_camera_path, exist_ok=True)
 
-        self.down_camera_frame = []
-        self.front_camera_frame = []
+        self.down_camera_frame = None
+        self.front_camera_frame = None
 
         self.pid_position_delta = rospy.get_param("joystick_pid_position_delta")   
         self.pid_quaternion_delta_w = rospy.get_param("joystick_pid_quaternion_delta_w")   
@@ -158,12 +159,15 @@ class Joystick:
         )
 
     def set_enable_pid(self, enable):
-        self.pub_pid_x_enable(Bool(enable))
-        self.pub_pid_y_enable(Bool(enable))
-        self.pub_pid_z_enable(Bool(enable))
-        self.pub_pid_quat_enable(Bool(enable))
+        self.pub_pid_x_enable.publish(Bool(enable))
+        self.pub_pid_y_enable.publish(Bool(enable))
+        self.pub_pid_z_enable.publish(Bool(enable))
+        self.pub_pid_quat_enable.publish(Bool(enable))
 
     def take_screenshot(self, image, path):
+        if image is None:
+            rospy.logwarn("No frame has been received from camera! Screenshot failed.")
+            return
         bridge = CvBridge()
         cv_image = bridge.imgmsg_to_cv2(image, desired_encoding="passthrough")
         file_path = os.path.join(path, f"image_{self.file_number}.jpg")
@@ -172,7 +176,7 @@ class Joystick:
 
     def establish_key_hooks(self) -> None:
         mode_swap = lambda mode, enable: (
-            setattr(self, "current_mode", mode),
+            setattr(self, "mode_current", mode),
             self.set_enable_pid(enable)
         )
         keyboard.on_press_key(
@@ -211,9 +215,9 @@ class Joystick:
         print(" > U/O for ROLL")
         print(" > Hold SPACE for max. force")
         print(f" > To switch to [{self.mode_force}] mode, press 1")
-        print(f" > To switch to [{self.local_mode}] mode, press 2")
+        print(f" > To switch to [{self.mode_pid_local}] mode, press 2")
         print(f" > To switch to [{self.mode_pid_global}] mode, press 3")
-        print(f" > CURRENT MODE: [{self.current_mode}]")
+        print(f" > CURRENT MODE: [{self.mode_current}]")
         print(" > For down camera screenshot, press 4")
         print(" > For front camera screenshot, press 5")
 
@@ -242,7 +246,7 @@ class Joystick:
         print("Safely shutting down thrusters")
     
     def local_to_global(self, target_position):
-        pivot_quat = self.quaterion
+        pivot_quat = self.quaternion
         global_goal = (
             pivot_quat
             * np.quaternion(0, target_position[0], target_position[1], target_position[2])
@@ -252,9 +256,9 @@ class Joystick:
 
     def execute_force_mode(self) -> None:
         current_force_amt = (
-            float(rospy.get_param("joystick_max_force"))
+            self.joystick_max_force
             if keyboard.is_pressed("space")
-            else float(rospy.get_param("joystick_dry_test_force"))
+            else self.joystick_dry_test_force
         )
 
         desired_x_force = 0
@@ -297,19 +301,16 @@ class Joystick:
         self.pub_yaw.publish(desired_z_torque)
 
     def execute_pid_mode(self) -> None:
-        if all(axis is not None for axis in [self.x, self.y, self.z, self.quaternion]):
-            rospy.logwarn("Incomplete pose data for [PID] mode")
-            return
-        if self.current_mode == self.mode_pid_global:
+        if self.mode_current == self.mode_pid_global:
             target_x = self.x
             target_y = self.y
             target_z = self.x
-            target_quaterion = self.quaternion
+            target_quaternion = self.quaternion
         else:
             target_x = 0
             target_y = 0
             target_z = 0
-            target_quaterion = np.quaterion(1, 0, 0, 0)
+            target_quaternion = np.quaternion(1, 0, 0, 0)
 
         if keyboard.is_pressed("w"): target_x += self.pid_position_delta
         if keyboard.is_pressed("s"): target_x -= self.pid_position_delta
@@ -318,75 +319,75 @@ class Joystick:
         if keyboard.is_pressed("q"): target_z += self.pid_position_delta
         if keyboard.is_pressed("e"): target_z -= self.pid_position_delta
         if keyboard.is_pressed("o"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 self.pid_quaternion_delta_xyz,
                 0.0,
                 0.0
             )
         if keyboard.is_pressed("u"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 -self.pid_quaternion_delta_xyz,
                 0.0,
                 0.0
             )
         if keyboard.is_pressed("i"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 0.0,
                 self.pid_quaternion_delta_xyz,
                 0.0
             )
         if keyboard.is_pressed("k"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 0.0,
                 -self.pid_quaternion_delta_xyz,
                 0.0
             )
         if keyboard.is_pressed("j"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 0.0,
                 0.0,
                 self.pid_quaternion_delta_xyz
             )
         if keyboard.is_pressed("l"): 
-            target_quaterion *= np.quaternion(
+            target_quaternion *= np.quaternion(
                 self.pid_quaternion_delta_w,
                 0.0,
                 0.0,
                 -self.pid_quaternion_delta_xyz
             )
 
-        if self.current_mode == self.mode_pid_local:
+        if self.mode_current == self.mode_pid_local:
             # Convert local desired postion (target_[xyz]) to
-            # NWU positon 
+            # NWU positon.
             target_x, target_y, target_z = self.local_to_global(
                 [target_x, target_y, target_z]
             )  
-            # Convert local desired rotation (target_quaterion)  
+            # Convert local desired rotation (target_quaternion)  
             # to NWU rotation (self.quaternion).
-            target_quaterion = self.quaternion * target_quaterion
-
+            target_quaternion = self.quaternion * target_quaternion
+        
         self.pub_pid_x.publish(Float64(target_x))
         self.pub_pid_y.publish(Float64(target_y))
         self.pub_pid_z.publish(Float64(target_z))
         self.pub_pid_quat.publish(
             Quaternion(
-                w=target_quaterion.w, 
-                x=target_quaterion.x, 
-                y=target_quaterion.y, 
-                z=target_quaterion.z
+                w=target_quaternion.w, 
+                x=target_quaternion.x, 
+                y=target_quaternion.y, 
+                z=target_quaternion.z
             )
         )
         
         target_roll, target_pitch, target_yaw = transformations.euler_from_quaternion(
-            target_quaterion.w,
-            target_quaterion.z,
-            target_quaterion.y,
-            target_quaterion.x
+            target_quaternion.w,
+            target_quaternion.z,
+            target_quaternion.y,
+            target_quaternion.x
         ) 
         targets = [target_x, target_y, target_z, target_roll, target_pitch, target_yaw]
         self.print_pid_values(targets)
@@ -399,8 +400,13 @@ class Joystick:
         self.establish_key_hooks()
         self.print_key_options_msg()
 
-        while not rospy.is_shutdown() and self.is_esc_pressed:
-            self.modes_execution[self.current_mode]() 
+        while not (rospy.is_shutdown() or self.is_esc_pressed):
+            if self.mode_current != self.mode_force:
+                if any(x is None for x in [self.x, self.y, self.z, self.quaternion]):
+                    if rospy.Time.now() - self.last_warning_time > self.missing_pose_interval:
+                        rospy.logwarn("Missing pose values.")
+                        continue
+            self.modes_execution[self.mode_current]() 
 
     
 
