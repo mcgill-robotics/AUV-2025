@@ -9,7 +9,7 @@ services:
     image: "mcgillrobotics/auv_2024:poolside"
     privileged: true
     build: .
-    command: bash -c "echo 'source /root/AUV-2024/scripts/set_env.bash' >> ~/.bashrc && tail -f /dev/null"
+    command: bash -c "echo 'tail -f /dev/null"
     network_mode: host
     # deploy:
     #   resources:
