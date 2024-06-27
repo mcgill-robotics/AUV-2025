@@ -4,7 +4,7 @@ services:
       - DISPLAY=novnc:0.0 
       - UDEV=on
     volumes:
-      - ../../../AUV-2024:/root/AUV-2024
+      - ../../../AUV-2024:/AUV-2024
       - /dev:/dev
     image: "mcgillrobotics/auv_2024:poolside"
     privileged: true
