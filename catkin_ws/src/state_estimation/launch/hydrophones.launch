@@ -3,11 +3,6 @@
 	<param name="hydrophones_dx" value="0.1"/>
 	<param name="hydrophones_dy" value="0.1"/>
 	<param name="hydrophones_dz" value="-0.1"/>
-	<!-- Frequency of each pinger -->
-	<param name="pinger_frequency_1" value="1"/>
-	<param name="pinger_frequency_2" value="2"/>
-	<param name="pinger_frequency_3" value="3"/>
-	<param name="pinger_frequency_4" value="4"/>
 
 	<param name="hydrophones_time_unit" value="0.0000001"/>
 

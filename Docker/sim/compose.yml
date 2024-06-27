@@ -5,6 +5,7 @@ services:
     volumes:
       - ../../../AUV-2024:/root/AUV-2024
     image: "mcgillrobotics/auv_2024:sim"
+    build: .
     command: bash -c "tail -f /dev/null"
     ports:
       - "10000:10000"

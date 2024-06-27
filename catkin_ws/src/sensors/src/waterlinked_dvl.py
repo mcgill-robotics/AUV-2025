@@ -76,7 +76,14 @@ def main():
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
 
-    conn = serial.Serial(port)
+
+    try:
+        conn = serial.Serial(port)
+    except serial.serialutil.SerialException:
+        rospy.logerr("ERR: /dev/dvl directory does not exist")
+        rospy.sleep(5)
+        exit()
+
     conn.timeout = 10
     # dvl's baud has been set to 115200 but its default is 9600.
     # There is a way to set the baudrate of the dvl through a command.
@@ -119,6 +126,7 @@ def main():
                 pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
+            conn.close()
             exit()
 
 
