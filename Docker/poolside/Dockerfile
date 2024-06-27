@@ -28,4 +28,5 @@ RUN chmod +x build_zed.bash \
     && rm -rf /root/.cache/pip
 
 RUN rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get clean \
+    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
