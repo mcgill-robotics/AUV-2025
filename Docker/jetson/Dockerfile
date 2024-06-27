@@ -18,6 +18,27 @@ ENV LC_ALL C.UTF-8
 
 ENV ROS_DISTRO noetic
 
+# Install ZED camera deps
+# this one was fucking up so moving it first to get it out of the way
+
+RUN apt-get update && \
+    apt-get install -y zstd \
+    && pip3 install bitstring
+
+
+RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/l4t35.3/jetsons \
+    && chmod +x zed_sdk_install_ubuntu.run && ./zed_sdk_install_ubuntu.run -- silent \
+    && rm zed_sdk_install_ubuntu.run
+
+RUN apt update \
+    && apt install -y openssh-server xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && echo "Port 222" >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    && echo 'root:jetson' | chpasswd
+    
 # install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-core=1.5.0-1* \
@@ -42,16 +63,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV IGNITION_VERSION=fortress
 
 # Install all needed deps and compile the mesa llvmpipe driver from source.
-RUN sudo apt-get update \
-    && apt-get install -y software-properties-common \
-    && apt-get update \
-    && add-apt-repository ppa:kisak/kisak-mesa \
-    && apt-get update \
-    && apt-get -y upgrade \
-    && apt-get update && apt-get install -y wget \
+RUN apt-get update && apt-get install -y wget \
     && wget http://packages.ros.org/ros.key -O - | apt-key add - \
     && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip
+    && apt-get install -y python3-catkin-tools python3-pip tmux vim
 
 RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
@@ -61,24 +76,8 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-cv-bridge \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
-    ros-noetic-smach-ros
-
-RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ignition-fortress \
-    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-    && apt-get update \
-    && apt-get install -y ros-noetic-gazebo-ros git libgflags-dev libignition-gazebo3-dev\
-    && sudo apt-get autoremove -y  \
-    && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
-
-COPY requirements.txt requirements.txt
-
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
-    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt 
+    ros-noetic-smach-ros \
+    ros-noetic-usb-cam
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -87,14 +86,15 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install ZED camera deps
-COPY zed_sdk_install_jetson.run zed_sdk_install_jetson.run
-RUN apt-get update && \
-    apt-get install -y zstd \
-    && apt-get install -y ros-noetic-usb-cam \
-    && pip3 install bitstring \
-    && ./zed_sdk_install_jetson.run -- silent \
-    && rm zed_sdk_install_jetson.run
+COPY build_zed.bash .
+RUN chmod +x build_zed.bash \
+    && /bin/bash -c './build_zed.bash' \
+    && rm build_zed.bash
+
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
+    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
 
 RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
     cd torchvision && \
@@ -104,8 +104,11 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
     cd ../ && \
     rm -rf torchvision \
-    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
+    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
+    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
+    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
+    && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean

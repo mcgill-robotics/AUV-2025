@@ -231,46 +231,28 @@ class Hydrophones(Sensor):
     def __init__(self):
         super().__init__("Hydrophones")
 
-        # @TODO(Felipe): Subsbitute frequency_types values by 
-        #                real pinger values (waiting for Sam
-        #                to respond)  
-        self.frequency_types = [-1, -1, -1, -1]
-        self.current_reading = [None] * len(self.frequency_types)
-        self.last_reading = [None] * len(self.frequency_types)
-        self.frequency_index = -1
+        self.current_reading = {}
+        self.last_reading = {}
+        self.time_tolerance = rospy.get_param("hydrophones_time_difference_tolerance")
         rospy.Subscriber(
             "/sensors/hydrophones/pinger_time_difference",
             PingerTimeDifference,
             self.hydrophones_cb,
-        )
-        self.load_params()       
-
-    def load_params(self):
-        while not rospy.is_shutdown():
-            if rospy.has_param("pinger_frequency_1"):
-                self.frequency_types = [
-                    rospy.get_param("pinger_frequency_1"), 
-                    rospy.get_param("pinger_frequency_2"), 
-                    rospy.get_param("pinger_frequency_3"), 
-                    rospy.get_param("pinger_frequency_4")
-                ]
-                return
+        )     
         
     def hydrophones_cb(self, msg):
-        if msg.frequency in self.frequency_types:
-            self.frequency_index = self.frequency_types.index(msg.frequency)
-            self.current_reading[self.frequency_index] = msg.times
-            self.update_last_reading()
-        else:
-            self.frequency_index = -1
+        times = msg.times
+        if (max(times) - min(times) <= self.time_tolerance):
+            self.current_reading[msg.frequency] = times
+            self.update_last_reading(msg.frequency)
 
-    def update_last_reading(self):
-        if self.current_reading[self.frequency_index] != self.last_reading[self.frequency_index]:
+    def update_last_reading(self, frequency):
+        if self.current_reading.get(frequency, []) != self.last_reading.get(frequency, []):
             self.last_unique_reading_time = rospy.get_time()
-            self.last_reading[self.frequency_index] = self.current_reading[self.frequency_index][:]
+            self.last_reading[frequency] = self.current_reading.get(frequency, [])[:]
 
     def has_valid_data(self):
-        return self.frequency_index != -1
+        return len(self.current_reading.keys()) > 0
 
 
 

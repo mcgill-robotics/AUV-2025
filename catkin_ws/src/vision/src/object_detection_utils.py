@@ -487,7 +487,6 @@ visualisation_pubs = [
 pub = rospy.Publisher("vision/viewframe_detection", VisionObjectArray, queue_size=1)
 
 bridge = CvBridge()
-states = (State(), State())
 
 
 ############## PARAMETERS ##############
@@ -550,3 +549,6 @@ else:
     device = "cpu"
 # count for number of images received per camera
 i = [0, 0]
+
+
+states = (State(), State())
