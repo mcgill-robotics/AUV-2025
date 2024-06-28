@@ -8,7 +8,7 @@
     1. Do NOT add any pre-processing/augmentation. We already do that in the training notebook.
 5. Change the parameters in the training notebook as needed.
 6. Run training notebook.
-    1. Note: I _**highly**_ recommend training a model only if you have a GPU available.
+    1. Note: I _**HIGHLY**_ recommend training a model only if you have a **_GPU_** available.
     2. [Optional] If you don't like Jupyter's output (as I don't), you can execute all cells EXCEPT the final one (which trains the model). Instead, use the `training.py` file to train the model, which displays the training progress in the terminal.
         1. Make sure to update the parameters in the paramater boxes.
         2. There is no need to change the rest of the code.
