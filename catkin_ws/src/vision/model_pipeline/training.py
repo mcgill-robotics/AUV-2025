@@ -6,7 +6,7 @@ import shutil
 from ultralytics import YOLO
 import torch
 
-is_front_camera_training = False  # Change it to False if training for down cmaera.
+is_front_camera_training = False # Change it to False if training for down camera.
 ################################# OS PARAMETERS ##################################
 os_name = os.name
 # Windows = nt, [Linux, Apple] = posix. 
