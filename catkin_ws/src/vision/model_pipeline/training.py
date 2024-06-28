@@ -57,17 +57,6 @@ contrastAugmentProb = 0.3
 blurAugmentProb = 0.3
 brightnessAugmentProb = 0.3
 ##################################################################################
-########################## YOLO AUGMENTATION PARAMETERS ##########################
-# Currently not being used.
-degrees = 360
-flipud = 0.5
-fliplr = 0.5
-max_perspective_change = 0.001
-max_translate = 0.1
-max_scale_change = 0.3
-mosaic = 0.5
-mixup = 0.5
-##################################################################################
 
 if __name__ == "__main__":
      data_yaml_file_absolute_path = os.path.abspath("data.yaml")
