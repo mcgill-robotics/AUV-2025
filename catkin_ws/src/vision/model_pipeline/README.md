@@ -1,27 +1,19 @@
-All data must be put into the format expected by the YOLO v7 model.
-
-That format is:
-    - An "images" folder containing all training images
-    - In the same folder as the images folder, a "labels" folder containing one .txt file for each image in /images
-    - Each .txt file should have the same name as the image it annotates.
-
-The format for annotation in the .txt files is:
-    - each line describes one bounding box: "class, x_center, y_center, width, height"
-    - The fields x, y, width, and height should be normalized to the dimensions of the image i.e. between 0 and 1
-
-
-Dependencies to use model in project:
-    pip install opencv-python
-    pip install ultralytics
-
-Common problems:
-    #if problems occur with torch version, uninstall torch, uninstall ultralytics and re-install ultralytics which will install the appropriate torch version at the same time
-
-To train model on Google Colab:
-- Open .ipynb file in Google Colab
-- Ensure Colab is using GPU (set this in Edit > Notebook Settings > Hardware Acceleration)
-- Run all cells for installing and importing librairies, as well as those to set up directory structure and generate data.yaml file
-- Customize (if necessary) training label count and names in data.yaml file that is generated ('nc' (number of classes) and 'names' (class names) fields)
-- Upload training images and labels (in YOLO format) to content/data/raw/images/ and content/data/raw/labels/ respectively
-- Run the rest of the notebook
-
+# Steps to train a model
+1. Collect image samples (either sim or real).
+    1. Ideally, you should collect at least ~50 raw images for each class. 
+3. Either open or add the images to AUV2024 workspace on Roboflow.
+    1. Ask a lead for the McGill Robotics account information.
+4. Upload your data and label it using bounding boxes.
+    1. You can keep the train/valid/test default split suggested by Roboflow.
+    2. Make sure to properly label the objects. It doesn't have to be perfect, but it does affect the training performance.
+5. Generate a new version of the dataset. 
+    1. Do NOT add any pre-processing/augmentation. We already do that in the training notebook.
+6. Change the parameters in the training notebook as needed.
+    1. The order of classes in the script has to be _**alphabetical**_ (same as Roboflow).
+    2. As of now [28/06/2024], ultralytics only stably supports YOLOv8. YOLOv9 is available but not fully reliable. 
+8. Run training notebook.
+    1. Note: I _**HIGHLY**_ recommend training a model only if you have a **_GPU_** available.
+        1. If you don't have one, it will take days to reach an acceptable performance. So, ask someone who does to let the model train overnight for you.
+    3. [Optional] If you don't like Jupyter's output (as I don't), you can execute all cells EXCEPT the final one (which trains the model). Instead, use the `training.py` file to train the model, which displays the training progress in the terminal.
+        1. Make sure to update the parameters in the parameter boxes.
+        2. There is no need to change the rest of the code.
