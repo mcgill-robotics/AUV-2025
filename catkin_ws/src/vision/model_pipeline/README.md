@@ -3,7 +3,7 @@
 2. Either open or add the images to AUV2024 workspace on Roboflow.
     1. Ask a lead for the McGill Robotics account information.
 3. Upload your data and label it using bounding boxes.
-    1. The train/valid/test split does not matter.
+    1. You can keep the train/valid/test defualt split suggested by Roboflow.
 4. Generate a new version of the dataset. 
     1. Do NOT add any pre-processing/augmentation. We already do that in the training notebook.
 5. Change the parameters in the training notebook as needed.
