@@ -61,7 +61,7 @@ brightnessAugmentProb = 0.3
 if __name__ == "__main__":
      data_yaml_file_absolute_path = os.path.abspath("data.yaml")
 
-     model = YOLO("yolov8n.pt") # load a pretrained model.
+     model = YOLO("yolov8n.pt") # Load a pretrained model.
 
      # Start the training process.
      while True:
