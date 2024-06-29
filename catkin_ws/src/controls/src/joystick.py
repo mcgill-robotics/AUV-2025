@@ -29,6 +29,8 @@ class Joystick:
         self.max_force = float(rospy.get_param("joystick_max_force"))
         self.dry_test_force = float(rospy.get_param("joystick_dry_test_force"))
         self.pool_force = float(rospy.get_param("joystick_pool_force"))
+        self.force_increment = float(rospy.get_param("joystick_force_increment"))
+        self.current_force = self.dry_test_force
 
         # Warning message.
         self.missing_pose_interval = float(rospy.get_param("joystick_missing_data_warning_interval"))
@@ -74,10 +76,10 @@ class Joystick:
         self.down_camera_frame = None
         self.front_camera_frame = None
 
-        # PID delta axis.
-        self.pid_position_delta = rospy.get_param("joystick_pid_position_delta")   
-        self.pid_quaternion_delta_w = rospy.get_param("joystick_pid_quaternion_delta_w")   
-        self.pid_quaternion_delta_xyz = rospy.get_param("joystick_pid_quaternion_delta_xyz")   
+        # PID increment axis.
+        self.pid_position_increment = rospy.get_param("joystick_pid_position_increment")   
+        self.pid_quaternion_increment_w = rospy.get_param("joystick_pid_quaternion_increment_w")   
+        self.pid_quaternion_increment_xyz = rospy.get_param("joystick_pid_quaternion_increment_xyz")   
 
         # Current pose.
         self.x = None
@@ -175,7 +177,7 @@ class Joystick:
         self.pub_pid_z_enable.publish(Bool(enable))
         self.pub_pid_quat_enable.publish(Bool(enable))
 
-    def mode_swap(self, mode, enable):
+    def cb_mode_swap(self, mode, enable):
         rospy.sleep(1)
         if self.mode_current in self.modes_pid:
             clean_pretty_print()
@@ -185,6 +187,23 @@ class Joystick:
             print(" > Hold SPACE for max force.")
         self.set_enable_pid(enable)
 
+    def cb_force_increment(self, is_positive):
+        if self.mode_current not in self.modes_pid:
+            if is_positive:
+                if self.current_force + self.force_increment <= self.max_force:
+                    self.current_force += self.force_increment
+                else:
+                    print(" > WARNING: Increment not valid! Current force is already at maximum.")
+            else:
+                if self.current_force - self.force_increment > 0:
+                    self.current_force -= self.force_increment
+                else:
+                    print(" > WARNING: Increment not valid! Current force cannot go below zero.")
+
+            self.current_force = round(self.current_force, 2)
+            print(f" > Current force = {format_number(self.current_force, 4)}")
+
+
     def establish_key_hooks(self):
         keyboard.on_press_key(
             "esc", 
@@ -193,18 +212,32 @@ class Joystick:
             )
         )
         keyboard.on_press_key(
+            "up", 
+            lambda _: ( 
+                self.cb_force_increment(True)
+            )
+        )
+        keyboard.on_press_key(
+            "down", 
+            lambda _: ( 
+                self.cb_force_increment(False)
+            )
+        )
+        keyboard.on_press_key(
             "0", 
             lambda _: (
+                setattr(self, "current_force", self.dry_test_force),
                 setattr(self, "wait_execute", True),
-                self.mode_swap(self.mode_dry_test, False),
+                self.cb_mode_swap(self.mode_dry_test, False),
                 setattr(self, "wait_execute", False)
             )
         )
         keyboard.on_press_key(
             "1", 
             lambda _: (
+                setattr(self, "current_force", self.pool_force),
                 setattr(self, "wait_execute", True),
-                self.mode_swap(self.mode_force, False),
+                self.cb_mode_swap(self.mode_force, False),
                 setattr(self, "wait_execute", False)
             )
         )
@@ -212,7 +245,7 @@ class Joystick:
             "2", 
             lambda _: (
                 setattr(self, "wait_execute", True),
-                self.mode_swap(self.mode_pid_local, True),
+                self.cb_mode_swap(self.mode_pid_local, True),
                 setattr(self, "wait_execute", False)
             )
         )
@@ -220,7 +253,7 @@ class Joystick:
             "3", 
             lambda _: (
                 setattr(self, "wait_execute", True),
-                self.mode_swap(self.mode_pid_global, True),
+                self.cb_mode_swap(self.mode_pid_global, True),
                 setattr(self, "wait_execute", False)
             )
         )
@@ -256,7 +289,7 @@ class Joystick:
     def execute_force_mode(self):
         current_force_amt = (
             self.max_force if keyboard.is_pressed("space")
-            else (self.dry_test_force if self.mode_current == self.mode_dry_test else self.pool_force)
+            else self.current_force
         )
 
         desired_x_force = 0
@@ -310,53 +343,53 @@ class Joystick:
             target_z = 0
             target_quaternion = np.quaternion(1, 0, 0, 0)
 
-        if keyboard.is_pressed("w"): target_x += self.pid_position_delta
-        if keyboard.is_pressed("s"): target_x -= self.pid_position_delta
-        if keyboard.is_pressed("a"): target_y += self.pid_position_delta
-        if keyboard.is_pressed("d"): target_y -= self.pid_position_delta
-        if keyboard.is_pressed("q"): target_z += self.pid_position_delta
-        if keyboard.is_pressed("e"): target_z -= self.pid_position_delta
+        if keyboard.is_pressed("w"): target_x += self.pid_position_increment
+        if keyboard.is_pressed("s"): target_x -= self.pid_position_increment
+        if keyboard.is_pressed("a"): target_y += self.pid_position_increment
+        if keyboard.is_pressed("d"): target_y -= self.pid_position_increment
+        if keyboard.is_pressed("q"): target_z += self.pid_position_increment
+        if keyboard.is_pressed("e"): target_z -= self.pid_position_increment
         if keyboard.is_pressed("o"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
-                self.pid_quaternion_delta_xyz,
+                self.pid_quaternion_increment_w,
+                self.pid_quaternion_increment_xyz,
                 0.0,
                 0.0
             )
         if keyboard.is_pressed("u"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
-                -self.pid_quaternion_delta_xyz,
+                self.pid_quaternion_increment_w,
+                -self.pid_quaternion_increment_xyz,
                 0.0,
                 0.0
             )
         if keyboard.is_pressed("i"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
+                self.pid_quaternion_increment_w,
                 0.0,
-                self.pid_quaternion_delta_xyz,
+                self.pid_quaternion_increment_xyz,
                 0.0
             )
         if keyboard.is_pressed("k"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
+                self.pid_quaternion_increment_w,
                 0.0,
-                -self.pid_quaternion_delta_xyz,
+                -self.pid_quaternion_increment_xyz,
                 0.0
             )
         if keyboard.is_pressed("j"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
+                self.pid_quaternion_increment_w,
                 0.0,
                 0.0,
-                self.pid_quaternion_delta_xyz
+                self.pid_quaternion_increment_xyz
             )
         if keyboard.is_pressed("l"): 
             target_quaternion *= np.quaternion(
-                self.pid_quaternion_delta_w,
+                self.pid_quaternion_increment_w,
                 0.0,
                 0.0,
-                -self.pid_quaternion_delta_xyz
+                -self.pid_quaternion_increment_xyz
             )
 
         if self.mode_current == self.mode_pid_local:
@@ -409,12 +442,9 @@ class Joystick:
             else:
                 self.modes_execution[self.mode_current]() 
 
-
     def shut_down_thrusters(self):
-        # @TO-DO(Felipe): Fix format print message.
         if self.mode_current in self.modes_pid:
             clean_pretty_print()
-            print("\n" * 6) 
         self.pub_pid_x_enable.publish(Bool(False))
         self.pub_pid_y_enable.publish(Bool(False))
         self.pub_pid_z_enable.publish(Bool(False))
@@ -424,7 +454,6 @@ class Joystick:
         )
         self.pub_microseconds.publish(reset_cmd)
         print("Safely shutting down thrusters.")
-
     
 
 if __name__ == "__main__":

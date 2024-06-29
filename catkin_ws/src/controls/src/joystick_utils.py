@@ -17,11 +17,11 @@ space_indentation = " " * 11
 
 
 def print_key_options_msg(modes): 
-     print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
      print(" > WASD for SURGE/SWAY.")
-     print(" > Q/E for UP/DOWN.")
+     print(" > Q/E for HEAVE.")
      print(" > IJKL for PITCH/YAW.")
      print(" > U/O for ROLL.")
+     print(" > To change thruster force, use up and down arrows.")
      print(f" > To switch to [{modes[0]}] mode, press 0.")
      print(f" > To switch to [{modes[1]}] mode, press 1.")
      print(f" > To switch to [{modes[1]}] mode, press 2.")
