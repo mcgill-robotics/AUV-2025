@@ -9,42 +9,64 @@ import cv2
 import os
 from cv_bridge import CvBridge
 
+from joystick_utils import *
+
 from auv_msgs.msg import ThrusterMicroseconds
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Quaternion, Pose
 from sensor_msgs.msg import Image
 
 
+# Note: np.quaternion -> (w, x, y, z).
+#       Quaternion -> (x, y, z, w).
+
 class Joystick:
-    def __init__(self) -> None:
+    def __init__(self):
         self.MAX_FWD_FORCE = 4.52 * 9.81
         self.MAX_BKWD_FORCE = -3.52 * 9.81
-        self.joystick_max_force = float(rospy.get_param("joystick_max_force"))
-        self.joystick_dry_test_force = float(rospy.get_param("joystick_dry_test_force"))
 
+        # Thrusters force parameters.
+        self.max_force = float(rospy.get_param("joystick_max_force"))
+        self.dry_test_force = float(rospy.get_param("joystick_dry_test_force"))
+        self.pool_force = float(rospy.get_param("joystick_pool_force"))
+
+        # Warning message.
         self.missing_pose_interval = float(rospy.get_param("joystick_missing_data_warning_interval"))
-        self.last_warning_time = rospy.Time.now()
+        self.last_warning_time = rospy.get_time()
+        self.last_pose_received = rospy.get_time()
         
         # Mode names.
+        self.mode_dry_test = "DRY_TEST"
         self.mode_force = "FORCE"
         self.mode_pid_global = "PID GLOBAL"
         self.mode_pid_local = "PID LOCAL"
-        self.mode_current = self.mode_force
-
+        self.mode_current = self.mode_dry_test
+        self.modes = [
+            self.mode_dry_test,
+            self.mode_force,
+            self.mode_pid_global,
+            self.mode_pid_local
+        ]
+        self.modes_pid = [
+            self.mode_pid_global,
+            self.mode_pid_local
+        ]
         self.modes_execution = {
-            self.mode_force :  self.execute_force_mode,
-            self.mode_pid_local : self.execute_pid_mode,
-            self.mode_pid_global : self.execute_pid_mode
+            self.mode_dry_test: self.execute_force_mode,
+            self.mode_force:  self.execute_force_mode,
+            self.mode_pid_local: self.execute_pid_mode,
+            self.mode_pid_global: self.execute_pid_mode
         }
-
         self.is_esc_pressed = False      
 
+        # Camera screenshot.
         self.folder_path = rospy.get_param("joystick_image_folder_path")
         self.down_camera_path = os.path.join(self.folder_path, "down_camera")
         self.front_camera_path = os.path.join(self.folder_path, "front_camera")
-        self.file_number = 1
-        
-        # Ensure the folder exists.
+        self.file_number = 0
+        self.wait_execute = False
+
+        # Ensure the folders exist.
         os.makedirs(self.folder_path, exist_ok=True)
         os.makedirs(self.down_camera_path, exist_ok=True)
         os.makedirs(self.front_camera_path, exist_ok=True)
@@ -52,59 +74,25 @@ class Joystick:
         self.down_camera_frame = None
         self.front_camera_frame = None
 
+        # PID delta axis.
         self.pid_position_delta = rospy.get_param("joystick_pid_position_delta")   
         self.pid_quaternion_delta_w = rospy.get_param("joystick_pid_quaternion_delta_w")   
         self.pid_quaternion_delta_xyz = rospy.get_param("joystick_pid_quaternion_delta_xyz")   
 
+        # Current pose.
         self.x = None
         self.y = None
         self.z = None
         self.quaternion = None
-        
-        self.max_width = 5
-        self.terminal_cursor_up = "\033[A"
-        self.horizontal_box = chr(0x2550)
-        self.vertical_box = chr(0x2551)
-        self.top_left_box = chr(0x2554)
-        self.top_right_box = chr(0x2557)
-        self.bottom_left_box = chr(0x255A)
-        self.bottom_right_box = chr(0x255D)
-        self.space_indentation = " " * 11
 
+        # Subscribers.
         rospy.Subscriber("/state/pose", Pose, self.cb_pose)
         rospy.Subscriber("/vision/down_cam/image_raw", Image, self.cb_down_camera)
         rospy.Subscriber("/vision/front_cam/color/image_raw",
             Image, self.cb_front_camera
         )
 
-
-    def cb_pose(self, msg) -> None:
-        self.x = msg.position.x
-        self.y = msg.position.y
-        self.z = msg.position.z
-        self.quaternion = np.quaternion(
-            x=msg.orientation.x,
-            y=msg.orientation.y,
-            z=msg.orientation.z,
-            w=msg.orientation.w
-        )
-
-    def cb_theta_x(self, msg) -> None:
-        self.theta_x = msg.data
-
-    def cb_theta_y(self, msg) -> None:
-        self.theta_y = msg.data
-
-    def cb_theta_z(self, msg) -> None:
-        self.theta_z = msg.data
-
-    def cb_down_camera(self, msg) -> None:
-        self.down_camera_frame = msg
-
-    def cb_front_camera(self, msg) -> None:
-        self.front_camera_frame = msg
-        
-    def establish_force_publishers(self) -> None:
+        # Mode publishers.
         # [FORCE] mode.
         self.pub_x = rospy.Publisher(
             "/controls/force/global/x", Float64, queue_size=1
@@ -127,9 +115,7 @@ class Joystick:
         self.pub_microseconds = rospy.Publisher(
             "/propulsion/microseconds", ThrusterMicroseconds, queue_size=1
         )
-
-    def establish_pid_enable_publishers(self) -> None:
-        # [PID] mode.
+        # [PID] mode - enable.
         self.pub_pid_x_enable = rospy.Publisher(
             "/controls/pid/x/enable", Bool, queue_size=1
         )
@@ -142,9 +128,7 @@ class Joystick:
         self.pub_pid_quat_enable = rospy.Publisher(
             "/controls/pid/quat/enable", Bool, queue_size=1
         )
-   
-    def establish_pid_publishers(self) -> None:
-        # [PID] mode.
+        # [PID] mode - setpoints.
         self.pub_pid_x = rospy.Publisher(
             "/controls/pid/x/setpoint", Float64, queue_size=1
         )
@@ -158,27 +142,50 @@ class Joystick:
             "/controls/pid/quat/setpoint", Quaternion, queue_size=1
         )
 
-    def set_enable_pid(self, enable) -> None:
+    def cb_pose(self, msg):
+        self.x = msg.position.x
+        self.y = msg.position.y
+        self.z = msg.position.z
+        self.quaternion = np.quaternion(
+            msg.orientation.w,
+            msg.orientation.x,
+            msg.orientation.y,
+            msg.orientation.z            
+        )
+        self.last_pose_received = rospy.get_time()
+
+    def cb_theta_x(self, msg):
+        self.theta_x = msg.data
+
+    def cb_theta_y(self, msg):
+        self.theta_y = msg.data
+
+    def cb_theta_z(self, msg):
+        self.theta_z = msg.data
+
+    def cb_down_camera(self, msg):
+        self.down_camera_frame = msg
+
+    def cb_front_camera(self, msg):
+        self.front_camera_frame = msg
+
+    def set_enable_pid(self, enable):
         self.pub_pid_x_enable.publish(Bool(enable))
         self.pub_pid_y_enable.publish(Bool(enable))
         self.pub_pid_z_enable.publish(Bool(enable))
         self.pub_pid_quat_enable.publish(Bool(enable))
 
-    def take_screenshot(self, image, path) -> None:
-        if image is None:
-            rospy.logwarn("No frame has been received from camera! Screenshot failed.")
-            return
-        bridge = CvBridge()
-        cv_image = bridge.imgmsg_to_cv2(image, desired_encoding="passthrough")
-        file_path = os.path.join(path, f"image_{self.file_number}.jpg")
-        cv2.imwrite(file_path, cv_image)
-        self.file_number += 1
+    def mode_swap(self, mode, enable):
+        rospy.sleep(1)
+        if self.mode_current in self.modes_pid:
+            clean_pretty_print()
+        self.mode_current = mode
+        print(f" > CURRENT MODE: [{self.mode_current}].")
+        if self.mode_current == self.mode_dry_test:
+            print(" > Hold SPACE for max force.")
+        self.set_enable_pid(enable)
 
-    def establish_key_hooks(self) -> None:
-        mode_swap = lambda mode, enable: (
-            setattr(self, "mode_current", mode),
-            self.set_enable_pid(enable)
-        )
+    def establish_key_hooks(self):
         keyboard.on_press_key(
             "esc", 
             lambda _: ( 
@@ -186,79 +193,70 @@ class Joystick:
             )
         )
         keyboard.on_press_key(
+            "0", 
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                self.mode_swap(self.mode_dry_test, False),
+                setattr(self, "wait_execute", False)
+            )
+        )
+        keyboard.on_press_key(
             "1", 
-            mode_swap(self.mode_force, False)
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                self.mode_swap(self.mode_force, False),
+                setattr(self, "wait_execute", False)
+            )
         )
         keyboard.on_press_key(
             "2", 
-            mode_swap(self.mode_pid_local, True)
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                self.mode_swap(self.mode_pid_local, True),
+                setattr(self, "wait_execute", False)
+            )
         )
         keyboard.on_press_key(
             "3", 
-            mode_swap(self.mode_pid_global, True)
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                self.mode_swap(self.mode_pid_global, True),
+                setattr(self, "wait_execute", False)
+            )
         )
         keyboard.on_press_key(
             "4",
-            self.take_screenshot(self.down_camera_frame, self.down_camera_path)
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                setattr(self, 'file_number', self.file_number + 1),
+                take_screenshot(
+                    self.down_camera_frame, 
+                    self.down_camera_path, 
+                    self.file_number,
+                    True if self.mode_current in self.modes_pid else False
+                ),
+                setattr(self, "wait_execute", False)
+            )
         )
         keyboard.on_press_key(
             "5",
-            self.take_screenshot(self.front_camera_frame, self.front_camera_path)
+            lambda _: (
+                setattr(self, "wait_execute", True),
+                setattr(self, 'file_number', self.file_number + 1),
+                take_screenshot(
+                    self.front_camera_frame, 
+                    self.front_camera_path, 
+                    self.file_number,
+                    True if self.mode_current in self.modes_pid else False
+                ),
+                setattr(self, "wait_execute", False)
+            )
         )
 
-
-    def print_key_options_msg(self) -> None: 
-        print("NOTE: Launch controls.launch and propulsion.launch to use joystick.")
-        print(" > WASD for SURGE/SWAY.")
-        print(" > Q/E for UP/DOWN.")
-        print(" > IJKL for PITCH/YAW.")
-        print(" > U/O for ROLL.")
-        print(" > Hold SPACE for max force.")
-        print(f" > To switch to [{self.mode_force}] mode, press 1.")
-        print(f" > To switch to [{self.mode_pid_local}] mode, press 2.")
-        print(f" > To switch to [{self.mode_pid_global}] mode, press 3.")
-        print(f" > CURRENT MODE: [{self.mode_current}].")
-        print(" > For down camera screenshot, press 4.")
-        print(" > For front camera screenshot, press 5.")
-
-
-    def print_pid_values(self, targets) -> None:
-        x, y, z, roll, pitch, yaw = [self.format_number(num) for num in targets]
-        print(f"{self.self.top_left_box}{self.horizontal_box*8}Current PID setpoint{self.horizontal_box*8}{self.top_right_box}")
-        print(f"{self.vertical_box}{self.space_indentation}    x = {x}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.vertical_box}{self.space_indentation}    y = {y}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.vertical_box}{self.space_indentation}    z = {z}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.vertical_box}{self.space_indentation} roll = {roll}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.vertical_box}{self.space_indentation}pitch = {pitch}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.vertical_box}{self.space_indentation}  yaw = {yaw}{self.space_indentation}{self.vertical_box}")
-        print(f"{self.bottom_left_box}{self.horizontal_box*36}{self.bottom_right_box}", end="\r")
-        print(self.terminal_cursor_up * 7, end="\r")
-
-    def format_number(self, number) -> str:
-        formatted_number = f"{abs(number):.4f}"[:self.max_width].rjust(self.max_width, "0")
-        return f"{'-' if number < 0 else ' '}{formatted_number}"
-
-    def reset_thrusters(self) -> None:
-        reset_cmd = ThrusterMicroseconds(
-            [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
-        )
-        self.pub_microseconds.publish(reset_cmd)
-        print("Safely shutting down thrusters.")
-    
-    def local_to_global(self, target_position) :
-        pivot_quat = self.quaternion
-        global_goal = (
-            pivot_quat
-            * np.quaternion(0, target_position[0], target_position[1], target_position[2])
-            * pivot_quat.inverse()
-        )
-        return [global_goal.x, global_goal.y, global_goal.z]
-
-    def execute_force_mode(self) -> None:
+    def execute_force_mode(self):
         current_force_amt = (
-            self.joystick_max_force
-            if keyboard.is_pressed("space")
-            else self.joystick_dry_test_force
+            self.max_force if keyboard.is_pressed("space")
+            else (self.dry_test_force if self.mode_current == self.mode_dry_test else self.pool_force)
         )
 
         desired_x_force = 0
@@ -300,7 +298,7 @@ class Joystick:
         self.pub_pitch.publish(desired_y_torque)
         self.pub_yaw.publish(desired_z_torque)
 
-    def execute_pid_mode(self) -> None:
+    def execute_pid_mode(self):
         if self.mode_current == self.mode_pid_global:
             target_x = self.x
             target_y = self.y
@@ -364,7 +362,8 @@ class Joystick:
         if self.mode_current == self.mode_pid_local:
             # Convert local desired postion (target_[xyz]) to
             # NWU positon.
-            target_x, target_y, target_z = self.local_to_global(
+            target_x, target_y, target_z = local_to_global(
+                self.quaternion,
                 [target_x, target_y, target_z]
             )  
             # Convert local desired rotation (target_quaternion)  
@@ -376,36 +375,55 @@ class Joystick:
         self.pub_pid_z.publish(Float64(target_z))
         self.pub_pid_quat.publish(
             Quaternion(
-                w=target_quaternion.w, 
-                x=target_quaternion.x, 
-                y=target_quaternion.y, 
-                z=target_quaternion.z
+                target_quaternion.x, 
+                target_quaternion.y, 
+                target_quaternion.z,
+                target_quaternion.w
             )
         )
-        
         target_roll, target_pitch, target_yaw = transformations.euler_from_quaternion(
-            target_quaternion.w,
-            target_quaternion.z,
-            target_quaternion.y,
-            target_quaternion.x
+            [
+                target_quaternion.w, 
+                target_quaternion.x, 
+                target_quaternion.y, 
+                target_quaternion.z
+            ]
         ) 
-        self.print_pid_values([target_x, target_y, target_z, target_roll, target_pitch, target_yaw])
-        
-        
-    def execute(self) -> None:
-        self.establish_force_publishers()
-        self.establish_pid_publishers()
-        self.establish_pid_enable_publishers()
+        pretty_print_pid([target_x, target_y, target_z, target_roll, target_pitch, target_yaw])
+
+    def execute(self):
         self.establish_key_hooks()
-        self.print_key_options_msg()
+        print_key_options_msg(self.modes)
 
         while not (rospy.is_shutdown() or self.is_esc_pressed):
-            if self.mode_current != self.mode_force:
-                if any(x is None for x in [self.x, self.y, self.z, self.quaternion]):
-                    if rospy.Time.now() - self.last_warning_time > self.missing_pose_interval:
-                        rospy.logwarn("Missing pose values.")
-                        continue
-            self.modes_execution[self.mode_current]() 
+            if self.wait_execute:
+                rospy.sleep(2)
+            current_time = rospy.get_time()
+            if (
+                any(x is None for x in [self.x, self.y, self.z, self.quaternion]) or 
+                current_time - self.last_pose_received > self.missing_pose_interval
+            ):
+                if current_time - self.last_warning_time > self.missing_pose_interval:
+                    self.last_warning_time = current_time 
+                    rospy.logwarn("Missing pose values.")
+            else:
+                self.modes_execution[self.mode_current]() 
+
+
+    def shut_down_thrusters(self):
+        # @TO-DO(Felipe): Fix format print message.
+        if self.mode_current in self.modes_pid:
+            clean_pretty_print()
+            print("\n" * 6) 
+        self.pub_pid_x_enable.publish(Bool(False))
+        self.pub_pid_y_enable.publish(Bool(False))
+        self.pub_pid_z_enable.publish(Bool(False))
+        self.pub_pid_quat_enable.publish(Bool(False))
+        reset_cmd = ThrusterMicroseconds(
+            [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
+        )
+        self.pub_microseconds.publish(reset_cmd)
+        print("Safely shutting down thrusters.")
 
     
 
@@ -413,7 +431,7 @@ if __name__ == "__main__":
     rospy.init_node("joystick")
     joystick = Joystick()
     # Safely shut down the thrusters.
-    rospy.on_shutdown(joystick.reset_thrusters)  
+    rospy.on_shutdown(joystick.shut_down_thrusters)  
     joystick.execute()
 
         

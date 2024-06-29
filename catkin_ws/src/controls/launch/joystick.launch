@@ -1,12 +1,13 @@
 <launch>
     <param name="joystick_max_force" value ="0.5"/>
     <param name="joystick_dry_test_force" value ="0.0025"/>
+    <param name="joystick_pool_force" value="0.2"/>
     
     <param name="joystick_pid_position_delta" value="0.02"/>  <!-- Meters -->
     <param name="joystick_pid_quaternion_delta_w" value="0.9999905"/> 
     <param name="joystick_pid_quaternion_delta_xyz" value="0.0043633"/>
 
-    <param name="joystick_image_folder_path" value="../joystick_images"/>
+    <param name="joystick_image_folder_path" value="$(find controls)/joystick_images"/>
 
     <param name="joystick_missing_data_warning_interval" value="3"/>
 
