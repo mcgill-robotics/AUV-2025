@@ -20,7 +20,7 @@ void odom_cb(const std_msgs::Float64::ConstPtr& msg) {
 
     geometry_msgs::PoseWithCovarianceStamped pose_msg;
     pose_msg.pose.pose.position.z = msg->data;
-    pose_msg.pose.covariance[2*6 + 1] = variance; //double check this later
+    pose_msg.pose.covariance[2*6 + 2] = variance; //double check this later
     pose_msg.header.frame_id = "depth";
     pose_msg.header.stamp = ros::Time::now();
 
