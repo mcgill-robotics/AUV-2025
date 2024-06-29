@@ -1,4 +1,7 @@
 <launch>
+
+    <arg name="remove_gravity" default="true"/>
+
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
       <param name="frequency" value="10"/>  
       <param name="sensor_timeout" value="1.0"/>  
@@ -42,8 +45,8 @@
       <param name="imu0_relative" value="false"/>
       <param name="depth0_relative" value="false"/>
 
-      <param name="imu0_remove_gravitational_acceleration" value="false"/>
-
+      <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
+      
     </node>
 
     <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />

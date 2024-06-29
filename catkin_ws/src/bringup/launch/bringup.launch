@@ -17,6 +17,9 @@
 	</group>
 	<group if="$(arg sim)">
 		<include file="$(find sensors)/launch/sensors_status.launch"/>
+		<node name="depth_republish" pkg="sensors" type="depth_republisher" output="screen">
+			<param name="variance" value="0.02"/>
+		</node>
 	</group>
 
 	<include file="$(find controls)/launch/controls.launch">

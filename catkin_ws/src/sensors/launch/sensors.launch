@@ -13,4 +13,8 @@
      	<include file="$(find sensors)/launch/stream-down-cam.launch"/>
      	<include file="$(find sensors)/launch/stream-front-cam.launch"/>
 	</group>
+
+	<node name="depth_republish" pkg="sensors" type="depth_republisher" output="screen">
+        <param name="variance" value="0.02"/>
+    </node>
 </launch>

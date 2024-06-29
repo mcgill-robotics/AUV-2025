@@ -32,15 +32,23 @@
 		<node pkg="tf2_ros" type="static_transform_publisher" name="depth_transform_pub" args="0 0 0 0 0 0 1 auv depth" />
 
 		<param name="update_state_on_clock" value="false" />
+		<group if="$(arg ekf)">
+			<include file="$(find state_estimation)/launch/localization.launch">
+				<arg name="remove_gravity" value="true" />
+			</include>
+		</group>
 	</group>
 
 	<group if="$(arg sim)">
 		<param name="update_state_on_clock" value="true" />
+		<include file="$(find state_estimation)/launch/hydrophones.launch"/>
+		<group if="$(arg ekf)">
+			<include file="$(find state_estimation)/launch/localization.launch">
+				<arg name="remove_gravity" value="false" />
+			</include>
+		</group>
 	</group>	
 
-	<include file="$(find state_estimation)/launch/hydrophones.launch"/>
-	<group if="$(arg ekf)">
-		<include file="$(find state_estimation)/launch/localization.launch"/>
-	</group>
+	
 	
 </launch>
