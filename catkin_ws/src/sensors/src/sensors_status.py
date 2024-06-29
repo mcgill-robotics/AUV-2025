@@ -49,7 +49,7 @@ class Sensor:
             ):
                 self.last_inactive_message_time = rospy.get_time()
                 rospy.logwarn("{} is inactive.".format(self.sensor_name))
-            self.active = False
+            self.is_active = False
             return 0
         else:
             if not self.is_active:
