@@ -38,3 +38,6 @@ catkin_ws/src/sim/.idea
 catkin_ws/src/sim/*~
 catkin_ws/src/sim/build
 catkin_ws/src/sim/devel
+
+# zed workspace
+catkin_ws/src/zed

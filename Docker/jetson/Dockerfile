@@ -19,14 +19,12 @@ ENV LC_ALL C.UTF-8
 ENV ROS_DISTRO noetic
 
 # Install ZED camera deps
-# this one was fucking up so moving it first to get it out of the way
-
 RUN apt-get update && \
     apt-get install -y zstd \
     && pip3 install bitstring
 
-
-RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/l4t35.3/jetsons \
+# Installl ZED drivers
+RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/l4t35.4/jetsons \
     && chmod +x zed_sdk_install_ubuntu.run && ./zed_sdk_install_ubuntu.run -- silent \
     && rm zed_sdk_install_ubuntu.run
 
@@ -86,10 +84,11 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY build_zed.bash .
-RUN chmod +x build_zed.bash \
-    && /bin/bash -c './build_zed.bash' \
-    && rm build_zed.bash
+# This script clones the ZED github repo (the ZED package) to the docker imagein /zed
+COPY setup_zed.bash .
+RUN chmod +x setup_zed.bash \
+    && /bin/bash -c './setup_zed.bash' \
+    && rm setup_zed.bash
 
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
