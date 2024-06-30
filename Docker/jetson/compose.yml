@@ -15,7 +15,7 @@ services:
       - UDEV=on
 
     runtime: nvidia
-    command: bash -c "tail -f /dev/null"
+    command: bash -c "ln -s /zed /AUV-2024/catkin_ws/src/zed && tail -f /dev/null"
     network_mode: host
     restart: always
     build: .
