@@ -9,7 +9,7 @@ services:
     image: "mcgillrobotics/auv_2024:poolside"
     privileged: true
     build: .
-    command: bash -c "echo 'tail -f /dev/null"
+    command: tail -f /dev/null
     network_mode: host
     # deploy:
     #   resources:
