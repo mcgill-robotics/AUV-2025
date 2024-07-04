@@ -4,7 +4,7 @@ import rospy
 import rostest
 import unittest
 import numpy as np
-from object_detection_utils import findIntersection
+from object_detection_utils import find_intersection
 
 
 class find_intersection_test(unittest.TestCase):
@@ -12,7 +12,7 @@ class find_intersection_test(unittest.TestCase):
     def test__VectorIntersectsPlane(self):
         vector = np.array([1, 2, 3])
         plane_z_pos = 6
-        result = findIntersection(vector, plane_z_pos)
+        result = find_intersection(vector, plane_z_pos)
         expected_result = np.array([2, 4, 6])
         np.testing.assert_array_equal(result, expected_result)
 
@@ -20,14 +20,14 @@ class find_intersection_test(unittest.TestCase):
     def test__VectorParallelToPlane(self):
         vector = np.array([1, 2, 0])
         plane_z_pos = 6
-        result = findIntersection(vector, plane_z_pos)
+        result = find_intersection(vector, plane_z_pos)
         self.assertIsNone(result)
 
     # When the vector points away from the plane, the function should return None.
     def test__VectorPointsAwayFromPlane(self):
         vector = np.array([1, 2, -3])
         plane_z_pos = 6
-        result = findIntersection(vector, plane_z_pos)
+        result = find_intersection(vector, plane_z_pos)
         self.assertIsNone(result)
 
 

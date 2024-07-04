@@ -1,0 +1,6 @@
+<launch>
+     <param name="final_line_angle_tolerance" value="5"/> <!-- 5 degrees tolerance -->
+     <param name="center_point_tolerance" value="10"/> <!-- 10 pixels tolerance-->
+     <param name="images_lane_marker_folder_path" value="$(find vision)/tests/images/lane_marker"/>
+     <test test-name="test_lane_marker_measure" pkg="vision" type="test_lane_marker_measure.py"/>
+</launch>

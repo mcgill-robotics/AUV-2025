@@ -9,8 +9,10 @@
         <param name="down_cam_z_offset" value="0" />
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1000" />
-        <param name="down_cam_model_filename" value="sim_down_camera_model.pt" />
-        <param name="front_cam_model_filename" value="front_cam_model.pt" />
+        <param name="down_cam_model_file" 
+            value="$(vision)/src/models/sim_down_camera_model.pt" />
+        <param name="front_cam_model_file" 
+            value="$(vision)/src/models/front_cam_model.pt" />
     </group>
     <group if="$(arg sim)">
         <param name="front_cam_x_offset" value="0.312" />
@@ -21,8 +23,10 @@
         <param name="down_cam_z_offset" value="-0.2" />
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1" />
-        <param name="down_cam_model_filename" value="sim_down_camera_model.pt" />
-        <param name="front_cam_model_filename" value="sim_front_camera_model.pt" />
+        <param name="down_cam_model_file" 
+            value="$(vision)/src/models/sim_down_camera_model.pt" />
+        <param name="front_cam_model_file" 
+            value="$(vision)/src/models/sim_front_camera_model.pt" />
     </group>
 
     <param name="same_object_radius_lane_marker" value="1.5" /> <!-- need one of these params for every object which might appear more than once in the pool !!!-->

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import rospy
-from time import strftime
 import cv2
 from cv_bridge import CvBridge
 import os
+
 from sensor_msgs.msg import Image
 
 
@@ -12,11 +12,9 @@ def front_cam_image_callback(msg):
     global front_cam_cur_image
     front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
 
-
 def down_cam_image_callback(msg):
     global down_cam_cur_image
     down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
-
 
 def save_image(output_dir, is_front_cam):
     if is_front_cam:
