@@ -130,13 +130,13 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
         np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset]),
     )
     down_cam_pos = (
-        np.array([states[0].x, states[0].y, states[0].z]) + global_down_cam_offset
+        np.array([states[0].position.x, states[0].position.y, states[0].position.z]) + global_down_cam_offset
     )
     obj_pos = find_intersection(down_cam_pos, global_direction_to_object, z_pos)
 
     if (
         obj_pos is None
-        or np.linalg.norm(obj_pos - np.array([states[0].x, states[0].y, states[0].z]))
+        or np.linalg.norm(obj_pos - np.array([states[0].position.x, states[0].position.y, states[0].position.z]))
         > max_dist_to_measure
     ):
         return None, None, None
@@ -167,7 +167,7 @@ def get_object_position_front_camera(bbox):
     )
 
     # Get the best estimate of the mean.
-    x, y, z = global_obj_pos_offset + np.array([states[1].x, states[1].y, states[1].z])
+    x, y, z = global_obj_pos_offset + np.array([states[1].position.x, states[1].position.y, states[1].position.z])
     return x, y, z
 
 

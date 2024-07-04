@@ -175,7 +175,7 @@ class VisionState:
         self.is_paused = True
 
     def resume(self):
-        if self.x_while_paused is not None:
+        if self.position_while_paused is not None:
             self.position = self.position_while_paused
         if self.theta_z_while_paused is not None:
             self.theta_z = self.theta_z_while_paused
