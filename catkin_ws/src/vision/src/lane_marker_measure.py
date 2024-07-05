@@ -15,11 +15,12 @@ longest_downscaled_size = rospy.get_param("lane_marker_downscaling_size")
 blur1_amt = rospy.get_param("lane_marker_blur_1_amt")
 blur2_amt = rospy.get_param("lane_marker_blur_2_amt")
 color_tolerance = rospy.get_param("lane_marker_color_tolerance")
+testing = rospy.get_param("testing", False)
 
 HEADING_COLOR = (255, 0, 0)  # Blue
 bridge = CvBridge()
 
-pub_cropped_image = rospy.Publisher("vision/down_cam/cropped", Image, queue_size=1)
+pub_cropped_image = rospy.Publisher("/vision/down_cam/cropped", Image, queue_size=1)
 ###############################################
 
 
@@ -452,7 +453,8 @@ def measure_lane_marker(image, bbox, debug_image):
     )  # Line will be size of shortest bounding box side.
     # Measure headings from lane marker.
     cropped_image_to_pub = bridge.cv2_to_imgmsg(cropped_image, "bgr8")
-    pub_cropped_image.publish(cropped_image_to_pub)
+    if not testing:
+        pub_cropped_image.publish(cropped_image_to_pub)
     headings, center_point = measure_headings(
         cropped_image, debug_image = crop_to_bbox(debug_image, bbox, copy=False)
     )

@@ -63,6 +63,7 @@ class TestLaneMarkerMeasure(unittest.TestCase):
                if not (angles_goal[i] - self.final_line_angle_tolerance <= angles[i] <= angles_goal[i] + self.final_line_angle_tolerance):
                     return False
                if not (center_point_goal[i] - self.center_point_tolerance <= center_point[i] <= center_point_goal[i] + self.center_point_tolerance):
+                    print(center_point[i])
                     return False
           return True
      
@@ -74,7 +75,9 @@ class TestLaneMarkerMeasure(unittest.TestCase):
                     if image is None:
                          self.fail(f"Error: {self.raw_image_names[i]} could not be loaded.")
                     # There is an error in calling measure_lane_marker
-                    angles, center_point = measure_lane_marker(image, self.bboxes[i], debug_image)
+                    angles, center_point, temp = measure_lane_marker(image, self.bboxes[i], debug_image)
+                    temp_path = os.path.join(self.lane_marker_folder_path, f"test_debug_{self.raw_image_names[i]}.png")
+                    cv2.imwrite(temp_path, temp)
                     if angles is None or center_point is None:
                          self.fail(f"Error: measure_lane_marker returned None for {self.raw_image_names[i]}")
                     self.assertTrue(self.is_measure_correct(angles, self.angles_goals[i], center_point, self.center_point_goals[i]))

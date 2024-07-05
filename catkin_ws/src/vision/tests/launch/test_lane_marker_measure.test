@@ -4,6 +4,7 @@
      <param name="lane_marker_blur_1_amt" value="0.1"/> <!-- First blur amount -->
      <param name="lane_marker_color_tolerance" value="0.08"/> <!-- Color tolerance (to check if pixel is orange or not) -->
      <param name="lane_marker_blur_2_amt" value="0.04"/> <!-- Second blur amount -->
+     <param name="testing" value="True"/>
      <node name="lane_marker_measure" pkg="vision" type="lane_marker_measure.py" respawn="false" output="screen"/>
 
      <!-- Parameters for testing -->
