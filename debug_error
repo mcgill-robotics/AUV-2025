@@ -1,9 +1,0 @@
-jetson@jetson:~/AUV-2024/Docker/jetson$ sudo ss -lptn 'sport = :11311'
-State   Recv-Q   Send-Q     Local Address:Port      Peer Address:Port  Process  
-LISTEN  0        511            127.0.0.1:11311          0.0.0.0:*      users:(("code",pid=3557,fd=38))
-jetson@jetson:~/AUV-2024/Docker/jetson$ ps -aux | grep 35557
-jetson    167679  0.0  0.0   8488  2108 pts/4    S+   20:59   0:00 grep --color=auto 35557
-jetson@jetson:~/AUV-2024/Docker/jetson$ ps -aux | grep 3557
-jetson      3557 14.1  0.1 1185834316 120076 ?   Sl   20:55   0:35 /usr/share/code/code --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-GB --service-sandbox-type=none --crashpad-handler-pid=3389 --enable-crash-reporter=cec5b0af-b6ef-4d2d-ac96-8f865cc1b0da,no_channel --user-data-dir=/home/jetson/.config/Code --standard-schemes=vscode-webview,vscode-file --enable-sandbox --secure-schemes=vscode-webview,vscode-file --cors-schemes=vscode-webview,vscode-file --fetch-schemes=vscode-webview,vscode-file --service-worker-schemes=vscode-webview --code-cache-schemes=vscode-webview,vscode-file --shared-files=v8_context_snapshot_data:100 --field-trial-handle=0,i,11565543470450117394,16674114452928266562,262144 --enable-features=kWebSQLAccess --disable-features=CalculateNativeWinOcclusion,SpareRendererForSitePerProcess --variations-seed-version
-jetson    170864  0.0  0.0   8620  2108 pts/4    S+   20:59   0:00 grep --color=auto 3557
-jetson@jetson:~/AUV-2024/Docker/jetson$ kill -9 3557
