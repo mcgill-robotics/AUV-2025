@@ -494,4 +494,4 @@ def measure_lane_marker(image, bbox, debug_image):
 if __name__ == "__main__":
     # This is only executed if this script is executed directly.
     # Used for testing purposes.
-    rospy.init_node("lane_marker")
+    rospy.init_node("lane_marker_measure")

@@ -15,8 +15,6 @@ from sensor_msgs.msg import Image
 
 
 
-
-
 def is_vision_ready(camera_id):
     # Only predict if cameras_image_count has not reached detect_every yet.
     global cameras_image_count
@@ -45,7 +43,7 @@ def is_vision_ready(camera_id):
     return True
 
 
-def detection_frame(image, detections, camera_id):
+def detection_frame(image, debug_image, detections, camera_id):
     # Initialize empty array for object detection frame message.
     detection_frame_array = []
     image_h, image_w, _ = image.shape
@@ -120,29 +118,10 @@ def detection_frame(image, detections, camera_id):
             # Add the detection frame to the array.
             detection_frame_array.append(detectionFrame)
 
-    return detection_frame_array
+    publish_detection_frame(detection_frame_array)
 
-def vision_cb(raw_image, camera_id):
-    if not is_vision_ready(camera_id):
-        return
-    
-    # Convert image to cv2.
-    image = bridge.imgmsg_to_cv2(raw_image, "bgr8")
-    debug_image = np.copy(image)
-    states[camera_id].bgr_image = np.copy(image)
 
-    # Run model on image.
-    detections = model[camera_id].predict(
-        image, device=device, verbose=print_debug_info
-    )
-
-    detection_frame_array = detection_frame(image, detections, camera_id)
-    
-# Callback is called when a new image is received.
-# 1. Runs the model on new image.
-# 2. Publishes detection frame. 
-# 3. Generates/publishes visualization of predictions.
-def detect_on_image(raw_image, camera_id):
+def publish_detection_frame(detection_frame_array):
     for obj in detection_frame_array:
         obj.x = obj.x if obj.x is not None else NULL_PLACEHOLDER
         obj.theta_z = obj.theta_z if obj.theta_z is not None else NULL_PLACEHOLDER
@@ -158,11 +137,28 @@ def detect_on_image(raw_image, camera_id):
         detection_frame_arrayMsg.array = detection_frame_array
         pub_viewframe_detection.publish(detection_frame_arrayMsg)
 
+
+def vision_cb(raw_image, camera_id):
+    if not is_vision_ready(camera_id):
+        return
+    
+    # Convert image to cv2.
+    image = bridge.imgmsg_to_cv2(raw_image, "bgr8")
+    debug_image = np.copy(image)
+    states[camera_id].bgr_image = np.copy(image)
+
+    # Run model on image.
+    detections = model[camera_id].predict(
+        image, device=device, verbose=print_debug_info
+    )
+    
+    detection_frame(image, debug_image, detections, camera_id)
+
     # Convert visualization image to sensor_msg image and 
     # publish it to corresponding cameras visualization topic.
     debug_image = bridge.cv2_to_imgmsg(debug_image, "bgr8")
     pubs_visualisation[camera_id].publish(debug_image)
-    states[camera_id].resume()
+    states[camera_id].resume()    
 
 
 if __name__ == "__main__":
@@ -215,7 +211,7 @@ if __name__ == "__main__":
     bridge = CvBridge()
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
-    rospy.Subscriber("/vision/down_cam/image_raw", Image, detect_on_image, 0),
-    rospy.Subscriber("/vision/front_cam/color/image_raw", Image, detect_on_image, 1),
+    rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
+    rospy.Subscriber("/vision/front_cam/color/image_raw", Image, vision_cb, 1),
     
     rospy.spin()

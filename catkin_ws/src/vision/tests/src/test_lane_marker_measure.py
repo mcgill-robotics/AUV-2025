@@ -12,7 +12,7 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 lane_marker_file = os.path.abspath(os.path.join(current_dir, '../../src'))
 sys.path.append(lane_marker_file)
-from lane_marker_measure  import measure_headings
+from lane_marker_measure import measure_lane_marker
 
 
 # Naming convention for test functions:
@@ -23,10 +23,36 @@ class TestLaneMarkerMeasure(unittest.TestCase):
      def setUpClass(cls):
           cls.final_line_angle_tolerance = rospy.get_param("final_line_angle_tolerance")
           cls.center_point_tolerance = rospy.get_param("center_point_tolerance")
-          cls.images_lane_marker_folder_path = rospy.get_param("images_lane_marker_folder_path")
+          cls.lane_marker_folder_path = rospy.get_param("lane_marker_folder_path")
+          cls.raw_image_names = []
+          cls.debug_image_names = []
+          cls.bboxes = []
+          cls.angles_goals = []
+          cls.center_point_goals = [] 
+
+          cls.read_txt()
      
+     @classmethod
+     def read_txt(self):
+          lane_marker_txt_file = os.path.join(self.lane_marker_folder_path, "lane_marker_data.txt")
+          if not os.path.exists(lane_marker_txt_file):
+            raise FileNotFoundError(f"Error: {lane_marker_txt_file} does not exist")
+          with open(lane_marker_txt_file, 'r') as file:
+               # Read the header line
+               header = file.readline().strip().split(',')
+
+               # Iterate over the remaining lines
+               for line in file:
+                    values = line.strip().split(',')
+                    row = dict(zip(header, values))
+                    self.raw_image_names.append(row["raw_image_file"])
+                    self.debug_image_names.append(row["debug_image_file"])
+                    self.bboxes.append([float(row["x"]), float(row["y"]), float(row["width"]), float(row["height"])])
+                    self.angles_goals.append([float(row["angles_goal_1"]), float(row["angles_goal_2"])])
+                    self.center_point_goals.append((float(row["center_point_goal_1"]), float(row["center_point_goal_2"])))
+
      def load_image(self, image_name):
-          image_path = os.path.join(self.images_lane_marker_folder_path, image_name)
+          image_path = os.path.join(self.lane_marker_folder_path, image_name)
           if os.path.exists(image_path):
                image = cv2.imread(image_path, cv2.IMREAD_COLOR)
                return image
@@ -40,29 +66,18 @@ class TestLaneMarkerMeasure(unittest.TestCase):
                     return False
           return True
      
-     def run_test(self, image_name, angles_goal, center_point_goal):
-        image = self.load_image(image_name)
-        if image is None:
-             self.fail(f"Error: {image_name} could not be loaded.")
-        angles, center_point = measure_headings(image)
-        if angles is None or center_point is None:
-            self.fail(f"Error: measure_headings returned None for {image_name}")
-        self.assertTrue(self.is_measure_correct(angles, angles_goal, center_point, center_point_goal))
-
-     def test__0DegreesStraight(self):
-        self.run_test("lane_marker_0_straight.png", [0, 0], (0, 0))
-
-     def test__45DegreesLeft(self):
-          self.run_test("lane_marker_45_left.png", [45, 0], (0, 0))
-
-     def test__45DegreesRight(self):
-          self.run_test("lane_marker_45_right.png", [-45, 0], (0, 0))
-
-     def test__90DegreesLeft(self):
-          self.run_test("lane_marker_90_left.png", [90, 0], (0, 0))
-
-     def test__90DegreesRight(self):
-          self.run_test("lane_marker_90_right.png", [-90, 0], (0, 0))
+     def test_lane_marker_measure(self):
+          for i in range(len(self.raw_image_names)):
+               with self.subTest(msg=self.raw_image_names[i]):
+                    image = self.load_image(self.raw_image_names[i])
+                    debug_image = self.load_image(self.debug_image_names[i])
+                    if image is None:
+                         self.fail(f"Error: {self.raw_image_names[i]} could not be loaded.")
+                    # There is an error in calling measure_lane_marker
+                    angles, center_point = measure_lane_marker(image, self.bboxes[i], debug_image)
+                    if angles is None or center_point is None:
+                         self.fail(f"Error: measure_lane_marker returned None for {self.raw_image_names[i]}")
+                    self.assertTrue(self.is_measure_correct(angles, self.angles_goals[i], center_point, self.center_point_goals[i]))
 
 
 if __name__ == "__main__":
