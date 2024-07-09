@@ -5,7 +5,7 @@
     
     <param name="object_observation_time" value="10" />
     <param name="linear_search_step_size" value="2" />
-    <param name="in_place_search_rotation_increment" value="30"/>
+    <param name="in_place_search_rotation_increment" value="60"/>
     <param name="bfs_expansion_size" value="1" />
     <param name="mission_wait_time" value="30" /> <!-- time to wait before actually starting mission (for comp) -->
     <param name="buoy_centering_offset_distance" value="2"/>
@@ -15,7 +15,7 @@
     <param name="red_side" value="right"/> <!-- The side of the object that red corresponds to -->
     <param name="num_full_spins" value="2"/>
     <!-- TIME LIMIT PARAMETERS -->
-    <param name="object_search_time_limit" value="200" />
+    <param name="object_search_time_limit" value="30" />
     <param name="navigate_gate_time_limit" value="10" />
     <param name="navigate_buoy_time_limit" value="10" />
     <param name="navigate_lane_marker_time_limit" value="10" />

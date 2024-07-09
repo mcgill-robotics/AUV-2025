@@ -21,13 +21,14 @@ class InPlaceSearch(smach.State):
         self.timeout_occurred = False
         self.TIME_LIMIT = rospy.get_param("object_search_time_limit")
         self.NOMINAL_DEPTH = rospy.get_param("nominal_depth")
+        self.ROTATION_INCREMENT = rospy.get_param("in_place_search_rotation_increment")
         
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
         )
 
     def doRotation(self):
-        turn_amt = (0, 0, rospy.get_param("in_place_search_rotation_increment"))
+        turn_amt = (0, 0, self.ROTATION_INCREMENT)
         num_turns = 0
         num_full_turns = 0
 
