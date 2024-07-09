@@ -8,8 +8,12 @@ find_package(catkin REQUIRED COMPONENTS
 	rospy
 )
 
-catkin_package(	CATKIN_DEPENDS 
+catkin_package(CATKIN_DEPENDS 
 	${MSG_DEP_SET}
 	rospy
 )
 
+if (CATKIN_ENABLE_TESTING)
+    find_package(rostest REQUIRED)
+    add_rostest(tests/launch/test_lane_marker_measure.test)
+endif()
