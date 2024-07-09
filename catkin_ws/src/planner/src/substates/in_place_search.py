@@ -19,7 +19,8 @@ class InPlaceSearch(smach.State):
         
         self.thread_timer = None
         self.timeout_occurred = False
-        self.time_limit = rospy.get_param("object_search_time_limit")
+        self.TIME_LIMIT = rospy.get_param("object_search_time_limit")
+        self.NOMINAL_DEPTH = rospy.get_param("nominal_depth")
         
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
@@ -31,45 +32,41 @@ class InPlaceSearch(smach.State):
         num_full_turns = 0
 
         while not rospy.is_shutdown():
-            if self.preempt_requested():
-                break
             if num_turns >= 360 / abs(turn_amt[2]):
                 num_turns = 0
                 num_full_turns += 1
                 if num_full_turns == 1:
                     self.control.move(
-                        (None, None, rospy.get_param("nominal_depth") + 1)
+                        (None, None, self.NOMINAL_DEPTH + 1)
                     )
                 elif num_full_turns == 2:
                     self.control.move(
-                        (None, None, rospy.get_param("nominal_depth") - 1)
+                        (None, None, self.NOMINAL_DEPTH - 1)
                     )
                 else:
                     return
-            # move forward
             print("Rotating by {}.".format(turn_amt))
             self.control.rotateDeltaEuler(turn_amt)
             if self.detectedObject:
-                return  # stop grid search when object found
+                return  # Stop grid search when object found.
             num_turns += 1
 
     def timer_thread_func(self):
         self.pub_mission_display.publish("IPS Time-out")
         self.timeout_occurred = True
-        print("TIMEOUT FUNCTION")
-        self.control.preemptCurrentAction()
-        self.control.freeze_pose()
+        self.control.move((None, None, self.NOMINAL_DEPTH))
+        self.control.flatten()
 
     def execute(self, _):
         print("Starting in-place search.")
         self.pub_mission_display.publish("In-Place Search")
 
         # Start the timer in a separate thread.
-        self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
+        self.thread_timer = threading.Timer(self.TIME_LIMIT, self.timer_thread_func)
         self.thread_timer.start()
 
         # Move to the middle of the pool depth and flat orientationt.
-        self.control.move((None, None, rospy.get_param("nominal_depth")))
+        self.control.move((None, None, self.NOMINAL_DEPTH))
         self.control.flatten()
 
         self.searchThread = threading.Thread(target=self.doRotation)

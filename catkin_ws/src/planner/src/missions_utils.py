@@ -39,19 +39,21 @@ def get_user_missions_selected(mission_options):
      return missions_selected
 
 def get_state_params(mission_options, missions_selected, index):
-     # increment num of times the user has selected this task.
+     # Increment num of times the user has selected this task.
      mission_options[missions_selected[index]][3] += 1
      current_mission_name = mission_options[missions_selected[index]][2]
      current_mission_count = mission_options[missions_selected[index]][3]
-     # if last mission: no mission after.
-     # else: get state name of next mission.
+     # If last mission: no mission after.
+     # Else: get state name of next mission.
      if index == len(missions_selected) - 1:
-          mission_after = None
+          mission_after_success = None
+          mission_after_timeout = None
      else:
           next_mission_selected = missions_selected[index + 1]
-          mission_after = mission_options[next_mission_selected][2] + str(mission_options[next_mission_selected][3] + 1)
+          mission_after_success = mission_options[next_mission_selected][2] + str(mission_options[next_mission_selected][3] + 1)
+          mission_after_timeout = None
      
-     return current_mission_name, current_mission_count, mission_after
+     return current_mission_name, current_mission_count, mission_after_success, mission_after_timeout
 
 
 # Automatically import all functions and constants.
