@@ -72,7 +72,7 @@ def detection_frame(image, debug_image, detections, camera_id):
 
             # Initialize a new detection frame object.
             detectionFrame = VisionObject()
-            pred_obj_x, pred_obj_y, pred_obj_x = 0, 0, 0
+            pred_obj_x, pred_obj_y, pred_obj_z = 0, 0, 0
             extra_field, theta_z = None, None
 
             if camera_id == 0: # Down camera.
