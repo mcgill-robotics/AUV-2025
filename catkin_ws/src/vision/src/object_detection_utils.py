@@ -12,17 +12,17 @@ from vision_state import VisionState
 
 
 ############## Utils Parameters ###############
-max_dist_to_measure = rospy.get_param("max_object_detection_distance")
+MAX_DIST_TO_MEASURE = rospy.get_param("max_object_detection_distance")
 BOX_COLOR = (255, 255, 255) # White.
 TEXT_COLOR = (0, 0, 0) # Black.
 # [COMP] ensure FOV is correct.
-down_cam_hfov = rospy.get_param("down_cam_hfov")
-down_cam_vfov = rospy.get_param("down_cam_vfov")
+DOWN_CAM_HFOV = rospy.get_param("down_cam_hfov")
+DOWN_CAM_VFOX = rospy.get_param("down_cam_vfov")
 down_cam_x_offset = rospy.get_param("down_cam_x_offset")
-down_cam_y_offset = rospy.get_param("down_cam_y_offset")
-down_cam_z_offset = rospy.get_param("down_cam_z_offset")
-down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset")
-max_counts_per_label = json.loads(rospy.get_param("max_counts_per_label"))
+DOWN_CAM_Y_OFFSET = rospy.get_param("down_cam_y_offset")
+DOWN_CAM_Z_OFFSET = rospy.get_param("down_cam_z_offset")
+DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
+MAX_COUNTS_PER_LABEL = json.loads(rospy.get_param("max_counts_per_label"))
 states = (VisionState(), VisionState())
 ###############################################
 
@@ -107,15 +107,15 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     # Use offset within image and total FOV of camera to find 
     # an angle offset from the angle the camera is facing
     # assuming FOV increases linearly with distance from center pixel.
-    roll_angle_offset = down_cam_hfov * x_center_offset
-    pitch_angle_offset = down_cam_vfov * y_center_offset
+    roll_angle_offset = DOWN_CAM_HFOV * x_center_offset
+    pitch_angle_offset = DOWN_CAM_VFOX * y_center_offset
 
     x_pos_offset = -math.tan(math.radians(pitch_angle_offset))
     y_pos_offset = math.tan(math.radians(roll_angle_offset))
 
     local_direction_to_object = np.array([x_pos_offset, y_pos_offset, -1])
 
-    rotation_offset = transformations.quaternion_from_euler(0, 0, down_cam_yaw_offset)
+    rotation_offset = transformations.quaternion_from_euler(0, 0, DOWN_CAM_YAW_OFFSET)
     rotation = states[0].q_auv * np.quaternion(
         rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2]
     )
@@ -127,7 +127,7 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     # direction to the object and it's z position.
     global_down_cam_offset = quaternion.rotate_vectors(
         states[0].q_auv,
-        np.array([down_cam_x_offset, down_cam_y_offset, down_cam_z_offset]),
+        np.array([down_cam_x_offset, DOWN_CAM_Y_OFFSET, DOWN_CAM_Z_OFFSET]),
     )
     down_cam_pos = (
         np.array([states[0].position.x, states[0].position.y, states[0].position.z]) + global_down_cam_offset
@@ -137,7 +137,7 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     if (
         obj_pos is None
         or np.linalg.norm(obj_pos - np.array([states[0].position.x, states[0].position.y, states[0].position.z]))
-        > max_dist_to_measure
+        > MAX_DIST_TO_MEASURE
     ):
         return None, None, None
     x = obj_pos[0]
@@ -218,7 +218,7 @@ def clean_detections(detectionFrameArray):
         obj = detectionFrameArray[i]
         if None in [obj.x, obj.y, obj.z]:
             continue
-        if label_counts.get(obj.label, 0) >= max_counts_per_label[obj.label]:
+        if label_counts.get(obj.label, 0) >= MAX_COUNTS_PER_LABEL[obj.label]:
             candidate_obj_conf = obj.confidence
             min_conf_i = min(
                 selected_detections, key=lambda x: detectionFrameArray[x].confidence

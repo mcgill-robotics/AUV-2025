@@ -260,7 +260,7 @@ def reduce_map():
 # Publish a version of the map with only the objects 
 # with a certain number of observations.
 def publish_map():
-    confirmedMap = [obj for obj in object_map if obj[6] > min_observations]
+    confirmedMap = [obj for obj in object_map if obj[6] > MIN_OBSERVATIONS]
 
     # Create an array of ObjectMap.
     map_msg_array = VisionObjectArray()
@@ -279,7 +279,7 @@ def publish_map():
 if __name__ == "__main__":
     rospy.init_node("object_map")
 
-    min_observations = rospy.get_param("min_observations_for_mapping")
+    MIN_OBSERVATIONS = rospy.get_param("min_observations_for_mapping")
     object_map = []
 
     NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")

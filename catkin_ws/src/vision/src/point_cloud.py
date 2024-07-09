@@ -15,9 +15,9 @@ def rbg_callback(msg):
 
 
 def depth_callback(msg):
-    global depth, depth_scale_factor
+    global depth
     temp = bridge.imgmsg_to_cv2(msg)
-    depth = temp / depth_scale_factor
+    depth = temp / DEPTH_SCALE_FACTOR
 
 
 def camera_info_callback(msg):
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     rgb = None
     depth = None
 
-    depth_scale_factor = rospy.get_param("depth_map_scale_factor")
+    DEPTH_SCALE_FACTOR = rospy.get_param("depth_map_scale_factor")
 
     point_cloud_pub = rospy.Publisher(
         "vision/front_cam/point_cloud_raw", PointCloud2, queue_size=3

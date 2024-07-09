@@ -11,11 +11,11 @@ from sensor_msgs.msg import Image
 
 
 ############## Utils Parameters ###############
-longest_downscaled_size = rospy.get_param("lane_marker_downscaling_size")
-blur1_amt = rospy.get_param("lane_marker_blur_1_amt")
-blur2_amt = rospy.get_param("lane_marker_blur_2_amt")
-color_tolerance = rospy.get_param("lane_marker_color_tolerance")
-testing = rospy.get_param("testing", False)
+LONGEST_DOWNSCALED_SIZE = rospy.get_param("lane_marker_downscaling_size")
+BLUR1_AMT = rospy.get_param("lane_marker_blur_1_amt")
+BLUR2_AMT = rospy.get_param("lane_marker_blur_2_amt")
+COLOR_TOLERANCE = rospy.get_param("lane_marker_color_tolerance")
+TESTING = rospy.get_param("testing", False)
 
 HEADING_COLOR = (255, 0, 0)  # Blue
 bridge = CvBridge()
@@ -32,7 +32,7 @@ def colors_are_equal(color1, color2):
     color1 += min((255, 255, 255) - color1)
     color2 += min((255, 255, 255) - color2)
     for i in (0, 1, 2):
-        if max(color1[i], color2[i]) - min(color1[i], color2[i]) > color_tolerance * 255:
+        if max(color1[i], color2[i]) - min(color1[i], color2[i]) > COLOR_TOLERANCE * 255:
             return False
     return True
 
@@ -47,8 +47,8 @@ def threshold_red_to_black(
     blur2_publisher=None,
     thresh_publisher=None,
 ):
-    if min(image.shape[0], image.shape[1]) > longest_downscaled_size:
-        scaling_factor = longest_downscaled_size / min(image.shape[0], image.shape[1])
+    if min(image.shape[0], image.shape[1]) > LONGEST_DOWNSCALED_SIZE:
+        scaling_factor = LONGEST_DOWNSCALED_SIZE / min(image.shape[0], image.shape[1])
         downscaled_size = (
             int(image.shape[1] * scaling_factor),
             int(image.shape[0] * scaling_factor),
@@ -57,12 +57,12 @@ def threshold_red_to_black(
         downscaled_size = (image.shape[1], image.shape[0])
     downscaled = cv2.resize(image, dsize=downscaled_size, interpolation=cv2.INTER_AREA)
 
-    if blur1_amt > 0:
+    if BLUR1_AMT > 0:
         blurred = cv2.blur(
             downscaled,
             (
-                max(2, int(blur1_amt * downscaled.shape[0])),
-                max(2, int(blur1_amt * downscaled.shape[1])),
+                max(2, int(BLUR1_AMT * downscaled.shape[0])),
+                max(2, int(BLUR1_AMT * downscaled.shape[1])),
             ),
         )
     else:
@@ -121,12 +121,12 @@ def threshold_red_to_black(
         dsize=(int(image.shape[1]), int(image.shape[0])),
         interpolation=cv2.INTER_AREA,
     )
-    if blur2_amt > 0:
+    if BLUR2_AMT > 0:
         thresh_image = cv2.blur(
             thresh_image,
             (
-                max(2, int(blur2_amt * thresh_image.shape[0])),
-                max(2, int(blur2_amt * thresh_image.shape[1])),
+                max(2, int(BLUR2_AMT * thresh_image.shape[0])),
+                max(2, int(BLUR2_AMT * thresh_image.shape[1])),
             ),
         )
     if blur2_publisher != None:
@@ -453,7 +453,7 @@ def measure_lane_marker(image, bbox, debug_image):
     )  # Line will be size of shortest bounding box side.
     # Measure headings from lane marker.
     cropped_image_to_pub = bridge.cv2_to_imgmsg(cropped_image, "bgr8")
-    if not testing:
+    if not TESTING:
         pub_cropped_image.publish(cropped_image_to_pub)
     headings, center_point = measure_headings(
         cropped_image, debug_image = crop_to_bbox(debug_image, bbox, copy=False)

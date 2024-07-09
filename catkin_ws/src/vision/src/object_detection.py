@@ -16,10 +16,10 @@ from sensor_msgs.msg import Image
 
 
 def is_vision_ready(camera_id):
-    # Only predict if cameras_image_count has not reached detect_every yet.
+    # Only predict if cameras_image_count has not reached DETECT_EVERY yet.
     global cameras_image_count
     cameras_image_count[camera_id] += 1
-    if cameras_image_count[camera_id] <= detect_every:
+    if cameras_image_count[camera_id] <= DETECT_EVERY:
         return False
     # Reset cameras_image_count.
     cameras_image_count[camera_id] = 0
@@ -52,9 +52,9 @@ def detection_frame(image, debug_image, detections, camera_id):
         boxes = detection.boxes.cpu().numpy() if is_cuda_available else detection.boxes.numpy()
         for box in boxes:
             conf = float(list(box.conf)[0])
-            # Only consider prediction if confidence is at least min_prediction_confidence.
-            if conf < min_prediction_confidence:
-                if print_debug_info:
+            # Only consider prediction if confidence is at least MIN_PREDICTION_CONFIDENCE.
+            if conf < MIN_PREDICTION_CONFIDENCE:
+                if PRINT_DEBUG_INFO:
                     print(
                         "Confidence too low for camera {} ({}%)".format(
                             camera_id, conf * 100
@@ -84,10 +84,10 @@ def detection_frame(image, debug_image, detections, camera_id):
                         bbox = center
                         heading_auv = [0, 0]
                         for i in range(2):
-                            offset = 270 if headings[i] + down_cam_yaw_offset < -90 else -90
+                            offset = 270 if headings[i] + DOWN_CAM_YAW_OFFSET < -90 else -90
                             heading_auv[i] = states[camera_id].theta_z + headings[i] + offset
-                        theta_z = heading_auv[0] + down_cam_yaw_offset
-                        extra_field = heading_auv[1] + down_cam_yaw_offset
+                        theta_z = heading_auv[0] + DOWN_CAM_YAW_OFFSET
+                        extra_field = heading_auv[1] + DOWN_CAM_YAW_OFFSET
                     pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
                         bbox[0], bbox[1], image_h, image_w, lane_marker_top_z
                     )
@@ -149,7 +149,7 @@ def vision_cb(raw_image, camera_id):
 
     # Run model on image.
     detections = model[camera_id].predict(
-        image, device=device, verbose=print_debug_info
+        image, device=device, verbose=PRINT_DEBUG_INFO
     )
     
     detection_frame(image, debug_image, detections, camera_id)
@@ -164,25 +164,25 @@ def vision_cb(raw_image, camera_id):
 if __name__ == "__main__":
     rospy.init_node("object_detection")
 
-    print_debug_info = rospy.get_param("log_model_prediction_info", False)
+    PRINT_DEBUG_INFO = rospy.get_param("log_model_prediction_info", False)
     NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
-    min_prediction_confidence = rospy.get_param("min_prediction_confidence")
+    MIN_PREDICTION_CONFIDENCE = rospy.get_param("min_prediction_confidence")
     
-    pool_depth = rospy.get_param("pool_depth")
-    octagon_table_height = rospy.get_param("octagon_table_height")
-    lane_marker_height = rospy.get_param("lane_marker_height")
-    lane_marker_top_z = pool_depth + lane_marker_height
-    octagon_table_top_z = pool_depth + octagon_table_height
-    down_cam_yaw_offset = rospy.get_param("down_cam_yaw_offset")
+    POOL_DEPTH = rospy.get_param("pool_depth")
+    OCTAGON_TABLE_HEIGHT = rospy.get_param("octagon_table_height")
+    LANE_MARKER_HEIGHT = rospy.get_param("lane_marker_height")
+    lane_marker_top_z = POOL_DEPTH + LANE_MARKER_HEIGHT
+    octagon_table_top_z = POOL_DEPTH + OCTAGON_TABLE_HEIGHT
+    DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
 
     # Run the model every _ frames received (to not eat up too much RAM).
-    detect_every = rospy.get_param("object_detection_frame_interval")  
+    DETECT_EVERY = rospy.get_param("object_detection_frame_interval")  
 
-    down_cam_model_file = rospy.get_param("down_cam_model_file")
-    front_cam_model_file = rospy.get_param("front_cam_model_file")
+    DOWN_CAM_MODEL_FILE = rospy.get_param("down_cam_model_file")
+    FRONT_CAM_MODEL_FILE = rospy.get_param("front_cam_model_file")
 
-    model = [YOLO(down_cam_model_file), YOLO(front_cam_model_file)]
+    model = [YOLO(DOWN_CAM_MODEL_FILE), YOLO(FRONT_CAM_MODEL_FILE)]
 
     is_cuda_available = torch.cuda.is_available() 
     if not is_cuda_available:

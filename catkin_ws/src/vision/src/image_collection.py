@@ -31,12 +31,12 @@ if __name__ == "__main__":
     rospy.init_node("image_collection")
 
     bridge = CvBridge()
-    front_cam_data_dir = rospy.get_param("~image_data_dir/front_cam")
-    down_cam_data_dir = rospy.get_param("~image_data_dir/down_cam")
-    if not os.path.exists(front_cam_data_dir):
-        os.makedirs(front_cam_data_dir)
-    if not os.path.exists(down_cam_data_dir):
-        os.makedirs(down_cam_data_dir)
+    FRONT_CAM_DATA_DIR = rospy.get_param("~image_data_dir/front_cam")
+    DOWN_CAM_DATA_DIR = rospy.get_param("~image_data_dir/down_cam")
+    if not os.path.exists(FRONT_CAM_DATA_DIR):
+        os.makedirs(FRONT_CAM_DATA_DIR)
+    if not os.path.exists(DOWN_CAM_DATA_DIR):
+        os.makedirs(DOWN_CAM_DATA_DIR)
 
     front_cam_cur_image, down_cam_cur_image = None, None
 
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         usr_choice = input("Select an option: ")
         if usr_choice == "z":
-            save_image(front_cam_data_dir, is_front_cam=True)
+            save_image(FRONT_CAM_DATA_DIR, is_front_cam=True)
         elif usr_choice == "x":
-            save_image(down_cam_data_dir, is_front_cam=False)
+            save_image(DOWN_CAM_DATA_DIR, is_front_cam=False)
         else:
             print("Not a valid option!!!")

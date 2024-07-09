@@ -38,7 +38,7 @@ class VisionState:
 
         self.bridge = CvBridge()
 
-        self.depth_scale_factor = rospy.get_param("depth_map_scale_factor")
+        self.DEPTH_SCALE_FACTOR = rospy.get_param("depth_map_scale_factor")
 
         self.eps = rospy.get_param(
             "max_distance_for_point_cloud_fill_cleaning"
@@ -151,7 +151,7 @@ class VisionState:
 
     def update_depth(self, msg):
         temp = self.bridge.imgmsg_to_cv2(msg)
-        self.depth = temp / self.depth_scale_factor
+        self.depth = temp / self.DEPTH_SCALE_FACTOR
         self.update_point_cloud()
 
     def update_camera_info(self, msg):
