@@ -11,6 +11,11 @@
 6. Change the parameters in the training notebook as needed.
     1. The order of classes in the script has to be _**alphabetical**_ (same as Roboflow).
     2. As of now [28/06/2024], ultralytics only stably supports YOLOv8. YOLOv9 is available but not fully reliable. 
+    3. The script automatically chooses the lastest dataset version. If you want to train an older version, follow these steps:
+        1. Open the script,
+        2. Go to "Download dataset from Roboflow" section,
+        3. Change the value of `latest_version` to the version you want,
+        4. If you make other changes in the script and would like to commit them, make sure you undo the `lastest_version` change. Lastest dataset version should be the default.
 8. Run training notebook.
     1. Note: I _**HIGHLY**_ recommend training a model only if you have a **_GPU_** available.
         1. If you don't have one, it will take days to reach an acceptable performance. So, ask someone who does to let the model train overnight for you.
