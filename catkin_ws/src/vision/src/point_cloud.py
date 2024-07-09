@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import rospy
-from sensor_msgs.msg import PointCloud2, Image, CameraInfo, PointField
-from std_msgs.msg import Header
 import numpy as np
-from sensor_msgs import point_cloud2
 from cv_bridge import CvBridge
-from tf2_ros import TransformBroadcaster
-from geometry_msgs.msg import TransformStamped
 
+from std_msgs.msg import Header
+from sensor_msgs.msg import PointCloud2, Image, CameraInfo, PointField
+from sensor_msgs import point_cloud2
 
 def rbg_callback(msg):
     global rgb
@@ -17,9 +15,9 @@ def rbg_callback(msg):
 
 
 def depth_callback(msg):
-    global depth, depth_scale_factor
+    global depth
     temp = bridge.imgmsg_to_cv2(msg)
-    depth = temp / depth_scale_factor
+    depth = temp / DEPTH_SCALE_FACTOR
 
 
 def camera_info_callback(msg):
@@ -43,12 +41,12 @@ def camera_info_callback(msg):
 def convert_from_uvd(width, height):
     if y_over_z_map is not None:
         time = rospy.Time(0)
-        xyz_rgb_img = get_xyz_rgb_image(
+        xyz_rgb_image = get_xyz_rgb_image(
             rgb, depth, width, height, x_over_z_map, y_over_z_map
         )
 
-        xyz_rgb_img = xyz_rgb_img.reshape((width * height, 6))
-        xyz_rgb_img = xyz_rgb_img.astype(np.float32)
+        xyz_rgb_image = xyz_rgb_image.reshape((width * height, 6))
+        xyz_rgb_image = xyz_rgb_image.astype(np.float32)
         fields = [
             PointField("x", 0, PointField.FLOAT32, 1),
             PointField("y", 4, PointField.FLOAT32, 1),
@@ -62,7 +60,7 @@ def convert_from_uvd(width, height):
         header.stamp = time
         header.frame_id = "auv_base"
         pub_msg = point_cloud2.create_cloud(
-            header=header, fields=fields, points=xyz_rgb_img
+            header=header, fields=fields, points=xyz_rgb_image
         )
         return pub_msg
 
@@ -71,60 +69,46 @@ def get_point_cloud_image(
     bridge, color, z_map, width, height, x_over_z_map, y_over_z_map
 ):
     if y_over_z_map is not None:
-        xyz_rgb_img = get_xyz_rgb_image(
+        xyz_rgb_image = get_xyz_rgb_image(
             color, z_map, width, height, x_over_z_map, y_over_z_map
         )
-        point_cloud_img = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_img[:, :, :3]))
-        return point_cloud_img
+        point_cloud_image = bridge.cv2_to_imgmsg(np.float32(xyz_rgb_image[:, :, :3]))
+        return point_cloud_image
 
 
 def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
-        xyz_rgb_img = np.zeros((height, width, 6))
-        xyz_rgb_img[:, :, 3:6] = color[:, :, 0:3]
+        xyz_rgb_image = np.zeros((height, width, 6))
+        xyz_rgb_image[:, :, 3:6] = color[:, :, 0:3]
 
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 
-        xyz_rgb_img[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
-        xyz_rgb_img[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
-        xyz_rgb_img[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
+        xyz_rgb_image[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
+        xyz_rgb_image[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
+        xyz_rgb_image[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
 
-        return xyz_rgb_img
+        return xyz_rgb_image
 
 
 def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
     if y_over_z_map is not None:
-        xyz_img = np.zeros((height, width, 3))
+        xyz_image = np.zeros((height, width, 3))
 
         x_map = x_over_z_map * z_map
         y_map = y_over_z_map * z_map
 
-        xyz_img[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
-        xyz_img[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
-        xyz_img[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
+        xyz_image[:, :, 0] = z_map + rospy.get_param("front_cam_x_offset", 0)
+        xyz_image[:, :, 1] = x_map + rospy.get_param("front_cam_y_offset", 0)
+        xyz_image[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
 
-        return xyz_img
+        return xyz_image
 
 
 if __name__ == "__main__":
     rospy.init_node("point_cloud_sim")
 
     bridge = CvBridge()
-
-    depth_scale_factor = rospy.get_param("depth_map_scale_factor")
-
-    camera_info_sub = rospy.Subscriber(
-        "/vision/front_cam/camera_info", CameraInfo, camera_info_callback
-    )
-    depth_sub = rospy.Subscriber(
-        "/vision/front_cam/aligned_depth_to_color/image_raw", Image, depth_callback
-    )
-    rgb_sub = rospy.Subscriber("/vision/front_cam/color/image_raw", Image, rbg_callback)
-    point_cloud_pub = rospy.Publisher(
-        "vision/front_cam/point_cloud_raw", PointCloud2, queue_size=3
-    )
-    # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     fx = None
     fy = None
@@ -138,6 +122,22 @@ if __name__ == "__main__":
     convert_map = None
     rgb = None
     depth = None
+
+    DEPTH_SCALE_FACTOR = rospy.get_param("depth_map_scale_factor")
+
+    point_cloud_pub = rospy.Publisher(
+        "vision/front_cam/point_cloud_raw", PointCloud2, queue_size=3
+    )
+
+    camera_info_sub = rospy.Subscriber(
+        "/vision/front_cam/camera_info", CameraInfo, camera_info_callback
+    )
+    depth_sub = rospy.Subscriber(
+        "/vision/front_cam/aligned_depth_to_color/image_raw", Image, depth_callback
+    )
+    rgb_sub = rospy.Subscriber("/vision/front_cam/color/image_raw", Image, rbg_callback)
+    
+    # aligned_imaged_sub = rospy.Subscriber('/vision/front_cam/aligned_depth_to_color/image_raw', Image, algined_cb)
 
     while not rospy.is_shutdown():
         if rgb is not None and depth is not None:
