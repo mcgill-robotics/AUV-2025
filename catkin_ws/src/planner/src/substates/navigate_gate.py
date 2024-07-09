@@ -59,12 +59,12 @@ class NavigateGate(smach.State):
 
         if self.timeout_occurred:
             return "timeout"
-        self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
+        self.control.rotateEuler((None,None,gate_rot)) # Bring to exact angle. 
         if self.timeout_occurred:
             return "timeout"
-        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
+        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # Move in front of gate.
 
-        # wait and repeat just to be safe
+        # Wait and repeat just to be safe.
         print("Waiting to improve measurement accuracy")
         rospy.sleep(rospy.get_param("object_observation_time"))
 
@@ -78,10 +78,10 @@ class NavigateGate(smach.State):
 
         if self.timeout_occurred:
             return "timeout"
-        self.control.rotateEuler((None,None,gate_rot)) # bring to exact angle 
+        self.control.rotateEuler((None,None,gate_rot)) # Bring to exact angle. 
         if self.timeout_occurred:
             return "timeout"
-        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # move in front of gate
+        self.control.move((gate_object[1] + offset[0], gate_object[2] + offset[1], gate_object[3])) # Move in front of gate.
 
         print("Successfully centered in front of gate")
 
@@ -91,24 +91,23 @@ class NavigateGate(smach.State):
         print("Red is on the {} side. Target color is {}".format(self.red_gate_side, self.target_color))
 
         self.mapping.updateObject(gate_object)
-        symbol = 0 if gate_object[5] is None else gate_object[5] #1 if earth on left, 0 if abydos left
 
         if self.timeout_occurred:
             return "timeout"
-        if self.target == "red": 
+        if self.target_color == "red": 
             if self.red_gate_side == "left":
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # A quarter of gate width.
             else: 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # A quarter of gate width.
         else: 
             if self.red_gate_side == "right":
                 print("Going through left side")
-                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,self.gate_width/4,0)) # A quarter of gate width.
             else: 
                 print("Going through right side")
-                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # a quarter of gate width
+                self.control.moveDeltaLocal((0,-self.gate_width/4,0)) # A quarter of gate width.
 
         if self.timeout_occurred:
             return "timeout"

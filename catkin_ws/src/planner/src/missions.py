@@ -36,7 +36,10 @@ class Missions:
         first_state_name = first_state_name + count
         second_state_name = "navigate_gate_go_through" + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -66,7 +69,10 @@ class Missions:
         first_state_name = first_state_name + count
         second_state_name = "navigate_lane_marker" + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -93,7 +99,10 @@ class Missions:
 
         first_state_name = first_state_name + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -113,7 +122,10 @@ class Missions:
         first_state_name = first_state_name + count
         second_state_name = "navigate_buoy" + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -145,7 +157,10 @@ class Missions:
         first_state_name = first_state_name + count
         second_state_name = "navigate_octagon" + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -176,7 +191,10 @@ class Missions:
 
         first_state_name = first_state_name + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
 
         smach.StateMachine.add(
             first_state_name,
@@ -193,14 +211,12 @@ class Missions:
         ADD SOME TRANSITIONS HERE
         """
 
-    def quali(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def quali(self, first_state_name, count, mission_after_success, _):
         global sm
 
         first_state_name = first_state_name + count
         second_state_name = "navigate_quali" + count
         target_success_state_name = mission_after_success if mission_after_success is not None else "success"
-        target_timeout_state_name = mission_after_timeout if mission_after_success is not None else target_success_state_name
-        
 
         smach.StateMachine.add(
             first_state_name,
@@ -211,14 +227,14 @@ class Missions:
                 goThrough=False
             ),
             transitions={"success": second_state_name,
-                         "timeout": target_timeout_state_name, 
+                         "timeout": second_state_name, 
                          "failure": "failure"}
         )
         smach.StateMachine.add(
             second_state_name,
             Quali(control=self.control),
             transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
+                         "timeout": "failure",
                          "failure": "failure"}
         )
 

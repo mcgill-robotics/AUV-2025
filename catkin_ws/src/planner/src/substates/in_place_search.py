@@ -46,17 +46,19 @@ class InPlaceSearch(smach.State):
                     )
                 else:
                     return
-            print("Rotating by {}.".format(turn_amt))
-            self.control.rotateDeltaEuler(turn_amt)
             if self.detectedObject:
                 return  # Stop grid search when object found.
+            print("Rotating by {}.".format(turn_amt))
+            self.control.rotateDeltaEuler(turn_amt)
             num_turns += 1
 
     def timer_thread_func(self):
         self.pub_mission_display.publish("IPS Time-out")
+        print("In-place search timed out. Moving back to nominal depth and flattening.")
         self.timeout_occurred = True
+        self.control.preemptCurrentAction()
         self.control.move((None, None, self.NOMINAL_DEPTH))
-        self.control.flatten()
+        self.control.flattening()        
 
     def execute(self, _):
         print("Starting in-place search.")
@@ -75,9 +77,8 @@ class InPlaceSearch(smach.State):
 
         while not rospy.is_shutdown():
             if self.timeout_occurred:
-                self.detectedObject = True
+                self.detectedObject = False
                 self.searchThread.join()
-                print("In-place search timed out.")
                 return "timeout"
             elif len(self.mapping.getClass(self.target_class)) >= self.min_objects:
                 self.thread_timer.cancel()
@@ -88,7 +89,7 @@ class InPlaceSearch(smach.State):
                 rospy.sleep(rospy.get_param("object_observation_time"))
                 return "success"
             
-        self.detectedObject = True
+        self.detectedObject = False
         self.searchThread.join()
         self.control.freeze_pose()
         print("In-place search failed.")
