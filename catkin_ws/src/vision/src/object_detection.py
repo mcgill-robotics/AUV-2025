@@ -95,8 +95,8 @@ def detection_frame(image, debug_image, detections, camera_id):
                     pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
                         bbox[0], bbox[1], image_h, image_w, octagon_table_top_z
                     )
-                elif global_class_name == "Bins":
-                    # @TO-DO: Add Bins implementation to vision. 
+                elif global_class_name == "Bin":
+                    # @TO-DO: Add Bin implementation to vision. 
                     continue
             else: # Forward camera.
                 if global_class_name == "Octagon Table":
