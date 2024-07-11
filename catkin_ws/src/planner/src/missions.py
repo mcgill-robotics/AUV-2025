@@ -16,6 +16,7 @@ from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.navigate_pinger import *
+from substates.navigate_bin import *
 from substates.octagon_task import *
 from substates.quali import *
 
@@ -147,9 +148,31 @@ class Missions:
     def dropper(self, first_state_name, count, mission_after_success, mission_after_timeout):
         global sm
 
-        """
-        ADD SOME TRANSITIONS HERE
-        """
+        first_state_name = first_state_name + count
+        second_state_name = "navigate_bin" + count
+        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+
+        smach.StateMachine.add(
+            first_state_name,
+            InPlaceSearch(
+                self.control, self.mapping, target_class="Bin", min_objects=1
+            ),
+            transitions={"success": second_state_name, 
+                         "timeout": target_timeout_state_name,
+                         "failure": "failure"}
+        )
+        smach.StateMachine.add(
+            second_state_name,
+            NavigateDropper(self.control, self.mapping, self.state),
+            transitions={"success": target_timeout_state_name, 
+                         "timeout": target_timeout_state_name,
+                         "failure": "failure"}
+        )
+
 
     def octagon(self, first_state_name, count, mission_after_success, mission_after_timeout):
         global sm
