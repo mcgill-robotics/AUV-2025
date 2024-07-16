@@ -89,7 +89,7 @@ class Missions:
         smach.StateMachine.add(
             second_state_name,
             NavigateLaneMarker(self.control, self.mapping, self.state, origin_class=""),
-            transitions={"success": target_timeout_state_name, 
+            transitions={"success": target_success_state_name, 
                          "timeout": target_timeout_state_name,
                          "failure": "failure"}
         )
