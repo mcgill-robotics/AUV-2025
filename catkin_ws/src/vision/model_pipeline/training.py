@@ -7,7 +7,7 @@ from ultralytics import YOLO
 import torch
 
 
-is_front_camera_training = False # Change it to False if training for down camera.
+is_front_camera_training = True # Change it to False if training for down camera.
 ################################# OS PARAMETERS ##################################
 os_name = os.name
 # Windows = nt, [Linux, Apple] = posix. 
@@ -34,8 +34,8 @@ translate = 0.0
 scale = 0.0
 fliplr = 0.5
 flipud = 0.5
-mosaic = 0.75
-copy_paste = 0.1
+mosaic = 0.1
+copy_paste = 0.0
 erasing = 0.0
 crop_fraction = 0.1
 degrees = 180
