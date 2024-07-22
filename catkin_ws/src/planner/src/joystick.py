@@ -37,8 +37,8 @@ RECORDING = []
 def record_keyboard_state():
     global RECORDING
     keyboard_state = []
-    if keyboard.is_pressed("esc"):
-        keyboard_state.append("esc")
+    if keyboard.is_pressed("space"):
+        keyboard_state.append("space")
     if keyboard.is_pressed("w"):
         keyboard_state.append("w")
     if keyboard.is_pressed("s"):
@@ -80,7 +80,8 @@ def joystick(keyboard_state=None):
         record_keyboard_state()
         keyboard_state = []
 
-    current_force_amt = 0.5
+    space_pressed = keyboard.is_pressed("space") or "space" in keyboard_state
+    current_force_amt = 1.0 if space_pressed else 0.1
 
     if keyboard.is_pressed("esc"):
         controls.kill()
