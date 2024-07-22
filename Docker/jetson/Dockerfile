@@ -24,7 +24,7 @@ RUN apt-get update && \
     && pip3 install bitstring
 
 # Installl ZED drivers
-RUN wget -O zed_sdk_install_ubuntu.run https://download.stereolabs.com/zedsdk/4.1/l4t35.4/jetsons \
+RUN wget -O zed_sdk_install_ubuntu.run https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.3.zstd.run?_gl=1*1bklx7a*_gcl_au*MTYzODk0OTYzOC4xNzE5NjgwNzYy \
     && chmod +x zed_sdk_install_ubuntu.run && ./zed_sdk_install_ubuntu.run -- silent \
     && rm zed_sdk_install_ubuntu.run
 

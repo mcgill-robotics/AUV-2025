@@ -4,9 +4,9 @@
 	<group unless="$(arg actions)">
 		<group unless="$(arg sim)"> 
 			<node name="z_pid" pkg="pid" type="controller" >
-				<param name="Kp" value="10" />
-				<param name="Ki" value="1.0" />
-				<param name="Kd" value="5.0" />
+				<param name="Kp" value="50" />
+				<param name="Ki" value="10.0" />
+				<param name="Kd" value="1.0" />
 				<param name="upper_limit" value="25" />
 				<param name="lower_limit" value="-25" />
 				<param name="windup_limit" value="25" />
