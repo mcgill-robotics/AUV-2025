@@ -48,7 +48,7 @@ class DepthSensor(Sensor):
         rospy.Subscriber("/sensors/depth/z", Float64, self.depth_cb)
 
     def depth_cb(self, msg):
-        self.z = msg.data + self.z_pos_mount_offset
+        self.z = -1.0 * msg.data + self.z_pos_mount_offset
 
     def get_reading(self):
         return {"z": self.z}

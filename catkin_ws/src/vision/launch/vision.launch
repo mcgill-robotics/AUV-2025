@@ -35,9 +35,9 @@
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1" />
         <param name="down_cam_model_file" 
-            value="$(find vision)/src/models/sim_down_camera_model.pt" />
+            value="$(find vision)/src/models/best_AUV_sim_down_camera_model.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/sim_front_camera_model.pt" />
+            value="$(find vision)/src/models/best_AUV_sim_front_camera_model.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
