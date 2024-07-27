@@ -104,12 +104,14 @@ class Controller:
             "/controls/server/effort", EffortAction
         )
         self.clients.append(self.EffortClient)
+        print("Waiting for EffortServer to come online...")
         self.EffortClient.wait_for_server()
 
         self.StateQuaternionStateClient = actionlib.SimpleActionClient(
             "/controls/server/state", StateQuaternionAction
         )
         self.clients.append(self.StateQuaternionStateClient)
+        print("Waiting for StateQuaternionStateServer to come online...")
         self.StateQuaternionStateClient.wait_for_server()
 
         print("Controller waiting to receive state information...")
@@ -122,10 +124,23 @@ class Controller:
             self.theta_y,
             self.theta_z,
             self.orientation,
-        ]:
-            continue
+        ] and not rospy.is_shutdown():
+            debug_str = "Missing state information for "
+            for state_axis, state_axis_name in [
+                (self.x, "x"),
+                (self.y, "y"),
+                (self.z, "z"),
+                (self.theta_x, "theta x"),
+                (self.theta_y, "theta y"),
+                (self.theta_z, "theta z"),
+                (self.orientation, "quat."),
+            ]:
+                if state_axis is None:
+                    debug_str += state_axis_name + ", " 
+            print(debug_str)
+            rospy.sleep(1)
 
-        print("State information received, controller is active.")
+        print("All state information received, controller is active.")
 
     def set_position(self, data):
         self.x = data.position.x

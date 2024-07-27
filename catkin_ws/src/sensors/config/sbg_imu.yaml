@@ -48,7 +48,7 @@ sensorParameters:
   # 3 MARINE          Used in marine and underwater applications
   # 4 AIRPLANE        For fixed wings aircraft
   # 5 HELICOPTER      For rotary wing aircraft
-  motionProfile: 1
+  motionProfile: 3
 
 # IMU_ALIGNMENT_LEVER_ARM
 imuAlignementLeverArm:
