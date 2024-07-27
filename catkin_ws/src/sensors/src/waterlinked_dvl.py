@@ -70,6 +70,7 @@ def parse_dead_reckon_report(line):
         report.pose.covariance[i * 6 + i] = std
     report.header.frame_id = "dvl"
     report.header.stamp = rospy.Time.now()
+    return report
 
 def main():
     rospy.init_node("waterlinked_driver")
