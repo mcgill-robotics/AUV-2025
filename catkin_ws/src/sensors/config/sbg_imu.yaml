@@ -34,13 +34,13 @@ sensorParameters:
   # Initial longitude (°)
   initLong: -4.472119
   # Initial altitude (above WGS84 ellipsoid) (m)
-  initAlt: 100.0
+  initAlt: 0.0
   # Year at startup
-  year: 2018
+  year: 2024
   # month in year at startup
-  month: 03
+  month: 07
   # day in month at startup
-  day: 10
+  day: 27
 
   # Montion profile ID
   # 1 GENERAL_PURPOSE Should be used as a default when other profiles do not apply
@@ -48,7 +48,7 @@ sensorParameters:
   # 3 MARINE          Used in marine and underwater applications
   # 4 AIRPLANE        For fixed wings aircraft
   # 5 HELICOPTER      For rotary wing aircraft
-  motionProfile: 1
+  motionProfile: 3
 
 # IMU_ALIGNMENT_LEVER_ARM
 imuAlignementLeverArm:

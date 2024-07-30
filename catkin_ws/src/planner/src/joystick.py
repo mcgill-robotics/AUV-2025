@@ -13,8 +13,8 @@ MAX_BKWD_FORCE = -3.52 * 9.81
 reset_cmd = ThrusterMicroseconds([1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500])
 rospy.init_node("joystick")
 rospy.sleep(7)
-x_pub = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
-y_pub = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
+x_pub = rospy.Publisher("/controls/force/surge", Float64, queue_size=1)
+y_pub = rospy.Publisher("/controls/force/sway", Float64, queue_size=1)
 z_pub = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
 roll_pub = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
 pitch_pub = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
@@ -63,8 +63,14 @@ def record_keyboard_state():
         keyboard_state.append("j")
     if keyboard.is_pressed("l"):
         keyboard_state.append("l")
+    if keyboard.is_pressed("1"):
+        keyboard_state.append("1")
+    if keyboard.is_pressed("2"):
+        keyboard_state.append("2")
     if keyboard.is_pressed("r"):
         keyboard_state.append("r")
+    if keyboard.is_pressed("t"):
+        keyboard_state.append("t")
     RECORDING.append(keyboard_state)
 
 
@@ -81,7 +87,7 @@ def joystick(keyboard_state=None):
         keyboard_state = []
 
     space_pressed = keyboard.is_pressed("space") or "space" in keyboard_state
-    current_force_amt = 1.0 if space_pressed else 0.1
+    current_force_amt = 0.5 if space_pressed else 0.1
 
     if keyboard.is_pressed("esc"):
         controls.kill()
@@ -111,14 +117,28 @@ def joystick(keyboard_state=None):
     if keyboard.is_pressed("l") or "l" in keyboard_state:
         desired_z_torque += current_force_amt * MAX_BKWD_FORCE
     if keyboard.is_pressed("r") or "r" in keyboard_state:
+        print("STARTING ROTATION!!!")
+        controls.rotateDeltaEuler([0, 0, 150])
+        print("DONE ROTATING!!!!")
+    if keyboard.is_pressed("t") or "t" in keyboard_state:
+        print("STARTING ROTATION!!!")
+        controls.rotateDeltaEuler([0, 0, -150])
+        print("DONE ROTATING!!!!")
+    if keyboard.is_pressed("1") or "1" in keyboard_state:
+        print("STARTING ROTATION!!!")
         controls.rotateDeltaEuler([0, 0, 90])
+        print("DONE ROTATING!!!!")
+    if keyboard.is_pressed("2") or "2" in keyboard_state:
+        print("STARTING ROTATION!!!")
+        controls.rotateDeltaEuler([0, 0, -90])
+        print("DONE ROTATING!!!!")
 
     x_pub.publish(desired_x_force)
     y_pub.publish(desired_y_force)
-    z_pub.publish(desired_z_force)
-    roll_pub.publish(desired_x_torque)
-    pitch_pub.publish(desired_y_torque)
-    yaw_pub.publish(desired_z_torque)
+    # z_pub.publish(desired_z_force)
+    # roll_pub.publish(desired_x_torque)
+    # pitch_pub.publish(desired_y_torque)
+    # yaw_pub.publish(desired_z_torque)
 
     return True
 
@@ -131,13 +151,16 @@ is_recording_res = input("Recording?")
 is_recording = is_recording_res.lower() == "y"
 
 print("SUBMERGING...")
-controls.move([None, None, -0.75])
+controls.move([None, None, -0.5])
 print("FLATTENING...")
-controls.flatten()
+controls.rotateEuler([0,0,-137])
 
 print("\n\n\n")
 
 print(" > R to make a 90 deg. YAW")
+print(" > T to make a -90 deg. YAW")
+print(" > 1 to make a 30 deg. YAW")
+print(" > 2 to make a -30 deg. YAW")
 print(" > WASD for SURGE/SWAY")
 print(" > Q/E for UP/DOWN")
 print(" > IJKL for PITCH/YAW")
@@ -153,8 +176,7 @@ if is_recording:
             break
     with open("keyboard_rec.pkl", "wb") as f:
         print("SAVING")
-        pickle.dump(RECORDING, f)
-    f.close() 
+        pickle.dump(RECORDING, f) 
 else:
     with open("keyboard_rec.pkl", "rb") as f:
         RECORDING = pickle.load(f)
