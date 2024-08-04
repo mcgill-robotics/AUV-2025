@@ -17,9 +17,9 @@
     <!-- TIME LIMIT PARAMETERS -->
     <param name="object_search_time_limit" value="100" />
     <param name="navigate_gate_time_limit" value="100" />
-    <param name="navigate_buoy_time_limit" value="10" />
+    <param name="navigate_buoy_time_limit" value="100" />
     <param name="navigate_lane_marker_time_limit" value="100" />
-    <param name="navigate_pinger_time_limit" value="10" />
-    <param name="octagon_time_limit" value="10" />
-    <param name="trick_time_limit" value="10" />
+    <param name="navigate_pinger_time_limit" value="100" />
+    <param name="octagon_time_limit" value="100" />
+    <param name="trick_time_limit" value="100" />
 </launch>
