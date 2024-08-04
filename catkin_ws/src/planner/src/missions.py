@@ -144,13 +144,6 @@ class Missions:
                          "failure": "failure"}
         )
 
-    def dropper(self, first_state_name, count, mission_after_success, mission_after_timeout):
-        global sm
-
-        """
-        ADD SOME TRANSITIONS HERE
-        """
-
     def octagon(self, first_state_name, count, mission_after_success, mission_after_timeout):
         global sm
 
@@ -262,7 +255,6 @@ if __name__ == "__main__":
         ["Octagon", missions.octagon, "find_octagon", 0],
         ["Pinger", missions.pinger, "navigate_pinger", 0],
         ["Torpedo", missions.torpedo, "", 0],
-        ["Dropper", missions.dropper, "", 0],
         ["Bins", missions.bins, "", 0],
         ["Quali", missions.quali, "navigate_gate_not_through", 0],
         ["Competition", None, None, 0],
