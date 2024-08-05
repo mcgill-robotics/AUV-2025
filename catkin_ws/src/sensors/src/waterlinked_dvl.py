@@ -2,7 +2,11 @@
 
 import rospy
 import serial
-from geometry_msgs.msg import TwistWithCovarianceStamped
+from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
+from tf import transformations
+import numpy as np
+
+RAD_PER_DEG = np.pi / 180.0
 
 def parse_velocity_report(line):
     tokens = line.split(",")
@@ -39,36 +43,40 @@ def parse_velocity_report(line):
     #         time_since_last_report: {time_since_last_report}, state: {state}")
 
 
-# def parse_dead_reckon_report(line):
-#     tokens = line.split(",")
-#     time_stamp = float(tokens[1])
-#     x = float(tokens[2])
-#     y = float(tokens[3])
-#     z = float(tokens[4])
-#     std = float(tokens[5])
-#     roll = float(tokens[6])
-#     pitch = float(tokens[7])
-#     yaw = float(tokens[8])
-#     status = bool(tokens[9])
+def parse_dead_reckon_report(line):
+    tokens = line.split(",")
+    time_stamp = float(tokens[1])
+    x = float(tokens[2])
+    y = float(tokens[3])
+    z = float(tokens[4])
+    std = float(tokens[5])
+    roll = float(tokens[6])
+    pitch = float(tokens[7])
+    yaw = float(tokens[8])
+    status = bool(tokens[9])
 
-#     report = DeadReckonReport()
-#     report.x = x
-#     report.y = y
-#     report.z = z
-#     report.std = std
-#     report.roll = roll
-#     report.pitch = pitch
-#     report.yaw = yaw
-#     report.status = status
-#     return report
-#     # print(f"\nx: {x}, y: {y}, z: {z}, std: {std}, roll: {roll}, \
-#     #        pitch: {pitch}, yaw: {yaw}, status: {status}")
+    report = PoseWithCovarianceStamped()
+    report.pose.pose.position.x = 0
+    report.pose.pose.position.y = 0
+    report.pose.pose.position.z = 0
 
+    quaternion = transformations.quaternion_from_euler(roll * RAD_PER_DEG, pitch * RAD_PER_DEG, yaw * RAD_PER_DEG)
+    report.pose.pose.orientation.x = quaternion[0]
+    report.pose.pose.orientation.y = quaternion[1]
+    report.pose.pose.orientation.z = quaternion[2]
+    report.pose.pose.orientation.w = quaternion[3]
+    report.pose.covariance = [0.0] * 36
+    for i in range(3,6):
+        report.pose.covariance[i * 6 + i] = std
+    report.header.frame_id = "dvl"
+    report.header.stamp = rospy.Time.now()
+    return report
 
 def main():
     rospy.init_node("waterlinked_driver")
 
     pub_vr = rospy.Publisher("/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1)
+    pub_dr = rospy.Publisher("/sensors/dvl/pose", PoseWithCovarianceStamped, queue_size=1)
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
@@ -118,8 +126,8 @@ def main():
             # print(line)
             if line.startswith("wrz"):
                 pub_vr.publish(parse_velocity_report(line))
-            # elif line.startswith("wrp"):
-            #     pub_dr.publish(parse_dead_reckon_report(line))
+            elif line.startswith("wrp"):
+                pub_dr.publish(parse_dead_reckon_report(line))
         except Exception as e:
             print(e)
             conn.close()
