@@ -34,7 +34,6 @@ class NavigateDropper(smach.State):
         self.thread_timer.start()
 
         # Move to the middle of the pool depth and flat orientation.
-        self.control.move((None, None, -1))
         self.control.flatten()
 
         bin_object = self.mapping.getClosestObject(cls="Bin", pos=(self.state.x, self.state.y))
@@ -48,12 +47,6 @@ class NavigateDropper(smach.State):
             return "timeout"
         self.control.move((bin_object[1], bin_object[2], rospy.get_param("down_cam_search_depth")), face_destination=True)
         print("Centered.")
-        
-        # Descend the downcam length +2 meters
-        print("Moving down to descend on top of bin.")
-        if self.timeout_occurred:
-            return "timeout"
-        self.control.move((None, None, -rospy.get_param("down_cam_search_depth")))
         
         # Flatten on top of bin
         if self.timeout_occurred:
