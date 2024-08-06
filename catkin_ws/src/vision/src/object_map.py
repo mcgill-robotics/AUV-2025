@@ -133,25 +133,25 @@ def update_map(obj_i, observation):
 
     # Calculate pose.
     new_x = (
-        num_new_observations * observed_confidence * observed_x
-        + num_observations * current_confidence * current_x
+        observed_confidence * observed_x
+        +  current_confidence * current_x
     ) / (
-        num_observations * current_confidence
-        + num_new_observations * observed_confidence
+         current_confidence
+        + observed_confidence
     )
     new_y = (
-        num_new_observations * observed_confidence * observed_y
-        + num_observations * current_confidence * current_y
+        observed_confidence * observed_y
+        +  current_confidence * current_y
     ) / (
-        num_observations * current_confidence
-        + num_new_observations * observed_confidence
+         current_confidence
+        + observed_confidence
     )
     new_z = (
-        num_new_observations * observed_confidence * observed_z
-        + num_observations * current_confidence * current_z
+        observed_confidence * observed_z
+        +  current_confidence * current_z
     ) / (
-        num_observations * current_confidence
-        + num_new_observations * observed_confidence
+         current_confidence
+        + observed_confidence
     )
 
     if label == "Lane Marker":
@@ -183,11 +183,11 @@ def update_map(obj_i, observation):
                     else:
                         observed_theta_z += 360
                 new_theta_z = (
-                    num_new_observations * observed_confidence * observed_theta_z
-                    + num_observations * current_confidence * current_theta_z
+                    observed_confidence * observed_theta_z
+                    +  current_confidence * current_theta_z
                 ) / (
-                    num_observations * current_confidence
-                    + num_new_observations * observed_confidence
+                     current_confidence
+                    + observed_confidence
                 )
                 # Closes angles are observed extra_field and current extra_field.
                 while abs(observed_extra_field - current_extra_field) > 180:
@@ -196,11 +196,11 @@ def update_map(obj_i, observation):
                     else:
                         observed_extra_field += 360
                 new_extra_field = (
-                    num_new_observations * observed_confidence * observed_extra_field
-                    + num_observations * current_confidence * current_extra_field
+                    observed_confidence * observed_extra_field
+                    +  current_confidence * current_extra_field
                 ) / (
-                    num_observations * current_confidence
-                    + num_new_observations * observed_confidence
+                     current_confidence
+                    + observed_confidence
                 )
             else:
                 # Closest angles are observed theta_z and current extra_field.
@@ -210,11 +210,11 @@ def update_map(obj_i, observation):
                     else:
                         observed_theta_z += 360
                 new_extra_field = (
-                    num_new_observations * observed_confidence * observed_theta_z
-                    + num_observations * current_confidence * current_extra_field
+                    observed_confidence * observed_theta_z
+                    +  current_confidence * current_extra_field
                 ) / (
-                    num_observations * current_confidence
-                    + num_new_observations * observed_confidence
+                     current_confidence
+                    + observed_confidence
                 )
                 # Closest angles are observed extra_field and current theta_z.
                 while abs(observed_extra_field - current_theta_z) > 180:
@@ -223,11 +223,11 @@ def update_map(obj_i, observation):
                     else:
                         observed_extra_field += 360
                 new_theta_z = (
-                    num_new_observations * observed_confidence * observed_extra_field
-                    + num_observations * current_confidence * current_theta_z
+                    observed_confidence * observed_extra_field
+                    +  current_confidence * current_theta_z
                 ) / (
-                    num_observations * current_confidence
-                    + num_new_observations * observed_confidence
+                     current_confidence
+                    + observed_confidence
                 )
     else:
         # Calculate theta z.
@@ -246,11 +246,11 @@ def update_map(obj_i, observation):
                     observed_theta_z += 360
             # Average both orientations.
             new_theta_z = (
-                num_new_observations * observed_confidence * observed_theta_z
-                + num_observations * current_confidence * current_theta_z
+                observed_confidence * observed_theta_z
+                +  current_confidence * current_theta_z
             ) / (
-                num_observations * current_confidence
-                + num_new_observations * observed_confidence
+                 current_confidence
+                + observed_confidence
             )
 
         # Calculate extra_field when applicable.
@@ -261,11 +261,11 @@ def update_map(obj_i, observation):
                 new_extra_field = observed_extra_field
             else:
                 new_extra_field = (
-                    num_new_observations * observed_confidence * observed_extra_field
-                    + num_observations * current_confidence * current_extra_field
+                    observed_confidence * observed_extra_field
+                    +  current_confidence * current_extra_field
                 ) / (
-                    num_observations * current_confidence
-                    + num_new_observations * observed_confidence
+                     current_confidence
+                    + observed_confidence
                 )
         else:
             new_extra_field = NULL_PLACEHOLDER
@@ -284,6 +284,9 @@ def update_map(obj_i, observation):
     p_incorrect += 0.25 * p_imperfect
 
     new_confidence = 1.0 - p_incorrect
+
+    # limit confidence to 50% above the highest confidence (observation or current)
+    # new_confidence = min(1.5 * max(observed_confidence, current_confidence), new_confidence)
 
     object_map[obj_i][1] = new_x
     object_map[obj_i][2] = new_y
@@ -333,6 +336,7 @@ def publish_map():
         map_msg.z = obj[3]
         map_msg.theta_z = obj[4]
         map_msg.extra_field = obj[5]
+        map_msg.confidence = obj[7]
         map_msg_array.array.append(map_msg)
     obj_pub.publish(map_msg_array)
 

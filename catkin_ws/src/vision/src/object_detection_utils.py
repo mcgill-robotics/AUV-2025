@@ -41,7 +41,9 @@ def calculate_bbox_confidence(bbox, image_height, image_width):
     width_score = 1 - (2 * abs(0.5 - scaled_w))
     height_score = 1 - (2 * abs(0.5 - scaled_h))
 
-    return (x_centering_score + y_centering_score + width_score + height_score) / 4
+    avg_score = (x_centering_score + y_centering_score + width_score + height_score) / 4
+
+    return avg_score ** 2
 
 
 # bbox is an array of 4 elements.
@@ -184,6 +186,8 @@ def get_object_position_front_camera(bbox):
     ly = (max_ly + min_ly) / 2
     lz = (max_lz + min_lz) / 2
 
+    print("LOCAL", lx, ly, lz)
+
     global_obj_pos_offset = quaternion.rotate_vectors(
         states[1].q_auv, np.array([lx, ly, lz])
     )
@@ -192,6 +196,9 @@ def get_object_position_front_camera(bbox):
     x, y, z = global_obj_pos_offset + np.array(
         [states[1].position.x, states[1].position.y, states[1].position.z]
     )
+
+    print("GLOBAL",x,y,z)
+
     return x, y, z
 
 
