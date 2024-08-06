@@ -1,63 +1,63 @@
 services:
-  douglas:
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev:/dev
-      - type: bind
-        source: ../../../AUV-2024
-        target: /AUV-2024
-    image: "mcgillrobotics/auv_2024:jetson"
-    privileged: true
-    environment:
-      - DISPLAY
-      - QT_X11_NO_MITSHM=1
-      - NVIDIA_VISIBLE_DEVICES=all
-      - UDEV=on
+  # douglas:
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - /dev:/dev
+  #     - type: bind
+  #       source: ../../../AUV-2024
+  #       target: /AUV-2024
+  #   image: "mcgillrobotics/auv_2024:jetson"
+  #   privileged: true
+  #   environment:
+  #     - DISPLAY
+  #     - QT_X11_NO_MITSHM=1
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - UDEV=on
 
-    runtime: nvidia
-    command: bash -c "tail -f /dev/null"
-    network_mode: host
-    restart: always
-    build: .
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  #   runtime: nvidia
+  #   command: bash -c "tail -f /dev/null"
+  #   network_mode: host
+  #   restart: always
+  #   build: .
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
-  zed:
-    volumes:
-      - /dev:/dev
-    image: "mcgillrobotics/auv_2024:zed"
-    build:
-      context: .
-      dockerfile: ZED_Dockerfile
-    privileged: true
-    environment:
-      - DISPLAY
-      - QT_X11_NO_MITSHM=1
-      - NVIDIA_VISIBLE_DEVICES=all
-      - UDEV=on
-    runtime: nvidia
-    command: bash -c " && tail -f /dev/null"
-    network_mode: host
-    restart: always
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # zed:
+  #   volumes:
+  #     - /dev:/dev
+  #   image: "mcgillrobotics/auv_2024:zed"
+  #   build:
+  #     context: .
+  #     dockerfile: ZED_Dockerfile
+  #   privileged: true
+  #   environment:
+  #     - DISPLAY
+  #     - QT_X11_NO_MITSHM=1
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - UDEV=on
+  #   runtime: nvidia
+  #   command: bash -c "tail -f /dev/null"
+  #   network_mode: host
+  #   restart: always
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
 
   bridge:
     image: "mcgillrobotics/auv_2024:rosbridge"
-    build:
-      context: .
-      dockerfile: ROSBridge_Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: ROSBridge_Dockerfile
     privileged: true
     environment:
       - DISPLAY
@@ -65,3 +65,9 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     network_mode: host
     restart: always
+    # command: integration-service /conf/e-proxima.yaml
+    # volumes:
+    #   - type: bind
+    #     source: .
+    #     target: /conf
+    command: /is_entrypoint.sh /ros2_entrypoint.sh integration-service /conf/e-proxima.yaml

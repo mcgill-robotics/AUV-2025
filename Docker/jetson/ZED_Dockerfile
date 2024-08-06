@@ -21,7 +21,6 @@ RUN apt update
 
 RUN apt upgrade -y
 
-RUN apt install -y ros-humble-desktop
 
 RUN apt install -y ros-humble-ros-base
 
