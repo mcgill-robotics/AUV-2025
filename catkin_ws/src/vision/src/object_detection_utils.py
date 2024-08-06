@@ -10,11 +10,10 @@ import json
 from vision_state import VisionState
 
 
-
 ############## Utils Parameters ###############
 MAX_DIST_TO_MEASURE = rospy.get_param("max_object_detection_distance")
-BOX_COLOR = (255, 255, 255) # White.
-TEXT_COLOR = (0, 0, 0) # Black.
+BOX_COLOR = (255, 255, 255)  # White.
+TEXT_COLOR = (0, 0, 0)  # Black.
 # [COMP] ensure FOV is correct.
 DOWN_CAM_HFOV = rospy.get_param("down_cam_hfov")
 DOWN_CAM_VFOX = rospy.get_param("down_cam_vfov")
@@ -27,9 +26,26 @@ states = (VisionState(), VisionState())
 ###############################################
 
 
+def calculate_bbox_confidence(bbox, image_height, image_width):
+    x_center, y_center, w, h = bbox
+
+    x_center_offset = ((image_width / 2) - x_center) / image_width  # -0.5 to 0.5.
+    y_center_offset = (y_center - (image_height / 2)) / image_height
+    scaled_w = w / image_width
+    scaled_h = h / image_height
+
+    # ideal bounding box has centers at 0
+    x_centering_score = 1 - abs(2 * x_center_offset)
+    y_centering_score = 1 - abs(2 * y_center_offset)
+    # ideal width is half of the image
+    width_score = 1 - (2 * abs(0.5 - scaled_w))
+    height_score = 1 - (2 * abs(0.5 - scaled_h))
+
+    return (x_centering_score + y_centering_score + width_score + height_score) / 4
+
 
 # bbox is an array of 4 elements.
-# Given an image, class name, and a bounding box, draws the 
+# Given an image, class name, and a bounding box, draws the
 # bounding box rectangle and label name onto the image.
 def visualize_bbox(image, bbox, class_name, thickness=2, fontSize=0.5):
     # Get xmin, xmax, ymin, ymax from bbox.
@@ -64,7 +80,7 @@ def visualize_bbox(image, bbox, class_name, thickness=2, fontSize=0.5):
         lineType=cv2.LINE_AA,
     )
     return image  # Returns inputted image with label.
-    
+
 
 def find_intersection(starting_point, vector, plane_z_pos):
     """
@@ -98,13 +114,13 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     Returns:
         x, y, z position in 3D space (not relative to the AUV).
     """
-    # First calculate the relative offset of the object from the center of the 
+    # First calculate the relative offset of the object from the center of the
     # image (i.e. map pixel coordinates to values from -0.5 to 0.5).
     x_center_offset = ((image_width / 2) - pixel_x) / image_width  # -0.5 to 0.5.
     y_center_offset = (
         pixel_y - (image_height / 2)
     ) / image_height  # Negated since y goes from top to bottom.
-    # Use offset within image and total FOV of camera to find 
+    # Use offset within image and total FOV of camera to find
     # an angle offset from the angle the camera is facing
     # assuming FOV increases linearly with distance from center pixel.
     roll_angle_offset = DOWN_CAM_HFOV * x_center_offset
@@ -123,20 +139,26 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
         rotation, local_direction_to_object
     )
 
-    # Solve for point that is defined by the intersection of the 
+    # Solve for point that is defined by the intersection of the
     # direction to the object and it's z position.
     global_down_cam_offset = quaternion.rotate_vectors(
         states[0].q_auv,
         np.array([down_cam_x_offset, DOWN_CAM_Y_OFFSET, DOWN_CAM_Z_OFFSET]),
     )
     down_cam_pos = (
-        np.array([states[0].position.x, states[0].position.y, states[0].position.z]) + global_down_cam_offset
+        np.array([states[0].position.x, states[0].position.y, states[0].position.z])
+        + global_down_cam_offset
     )
     obj_pos = find_intersection(down_cam_pos, global_direction_to_object, z_pos)
 
     if (
         obj_pos is None
-        or np.linalg.norm(obj_pos - np.array([states[0].position.x, states[0].position.y, states[0].position.z]))
+        or np.linalg.norm(
+            obj_pos
+            - np.array(
+                [states[0].position.x, states[0].position.y, states[0].position.z]
+            )
+        )
         > MAX_DIST_TO_MEASURE
     ):
         return None, None, None
@@ -146,7 +168,7 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     return x, y, z
 
 
-# Given a bounding box, tells you where the main object in the 
+# Given a bounding box, tells you where the main object in the
 # bounding box is in 3D space (world space).
 # Assumes cleaning was correct.
 def get_object_position_front_camera(bbox):
@@ -167,7 +189,9 @@ def get_object_position_front_camera(bbox):
     )
 
     # Get the best estimate of the mean.
-    x, y, z = global_obj_pos_offset + np.array([states[1].position.x, states[1].position.y, states[1].position.z])
+    x, y, z = global_obj_pos_offset + np.array(
+        [states[1].position.x, states[1].position.y, states[1].position.z]
+    )
     return x, y, z
 
 
@@ -206,9 +230,9 @@ def measure_angle(bbox):
     return angle + states[1].theta_z
 
 
-# Lots of noise in pool, the idea is for example if the down 
+# Lots of noise in pool, the idea is for example if the down
 # cam has two detections, it will remove the least confident one.
-# Selects highest confidence detection from duplicates and ignores 
+# Selects highest confidence detection from duplicates and ignores
 # objects with no position measurement.
 def clean_detections(detectionFrameArray):
     label_counts = {}
@@ -232,5 +256,6 @@ def clean_detections(detectionFrameArray):
 
     return [detectionFrameArray[i] for i in selected_detections]
 
+
 # Automatically import all functions and constants.
-__all__ = [name for name in globals() if not name.startswith('__')]
+__all__ = [name for name in globals() if not name.startswith("__")]
