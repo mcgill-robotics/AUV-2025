@@ -328,7 +328,7 @@ class Missions:
             second_state_name,
             NavigateDropper(self.control, self.mapping, self.state),
             transitions={
-                "success": target_timeout_state_name,
+                "success": target_success_state_name,
                 "timeout": target_timeout_state_name,
                 "failure": "failure",
             },
