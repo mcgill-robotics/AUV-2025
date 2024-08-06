@@ -1,4 +1,10 @@
-FROM dustynv/pytorch:2.1-r35.3.1
+FROM ubuntu:20.04
+
+SHELL ["/bin/bash", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+#### ROS1
 
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
@@ -74,24 +80,45 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
-    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
 
-RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
-    cd torchvision && \
-    git checkout release/0.16 && \
-    python3 setup.py bdist_wheel && \
-    cp dist/torchvision*.whl /opt && \
-    pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
-    cd ../ && \
-    rm -rf torchvision \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
 
 RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
-    && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+#### ROS2
+
+RUN apt update && apt install -y locales
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+
+RUN apt install -y software-properties-common
+RUN add-apt-repository universe
+
+RUN apt update && apt install -y curl -y
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+RUN apt update
+
+RUN apt upgrade -y
+
+RUN apt install -y ros-humble-desktop
+
+RUN apt install -y ros-humble-ros-base
+
+RUN apt install -y ros-dev-tools
+
+### ROS BRIDGE
+
+RUN mkdir -p ~/is-workspace ~/dds-is-workspace
+
+RUN cd ~/is-workspace && git clone https://github.com/eProsima/ROS2-SH.git src/ROS2-S && colcon build
+RUN cd ~/dds-is-workspace && git clone https://github.com/eProsima/ROS1-SH.git src/ROS1-SH && colcon build
+
+CMD ["cd ~/is-workspace && source /opt/ros/noetic/setup.bash && source /opt/ros/humble/setup.bash && source install/setup.bash && integration-service src/Integration-Service/examples/basic/ros1_ros2__helloworld.yaml"]
