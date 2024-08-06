@@ -14,7 +14,6 @@ from auv_msgs.msg import VisionObject, VisionObjectArray
 from sensor_msgs.msg import Image
 
 
-
 def is_vision_ready(camera_id):
     # Only predict if cameras_image_count has not reached DETECT_EVERY yet.
     global cameras_image_count
@@ -49,7 +48,11 @@ def detection_frame(image, debug_image, detections, camera_id):
     image_h, image_w, _ = image.shape
     # Nested for loops get all predictions made by model.
     for detection in detections:
-        boxes = detection.boxes.cpu().numpy() if is_cuda_available else detection.boxes.numpy()
+        boxes = (
+            detection.boxes.cpu().numpy()
+            if is_cuda_available
+            else detection.boxes.numpy()
+        )
         for box in boxes:
             conf = float(list(box.conf)[0])
             # Only consider prediction if confidence is at least MIN_PREDICTION_CONFIDENCE.
@@ -75,7 +78,7 @@ def detection_frame(image, debug_image, detections, camera_id):
             pred_obj_x, pred_obj_y, pred_obj_z = 0, 0, 0
             extra_field, theta_z = None, None
 
-            if camera_id == 0: # Down camera.
+            if camera_id == 0:  # Down camera.
                 if global_class_name == "Lane Marker":
                     headings, center, debug_image = measure_lane_marker(
                         image, bbox, debug_image
@@ -84,38 +87,56 @@ def detection_frame(image, debug_image, detections, camera_id):
                         bbox = center
                         heading_auv = [0, 0]
                         for i in range(2):
-                            offset = 270 if headings[i] + DOWN_CAM_YAW_OFFSET < -90 else -90
-                            heading_auv[i] = states[camera_id].theta_z + headings[i] + offset
+                            offset = (
+                                270 if headings[i] + DOWN_CAM_YAW_OFFSET < -90 else -90
+                            )
+                            heading_auv[i] = (
+                                states[camera_id].theta_z + headings[i] + offset
+                            )
                         theta_z = heading_auv[0] + DOWN_CAM_YAW_OFFSET
                         extra_field = heading_auv[1] + DOWN_CAM_YAW_OFFSET
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
-                        bbox[0], bbox[1], image_h, image_w, lane_marker_top_z
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_down_camera(
+                            bbox[0], bbox[1], image_h, image_w, lane_marker_top_z
+                        )
                     )
                 elif global_class_name == "Octagon Table":
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
-                        bbox[0], bbox[1], image_h, image_w, octagon_table_top_z
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_down_camera(
+                            bbox[0], bbox[1], image_h, image_w, octagon_table_top_z
+                        )
                     )
                 elif global_class_name == "Bin":
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
-                        bbox[0], bbox[1], image_h, image_w, bin_top_z
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_down_camera(
+                            bbox[0], bbox[1], image_h, image_w, bin_top_z
+                        )
                     )
-            else: # Forward camera.
+            else:  # Forward camera.
                 if global_class_name == "Octagon Table":
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_front_camera(bbox)
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_front_camera(bbox)
+                    )
                 elif global_class_name == "Gate":
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_front_camera(bbox)
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_front_camera(bbox)
+                    )
                     theta_z = measure_angle(bbox)
                 elif global_class_name == "Buoy":
-                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_front_camera(bbox)
-                    
+                    pred_obj_x, pred_obj_y, pred_obj_z = (
+                        get_object_position_front_camera(bbox)
+                    )
+
             detectionFrame.label = global_class_name
-            detectionFrame.confidence = conf
             detectionFrame.x = pred_obj_x
             detectionFrame.y = pred_obj_y
             detectionFrame.z = pred_obj_z
             detectionFrame.theta_z = theta_z
             detectionFrame.extra_field = extra_field
-
+            detectionFrame.confidence = conf * calculate_bbox_confidence(
+                list(box.xywh[0]), image_h, image_w
+            )
+            print(global_class_name + ": " + str(detectionFrame.confidence))
             # Add the detection frame to the array.
             detection_frame_array.append(detectionFrame)
 
@@ -142,7 +163,7 @@ def publish_detection_frame(detection_frame_array):
 def vision_cb(raw_image, camera_id):
     if not is_vision_ready(camera_id):
         return
-    
+
     # Convert image to cv2.
     image = bridge.imgmsg_to_cv2(raw_image, "bgr8")
     debug_image = np.copy(image)
@@ -152,14 +173,14 @@ def vision_cb(raw_image, camera_id):
     detections = model[camera_id].predict(
         image, device=device, verbose=PRINT_DEBUG_INFO
     )
-    
+
     detection_frame(image, debug_image, detections, camera_id)
 
-    # Convert visualization image to sensor_msg image and 
+    # Convert visualization image to sensor_msg image and
     # publish it to corresponding cameras visualization topic.
     debug_image = bridge.cv2_to_imgmsg(debug_image, "bgr8")
     pubs_visualisation[camera_id].publish(debug_image)
-    states[camera_id].resume()    
+    states[camera_id].resume()
 
 
 if __name__ == "__main__":
@@ -169,7 +190,7 @@ if __name__ == "__main__":
     NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
 
     MIN_PREDICTION_CONFIDENCE = rospy.get_param("min_prediction_confidence")
-    
+
     POOL_DEPTH = rospy.get_param("pool_depth")
     OCTAGON_TABLE_HEIGHT = rospy.get_param("octagon_table_height")
     LANE_MARKER_HEIGHT = rospy.get_param("lane_marker_height")
@@ -180,14 +201,14 @@ if __name__ == "__main__":
     DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
 
     # Run the model every _ frames received (to not eat up too much RAM).
-    DETECT_EVERY = rospy.get_param("object_detection_frame_interval")  
+    DETECT_EVERY = rospy.get_param("object_detection_frame_interval")
 
     DOWN_CAM_MODEL_FILE = rospy.get_param("down_cam_model_file")
     FRONT_CAM_MODEL_FILE = rospy.get_param("front_cam_model_file")
 
     model = [YOLO(DOWN_CAM_MODEL_FILE), YOLO(FRONT_CAM_MODEL_FILE)]
 
-    is_cuda_available = torch.cuda.is_available() 
+    is_cuda_available = torch.cuda.is_available()
     if not is_cuda_available:
         rospy.logwarn("CUDA is not available! YOLO inference will run on CPU.")
         device = "cpu"
@@ -197,9 +218,9 @@ if __name__ == "__main__":
             m.to(torch.device("cuda"))
 
     # One array per camera, name index should be class id.
-    class_names = [  
+    class_names = [
         ast.literal_eval(rospy.get_param("down_cam_class_name_mappings")),
-        ast.literal_eval(rospy.get_param("front_cam_class_name_mappings"))
+        ast.literal_eval(rospy.get_param("front_cam_class_name_mappings")),
     ]
 
     # Count for number of images received per camera.
@@ -209,12 +230,14 @@ if __name__ == "__main__":
         rospy.Publisher("/vision/down_cam/detection", Image, queue_size=1),
         rospy.Publisher("/vision/front_cam/detection", Image, queue_size=1),
     ]
-    pub_viewframe_detection = rospy.Publisher("/vision/viewframe_detection", VisionObjectArray, queue_size=1)
+    pub_viewframe_detection = rospy.Publisher(
+        "/vision/viewframe_detection", VisionObjectArray, queue_size=1
+    )
 
     bridge = CvBridge()
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
     rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
     rospy.Subscriber("/vision/front_cam/color/image_raw", Image, vision_cb, 1),
-    
+
     rospy.spin()
