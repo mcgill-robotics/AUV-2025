@@ -31,25 +31,37 @@ class Missions:
             "/mission_display", String, queue_size=1
         )
 
-    def gate(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def gate(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
-        second_state_name = "navigate_gate_go_through" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        second_state_name = "navigate_gate" + count
+        third_state_name = "tricks_gate" + count
+        fourth_state_name = "navigate_gate_go_through" + count
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             InPlaceSearch(
                 self.control, self.mapping, target_class="Gate", min_objects=1
             ),
-            transitions={"success": second_state_name,
-                         "timeout": target_timeout_state_name, 
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
@@ -57,23 +69,56 @@ class Missions:
                 control=self.control,
                 mapping=self.mapping,
                 state=self.state,
-                goThrough=True
+                goThrough=False,
             ),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": third_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
+        )
+        smach.StateMachine.add(
+            third_state_name,
+            Trick(self.control),
+            transitions={
+                "success": fourth_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
+        )
+        smach.StateMachine.add(
+            fourth_state_name,
+            NavigateGate(
+                control=self.control,
+                mapping=self.mapping,
+                state=self.state,
+                goThrough=True,
+            ),
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def lane_marker(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def lane_marker(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
         second_state_name = "navigate_lane_marker" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
@@ -83,147 +128,209 @@ class Missions:
                 target_class="Lane Marker",
                 min_objects=int(count),
             ),
-            transitions={"success": second_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateLaneMarker(self.control, self.mapping, self.state, origin_class=""),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def pinger(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def pinger(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             NavigatePinger(
-                control=self.control, 
-                state=self.state, 
-                mapping=self.mapping, 
+                control=self.control,
+                state=self.state,
+                mapping=self.mapping,
             ),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def buoy(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def buoy(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
-        
+
         first_state_name = first_state_name + count
         second_state_name = "navigate_buoy" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             InPlaceSearch(
                 self.control, self.mapping, target_class="Buoy", min_objects=1
             ),
-            transitions={"success": second_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateBuoy(self.control, self.mapping, self.state),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def octagon(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def octagon(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
         second_state_name = "navigate_octagon" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             LinearSearch(
                 self.control, self.mapping, target_class="Octagon Table", min_objects=1
             ),
-            transitions={"success": second_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateOctagon(self.control, self.mapping, self.state),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def torpedo(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def torpedo(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         """
         ADD SOME TRANSITIONS HERE
         """
 
-    def trick(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def trick(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             Trick(self.control),
-            transitions={"success": target_success_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"},
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
-    def bins(self, first_state_name, count, mission_after_success, mission_after_timeout):
+    def bins(
+        self, first_state_name, count, mission_after_success, mission_after_timeout
+    ):
         global sm
 
         first_state_name = first_state_name + count
         second_state_name = "navigate_bin" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
         if mission_after_timeout is not None:
             target_timeout_state_name = mission_after_timeout
         else:
-            target_timeout_state_name = "failure" if target_success_state_name == "success" else target_success_state_name
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
 
         smach.StateMachine.add(
             first_state_name,
             InPlaceSearch(
                 self.control, self.mapping, target_class="Bin", min_objects=1
             ),
-            transitions={"success": second_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
             NavigateDropper(self.control, self.mapping, self.state),
-            transitions={"success": target_timeout_state_name, 
-                         "timeout": target_timeout_state_name,
-                         "failure": "failure"}
+            transitions={
+                "success": target_timeout_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
         )
 
     def quali(self, first_state_name, count, mission_after_success, _):
@@ -231,7 +338,9 @@ class Missions:
 
         first_state_name = first_state_name + count
         second_state_name = "navigate_quali" + count
-        target_success_state_name = mission_after_success if mission_after_success is not None else "success"
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
 
         smach.StateMachine.add(
             first_state_name,
@@ -239,20 +348,23 @@ class Missions:
                 control=self.control,
                 mapping=self.mapping,
                 state=self.state,
-                goThrough=False
+                goThrough=False,
             ),
-            transitions={"success": second_state_name,
-                         "timeout": second_state_name, 
-                         "failure": "failure"}
+            transitions={
+                "success": second_state_name,
+                "timeout": second_state_name,
+                "failure": "failure",
+            },
         )
         smach.StateMachine.add(
             second_state_name,
             Quali(control=self.control),
-            transitions={"success": target_success_state_name, 
-                         "timeout": "failure",
-                         "failure": "failure"}
+            transitions={
+                "success": target_success_state_name,
+                "timeout": "failure",
+                "failure": "failure",
+            },
         )
-
 
     def endPlanner(self, msg="Shutting down mission planner."):
         self.pub_mission_display.publish("End")
@@ -284,21 +396,26 @@ if __name__ == "__main__":
 
     try:
         done = False
-        while not done:           
+        while not done:
             missions_selected = get_user_missions_selected(mission_options)
 
             sm = smach.StateMachine(outcomes=["success", "failure", "timeout"])
             sm.open()
 
             for i in range(len(missions_selected)):
-                current_mission_name, current_mission_count, mission_after_success, mission_after_timeout = get_state_params(mission_options, missions_selected, i)
+                (
+                    current_mission_name,
+                    current_mission_count,
+                    mission_after_success,
+                    mission_after_timeout,
+                ) = get_state_params(mission_options, missions_selected, i)
 
                 # Add task to state machine.
                 mission_options[missions_selected[i]][1](
                     first_state_name=current_mission_name,
                     count=str(current_mission_count),
                     mission_after_success=mission_after_success,
-                    mission_after_timeout=mission_after_timeout
+                    mission_after_timeout=mission_after_timeout,
                 )
 
             # Execute state machine.
@@ -309,6 +426,6 @@ if __name__ == "__main__":
             )
 
     except KeyboardInterrupt:
-        missions.endPlanner()        
+        missions.endPlanner()
 
     rospy.spin()
