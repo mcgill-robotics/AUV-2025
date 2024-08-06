@@ -96,8 +96,9 @@ def detection_frame(image, debug_image, detections, camera_id):
                         bbox[0], bbox[1], image_h, image_w, octagon_table_top_z
                     )
                 elif global_class_name == "Bin":
-                    # @TO-DO: Add Bin implementation to vision. 
-                    continue
+                    pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_down_camera(
+                        bbox[0], bbox[1], image_h, image_w, bin_top_z
+                    )
             else: # Forward camera.
                 if global_class_name == "Octagon Table":
                     pred_obj_x, pred_obj_y, pred_obj_z = get_object_position_front_camera(bbox)
@@ -172,8 +173,10 @@ if __name__ == "__main__":
     POOL_DEPTH = rospy.get_param("pool_depth")
     OCTAGON_TABLE_HEIGHT = rospy.get_param("octagon_table_height")
     LANE_MARKER_HEIGHT = rospy.get_param("lane_marker_height")
+    BIN_HEIGHT = rospy.get_param("bin_height")
     lane_marker_top_z = POOL_DEPTH + LANE_MARKER_HEIGHT
     octagon_table_top_z = POOL_DEPTH + OCTAGON_TABLE_HEIGHT
+    bin_top_z = POOL_DEPTH + BIN_HEIGHT
     DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
 
     # Run the model every _ frames received (to not eat up too much RAM).
