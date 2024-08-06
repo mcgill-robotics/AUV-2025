@@ -53,7 +53,7 @@ class NavigateDropper(smach.State):
         print("Moving down to descend on top of bin.")
         if self.timeout_occurred:
             return "timeout"
-        self.control.move((None, None, -rospy.get_param("down_cam_search_depth") + 2))
+        self.control.move((None, None, -rospy.get_param("down_cam_search_depth")))
         
         # Flatten on top of bin
         if self.timeout_occurred:
@@ -64,8 +64,8 @@ class NavigateDropper(smach.State):
         if self.timeout_occurred:
             return "timeout"
         print("Dropping ball.")
-        self.controls.open_claw()
+        self.control.open_claw()
         rospy.sleep(1)
-        self.controls.close_claw()
+        self.control.close_claw()
         print("Successfully dropped ball.")
         return 'success'
