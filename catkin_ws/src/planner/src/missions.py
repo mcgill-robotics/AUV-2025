@@ -221,8 +221,10 @@ class Missions:
     ):
         global sm
 
-        first_state_name = first_state_name + count
-        second_state_name = "navigate_octagon" + count
+        first_state_name = first_state_name
+        second_state_name = second_state_name + count
+        third_state_name = "navigate_octagon" + count
+
         target_success_state_name = (
             mission_after_success if mission_after_success is not None else "success"
         )
@@ -237,17 +239,30 @@ class Missions:
 
         smach.StateMachine.add(
             first_state_name,
-            LinearSearch(
-                self.control, self.mapping, target_class="Octagon Table", min_objects=1
+            NavigatePinger(
+                self.control, self.mapping, self.state,
             ),
             transitions={
-                "success": second_state_name,
+                "success": target_success_state_name,
                 "timeout": target_timeout_state_name,
                 "failure": "failure",
             },
         )
+
         smach.StateMachine.add(
             second_state_name,
+            LinearSearch(
+                self.control, self.mapping, self.state, target_class="Octagon Table", min_objects=1
+            ),
+            transitions={
+                "success": third_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
+        )
+
+        smach.StateMachine.add(
+            third_state_name,
             NavigateOctagon(self.control, self.mapping, self.state),
             transitions={
                 "success": target_success_state_name,

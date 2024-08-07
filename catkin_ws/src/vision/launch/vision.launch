@@ -65,7 +65,7 @@
     <param name="min_distance_for_valid_point_cloud_point" value="0.5" />
     <param name="max_counts_per_label" value='{"Buoy":1, "Gate":1, "Lane Marker":2, "Octagon Table":1, "Bin":1}'/>
     <param name="debug_lane_marker_thresholding" value="false" />
-    <param name="debug_point_cloud_cleaning" value="false" />
+    <param name="debug_point_cloud_cleaning" value="true" />
 
     <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen">
         <param name="sim" value="$(arg sim)" />
