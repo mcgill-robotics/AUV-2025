@@ -56,8 +56,6 @@ def euler_to_quaternion(roll, pitch, yaw):
 
 def countdown(secs):
     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
-    end_time = rospy.Time.now() + secs
-    last_pub_time = rospy.Time.now()
-    while last_pub_time < end_time:
-        pub_mission_display.publish(str(end_time - last_pub_time))
-        last_pub_time = rospy.Time.now()
+    end_time = rospy.get_time() + secs
+    while rospy.get_time() < end_time:
+        pub_mission_display.publish(str(end_time - rospy.get_time()))
