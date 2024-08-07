@@ -41,3 +41,5 @@ catkin_ws/src/sim/devel
 
 # zed workspace
 catkin_ws/src/zed
+catkin_ws/src/vision/model_pipeline/data/
+catkin_ws/src/vision/model_pipeline/data.yaml
