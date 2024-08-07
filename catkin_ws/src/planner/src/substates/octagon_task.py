@@ -15,7 +15,6 @@ class NavigateOctagon(smach.State):
         self.thread_timer = None
         self.timeout_occurred = False
         self.time_limit = rospy.get_param("octagon_time_limit")
-        self.NOMINAL_DEPTH = rospy.get_param("nominal_depth")
 
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
@@ -34,11 +33,9 @@ class NavigateOctagon(smach.State):
         self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
         self.thread_timer.start()
 
-        # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-        #self.control.move((None, None, rospy.get_param("down_cam_search_depth")))
         self.control.flatten()
 
-        octagon_obj = self.mapping.getClosestObject((self.state.x, self.state.y), cls="Octagon Table") 
+        octagon_obj = self.mapping.getClosestObject((self.state.x, self.state.y), cls="Octagon Table") #Assume that we can see the octagon + reasonably close
 
         if octagon_obj is None:
             print("No octagon in object map! Failed.")
@@ -53,7 +50,7 @@ class NavigateOctagon(smach.State):
             face_destination=True,
         )
 
-        #Do a small inplace search to double check that we ar4e entered properly
+        #Maybe do a small inplace search to double check that we are entered properly
         #Is there a way of getting the bounding box that the down cam draws over the octagon? If yes, use to check that we are centered
 
         print("Surfacing.")
