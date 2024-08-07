@@ -315,7 +315,7 @@ class Missions:
                 if target_success_state_name == "success"
                 else target_success_state_name
             )
-
+            
         smach.StateMachine.add(
             first_state_name,
             InPlaceSearch(
@@ -327,11 +327,12 @@ class Missions:
                 "failure": "failure",
             },
         )
+        
         smach.StateMachine.add(
             second_state_name,
             NavigateDropper(self.control, self.mapping, self.state),
             transitions={
-                "success": target_timeout_state_name,
+                "success": target_success_state_name,
                 "timeout": target_timeout_state_name,
                 "failure": "failure",
             },
@@ -393,7 +394,7 @@ if __name__ == "__main__":
         ["Octagon", missions.octagon, "find_octagon", 0],
         ["Pinger", missions.pinger, "navigate_pinger", 0],
         ["Torpedo", missions.torpedo, "", 0],
-        ["Bins", missions.bins, "navigate_dropper", 0],
+        ["Bins", missions.bins, "find_bin", 0],
         ["Quali", missions.quali, "navigate_gate_not_through", 0],
         ["Competition", None, None, 0],
     ]

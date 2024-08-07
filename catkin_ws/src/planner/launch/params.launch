@@ -20,6 +20,7 @@
     <param name="navigate_buoy_time_limit" value="100" />
     <param name="navigate_lane_marker_time_limit" value="100" />
     <param name="navigate_pinger_time_limit" value="100" />
+    <param name="navigate_bin_time_limit" value="100" />
     <param name="octagon_time_limit" value="100" />
     <param name="trick_time_limit" value="100" />
 </launch>
