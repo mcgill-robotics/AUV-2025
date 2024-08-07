@@ -80,75 +80,13 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
-    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
-    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
-
 RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-#### ROS2
-
-RUN apt update && apt install -y locales
-RUN locale-gen en_US en_US.UTF-8
-RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-ENV LANG=en_US.UTF-8
-
-RUN apt install -y software-properties-common
-RUN add-apt-repository universe
-
-RUN apt update && apt install -y curl -y
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-RUN apt update
-
-RUN apt upgrade -y
-
-RUN apt install -y ros-galactic-ros-base
-
-RUN apt install -y ros-dev-tools
-
 ### ROS BRIDGE
 
-RUN mkdir -p ~/is-workspace ~/dds-is-workspace
+RUN wget https://github.com/ros2/ros2/releases/download/release-humble-20240807/ros2-humble-20240807-linux-jammy-arm64.tar.bz2
+RUN tar xvjf ros2-humble-20240807-linux-jammy-arm64.tar.bz2
 
-RUN mkdir ~/Fast-DDS && cd ~/Fast-DDS \
-    && git clone https://github.com/eProsima/Fast-CDR -b v1.0.19 \
-    && git clone https://github.com/eProsima/foonathan_memory_vendor \
-    && git clone https://github.com/eProsima/Fast-DDS  
-
-RUN apt-get install -y libyaml-cpp-dev libboost-program-options-dev \
-    && apt-get install -y libcurlpp-dev libasio-dev libcurl4-openssl-dev
-
-RUN pip install cmake --upgrade
-
-
-RUN cd ~/Fast-DDS \
-    && mkdir foonathan_memory_vendor/build \
-    && cd foonathan_memory_vendor/build \
-    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/ -DBUILD_SHARED_LIBS=ON \
-    && cmake --build . --target install \
-    && cd ../..
-
-RUN cd ~/Fast-DDS \
-    && mkdir Fast-CDR/build \
-    && cd Fast-CDR/build \
-    && cmake .. \
-    && cmake --build . --target install \
-    && cd ../..
-
-# RUN cd ~/Fast-DDS \
-#     && mkdir Fast-DDS/build \
-#     && cd Fast-DDS/build \
-#     && cmake ..  \
-#     && cmake --build . --target install \
-#     && cd ../..
-
-# RUN cd ~/is-workspace && git clone https://github.com/eProsima/ROS2-SH.git src/ROS2-S && colcon build
-# RUN cd ~/dds-is-workspace && git clone https://github.com/eProsima/ROS1-SH.git src/ROS1-SH && colcon build
-
-# CMD ["cd ~/is-workspace && source /opt/ros/noetic/setup.bash && source /opt/ros/galactic/setup.bash && source install/setup.bash && integration-service src/Integration-Service/examples/basic/ros1_ros2__helloworld.yaml"]
+CMD ["source /opt/ros/noetic/setup.bash && source ros2-linux/setup.bash && source /AUV-2024/scripts/set_env.bash && ros2 run ros1_bridge dynamic_bridge"]

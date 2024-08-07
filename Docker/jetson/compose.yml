@@ -6,7 +6,7 @@ services:
       - type: bind
         source: ../../../AUV-2024
         target: /AUV-2024
-    image: "mcgillrobotics/auv_2024:jetson"
+    image: "mcgillrobotics/auv_2024:poolside"
     privileged: true
     environment:
       - DISPLAY
@@ -53,6 +53,10 @@ services:
 
 
   bridge:
+    volumes:
+      - type: bind
+        source: ../../../AUV-2024
+        target: /AUV-2024
     image: "mcgillrobotics/auv_2024:rosbridge"
     build:
       context: .
@@ -64,7 +68,3 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     network_mode: host
     restart: always
-    volumes:
-      - type: bind
-        source: .
-        target: /conf
