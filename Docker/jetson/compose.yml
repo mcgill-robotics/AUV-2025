@@ -15,7 +15,7 @@ services:
       - UDEV=on
 
     runtime: nvidia
-    command: bash -c "tail -f /dev/null"
+    command: ${OVERRIDE_COMMAND:-bash -c "tail -f /dev/null"}
     network_mode: host
     restart: always
     build: .
