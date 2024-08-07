@@ -186,8 +186,6 @@ def get_object_position_front_camera(bbox):
     ly = (max_ly + min_ly) / 2
     lz = (max_lz + min_lz) / 2
 
-    print("LOCAL", lx, ly, lz)
-
     global_obj_pos_offset = quaternion.rotate_vectors(
         states[1].q_auv, np.array([lx, ly, lz])
     )
@@ -196,9 +194,7 @@ def get_object_position_front_camera(bbox):
     x, y, z = global_obj_pos_offset + np.array(
         [states[1].position.x, states[1].position.y, states[1].position.z]
     )
-
-    print("GLOBAL",x,y,z)
-
+    
     return x, y, z
 
 
