@@ -168,6 +168,10 @@ class Missions:
                 control=self.control,
                 state=self.state,
                 mapping=self.mapping,
+                goal_object="Buoy",
+                advance_distance=2,
+                pinger_frequency=30000,
+                update_heading_time=rospy.Duration(5),
             ),
             transitions={
                 "success": target_success_state_name,
