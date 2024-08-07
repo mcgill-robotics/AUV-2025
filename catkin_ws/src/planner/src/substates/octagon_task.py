@@ -50,9 +50,6 @@ class NavigateOctagon(smach.State):
             face_destination=True,
         )
 
-        #Maybe do a small inplace search to double check that we are entered properly
-        #Is there a way of getting the bounding box that the down cam draws over the octagon? If yes, use to check that we are centered
-
         print("Surfacing.")
         self.control.flatten()
         self.control.kill()
