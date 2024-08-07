@@ -2,6 +2,8 @@ import math
 from tf import transformations
 import numpy as np
 import quaternion
+import rospy
+from std_msgs import String
 
 
 def degreesToVector(yawDegrees):
@@ -50,3 +52,10 @@ def euler_to_quaternion(roll, pitch, yaw):
         math.pi * roll / 180, math.pi * pitch / 180, math.pi * yaw / 180, "rxyz"
     )
     return [q[3], q[0], q[1], q[2]]
+
+
+def countdown(secs):
+    pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+    end_time = rospy.get_time() + secs
+    while rospy.get_time() < end_time:
+        pub_mission_display.publish(str(end_time - rospy.get_time()))
