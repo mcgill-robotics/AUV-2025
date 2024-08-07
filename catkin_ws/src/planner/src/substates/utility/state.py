@@ -3,9 +3,9 @@
 import rospy
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose
+from auv_msgs.msg import PingerBearing
 import numpy as np
 import quaternion
-
 
 class StateTracker:
     def __init__(self):
@@ -16,29 +16,22 @@ class StateTracker:
         self.theta_y = None
         self.theta_z = None
         self.pose = None
-        self.quat = None
-        self.x_pos_sub = rospy.Subscriber("/state/x", Float64, self.updateX)
-        self.y_pos_sub = rospy.Subscriber("/state/y", Float64, self.updateY)
-        self.z_pos_sub = rospy.Subscriber("/state/z", Float64, self.updateZ)
-        self.theta_x_sub = rospy.Subscriber(
-            "/state/theta/x", Float64, self.updateThetaX
-        )
-        self.theta_y_sub = rospy.Subscriber(
-            "/state/theta/y", Float64, self.updateThetaY
-        )
-        self.theta_z_sub = rospy.Subscriber(
-            "/state/theta/z", Float64, self.updateThetaZ
-        )
-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.updatePose)
-        self.claw_contact_sub = rospy.Publisher(
-            "/actuators/grabber/contact", Bool, self.updateGrabberContact
-        )
+        self.quat = None    
+        self.pingers_bearing = [None, None, None, None]
+        self.frequency_types = [None, None, None, None]
+        self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
+        self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
+        self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
+        self.theta_x_sub = rospy.Subscriber('/state/theta/x', Float64, self.updateThetaX)
+        self.theta_y_sub = rospy.Subscriber('/state/theta/y', Float64, self.updateThetaY)
+        self.theta_z_sub = rospy.Subscriber('/state/theta/z', Float64, self.updateThetaZ)
+        self.pose_sub = rospy.Subscriber('/state/pose', Pose, self.updatePose)
+        self.hydrophone_sub = rospy.Subscriber('/sensors/hydrophones/pinger_bearing', PingerBearing, self.updatePingerBearing)
+        self.claw_contact_sub = rospy.Subscriber("/actuators/grabber/contact", Bool, self.updateGrabberContact)
 
-    def updatePose(self, msg):
+    def updatePose(self,msg):
         self.pose = msg
-        self.quat = np.quaternion(
-            msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z
-        )
+        self.quat = np.quaternion(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
 
     def updateX(self, msg):
         self.x = float(msg.data)
@@ -58,6 +51,19 @@ class StateTracker:
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
 
+    def updatePingerBearing(self, msg):
+        if rospy.has_param("pinger_frequency_1"):
+            if None in self.frequency_types:
+                self.frequency_types = [
+                    rospy.get_param("pinger_frequency_1"), 
+                    rospy.get_param("pinger_frequency_2"), 
+                    rospy.get_param("pinger_frequency_3"), 
+                    rospy.get_param("pinger_frequency_4")
+                ]
+            if msg.frequency in self.frequency_types:
+                pinger_index = self.frequency_types.index(msg.frequency)
+                self.pingers_bearing[pinger_index] = msg.pinger_bearing
+
     def updateGrabberContact(self, msg):
         self.grabber_contact = msg.data
 
@@ -68,3 +74,6 @@ class StateTracker:
         self.theta_x_sub.unregister()
         self.theta_y_sub.unregister()
         self.theta_z_sub.unregister()
+        self.hydrophone_sub.unregister()
+        self.claw_contact_sub.unregister()
+        
