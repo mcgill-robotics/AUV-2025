@@ -136,7 +136,7 @@ def detection_frame(image, debug_image, detections, camera_id):
             detectionFrame.confidence = conf * calculate_bbox_confidence(
                 list(box.xywh[0]), image_h, image_w
             )
-            print(global_class_name + ": " + str(detectionFrame.confidence))
+
             # Add the detection frame to the array.
             detection_frame_array.append(detectionFrame)
 
