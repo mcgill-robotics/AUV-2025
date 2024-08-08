@@ -25,7 +25,7 @@ def forwards_test(t):
         print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
 
         cmd = reset.copy()
-        cmd[t - 1] = force_to_pwm(force_amt * MAX_FWD_FORCE)
+        cmd[t - 1] = force_to_pwm(force_amt * MAX_FWD_FORCE * thruster_mount_dirs[t-1])
         pub.publish(cmd)
         rospy.sleep(1.0)
         pub.publish(reset_cmd)
