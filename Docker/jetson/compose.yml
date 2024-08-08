@@ -6,7 +6,7 @@ services:
       - type: bind
         source: ../../../AUV-2024
         target: /AUV-2024
-    image: "mcgillrobotics/auv_2024:poolside"
+    image: "mcgillrobotics/auv_2024:jetson"
     privileged: true
     environment:
       - DISPLAY
@@ -15,7 +15,7 @@ services:
       - UDEV=on
 
     runtime: nvidia
-    command: ${OVERRIDE_COMMAND:-bash -c "tail -f /dev/null"}
+    command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
     network_mode: host
     restart: always
     build: .
@@ -32,8 +32,8 @@ services:
       - /dev:/dev
     image: "mcgillrobotics/auv_2024:zed"
     build:
-      context: .
-      dockerfile: Dockerfile.zed
+      context: ../../../AUV-2024
+      dockerfile: Docker/jetson/Dockerfile.zed
     privileged: true
     environment:
       - DISPLAY
@@ -53,14 +53,10 @@ services:
 
 
   bridge:
-    volumes:
-      - type: bind
-        source: ../../../AUV-2024
-        target: /AUV-2024
     image: "mcgillrobotics/auv_2024:rosbridge"
     build:
-      context: .
-      dockerfile: Dockerfile.bridge
+      context: ../../../AUV-2024
+      dockerfile: Docker/jetson/Dockerfile.bridge
     privileged: true
     environment:
       - DISPLAY

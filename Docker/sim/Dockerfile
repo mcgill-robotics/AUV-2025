@@ -7,4 +7,6 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
 RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /root/.cache/pip \
+    && rm -rf /root/.cache/pip
+
+RUN echo "source /AUV-2024/scripts/jetson/docker_aliases.bash" >> ~/.bashrc

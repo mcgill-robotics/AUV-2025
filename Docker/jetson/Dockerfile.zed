@@ -1,4 +1,4 @@
-FROM stereolabs/zed:4.1-py-runtime-jetson-jp6.0.0
+FROM stereolabs/zed:4.1-py-devel-jetson-jp6.0.0
 
 SHELL ["/bin/bash", "-c"]
 
@@ -23,4 +23,30 @@ RUN apt upgrade -y
 
 RUN apt install -y ros-humble-ros-base
 
-RUN apt install -y ros-dev-tools
+# INSTALL ZED PACKAGE
+RUN apt-get install -y python3-rosdep python3-rosinstall-generator python3-vcstool python3-rosinstall build-essential
+RUN sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+RUN apt update
+RUN apt install -y python3-colcon-common-extensions
+
+
+RUN mkdir -p ~/ros2_ws/src/ # create your workspace if it does not exist
+RUN cd ~/ros2_ws/src/ #use your current ros2 workspace folder
+RUN git clone  --recursive https://github.com/stereolabs/zed-ros2-wrapper.git
+RUN cd ..
+RUN apt update
+RUN rosdep init && rosdep update
+RUN cd ~/ros2_ws && rosdep install --from-paths src --ignore-src -r -y # install dependencies
+# RUN apt -y install nvidia-cuda-dev
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/arm64/cuda-ubuntu2004.pin \
+    && sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+    && wget https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda-tegra-repo-ubuntu2004-12-2-local_12.2.0-1_arm64.deb \
+    && sudo dpkg -i cuda-tegra-repo-ubuntu2004-12-2-local_12.2.0-1_arm64.deb \
+    && sudo cp /var/cuda-tegra-repo-ubuntu2004-12-2-local/cuda-*-keyring.gpg /usr/share/keyrings/ \
+    && sudo apt-get update \
+    && sudo apt install cuda
+    
+RUN cd ~/ros2_ws/src && git clone  --recursive https://github.com/stereolabs/zed-ros2-wrapper.git
+RUN cd ~/ros2_ws && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args ' -DCMAKE_BUILD_TYPE=Release'  --cmake-args ' -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda' --cmake-args ' -DCUDA_NVCC_EXECUTABLE=/usr/local/cuda/bin/nvcc' --parallel-workers $(nproc) # build the workspace
+RUN echo source $(pwd)/install/local_setup.bash >> ~/.bashrc # automatically source the installation in every new bash (optional
