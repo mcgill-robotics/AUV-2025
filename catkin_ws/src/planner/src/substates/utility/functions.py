@@ -5,6 +5,12 @@ import quaternion
 import rospy
 from std_msgs.msg import String
 
+def countdown(secs):
+    pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+    end_time = rospy.get_time() + secs
+    while rospy.get_time() < end_time and not rospy.is_shutdown():
+        pub_mission_display.publish(f"T - {end_time - rospy.get_time():.3f}")
+
 
 def degreesToVector(yawDegrees):
     angleRadians = yawDegrees * math.pi / 180
