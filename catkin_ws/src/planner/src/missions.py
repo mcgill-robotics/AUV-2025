@@ -238,7 +238,7 @@ class Missions:
 
         smach.StateMachine.add(
             first_state_name,
-            LinearSearch(
+            InPlaceSearch(
                 self.control, self.mapping, target_class="Octagon Table", min_objects=1
             ),
             transitions={
