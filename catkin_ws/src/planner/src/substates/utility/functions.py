@@ -3,7 +3,7 @@ from tf import transformations
 import numpy as np
 import quaternion
 import rospy
-from std_msgs import String
+from std_msgs.msg import String
 
 
 def degreesToVector(yawDegrees):
