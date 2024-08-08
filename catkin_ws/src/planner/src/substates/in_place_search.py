@@ -51,6 +51,7 @@ class InPlaceSearch(smach.State):
             print("Rotating by {}.".format(turn_amt))
             self.control.rotateDeltaEuler(turn_amt)
             num_turns += 1
+            rospy.sleep(5)
 
     def timer_thread_func(self):
         self.pub_mission_display.publish("IPS Time-out")

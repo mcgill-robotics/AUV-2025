@@ -1,4 +1,4 @@
-COMPETITION_TASKS = ["Gate", "Lane Marker", "Buoy", "Lane Marker"]
+COMPETITION_TASKS = ["Gate", "Lane Marker", "Buoy", "Lane Marker", "Bins"] #, "Pinger", "Octagon"
 QUALIFYING_TASKS = ["Quali"]
 
 
