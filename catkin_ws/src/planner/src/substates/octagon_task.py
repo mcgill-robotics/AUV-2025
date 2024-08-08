@@ -15,16 +15,21 @@ class NavigateOctagon(smach.State):
         self.thread_timer = None
         self.timeout_occurred = False
         self.time_limit = rospy.get_param("octagon_time_limit")
+        self.closeness_threshold = rospy.get_param("octagon_closeness_threshold")
 
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
         )
     
     def timer_thread_func(self):
-        self.pub_mission_display.publish("Gate Time-out")
+        self.pub_mission_display.publish("Octagon Time-out")
         self.timeout_occurred = True
         self.control.freeze_pose()
 
+    def is_close(self, current_pos, target_pos, threshold): #better place to put this function???
+        distance = ((current_pos[0] - target_pos[0]) ** 2 + (current_pos[1] - target_pos[1]) ** 2) ** 0.5
+        return distance < threshold
+    
     def execute(self, ud):
         print("Starting octagon navigation.")
         self.pub_mission_display.publish("Octagon")
@@ -35,24 +40,37 @@ class NavigateOctagon(smach.State):
 
         self.control.flatten()
 
-        octagon_obj = self.mapping.getClosestObject((self.state.x, self.state.y), cls="Octagon Table") #Assume that we can see the octagon + reasonably close
+        started = False
+        while not self.timeout_occurred:
+            octagon_obj = self.mapping.getClosestObject((self.state.x, self.state.y), cls="Octagon Table")
+            
+            if octagon_obj is None: #TODO: better way to handle this?
+                print("No octagon in object map! Failed.")
+                return "failure"
+            
+            print("Moving towards the center of the octagon.") if not started else None
+            started = True
 
-        if octagon_obj is None:
-            print("No octagon in object map! Failed.")
-            return "failure"
+            self.control.move(
+                (octagon_obj[1], octagon_obj[2], rospy.get_param("down_cam_search_depth")),
+                face_destination=True,
+            )
 
-        if self.timeout_occurred:
+            #If close enough to the octagon that we estimate vision can accurately localize it, break
+            if self.is_close((self.state.x, self.state.y), (octagon_obj[1], octagon_obj[2]), self.closeness_threshold):
+                self.control.move(
+                (octagon_obj[1], octagon_obj[2], rospy.get_param("down_cam_search_depth")),
+                face_destination=True,
+                )
+                print("Surfacing.")
+                self.control.flatten()
+                self.control.kill()
+                break
+        else:
             return "timeout"
-        
-        print("Moving to the center of the octagon.")
-        self.control.move(
-            (octagon_obj[1], octagon_obj[2], rospy.get_param("down_cam_search_depth")),
-            face_destination=True,
-        )
-
-        print("Surfacing.")
-        self.control.flatten()
-        self.control.kill()
 
         print("Successfully navigated the octagon.")
         return "success"
+    
+
+
