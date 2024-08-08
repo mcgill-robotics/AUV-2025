@@ -42,7 +42,7 @@
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
-        <param name="bin_height" value="0.2" />
+        <param name="bin_height" value="0.5" />
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
         <param name="down_cam_class_name_mappings" value="['Bin', 'Lane Marker', 'Octagon Table']"/>
