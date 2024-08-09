@@ -7,104 +7,97 @@ from auv_msgs.msg import PingerBearing
 import threading
 from std_msgs.msg import String
 
+
 # Given a pinger number (integer), navigate the AUV towards the object corresponding to that pinger number
 class NavigatePinger(smach.State):
 
-     def __init__(self, control, state, mapping, pinger_number):
-          super().__init__(outcomes=["success", "failure", "search", "timeout"])
-          self.control = control
-          self.mapping = mapping
-          self.state = state
-          # An integer from 0 to 3 corresponding to a specifc pinger & object
-          self.pinger_number = pinger_number
-          self.nominal_depth = rospy.get_param("nominal_depth")
+    def __init__(
+        self, control, state, mapping, pinger_frequency, update_heading_time, advance_distance, goal_object,
+    ):
+        super().__init__(outcomes=["success", "failure", "timeout"])
+        self.control = control
+        self.mapping = mapping
+        self.state = state
+        # An integer from 0 to 3 corresponding to a specifc pinger & object
+        self.pinger_frequency = pinger_frequency # change to freq
+        self.update_heading_time = update_heading_time
+        self.goal_object = goal_object
+        self.advance_distance = advance_distance
+        self.nominal_depth = rospy.get_param("nominal_depth")
 
-          self.thread_timer = None
-          self.timeout_occurred = False
-          self.time_limit = rospy.get_param("navigate_pinger_time_limit")
-          
-          self.pub_mission_display = rospy.Publisher(
-               "/mission_display", String, queue_size=1
-          )
+        self.thread_timer = None
+        self.timeout_occurred = False
+        self.time_limit = rospy.get_param("navigate_pinger_time_limit")
 
-     def timer_thread_func(self):
-          self.pub_mission_display.publish("Gate Time-out")
-          self.timeout_occurred = True
-          self.control.freeze_pose()
+        self.pub_mission_display = rospy.Publisher(
+            "/mission_display", String, queue_size=1
+        )
 
-     def execute(self, ud):
-          print("Starting pinger navigation. Navigating to object with pinger number", self.pinger_number) 
-          self.pub_mission_display.publish("Pinger")
+    def timer_thread_func(self):
+        self.pub_mission_display.publish("Pinger Time-out")
+        self.timeout_occurred = True
+        self.control.freeze_pose()
 
-          # Start the timer in a separate thread.
-          self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
-          self.thread_timer.start()
+    def execute(self, ud):
+        print("Starting navigate pinger.")
+        self.pub_mission_display.publish("Pinger")
 
-          # Get all the pinger bearings into an array to access bearings by the pinger_number
-          pinger_bearings = self.state.pinger_bearing
-          pingers = [pinger_bearings.pinger1_bearing, pinger_bearings.pinger2_bearing, pinger_bearings.pinger3_bearing, pinger_bearings.pinger4_bearing]
+        # Start the timer in a separate thread.
+        self.thread_timer = threading.Timer(self.time_limit, self.timer_thread_func)
+        self.thread_timer.start()
 
-          # MOVE TO MIDDLE OF POOL DEPTH AND FLAT ORIENTATION
-          self.control.move((None, None, self.nominal_depth))
-          self.control.rotateEuler((0,0,None))
+        # Move to the middle of the pool depth and flat orientationt.
+        self.control.move((None, None, rospy.get_param("nominal_depth")))
+        self.control.flatten()
 
-          pinger_object = None
+        current_pinger = self.state.pingers_bearing[self.pinger_frequency]
+        current_pinger_bearing = np.array([current_pinger.x, current_pinger.y, current_pinger.z])
+        print("Current pinger bearing: ", current_pinger_bearing)
 
-          # Amount of times to turn towards the pinger/move while an object is not found before giving up
-          give_up_threshold = 10
+        if current_pinger_bearing is None:
+            print("No pinger data!")
+            return "failure"
 
-          while pinger_object is None and give_up_threshold > 0:
-               target_bearing = pingers[self.pinger_number - 1]
+        print("Centering and rotating in front of pinger.")
 
-               # Normalize (x magnitude = 1)
-               bearing = np.array([target_bearing.x, target_bearing.y, target_bearing.z])
-               bearing = bearing / np.linalg.norm(bearing)
+        if self.timeout_occurred:
+            return "timeout"
 
-               dotProduct = np.dot(np.array([1, 0, 0]), bearing)
+        pinger_bearings_sum = np.zeros(3)
+        number_pinger_measurements = 0
+        reset_time = rospy.Time.now()
 
-               # arctan with pinger bearing x and y to get an angle
-               angle = (180/math.pi) * np.arccos(dotProduct)
+        while True:
+            current_pinger = self.state.pingers_bearing[self.pinger_frequency]
+            current_pinger_bearing = np.array([current_pinger.x, current_pinger.y, current_pinger.z])
+            pinger_bearings_sum += current_pinger_bearing
+            number_pinger_measurements += 1
 
-               # Add 180 degrees if the angle is negative
-               if (pingerBearingX < 0 or pingerBearingY < 0):
-                    angle = angle + 180
-
-               # If the pinger is reached and no object is found (after the first attempt), exit the loop and search for it
-               if angle > 180 and give_up_threshold < 10:
-                    return "search"
-
-               # Rotate towards the pinger bearing and move forward a bit
-               self.control.rotateEuler([0, 0, angle])
-               self.control.moveDeltaLocal([1, 0, 0])
-
-               # Try to get the current closest object
-               # TODO: Can turn this into a specific target object if needed
-               pinger_object = self.mapping.getClosestObject(pos=(self.state.x, self.state.y))
-
-               # Keep trying if no object is found
-               if pinger_object is None:
-                    print("No object found, moving towards pinger again.")
-                    give_up_threshold -= 1
-
-          # Couldn't find the object with the specified pinger
-          if pinger_object is None:
-               print("No object found after", give_up_threshold, "tries. Giving up.")
-               return "failure"
-          else:
-               # Move towards the object
-               print("Object found! Centering and rotating in front of the {}".format(pinger_object[0]))
-               offset_distance = -2
-               rotation_amount = 180 if pinger_object[4] is None else pinger_object[4]
-               dtv = degreesToVector(rotation_amount)
-               offset = [] 
-               for i in range(len(dtv)):
-                    offset.append(offset_distance * dtv[i]) 
-               self.control.rotateEuler((None,None,rotation_amount))
-               homing_position = (pinger_object[1] + offset[0], pinger_object[2] + offset[1], pinger_object[3])
-
-               self.control.move(homing_position)
-
-          print("Successfully centered in front of the {}".format(pinger_object[0]))
-          print("Successfully completed pinger task!")
-
-          return "success"
+            if (rospy.Time.now() - reset_time) >= self.update_heading_time:
+                pinger_bearings_average = (
+                    pinger_bearings_sum / number_pinger_measurements
+                )
+               
+                # Move towards the Pinger 
+                print("Moving towards pinger")
+                print("Pinger bearings average: ", pinger_bearings_average)
+                self.control.rotateEuler((0,0, 180 + vectorToYawDegrees(pinger_bearings_average[0], pinger_bearings_average[1])))
+                
+                current_distance = np.linalg.norm(pinger_bearings_average)
+                vector_auv_pinger = -pinger_bearings_average / current_distance * self.advance_distance
+                
+                self.control.moveDelta(vector_auv_pinger)
+                
+                reset_time = rospy.Time.now()
+                
+                if self.timeout_occurred:
+                    return "timeout"
+                
+                # After we move we look for object, if it has been found then success
+                object = self.mapping.getClosestObject(
+                    cls=self.goal_object, pos=(self.state.x, self.state.y)
+                )
+                if object is not None:
+                    print("The " + self.goal_object + " has been found. The mission was a success")
+                    return "success"
+                

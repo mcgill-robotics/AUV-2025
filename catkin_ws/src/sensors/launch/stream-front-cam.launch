@@ -1,6 +1,3 @@
 <launch>
-    <!-- Launch ZED camera wrapper -->
-    <include file="$(find zed_wrapper)/launch/zed2i.launch">
-        <arg name="publish_urdf" value="false" />
-    </include>
+        <node name="zed_exec" pkg="sensors" type="start_zed_bridge.sh" output="screen" />
 </launch>
