@@ -5,7 +5,7 @@
 	</node>
 
 	<node name="imu_republish" pkg="sensors" type="imu_republisher" output="screen">
-        <param name="angular_velocity_variance" value="0.02"/>
-		<param name="acceleration_variance" value="0.02"/>
+        <param name="angular_velocity_variance" value="0.000000075"/>
+		<param name="acceleration_variance" value="0.00005"/>
     </node>
 </launch>

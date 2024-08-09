@@ -8,7 +8,7 @@
 bool update_state_on_clock;
 ros::Time last_clock_msg;
 
-ros::Publisher pub_pose;
+ros::Publisher pub_imu;
 float angular_velocity_variance;
 float acceleration_variance;
 
@@ -26,7 +26,7 @@ void odom_cb(const sensor_msgs::Imu::ConstPtr& msg) {
     new_msg.linear_acceleration_covariance[4] = acceleration_variance;
     new_msg.linear_acceleration_covariance[8] = acceleration_variance;
 
-    pub_pose.publish(new_msg);
+    pub_imu.publish(new_msg);
 
 }
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
   
 
-    pub_pose = n.advertise<sensor_msgs::Imu>("/sensors/depth/pose",1);   
+    pub_imu = n.advertise<sensor_msgs::Imu>("/sensors/imu/data",1);   
     ros::param::get("~angular_velocity_variance",angular_velocity_variance);
     ros::param::get("~acceleration_variance",acceleration_variance);
 
