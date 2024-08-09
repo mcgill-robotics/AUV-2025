@@ -25,6 +25,7 @@ catkin_package( CATKIN_DEPENDS
 
 
 install(PROGRAMS
+  src/start_zed_bridge.sh
   scripts/${PROJECT_NAME}
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

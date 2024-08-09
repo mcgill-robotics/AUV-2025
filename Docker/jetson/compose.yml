@@ -3,6 +3,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /dev:/dev
+      - /var/run/docker.sock:/var/run/docker.sock
       - type: bind
         source: ../../../AUV-2024
         target: /AUV-2024
@@ -15,8 +16,8 @@ services:
       - UDEV=on
 
     runtime: nvidia
+    command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
     network_mode: host
-    command: bash -c "source /opt/ros/noetic/setup.bash && source /AUV-2024/catkin_ws/devel/setup.bash && roslaunch planner quali.launch"
     restart: always
     build: .
     deploy:
@@ -27,33 +28,40 @@ services:
               count: 1
               capabilities: [gpu]
 
-  # zed:
-  #   volumes:
-  #     - /dev:/dev
-  #   image: "stereolabs/zed:4.1-py-runtime-jetson-jp6.0.0"
-  #   privileged: true
-  #   environment:
-  #     - DISPLAY
-  #     - QT_X11_NO_MITSHM=1
-  #     - NVIDIA_VISIBLE_DEVICES=all
-  #     - UDEV=on
-  #   volumes:
-  #     - /dev:/dev
-  #   image: "stereolabs/zed:4.1-py-runtime-jetson-jp6.0.0"
-  #   privileged: true
-  #   environment:
-  #     - DISPLAY
-  #     - QT_X11_NO_MITSHM=1
-  #     - NVIDIA_VISIBLE_DEVICES=all
-  #     - UDEV=on
-  #   runtime: nvidia
-  #   command: bash -c "ln -s /zed /AUV-2024/catkin_ws/src/zed && rm /zed/zed | exit 0 && tail -f /dev/null"
-  #   network_mode: host
-  #   restart: always
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
+  zed:
+    volumes:
+      - /dev:/dev
+    image: "mcgillrobotics/auv_2024:zed"
+    build:
+      context: ../../../AUV-2024
+      dockerfile: Docker/jetson/Dockerfile.zed
+    privileged: true
+    environment:
+      - DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - UDEV=on
+    runtime: nvidia
+    network_mode: host
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+
+  bridge:
+    image: "mcgillrobotics/auv_2024:rosbridge"
+    build:
+      context: ../../../AUV-2024
+      dockerfile: Docker/jetson/Dockerfile.bridge
+    privileged: true
+    environment:
+      - DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+    network_mode: host
+    restart: always
