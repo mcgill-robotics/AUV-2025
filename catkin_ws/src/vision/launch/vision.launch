@@ -10,9 +10,9 @@
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1000" />
         <param name="down_cam_model_file" 
-            value="$(find vision)/src/models/sim_down_camera_model.pt" />
+            value="$(find vision)/src/models/down_cam_comp.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/front_cam_model.pt" />
+            value="$(find vision)/src/models/front_cam_comp.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
@@ -36,13 +36,13 @@
         <param name="down_cam_yaw_offset" value="0" />
         <param name="depth_map_scale_factor" value="1" />
         <param name="down_cam_model_file" 
-            value="$(find vision)/src/models/best_AUV_sim_down_camera_model.pt" />
+            value="$(find vision)/src/models/down_cam_sim.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/best_AUV_sim_front_camera_model.pt" />
+            value="$(find vision)/src/models/front_cam_sim.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
-        <param name="bin_height" value="0.2" />
+        <param name="bin_height" value="0.5" />
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
         <param name="down_cam_class_name_mappings" value="['Bin', 'Lane Marker', 'Octagon Table']"/>

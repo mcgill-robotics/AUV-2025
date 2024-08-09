@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 import rospy
 from substates.utility.controller import Controller
+from substates.utility.functions import countdown
 
 rospy.init_node("pooltest")
+
+countdown(120)
+
+exit()
+
 controls = Controller(rospy.Time(0))
 
 controls.flatten()
