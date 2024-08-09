@@ -17,8 +17,7 @@ class StateTracker:
         self.theta_z = None
         self.pose = None
         self.quat = None    
-        self.pingers_bearing = [None, None, None, None]
-        self.frequency_types = [None, None, None, None]
+        self.pingers_bearing = {}
         self.x_pos_sub = rospy.Subscriber('/state/x', Float64, self.updateX)
         self.y_pos_sub = rospy.Subscriber('/state/y', Float64, self.updateY)
         self.z_pos_sub = rospy.Subscriber('/state/z', Float64, self.updateZ)
@@ -50,19 +49,9 @@ class StateTracker:
 
     def updateThetaZ(self, msg):
         self.theta_z = float(msg.data)
-
+    
     def updatePingerBearing(self, msg):
-        if rospy.has_param("pinger_frequency_1"):
-            if None in self.frequency_types:
-                self.frequency_types = [
-                    rospy.get_param("pinger_frequency_1"), 
-                    rospy.get_param("pinger_frequency_2"), 
-                    rospy.get_param("pinger_frequency_3"), 
-                    rospy.get_param("pinger_frequency_4")
-                ]
-            if msg.frequency in self.frequency_types:
-                pinger_index = self.frequency_types.index(msg.frequency)
-                self.pingers_bearing[pinger_index] = msg.pinger_bearing
+        self.pingers_bearing[msg.frequency] = msg.pinger_bearing
 
     def updateGrabberContact(self, msg):
         self.grabber_contact = msg.data
