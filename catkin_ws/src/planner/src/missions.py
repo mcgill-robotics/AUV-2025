@@ -3,6 +3,7 @@
 import rospy
 import smach
 from std_msgs.msg import String
+import ast
 
 from missions_utils import *
 from substates.breadth_first_search import *
@@ -148,7 +149,13 @@ class Missions:
         self, first_state_name, count, mission_after_success, mission_after_timeout
     ):
         global sm
-
+        global missions_to_objects
+        global missions_to_pinger_frequency
+        
+        advance_distance = int(rospy.get_param("advance_distance"))
+        update_heading_time = int(rospy.get_param("update_heading_time"))
+        update_heading_time = rospy.Duration(update_heading_time)
+        
         first_state_name = first_state_name + count
         target_success_state_name = (
             mission_after_success if mission_after_success is not None else "success"
@@ -168,6 +175,10 @@ class Missions:
                 control=self.control,
                 state=self.state,
                 mapping=self.mapping,
+                goal_object=missions_to_objects[mission_after_success[:-1]],
+                advance_distance=advance_distance,
+                pinger_frequency=missions_to_pinger_frequency[mission_after_success[:-1]],
+                update_heading_time=update_heading_time,
             ),
             transitions={
                 "success": target_success_state_name,
@@ -375,6 +386,12 @@ class Missions:
 
 if __name__ == "__main__":
     rospy.init_node("competition_planner")
+    
+    # Retrieve dictionnaries
+    missions_to_objects_str = rospy.get_param("missions_to_objects")
+    missions_to_pinger_frequency_str = rospy.get_param("missions_to_pinger_frequency")
+    missions_to_objects = ast.literal_eval(missions_to_objects_str)
+    missions_to_pinger_frequency = ast.literal_eval(missions_to_pinger_frequency_str)
 
     sm = None
     missions = Missions()
