@@ -66,4 +66,4 @@ USER root
 
 COPY scripts/set_env.bash /set_env.bash
 
-CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /set_env.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i"]
+CMD ["bash", "-c", "tail -f /dev/null"]
