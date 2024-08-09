@@ -40,51 +40,40 @@ for _ in range(2 * 3):
 update_display("GATE")
 controls.moveDelta([2, None, None])
 
+update_display("PINGER")
+previous_angle = None
+while not rospy.is_shutdown():
 
-def gotopinger():
-    previous_angle = None
-    while not rospy.is_shutdown():
+    pinger_bearing = state.pingers_bearing.get(TARGET_FREQUENCY, None)
 
-        pinger_bearing = state.pingers_bearing.get(TARGET_FREQUENCY, None)
+    if pinger_bearing is not None:
+        current_angle = vectorToYawDegrees(pinger_bearing.x, pinger_bearing.y)
+        if previous_angle is not None:
+            angle_change = abs(current_angle - previous_angle)
+            if angle_change > 180:
+                angle_change -= 180
+            if angle_change > 90:
+                break
 
-        if pinger_bearing is not None:
-            current_angle = vectorToYawDegrees(pinger_bearing.x, pinger_bearing.y)
-            if previous_angle is not None:
-                angle_change = abs(current_angle - previous_angle)
-                if angle_change > 180:
-                    angle_change -= 180
-                if angle_change > 90:
-                    break
-
-            print(f" >>>>>>>>>>>>>>>>> going to pinger @ {TARGET_FREQUENCY} Hz")
-            controls.rotateEuler(
-                (
-                    0,
-                    0,
-                    180 + current_angle,
-                )
+        print(f" >>>>>>>>>>>>>>>>> going to pinger @ {TARGET_FREQUENCY} Hz")
+        controls.rotateEuler(
+            (
+                0,
+                0,
+                180 + current_angle,
             )
-            pinger_bearing_np = np.array([pinger_bearing.x, pinger_bearing.y])
-            current_distance = np.linalg.norm(pinger_bearing_np)
-            vector_auv_pinger = (
-                -pinger_bearing_np / current_distance
-            ) * PINGER_STEP_DISTANCE
-            controls.moveDelta(vector_auv_pinger)
-            previous_angle = current_angle
-
-
-update_display("PINGER1")
-gotopinger()
-
-countdown(60)
-
-update_display("PINGER2")
-gotopinger()
-
+        )
+        pinger_bearing_np = np.array([pinger_bearing.x, pinger_bearing.y])
+        current_distance = np.linalg.norm(pinger_bearing_np)
+        vector_auv_pinger = (
+            -pinger_bearing_np / current_distance
+        ) * PINGER_STEP_DISTANCE
+        controls.moveDelta(vector_auv_pinger)
+        previous_angle = current_angle
 
 update_display("OCTAGON")
 controls.rotateEuler((0, 0, angle_to_gate))
-controls.moveDeltaLocal((0.5, 0, 0))
+controls.moveDeltaLocal((0.25, 0, 0))
 controls.rotateDeltaEuler((0, 0, -90))
 controls.moveDeltaLocal((0.5, 0, 0))
 
