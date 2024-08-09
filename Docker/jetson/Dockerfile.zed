@@ -64,4 +64,6 @@ RUN ./ZED_SDK_Tegra_L4T36.3_v4.1.3.zstd.run
 
 USER root
 
-CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i"]
+COPY scripts/set_env.bash /set_env.bash
+
+CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /set_env.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i"]
