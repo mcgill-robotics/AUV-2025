@@ -15,8 +15,6 @@ then
   # master node is run on Jetson
   export ROS_MASTER_URI=http://192.168.0.105:11311
 else
-    export ROS_MASTER_URI=http://0.0.0.0:11311
     echo "Jetson IP not reachable - not setting environment variables."
 fi
 
-source jetson/docker_aliases.sh
