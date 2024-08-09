@@ -11,6 +11,7 @@ from object_detection_utils import *
 from lane_marker_measure import measure_lane_marker
 
 from auv_msgs.msg import VisionObject, VisionObjectArray
+from std_msgs.msg import Int32MultiArray
 from sensor_msgs.msg import Image
 
 
@@ -112,6 +113,9 @@ def detection_frame(image, debug_image, detections, camera_id):
                             bbox[0], bbox[1], image_h, image_w, bin_top_z
                         )
                     )
+                bbox_message = Int32MultiArray()
+                bbox_message.data = [int(bbox[0]),int(bbox[1]), len(image[0]), len(image)]
+                pub_bbox_centering.publish(bbox_message)
             else:  # Forward camera.
                 if global_class_name == "Octagon Table":
                     pred_obj_x, pred_obj_y, pred_obj_z = (
@@ -233,6 +237,7 @@ if __name__ == "__main__":
     pub_viewframe_detection = rospy.Publisher(
         "/vision/viewframe_detection", VisionObjectArray, queue_size=1
     )
+    pub_bbox_centering = rospy.Publisher("/vision/down_cam/bbox", Int32MultiArray, queue_size=1)
 
     bridge = CvBridge()
 
