@@ -17,3 +17,4 @@ then
 else
     echo "Jetson IP not reachable - not setting environment variables."
 fi
+
