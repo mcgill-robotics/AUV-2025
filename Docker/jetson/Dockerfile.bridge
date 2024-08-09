@@ -4,4 +4,4 @@ COPY scripts/set_env.bash /set_env.bash
 
 SHELL ["/bin/bash"]
 
-CMD ["bash", "-c", "source /set_env.bash && ros2 run ros1_bridge dynamic_bridge"]
+CMD ["bash", "-c", "tail -f /dev/null"]
