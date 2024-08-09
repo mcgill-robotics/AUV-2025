@@ -6,7 +6,7 @@ from substates.utility.state import *
 from substates.utility.functions import *
 
 
-START2OCT_X = 1.4 + 2.74 * 5
+START2OCT_X = 1.4 + 2.74 * 6.5
 START2OCT_Y = 1.5 * 2.74
 
 rospy.init_node("semis")
@@ -41,7 +41,5 @@ update_display("GATE + NAV TO OCT")
 controls.moveDeltaLocal([START2OCT_X - 1, 0, 0])
 controls.rotateDeltaEuler((0, 0, -90))
 controls.moveDeltaLocal([START2OCT_Y, 0, 0])
-
-rospy.sleep(SLEEPING_TIME)
 
 controls.kill()

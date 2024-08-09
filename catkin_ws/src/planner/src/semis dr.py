@@ -6,10 +6,9 @@ from substates.utility.state import *
 from substates.utility.functions import *
 
 
-TARGET_FREQUENCY = 40000
-PINGER_STEP_DISTANCE = 1
-MOVE_FORWARD_FORCE = 20
-SLEEPING_TIME = 30
+START2OCT_X = 1.4 + 2.74 * 6.5
+START2OCT_Y = 1.5 * 2.74
+VELOCITY = 1
 
 rospy.init_node("semis")
 pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
@@ -20,18 +19,25 @@ def update_display(status):
     print(status)
 
 
-countdown(30)
+countdown(120)
 
 update_display("INIT")
 state = StateTracker()
 controls = Controller(rospy.Time(0))
 
 
+def moveForward(distance):
+    time_to_sleep = distance / VELOCITY
+    controls.forceLocal((20, 0))
+    rospy.sleep(time_to_sleep)
+    controls.forceLocal((0, 0))
+
+
 update_display("MOVE2GATE")
-controls.rotateDeltaEuler([0, 0, 0]) #TODO: change rotation based on flip coin
+controls.rotateDeltaEuler([0, 0, 0])  # TODO: change rotation based on flip coin
 angle_to_gate = state.theta_z
 controls.moveDelta([None, None, -0.75])
-controls.moveDelta([1, None, None])
+moveForward(1)
 
 
 update_display("TRICKS")
@@ -39,13 +45,9 @@ for _ in range(2 * 3):
     controls.rotateDeltaEuler((0, 0, 120))
 
 
-update_display("GATE")
-controls.moveDelta([2, None, None])
-
-update_display("NAV TO OCT")
-controls.rotateEuler((0, 0, angle_to_gate))
-controls.forceLocal((MOVE_FORWARD_FORCE,0,0))
-
-rospy.sleep(SLEEPING_TIME)
+update_display("GATE + NAV TO OCT")
+moveForward(START2OCT_X - 1)
+controls.rotateDeltaEuler((0, 0, -90))
+moveForward(START2OCT_Y)
 
 controls.kill()
