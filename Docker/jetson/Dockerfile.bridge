@@ -1,8 +1,7 @@
 FROM ros:foxy-ros1-bridge-focal
 
 COPY scripts/set_env.bash /set_env.bash
-COPY scripts/jetson/docker_aliases.bash /docker_aliases.bash
 
 SHELL ["/bin/bash"]
 
-CMD ["bash", "-c", "source /set_env.bash && source /docker_aliases.bash && ros2 run ros1_bridge dynamic_bridge"]
+CMD ["bash", "-c", "tail -f /dev/null"]

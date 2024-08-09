@@ -49,6 +49,7 @@ target_link_libraries(
 )
 
 install(PROGRAMS
+  src/start_zed_bridge.sh
   scripts/${PROJECT_NAME}
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
