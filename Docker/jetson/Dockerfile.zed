@@ -1,52 +1,120 @@
-FROM stereolabs/zed:4.1-py-devel-jetson-jp6.0.0
+# ARG IMAGE_NAME=dustynv/ros:humble-ros-base-l4t-r35.1.0
 
-SHELL ["/bin/bash", "-c"]
+# FROM ${IMAGE_NAME}
 
-ENV DEBIAN_FRONTEND=noninteractive
+# ARG ZED_SDK_MAJOR=3
+# ARG ZED_SDK_MINOR=8
+# ARG JETPACK_MAJOR=5
+# ARG JETPACK_MINOR=0
+# ARG L4T_MAJOR=35
+# ARG L4T_MINOR=1
 
-RUN apt update && apt install -y locales
-RUN locale-gen en_US en_US.UTF-8
-RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-ENV LANG=en_US.UTF-8
+# ARG ROS2_DIST=humble       # ROS2 distribution
 
-RUN apt install -y software-properties-common
-RUN add-apt-repository universe
+# # ZED ROS2 Wrapper dependencies version
+# ARG XACRO_VERSION=2.0.8
+# ARG DIAGNOSTICS_VERSION=3.0.0
+# ARG AMENT_LINT_VERSION=0.12.4
 
-RUN apt update && apt install -y curl -y
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+# ENV DEBIAN_FRONTEND noninteractive
 
+# # Enable required NVIDIA drivers
+# #ENV NVIDIA_DRIVER_CAPABILITIES \
+# #  ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}compute,video,utility
+
+# # Disable apt-get warnings
+# RUN apt-get update || true && apt-get install -y --no-install-recommends apt-utils dialog && \
+#   rm -rf /var/lib/apt/lists/*
+
+# ENV TZ=Europe/Paris
+
+# RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \ 
+#   apt-get update && \
+#   apt-get install --yes lsb-release wget less udev sudo build-essential cmake python3 python3-dev python3-pip python3-wheel git jq libpq-dev zstd usbutils && \    
+#   rm -rf /var/lib/apt/lists/*
+
+# # Install the ZED SDK
+# RUN echo "# R${L4T_MAJOR} (release), REVISION: ${L4T_MINOR}" > /etc/nv_tegra_release && \
+#   apt-get update -y || true && \
+#   apt-get install -y --no-install-recommends zstd wget less cmake curl gnupg2 \
+#   build-essential python3 python3-pip python3-dev python3-setuptools libusb-1.0-0-dev -y && \
+#   pip install protobuf && \
+#   wget -q --no-check-certificate -O ZED_SDK_Linux_JP.run \
+#   https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/l4t${L4T_MAJOR}.${L4T_MINOR}/jetsons && \
+#   chmod +x ZED_SDK_Linux_JP.run ; ./ZED_SDK_Linux_JP.run silent skip_tools && \
+#   rm -rf /usr/local/zed/resources/* && \
+#   rm -rf ZED_SDK_Linux_JP.run && \
+#   rm -rf /var/lib/apt/lists/*
+
+# # Install the ZED ROS2 Wrapper
+# ENV ROS_DISTRO ${ROS2_DIST}
+
+FROM stereolabs/zed:4.1-tools-devel-l4t-r36.3
+RUN sudo apt update && sudo apt install curl -y
+RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN sudo apt update && sudo apt install locales
+RUN sudo locale-gen en_US en_US.UTF-8
+RUN sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV DEBIAN_FRONTEND noninteractive 
+RUN sudo apt update
+RUN  apt install --no-install-recommends -y \
+python3-flake8-docstrings \
+python3-pip \
+python3-pytest-cov \
+ros-dev-tools
+RUN  apt install -y \
+python3-flake8-blind-except \
+python3-flake8-builtins \
+python3-flake8-class-newline \
+python3-flake8-comprehensions \
+python3-flake8-deprecated \
+python3-flake8-import-order \
+python3-flake8-quotes \
+python3-pytest-repeat \
+python3-pytest-rerunfailures
 
-RUN apt update
+RUN apt -y upgrade
+RUN apt install -y ros-humble-desktop-full
+# Install the ZED ROS2 Wrapper
+WORKDIR /root/ros2_ws/src
+RUN git clone --recursive https://github.com/stereolabs/zed-ros2-wrapper.git
 
-RUN apt upgrade -y
+# Install missing dependencies
+# WORKDIR /root/ros2_ws/src
+# RUN wget https://github.com/ros/xacro/archive/refs/tags/${XACRO_VERSION}.tar.gz -O - | tar -xvz && mv xacro-${XACRO_VERSION} xacro && \
+#   wget https://github.com/ros/diagnostics/archive/refs/tags/${DIAGNOSTICS_VERSION}.tar.gz -O - | tar -xvz && mv diagnostics-${DIAGNOSTICS_VERSION} diagnostics && \
+#   wget https://github.com/ament/ament_lint/archive/refs/tags/${AMENT_LINT_VERSION}.tar.gz -O - | tar -xvz && mv ament_lint-${AMENT_LINT_VERSION} ament-lint
+  
 
-RUN apt install -y ros-humble-ros-base
+# Check that all the dependencies are satisfied
+WORKDIR /root/ros2_ws
 
-# INSTALL ZED PACKAGE
-RUN apt-get install -y python3-rosdep python3-rosinstall-generator python3-vcstool python3-rosinstall build-essential
-RUN sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
-RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-RUN apt update
-RUN apt install -y python3-colcon-common-extensions
+RUN cd src && git clone https://github.com/ros-drivers/nmea_msgs \
+    &&  git clone -b ros2 https://github.com/ros-geographic-info/geographic_info.git && cd .. 
+#     && rm -rf geographic_info/geodesy \
+#     && git clone https://github.com/cra-ros-pkg/robot_localization.git \
+#     && git clone https://github.com/jbeder/yaml-cpp.git \
+#     && git clone https://github.com/ros/angles.git \
+#     && cd ..
+
+RUN apt-get install -y ros-humble-robot-localization
+RUN apt-get install -y ros-humble-point-cloud-transport
+
+RUN apt-get update -y || true && rosdep init && rosdep update && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    rm -rf /var/lib/apt/lists/*
 
 
-RUN mkdir -p ~/ros2_ws/src/ # create your workspace if it does not exist
-RUN cd ~/ros2_ws/src/ #use your current ros2 workspace folder
-RUN git clone  --recursive https://github.com/stereolabs/zed-ros2-wrapper.git
-RUN cd ..
-RUN apt update
-RUN rosdep init && rosdep update
-RUN cd ~/ros2_ws && rosdep install --from-paths src --ignore-src -r -y # install dependencies
-# RUN apt -y install nvidia-cuda-dev
-RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/arm64/cuda-ubuntu2004.pin \
-    && sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
-    && wget https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda-tegra-repo-ubuntu2004-12-2-local_12.2.0-1_arm64.deb \
-    && sudo dpkg -i cuda-tegra-repo-ubuntu2004-12-2-local_12.2.0-1_arm64.deb \
-    && sudo cp /var/cuda-tegra-repo-ubuntu2004-12-2-local/cuda-*-keyring.gpg /usr/share/keyrings/ \
-    && sudo apt-get update \
-    && sudo apt install cuda
-    
-RUN cd ~/ros2_ws/src && git clone  --recursive https://github.com/stereolabs/zed-ros2-wrapper.git
-RUN cd ~/ros2_ws && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args ' -DCMAKE_BUILD_TYPE=Release'  --cmake-args ' -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda' --cmake-args ' -DCUDA_NVCC_EXECUTABLE=/usr/local/cuda/bin/nvcc' --parallel-workers $(nproc) # build the workspace
-RUN echo source $(pwd)/install/local_setup.bash >> ~/.bashrc # automatically source the installation in every new bash (optional
+# Build the dependencies and the ZED ROS2 Wrapper
+RUN /bin/bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build --parallel-workers $(nproc) --symlink-install \
+  --event-handlers console_direct+ --base-paths src \
+  --cmake-args ' -DCMAKE_BUILD_TYPE=Release' \
+  ' -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs' \
+  ' -DCMAKE_CXX_FLAGS="-Wl,--allow-shlib-undefined"' \
+  ' --no-warn-unused-cli' "
+
+WORKDIR /root/ros2_ws
+
