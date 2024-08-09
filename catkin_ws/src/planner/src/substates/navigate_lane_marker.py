@@ -19,6 +19,8 @@ class NavigateLaneMarker(smach.State):
         self.thread_timer = None
         self.timeout_occurred = False
         self.time_limit = rospy.get_param("navigate_lane_marker_time_limit")
+        self.centering_dist_threshold = rospy.get_param("center_dist_threshold")
+        self.centering_delta_increment = rospy.get_param("centering_delta_increment")
 
         self.pub_mission_display = rospy.Publisher(
             "/mission_display", String, queue_size=1
@@ -108,6 +110,20 @@ class NavigateLaneMarker(smach.State):
             ),
             face_destination=True,
         )
+        # center distance loop
+        while (self.mapping.distance > self.centering_dist_threshold):
+            if self.timeout_occurred:
+                return "timeout"
+            if self.mapping.delta_height < 0:
+                self.control.moveDeltaLocal((self.centering_delta_increment, 0, 0))
+            elif self.mapping.delta_height > 0:
+                self.control.moveDeltaLocal((-self.centering_delta_increment, 0, 0))
+            if self.mapping.delta_width < 0:
+                self.control.moveDeltaLocal((0, self.centering_delta_increment, 0))
+            elif self.mapping.delta_width > 0:
+                self.control.moveDeltaLocal((0, -self.centering_delta_increment, 0))
+            rospy.sleep(3)
+        print("Centered")
 
         heading1 = lane_marker_obj[4]
         heading2 = lane_marker_obj[5]

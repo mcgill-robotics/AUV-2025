@@ -316,7 +316,7 @@ class Missions:
             
         smach.StateMachine.add(
             first_state_name,
-            InPlaceSearch(
+            LinearSearch(
                 self.control, self.mapping, target_class="Bin", min_objects=1
             ),
             transitions={
