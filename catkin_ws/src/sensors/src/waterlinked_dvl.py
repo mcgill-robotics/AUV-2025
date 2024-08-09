@@ -43,7 +43,7 @@ def parse_velocity_report(line):
     #         time_since_last_report: {time_since_last_report}, state: {state}")
 
 
-def parse_dead_reckon_report(line):
+def parse_dead_reckon_report(line, quat_variance):
     tokens = line.split(",")
     time_stamp = float(tokens[1])
     x = float(tokens[2])
@@ -56,9 +56,9 @@ def parse_dead_reckon_report(line):
     status = bool(tokens[9])
 
     report = PoseWithCovarianceStamped()
-    report.pose.pose.position.x = 0
-    report.pose.pose.position.y = 0
-    report.pose.pose.position.z = 0
+    report.pose.pose.position.x = x
+    report.pose.pose.position.y = y
+    report.pose.pose.position.z = z
 
     quaternion = transformations.quaternion_from_euler(roll * RAD_PER_DEG, pitch * RAD_PER_DEG, yaw * RAD_PER_DEG)
     report.pose.pose.orientation.x = quaternion[0]
@@ -66,8 +66,11 @@ def parse_dead_reckon_report(line):
     report.pose.pose.orientation.z = quaternion[2]
     report.pose.pose.orientation.w = quaternion[3]
     report.pose.covariance = [0.0] * 36
-    for i in range(3,6):
+    for i in range(0,3):
         report.pose.covariance[i * 6 + i] = std
+
+    for i in range(3,6):
+        report.pose.covariance[i * 6 + i] = quat_variance
     report.header.frame_id = "dvl"
     report.header.stamp = rospy.Time.now()
     return report
@@ -80,6 +83,7 @@ def main():
 
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
+    quat_variance = rospy.get_param("~quat_variance")
 
 
     try:
@@ -127,7 +131,7 @@ def main():
             if line.startswith("wrz"):
                 pub_vr.publish(parse_velocity_report(line))
             elif line.startswith("wrp"):
-                pub_dr.publish(parse_dead_reckon_report(line))
+                pub_dr.publish(parse_dead_reckon_report(line, quat_variance))
         except Exception as e:
             print(e)
             conn.close()
