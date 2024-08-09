@@ -18,16 +18,6 @@ ENV LC_ALL C.UTF-8
 
 ENV ROS_DISTRO noetic
 
-# Install ZED camera deps
-RUN apt-get update && \
-    apt-get install -y zstd \
-    && pip3 install bitstring
-
-# Installl ZED drivers
-RUN wget -O zed_sdk_install_ubuntu.run https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.3.zstd.run?_gl=1*1bklx7a*_gcl_au*MTYzODk0OTYzOC4xNzE5NjgwNzYy \
-    && chmod +x zed_sdk_install_ubuntu.run && ./zed_sdk_install_ubuntu.run -- silent \
-    && rm zed_sdk_install_ubuntu.run
-
 RUN apt update \
     && apt install -y openssh-server xauth \
     && mkdir /var/run/sshd \
@@ -85,12 +75,6 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# This script clones the ZED github repo (the ZED package) to the docker imagein /zed
-COPY setup_zed.bash .
-RUN chmod +x setup_zed.bash \
-    && /bin/bash -c './setup_zed.bash' \
-    && rm setup_zed.bash
-
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
@@ -106,9 +90,14 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc \
-    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc
+    && echo "source /AUV-2024/scripts/set_env.bash" >> ~/.bashrc \
+    && echo "source /AUV-2024/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
 RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
     && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+SHELL ["/bin/bash", "-c"]
+
+RUN echo "tmux" >> ~/.bashrc
