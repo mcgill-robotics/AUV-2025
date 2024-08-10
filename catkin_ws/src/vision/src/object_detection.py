@@ -243,6 +243,6 @@ if __name__ == "__main__":
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
     rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
-    rospy.Subscriber("/vision/front_cam/color/image_raw", Image, vision_cb, 1),
+    rospy.Subscriber("/zed/zed_node/stereo/image_rect_color", Image, vision_cb, 1),
 
     rospy.spin()
