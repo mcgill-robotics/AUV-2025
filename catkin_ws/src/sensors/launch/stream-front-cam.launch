@@ -1,4 +1,3 @@
 <launch>
-        <node name="zed_ros2" pkg="sensors" type="start_zed.sh" output="screen" />
         <node name="bridge" pkg="sensors" type="start_bridge.sh" output="screen" />
 </launch>
