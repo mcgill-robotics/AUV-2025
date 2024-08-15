@@ -1,62 +1,98 @@
-<launch>
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
-    <arg name="remove_gravity" default="true"/>
+def generate_launch_description():
+    # Declare the remove_gravity argument with a default value
+    remove_gravity_arg = DeclareLaunchArgument(
+        'remove_gravity',
+        default_value='true',
+        description='Remove gravitational acceleration from IMU data'
+    )
 
-    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
-      <param name="frequency" value="10"/>  
-      <param name="sensor_timeout" value="1.0"/>  
-      <param name="two_d_mode" value="false"/>
+    # Define the ekf_localization node with parameters and rosparams
+    ekf_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_localization_node',
+        name='ekf_localization',
+        output='screen',
+        parameters=[
+            {'frequency': 10},
+            {'sensor_timeout': 1.0},
+            {'two_d_mode': False},
+            {'print_diagnostics': True},
+            {'map_frame': 'map'},
+            {'odom_frame': 'odom'},
+            {'base_link_frame': 'auv'},
+            {'world_frame': 'odom'},
+            {'twist0': '/sensors/dvl/twist'},
+            {'imu0': '/sensors/imu/data'},
+            {'depth0': '/sensors/depth/pose'},
+            {'pose0': '/sensors/dvl/pose'},
+            {'debug': True},
+            {'imu0_differential': False},
+            {'depth0_differential': False},
+            {'pose0_differential': False},
+            {'twist0_relative': False},
+            {'imu0_relative': True},
+            {'depth0_relative': False},
+            {'pose0_relative': True},
+            {
+                'imu0_remove_gravitational_acceleration': 
+                LaunchConfiguration('remove_gravity')
+            },
+            {
+                'twist0_config': [
+                    False, False, False, 
+                    False, False, False, 
+                    True, True, True, 
+                    False, False, False,
+                    False, False, False
+                ]
+            },
+            {
+                'imu0_config': [
+                    False, False, False, 
+                    True,  True,  True, 
+                    False, False, False, 
+                    True,  True,  True,
+                    True, True, True
+                ]
+            },
+            {
+                'depth0_config': [
+                    False, False, True, 
+                    False, False, False, 
+                    False, False, False, 
+                    False, False, False,
+                    False, False, False
+                ]
+            },
+            {
+                'pose0_config': [
+                    True, True, True,
+                    True, True, True,
+                    False, False, False,
+                    False, False, False,
+                    False, False, False
+                ]
+            }
+        ]
+    )
 
-      <param name="print_diagnostics" value="true"/>
+    # Define the odom_republisher node
+    odom_republisher_node = Node(
+        package='state_estimation',
+        executable='odom_republisher',
+        name='odom_republisher',
+        output='screen'
+    )
 
-      <param name="map_frame" value="map"/>
-      <param name="odom_frame" value="odom"/>
-      <param name="base_link_frame" value="auv"/>
-      <param name="world_frame" value="odom"/>
+    # Create the launch description and add the nodes
+    return LaunchDescription([
+        remove_gravity_arg,
+        ekf_localization_node,
+        odom_republisher_node
+    ])
 
-      <param name="twist0" value="/sensors/dvl/twist"/>
-      <param name="imu0" value="/sensors/imu/data"/> 
-      <param name="depth0" value="/sensors/depth/pose"/>
-      <param name="pose0" value="/sensors/dvl/pose"/>
-
-      <param name="debug" value="true" />
-
-      <rosparam param="twist0_config">[false,  false,  false, 
-                                      false, false, false, 
-                                      true, true, true, 
-                                      false, false, false,
-                                      false, false, false]</rosparam>
-
-      <rosparam param="imu0_config">[false, false, false, 
-                                     true,  true,  true, 
-                                     false, false, false, 
-                                     true,  true,  true,
-                                     true, true, true]</rosparam>
-      
-      <rosparam param="depth0_config">[false, false, true, 
-                                       false, false, false, 
-                                       false, false, false, 
-                                       false, false, false,
-                                       false, false, false]</rosparam>
-      
-      <rosparam param="pose0_config">[true, true, true,
-                                      true, true, true,
-                                      false, false, false,
-                                      false, false, false,
-                                      false, false, false]</rosparam>
-
-      <param name="imu0_differential" value="false"/>
-      <param name="depth0_differential" value="false"/>
-      <param name="pose0_differential" value="false"/>
-
-      <param name="twist0_relative" value="false"/>
-      <param name="imu0_relative" value="true"/>
-      <param name="depth0_relative" value="false"/>
-      <param name="pose0_relative" value="true"/>
-
-      <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
-      
-    </node>
-
-    <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
-</launch>

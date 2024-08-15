@@ -1,60 +1,103 @@
-<launch>
-    <param name="/use_sim_time" value="true" />
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, SetParameter
+from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
+from ament_index_python.packages import get_package_share_directory
+import os
 
-    <arg name="vision" default="true" />
+def generate_launch_description():
+    # Declare arguments
+    sim_arg = DeclareLaunchArgument('sim', default_value='false', description='Simulation mode')
+    vision_arg = DeclareLaunchArgument('vision', default_value='true', description='Vision argument')
+    ekf_arg = DeclareLaunchArgument('ekf', default_value='true', description='EKF localization')
 
-    <arg name="ekf" default="true" />
+    # Group for EKF related parameters and nodes
+    ekf_group = GroupAction(
+        actions=[
+            DeclareLaunchArgument('q_imunominalup_imuup_w', default_value='1.0'),
+            DeclareLaunchArgument('q_imunominalup_imuup_x', default_value='0.0'),
+            DeclareLaunchArgument('q_imunominalup_imuup_y', default_value='0.0'),
+            DeclareLaunchArgument('q_imunominalup_imuup_z', default_value='0.0'),
+            DeclareLaunchArgument('q_dvlnominalup_dvlup_w', default_value='1.0'),
+            DeclareLaunchArgument('q_dvlnominalup_dvlup_x', default_value='0.0'),
+            DeclareLaunchArgument('q_dvlnominalup_dvlup_y', default_value='0.0'),
+            DeclareLaunchArgument('q_dvlnominalup_dvlup_z', default_value='0.0'),
+            DeclareLaunchArgument('auv_dvl_offset_x', default_value='0.0'),
+            DeclareLaunchArgument('auv_dvl_offset_y', default_value='0.0'),
+            DeclareLaunchArgument('auv_dvl_offset_z', default_value='0.0'),
+            Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                name='dvl_transform_pub',
+                arguments=[
+                    LaunchConfiguration('auv_dvl_offset_x'),
+                    LaunchConfiguration('auv_dvl_offset_y'),
+                    LaunchConfiguration('auv_dvl_offset_z'),
+                    LaunchConfiguration('q_dvlnominalup_dvlup_x'),
+                    LaunchConfiguration('q_dvlnominalup_dvlup_y'),
+                    LaunchConfiguration('q_dvlnominalup_dvlup_z'),
+                    LaunchConfiguration('q_dvlnominalup_dvlup_w'),
+                    'auv', 'dvl'
+                ]
+            ),
+            Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                name='imu_transform_pub',
+                arguments=[
+                    '0', '0', '0',
+                    LaunchConfiguration('q_imunominalup_imuup_x'),
+                    LaunchConfiguration('q_imunominalup_imuup_y'),
+                    LaunchConfiguration('q_imunominalup_imuup_z'),
+                    LaunchConfiguration('q_imunominalup_imuup_w'),
+                    'auv', 'imu'
+                ]
+            ),
+            Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                name='depth_transform_pub',
+                arguments=['0', '0', '0', '0', '0', '0', '1', 'auv', 'depth']
+            )
+        ],
+        condition=IfCondition(LaunchConfiguration('ekf'))
+    )
 
-    <group if="$(arg ekf)">
-      <arg name="q_imunominalup_imuup_w" default="1.0" />
-      <arg name="q_imunominalup_imuup_x" default="0.0" />
-      <arg name="q_imunominalup_imuup_y" default="0.0" />
-      <arg name="q_imunominalup_imuup_z" default="0.0" />
+    # Include other launch files
+    bringup_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('bringup'), 'launch', 'bringup.launch.py')
+        ),
+        launch_arguments={
+            'sim': 'true',
+            'vision': LaunchConfiguration('vision'),
+            'ekf': LaunchConfiguration('ekf')
+        }.items()
+    )
 
-      <arg name="q_dvlnominalup_dvlup_w" default="1.0" />
-      <arg name="q_dvlnominalup_dvlup_x" default="0.0" />
-      <arg name="q_dvlnominalup_dvlup_y" default="0.0" />
-      <arg name="q_dvlnominalup_dvlup_z" default="0.0" />
+    sim_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('sim'), 'launch', 'endpoint.launch.py')
+        )
+    )
 
-      <arg name="auv_dvl_offset_x" default="0.0" />
-      <arg name="auv_dvl_offset_y" default="0.0" />
-      <arg name="auv_dvl_offset_z" default="0.0" />
+    unity_bridge_node = Node(
+        package='sim',
+        executable='unity_bridge.py',
+        name='unity_bridge',
+        output='screen',
+        parameters=[{'ekf': LaunchConfiguration('ekf')}]
+    )
 
-      <param name="q_imunominalup_imuup_w" value="$(arg q_imunominalup_imuup_w)" />
-      <param name="q_imunominalup_imuup_x" value="$(arg q_imunominalup_imuup_x)" />
-      <param name="q_imunominalup_imuup_y" value="$(arg q_imunominalup_imuup_y)" />
-      <param name="q_imunominalup_imuup_z" value="$(arg q_imunominalup_imuup_z)" />
-
-      <param name="q_dvlnominalup_dvlup_w" value="$(arg q_dvlnominalup_dvlup_w)" />
-      <param name="q_dvlnominalup_dvlup_x" value="$(arg q_dvlnominalup_dvlup_x)" />
-      <param name="q_dvlnominalup_dvlup_y" value="$(arg q_dvlnominalup_dvlup_y)" />
-      <param name="q_dvlnominalup_dvlup_z" value="$(arg q_dvlnominalup_dvlup_z)" />
-
-      <param name="auv_dvl_offset_x" value="$(arg auv_dvl_offset_x)" />
-      <param name="auv_dvl_offset_y" value="$(arg auv_dvl_offset_y)" />
-      <param name="auv_dvl_offset_z" value="$(arg auv_dvl_offset_z)" />
-
-      <node name="dvl_transform_pub" pkg="tf2_ros" type="static_transform_publisher" args="
-        $(arg auv_dvl_offset_x) $(arg auv_dvl_offset_y) $(arg auv_dvl_offset_z) 
-        $(arg q_dvlnominalup_dvlup_x) $(arg q_dvlnominalup_dvlup_y) $(arg q_dvlnominalup_dvlup_z) $(arg q_dvlnominalup_dvlup_w) 
-        auv dvl" />
-      <node name="imu_transform_pub" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 
-        $(arg q_imunominalup_imuup_x) $(arg q_imunominalup_imuup_y) $(arg q_imunominalup_imuup_z) $(arg q_imunominalup_imuup_w) 
-        auv imu" />
-        
-      <node pkg="tf2_ros" type="static_transform_publisher" name="depth_transform_pub" args="0 0 0 0 0 0 1 auv depth" />
-    </group>
-
-    <include file="$(find bringup)/launch/bringup.launch">
-        <arg name="sim" value="true" />
-        <arg name="vision" value="$(arg vision)" />
-        <arg name="ekf" value="$(arg ekf)" />
-    </include>
-
-    <include file="$(find sim)/launch/endpoint.launch"></include>
-
-    <node name="unity_bridge" pkg="sim" type="unity_bridge.py" output="screen">
-        <param name="ekf" value="$(arg ekf)" />
-    </node>
-
-</launch>
+    return LaunchDescription([
+        SetParameter(name='/use_sim_time', value='true'),
+        sim_arg,
+        vision_arg,
+        ekf_arg,
+        ekf_group,
+        bringup_include,
+        sim_include,
+        unity_bridge_node
+    ])
