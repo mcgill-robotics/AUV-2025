@@ -94,9 +94,12 @@ while not rospy.is_shutdown():
         forwards_test(7)
         forwards_test(8)
     elif choice == "2":
-        choice = int(input("select thruster to test (1-8): "))
-        if 1 <= choice and choice <= 8:
-            forwards_test(choice)
+        while True:
+            choice = int(input("select thruster to test (1-8): "))
+            if 1 <= choice and choice <= 8:
+                forwards_test(choice)
+            else:
+                break
     elif choice == "3":
         simultaneous_forwards_test()
     elif choice == "4":
