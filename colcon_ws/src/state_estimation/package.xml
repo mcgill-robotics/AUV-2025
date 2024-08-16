@@ -42,8 +42,8 @@
   <exec_depend>robot_localization</exec_depend>
 
   <!-- Optional: You can add a test dependency if you plan to include tests -->
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_cmake_pytest</test_depend>
+  <!--<test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend> -->
 
   <!-- Export build type, if necessary -->
   <export>
