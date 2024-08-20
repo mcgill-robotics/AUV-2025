@@ -52,6 +52,14 @@ def simultaneous_forwards_test():
         if choice != "1":
             break
 
+# just type the thruster you want and it will run
+def optimized_dry_test(t):
+    print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
+    cmd = reset.copy()
+    cmd[t - 1] = force_to_pwm(force_amt * MAX_FWD_FORCE * thruster_mount_dirs[t-1])
+    pub.publish(cmd)
+    rospy.sleep(1.0)
+    pub.publish(reset_cmd)
 
 def reset_thrusters():
     pub.publish(reset_cmd)
@@ -97,7 +105,7 @@ while not rospy.is_shutdown():
         while True:
             choice = int(input("select thruster to test (1-8): "))
             if 1 <= choice and choice <= 8:
-                forwards_test(choice)
+                optimized_dry_test(choice)
             else:
                 break
     elif choice == "3":
