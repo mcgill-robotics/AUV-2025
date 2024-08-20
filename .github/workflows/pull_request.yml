@@ -8,7 +8,7 @@ jobs:
   CI:
     runs-on: ubuntu-20.04
     container:
-        image: mcgillrobotics/auv_2025:actions
+        image: mcgillrobotics/auv_2024:actions
     steps:
       - uses: actions/checkout@v3
       - name: catkin build
