@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="planner" name="pooltest" type="pooltest.py" respawn="False" output="screen"/>
+</launch>
