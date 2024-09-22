@@ -1,5 +1,10 @@
+# Note: Dockerfile copied from base
+
 # Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
+
+WORKDIR /catkin_ws
+COPY /catkin_ws .
 
 RUN apt-get update && apt-get install -y locales\
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -7,7 +12,6 @@ RUN apt-get update && apt-get install -y locales\
 ENV LC_ALL en_US.UTF-8 
 ENV LANG en_US.UTF-8  
 ENV LANGUAGE en_US:en     
-
 
 # Install all needed deps and compile the mesa llvmpipe driver from source.
 RUN apt-get update && apt-get install -y wget \
@@ -40,4 +44,4 @@ RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
-    && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc
+    && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc
