@@ -1,3 +1,0 @@
-<launch>
-	<include file="$(find propulsion)/launch/drytest.launch" />
-</launch>

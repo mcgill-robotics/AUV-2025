@@ -1,3 +1,0 @@
-<launch>
-	<node pkg="planner" name="joystick" type="joystick.py" respawn="False" output="screen"/>
-</launch>

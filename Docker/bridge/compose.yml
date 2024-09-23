@@ -1,41 +1,29 @@
 version: '3.8'
 services:
   # Image Configurations for ROS 1 (Pulled from AUV-2024 Docker Hub)
-  ros1:
+  douglas:
     build: 
       context: ../../.
-      dockerfile: Docker/bridge/Dockerfile.ros1
+      dockerfile: Docker/bridge/Dockerfile
     volumes:
-      - ros1-data:/var/lib/ros1/data
+      - douglas:/var/lib/ros1/data
     networks:
       - ros-network
-    depends_on:
-      - ros2  # According to ROS 1 Bridge docs, any catkin commands should be run after colcon starts
-    # Note: Probably should add health checks here to make sure that ros2 works before ros1 starts running 
+    environment:
+      - ROS_MASTER_URI=http://localhost:11311/
+        # For reference, check domain ID documentation for ROS 2 Humble
+        # Default value: 0
+      - ROS_DOMAIN_ID=0 
+      # Configure ROS Install Paths for ROS 1 Bridge
+      - ROS1_INSTALL_PATH=/opt/ros/noetic
+      - ROS2_INSTALL_PATH=/opt/ros/humble
       
     stdin_open: true
     tty: true
-
-  # Image Configurations for ROS 2 (Pulled from Official ROS Docker Hub for Humble)
-  ros2:
-    image: "osrf/ros:humble-desktop"
-    volumes:
-      - ros2-data:/var/lib/ros2/data
-    networks:
-      - ros-network
-
-    stdin_open: true
-    tty: true
-
-    environment:
-      - ROS_MASTER_URI=http://ros1_container:11311/
-      - ROS_DOMAIN_ID=0  # For reference, check domain ID documentation for ROS 2 Humble
   
 volumes:
-  ros1-data:
-  ros2-data:
+  douglas:
 
-# TODO: Configure Network Settings For Communication to Work
 networks:
   ros-network:
     driver: bridge
