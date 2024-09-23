@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>state_estimation</name>
+  <version>0.1.0</version>
+  <description>
+    Aggregates states from various sensors and publishes poses at regular intervals.
+  </description>
+
+  <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
+  <license>GPLv3</license>
+  <url type="repository">https://github.com/mcgill-robotics/AUV-2020</url>
+
+  <!-- Change build tool dependency to ament_cmake -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Update dependencies, ensuring they are ROS2 compatible -->
+  <build_depend>auv_msgs</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>sensors</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>python3-numpy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>sbg_driver</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>robot_localization</build_depend>
+
+  <exec_depend>auv_msgs</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>sensors</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>sbg_driver</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+
+  <!-- Optional: You can add a test dependency if you plan to include tests -->
+  <!--<test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend> -->
+
+  <!-- Export build type, if necessary -->
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
