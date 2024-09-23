@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  # Image Configurations for ROS 1 (Pulled from AUV-2024 Docker Hub)
+  ros2:
+    build: 
+      context: ../../.
+      dockerfile: Docker/humble-base/Dockerfile
+    volumes:
+      - ros2:/var/lib/ros1/data
+    environment:
+        # For reference, check domain ID documentation for ROS 2 Humble
+        # Default value: 0
+      - ROS_DOMAIN_ID=0 
+      - ROS_INSTALL_PATH=/opt/ros/humble
+      
+    stdin_open: true
+    tty: true
+  
+volumes:
+  ros2:
