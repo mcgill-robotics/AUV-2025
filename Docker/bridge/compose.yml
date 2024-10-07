@@ -1,29 +1,62 @@
 version: '3.8'
 services:
-  # Image Configurations for ROS 1 (Pulled from AUV-2024 Docker Hub)
-  douglas:
-    build: 
+  ros1:
+    build:
       context: ../../.
-      dockerfile: Docker/bridge/Dockerfile
-    volumes:
-      - douglas:/var/lib/ros1/data
-    networks:
-      - ros-network
+      dockerfile: Docker/bridge/ros1.Dockerfile
+    network_mode: "host"
+    restart: on-failure
     environment:
       - ROS_MASTER_URI=http://localhost:11311/
+    stdin_open: true
+    tty: true
+    ports:
+    - "11311"
+
+    command: roscore
+
+  ros2:
+    build:
+      context: ../../.
+      dockerfile: Docker/bridge/ros2.Dockerfile
+    network_mode: "host"
+    environment:
         # For reference, check domain ID documentation for ROS 2 Humble
         # Default value: 0
-      - ROS_DOMAIN_ID=0 
-      # Configure ROS Install Paths for ROS 1 Bridge
-      - ROS1_INSTALL_PATH=/opt/ros/noetic
-      - ROS2_INSTALL_PATH=/opt/ros/humble
+      - ROS_DOMAIN_ID=0
+    restart: on-failure
+    stdin_open: true
+    tty: true
+
+  # Image Configurations for ROS 1 Bridge
+  bridge:
+    build: 
+      context: ../../.
+      dockerfile: Docker/bridge/bridge.Dockerfile
+    volumes:
+      - bridge:/var/lib/bridge/data
+    network_mode: "host"
+    restart: on-failure
+    environment:
+      # - ROS_HOSTNAME=bridge
+      - ROS_MASTER_URI=http://localhost:11311/
+      - ROS_DOMAIN_ID=0
+      - ROS1_INSTALL_PATH=/AUV-2025/catkin_ws
+      - ROS2_INSTALL_PATH=/AUV-2025/colcon_ws
+    
+    depends_on:
+      - ros1
+      - ros2
+    
+    # command: ros2 run ros1_bridge dynamic_bridge
       
     stdin_open: true
     tty: true
   
 volumes:
-  douglas:
+  bridge:
 
 networks:
-  ros-network:
-    driver: bridge
+  host:
+    name: host
+    external: true
