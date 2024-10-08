@@ -28,6 +28,16 @@ services:
     stdin_open: true
     tty: true
 
+  # bridgecompile:
+  #   build:
+  #     context: ../../.
+  #     dockerfile: Docker/bridge/bridgecompile.Dockerfile
+  #   network_mode: "host"
+  #   restart: on-failure
+  #   depends_on:
+  #     - ros1
+  #     - ros2
+
   # Image Configurations for ROS 1 Bridge
   bridge:
     build: 
@@ -47,6 +57,7 @@ services:
     depends_on:
       - ros1
       - ros2
+      # - bridgecompile
     
     # command: ros2 run ros1_bridge dynamic_bridge
       

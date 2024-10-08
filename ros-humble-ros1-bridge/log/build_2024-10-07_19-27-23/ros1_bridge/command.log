@@ -1,6 +1,0 @@
-Invoking command in '/ros-humble-ros1-bridge/build/ros1_bridge': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake /ros-humble-ros1-bridge/src/ros1_bridge -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ros-humble-ros1-bridge/install/ros1_bridge
-Invoked command in '/ros-humble-ros1-bridge/build/ros1_bridge' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake /ros-humble-ros1-bridge/src/ros1_bridge -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ros-humble-ros1-bridge/install/ros1_bridge
-Invoking command in '/ros-humble-ros1-bridge/build/ros1_bridge': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake --build /ros-humble-ros1-bridge/build/ros1_bridge
-Invoked command in '/ros-humble-ros1-bridge/build/ros1_bridge' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake --build /ros-humble-ros1-bridge/build/ros1_bridge
-Invoking command in '/ros-humble-ros1-bridge/build/ros1_bridge': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake --install /ros-humble-ros1-bridge/build/ros1_bridge
-Invoked command in '/ros-humble-ros1-bridge/build/ros1_bridge' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble:${CMAKE_PREFIX_PATH} /usr/bin/cmake --install /ros-humble-ros1-bridge/build/ros1_bridge

@@ -7,6 +7,9 @@ catkin_ws/build/
 catkin_ws/logs/
 catkin_ws/install/
 
+# ROS-Humble-ROS-1-Bridge log files
+ros-humble-ros1-bridge/log
+
 # catkin tools
 catkin_ws/.catkin_tools/
 
