@@ -17,7 +17,7 @@ def hamilton_product(q1,q2):
     y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
     z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
     return [w, x, y, z]
-#this function will rotate the DVLs orientation 180 degrees about x axis(whcih flips the z axis)
+#this function will rotate the DVLs orientation 180 degrees about x axis(whcih flips the z axis) 
 
 def parse_velocity_report(line):
     tokens = line.split(",")
