@@ -189,8 +189,7 @@ class UnityBridge(Node):
 
             # ROS Time is deprecated, to get the time a node was initialized use rclpy.node.now()
             # Check when testing/debugging for same functionality.
-            # Reference: https://docs.ros2.org/ardent/api/rclcpp/classrclcpp_1_1_node.html#af706b231620f1c120b7ccd738ec31867
-            dvl_msg.header.stamp = self.now()
+            # Reference: https://answers.ros.org/question/321536/replacement-for-rospytimenow-in-ros2/
             dvl_msg.header.frame_id = "dvl"
                             
             # TODO: fix after publishers initialized in constructor
@@ -224,8 +223,8 @@ class UnityBridge(Node):
             
             # ROS Time is deprecated, to get the time a node was initialized use rclpy.node.now()
             # Check when testing/debugging for same functionality.
-            # Reference: https://docs.ros2.org/ardent/api/rclcpp/classrclcpp_1_1_node.html#af706b231620f1c120b7ccd738ec31867
-            imu_msg.header.stamp = self.now()
+            # Reference: https://answers.ros.org/question/321536/replacement-for-rospytimenow-in-ros2/
+            imu_msg.header.stamp = self.get_clock().now()
             imu_msg.header.frame_id = "imu"
 
             # TODO: fix after publishers initialized in constructor
