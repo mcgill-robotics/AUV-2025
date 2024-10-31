@@ -23,10 +23,10 @@ from sensors_msgs.msg import Imu
 from auv_msgs.msg import UnityState, PingerTimeDifference
 from std_msgs.msg import Float64
 
+from robot_localization.srv import SetPose
 
 DEG_PER_RAD = 180 / np.pi
 NUMBER_OF_PINGERS = 4
-
 
 class UnityBridge(Node):
     '''
@@ -45,27 +45,26 @@ class UnityBridge(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
 
         # Fetches parameters from either launch files or package declarations
-        q_dvlnominalup_dvlup_w = self.get_parameter('q_dvlnominalup_dvlup_w').value
-        q_dvlnominalup_dvlup_x = self.get_parameter('q_dvlnominalup_dvlup_x').value
-        q_dvlnominalup_dvlup_y = self.get_parameter('q_dvlnominalup_dvlup_y').value
-        q_dvlnominalup_dvlup_z = self.get_parameter('q_dvlnominalup_dvlup_z').value
-
         self.q_dvlnominalup_dvlup = np.quaternion(
-            self.get_parameter('q_dvlnominalup_dvlup_w').value,
-            self.get_parameter('q_dvlnominalup_dvlup_x').value,
-            self.get_parameter('q_dvlnominalup_dvlup_y').value,
-            self.get_parameter('q_dvlnominalup_dvlup_z').value
+            self.declare_parameter('q_dvlnominalup_dvlup_w').value,
+            self.declare_parameter('q_dvlnominalup_dvlup_x').value,
+            self.declare_parameter('q_dvlnominalup_dvlup_y').value,
+            self.declare_parameter('q_dvlnominalup_dvlup_z').value
         )
+
+        self.declare_parameter('auv_dvl_offset_x')
+        self.declare_parameter('auv_dvl_offset_y')
+        self.declare_parameter('auv_dvl_offset_z')
 
         self.auv_dvl_offset_x = rclpy.get_parameter('auv_dvl_offset_x').value
         self.auv_dvl_offset_y = rclpy.get_parameter('auv_dvl_offset_y').value
         self.auv_dvl_offset_z = rclpy.get_parameter('auv_dvl_offset_z').value
-
+        
         self.q_imunominalup_imuup = np.quaternion(
-            rclpy.get_parameter('q_imunominalup_imuup_w').value,
-            rclpy.get_parameter('q_imunominalup_imuup_x').value,
-            rclpy.get_parameter('q_imunominalup_imuup_y').value,
-            rclpy.get_parameter('q_imunominalup_imuup_z').value
+            self.declare_parameter('q_imunominalup_imuup_w').value,
+            self.declare_parameter('q_imunominalup_imuup_x').value,
+            self.declare_parameter('q_imunominalup_imuup_y').value,
+            self.declare_parameter('q_imunominalup_imuup_z').value
         )
 
         self.q_imunominaldown_imunominalup = np.quaternion(0,1,0,0)
@@ -75,28 +74,111 @@ class UnityBridge(Node):
 
         self.q_imunominaldown_dvlnominalup = np.quaternion(0, 1, 0, 0)
 
-        # TODO: Add all publishers and subscribers for the node
+        self.create_publishers()
+        self.create_subscriptions()
 
+    '''
+    TODO: Document what create_publishers does.
+    '''
+    def create_publishers(self) -> None:
+        # Create Sensors Raw Data Publishers
+        self.pub_dvl_sensor = self.create_publisher(TwistWithCovarianceStamped, '/sensors/dvl/Twist', 1)
+        self.pub_depth_sensor = self.create_publisher(Float64, '/sensors/depth/z', 1)
+        self.pub_imu_sensor = self.create_publisher(Imu, '/sensors/imu/data', 1)
+        self.pub_hydrophone_sensor = self.create_publisher(PingerTimeDifference, '/sensors/hydrophones/pinger_time_difference', 1)
+
+        # Create Coordinate Data Publishers
+        self.pub_pose = self.create_publisher(Pose, '/state/post', 1)
+        self.pub_x = self.create_publisher(Float64, '/state/x', 1)
+        self.pub_y = self.create_publisher(Float64, '/state/y', 1)
+        self.pub_z = self.create_publisher(Float64, '/state/z', 1)
+        self.pub_theta_x = self.create_publisher(Float64, '/state/theta/x', 1)
+        self.pub_theta_y = self.create_publisher(Float64, '/state/theta/y', 1)
+        self.pub_theta_z = self.create_publisher(Float64, '/state/theta/z', 1)
+        self.pub_ang_vel = self.create_publisher(Vector3, '/state/angular_velocity', 1)
+
+    '''
+    TODO: Document what create_subscription does.
+    '''
+    def create_subscriptions(self) -> None:
+        self.sub_unity_state = self.create_subscription(UnityState, '/unity/state', unity_state_callback, rclpy.qos.QoSProfile())
 
     '''
     TODO: Document what reset_pose does.
     '''
     def reset_pose(self, pose) -> None:
-        client = self.create_client(SetPose, 'set_pose')
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('service not available, waiting again...')
+        self.set_pose_cli = self.create_client(SetPose, 'set_pose')
+        while not self.set_pose_cli.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Service not available, waiting again...')
 
-        msg = PoseWithCovarianceStamped()
-        # TODO: Implement message details (head, pose), deal with exception,
-        # and set_pose to new message
+        request = SetPose.Request()
+        request.msg = PoseWithCovarianceStamped()
+        request.msg.pose.pose = pose
+        request.msg.header.stamp = self.get_clock().now().to_msg()
+        request.msg.header.frame_id = 'odom'
 
-        return
+        future = self.set_pose_cli.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+
+        try:
+            response = future.result()
+            self.get_logger().info(f'Service call succeeded: {e}')
+        except Exception as e:
+            self.get_logger().info(f'Service call failed: {e}')
 
 
     '''
     TODO: Document what publish_with_bypass does.
     '''
     def publish_with_bypass(self, pose, ang_vel) -> None:
+        self.pub_pose.publish(pose)
+        self.pub_x.publish(pose.position.x)
+        self.pub_y.publish(pose.position.y)
+        self.pub_z.publish(pose.position.z)
+        self.pub_ang_vel.publish(ang_vel)
+
+        self.euler_dvlref_dvl = transformations.euler_from_quaternion(
+            [
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w,
+            ]
+        )
+
+        # roll = euler_dvlref_dvl[0] * DEG_PER_RAD
+        # pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
+        # yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
+
+        self.pub_theta_x.publish(euler_dvlref_dvl[0] * DEG_PER_RAD)
+        self.pub_theta_y.publish(euler_dvlref_dvl[1] * DEG_PER_RAD)
+        self.pub_theta_z.publish(euler_dvlref_dvl[2] * DEG_PER_RAD)
+
+        if rclpy.get_clock().now() == self.last_time:
+            return
+        self.last_time = rclpy.get_clock().now()
+
+        # Generate message t and broadcast via sendTransform
+        t = TransformStamped()
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "world"
+        t.child_frame_id = "auv_base"
+        t.transform.translation.x = pose.position.x
+        t.transform.translation.y = pose.position.y
+        t.transform.translation.z = pose.position.z
+        t.transform.rotation = pose.orientation
+        self.tf_broadcaster.sendTransform(t)
+
+        # Generate message t_rot and broadcast via sendTransform
+        t_rot = TransformStamped()
+        t_rot.header.stamp = rospy.Time.now()
+        t_rot.header.frame_id = "world_rotation"
+        t_rot.child_frame_id = "auv_rotation"
+        t_rot.transform.translation.x = 0
+        t_rot.transform.translation.y = 0
+        t_rot.transform.translation.z = 0
+        t_rot.transform.rotation = pose.orientation
+        self.tf_broadcaster.sendTransform(t_rot)
         
         return
 
