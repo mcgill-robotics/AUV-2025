@@ -7,5 +7,4 @@ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
 RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /root/.cache/pip \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
+    && rm -rf /root/.cache/pip
