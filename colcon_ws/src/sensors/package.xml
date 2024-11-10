@@ -34,7 +34,7 @@
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 
-  <!-- rclcpp dependencies -->
+  <!-- rclpy dependencies -->
   <depend>rclpy</depend>
   <export>
     <build_type>ament_python</build_type>
