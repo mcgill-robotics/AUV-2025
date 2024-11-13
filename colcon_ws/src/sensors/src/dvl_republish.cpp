@@ -10,12 +10,14 @@ class DVLRepublishNode : public rclcpp::Node {
 public:
     DVLRepublishNode() : Node("dvl_republish"){
         this->declare_parameter<float>("variance", 0.0);
-        this->get_parameter("variance", variance);
+        this->get_parameter("~variance", variance);
 
-        public_dvl = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/sensors/dvl/pose", 1);
         odom_sub = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "/sensors/dvl/raw", 100, std::bind(&DVLRepublishNode::odom_cb, this, std::placeholders:_1)
             );
+
+        public_dvl = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/sensors/dvl/pose", 1);
+
     }
 private:
     void odom_cb(const geometry_msgs::msg::PoseWithCovarianceStamped::ConstPtr& msg) {
@@ -35,6 +37,9 @@ private:
 
 int main(int argc, chae **argv) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<DVLRepublishNode>());
+
+    auto node = std::make_shared<DVLRepublishNode>();
+    rclcpp::spin(node);
+    
     return 0;
 }

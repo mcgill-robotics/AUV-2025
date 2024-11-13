@@ -10,7 +10,7 @@ class DepthRepublishNode : public rclcpp::Node {
 public:
     DepthRepublishNode() : Node("depth_republish") {
         this->declare_parameter<float>("variance", 0.0);
-        this->get_parameter("variance", variance);
+        this->get_parameter("~variance", variance);
 
         odom_sub = this->create_subscription<std_msgs::msg::Float64>(
             "/sensors/depth/z", 100, std::bind(&DepthRepublishNode::odom_cb, this, std::placeholders:_1)
@@ -39,8 +39,8 @@ private:
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<DepthRepublishNode>();
 
+    auto node = std::make_shared<DepthRepublishNode>();
     rclcpp::spin(node);
     
     return 0;
