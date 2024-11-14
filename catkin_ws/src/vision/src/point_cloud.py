@@ -63,6 +63,8 @@ def convert_from_uvd(width, height):
             header=header, fields=fields, points=xyz_rgb_image
         )
         return pub_msg
+    else:
+        print("y_over_z_map is None")
 
 
 def get_point_cloud_image(
@@ -144,3 +146,9 @@ if __name__ == "__main__":
             msg = convert_from_uvd(width, height)
             if msg is not None:
                 point_cloud_pub.publish(msg)
+            else:
+                print("msg is None")
+        '''if rgb is None:
+            print("rgb is None")
+        if depth is None:
+            print("depth is None")'''
