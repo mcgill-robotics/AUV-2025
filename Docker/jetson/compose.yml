@@ -5,9 +5,9 @@ services:
       - /dev:/dev
       - /var/run/docker.sock:/var/run/docker.sock
       - type: bind
-        source: ../../../AUV-2024
-        target: /AUV-2024
-    image: "mcgillrobotics/auv_2024:jetson"
+        source: ../../../AUV-2025
+        target: /AUV-2025
+    image: "mcgillrobotics/auv_2025:jetson"
     privileged: true
     environment:
       - DISPLAY
@@ -30,9 +30,9 @@ services:
   zed:
     volumes:
       - /dev:/dev
-    image: "mcgillrobotics/auv_2024:zed"
+    image: "mcgillrobotics/auv_2025:zed"
     build:
-      context: ../../../AUV-2024
+      context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.zed
     privileged: true
     environment:
@@ -42,11 +42,9 @@ services:
       - UDEV=on
     runtime: nvidia
     network_mode: host
-<<<<<<< HEAD
-    command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash 
-=======
-    command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash"
->>>>>>> 61285dccfd66a218a7a77c5e39c895ed002d7752
+
+    command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash" 
+
     deploy:
       resources:
         reservations:
@@ -57,9 +55,9 @@ services:
 
 
   bridge:
-    image: "mcgillrobotics/auv_2024:rosbridge"
+    image: "mcgillrobotics/auv_2025:rosbridge"
     build:
-      context: ../../../AUV-2024
+      context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.bridge
     privileged: true
     environment:
