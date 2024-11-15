@@ -1,0 +1,22 @@
+<!-- Need to finish/check -->
+<?xml version="1.0"?>
+<package format="2">
+  <name>planner</name>
+  <version>0.1.0</version>
+  <description>Makes high-level decisions of what to do</description>
+
+  <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
+  <license>GPLv3</license>
+  <url type="repository">https://github.com/mcgill-robotics/AUV-2025</url>
+
+  <buildtool_depend>colcon</buildtool_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
