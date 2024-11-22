@@ -16,8 +16,8 @@ def generate_launch_description():
         include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'imu_launch.py')).items()
         include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'hydrophones_launch.py')).items()
 
-        include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'stream-down-cam_launch.py')
+        include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'stream-down-cam_launch.py'),
                                         condition=IfCondition(LaunchConfiguration('vision'))).items()
-        include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'stream-front-cam_launch.py')
+        include_IncludeLaunchDescription(PathJoinSubstitution(FindPackageShare('sensors'), 'launch', 'stream-front-cam_launch.py'),
                                         condition=IfCondition(LaunchConfiguration('vision'))).items()
     ])

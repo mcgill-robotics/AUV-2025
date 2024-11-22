@@ -9,7 +9,7 @@ def generate_launch_description():
         respawn=True,
         respawn_delay=1.0,
         parameters=[{
-            'port': '/dev/display'
+            'port': '/dev/display',
             'baud': 115200
         }]
     )
