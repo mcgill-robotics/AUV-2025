@@ -128,7 +128,7 @@ class Controller:
                 self.theta_z,
                 self.orientation,
             ]
-            and not rclpy.ok()
+            and rclpy.ok()
         ):
             debug_str = "Missing state information for "
             for state_axis, state_axis_name in [

@@ -1,0 +1,3 @@
+[submodule "auv-sim-unity"]
+	path = auv-sim-unity
+	url = https://github.com/mcgill-robotics/auv-sim-unity
