@@ -33,7 +33,7 @@ services:
     image: "mcgillrobotics/auv_2025:zed"
     build:
       context: ../../../AUV-2025
-      dockerfile: Docker/jetson/Dockerfile.zed
+      dockerfile: Docker/jetson/Dockerfile_ROS1.zed
     privileged: true
     environment:
       - DISPLAY
