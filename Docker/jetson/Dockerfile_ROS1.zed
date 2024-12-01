@@ -1,0 +1,118 @@
+# Start from the ZED SDK base image for Jetson (bsed on Ubuntu 20.04)
+FROM stereolabs/zed:4.2-tools-devel-l4t-r36.2
+
+# Set environment variables
+ENV LANG=en_US.UTF-8
+ENV DEBIAN_FRONTEND noninteractive
+ENV ROS_DISTRO noetic
+ENV RMW_IMPLEMENTATION rmw_fastrtps_cpp
+
+# Update system locale and set environment variables
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+
+# Install curl, locales, ROS1 Noetic dependencies, and other utilities
+RUN apt update && apt install -y \
+    curl \
+    locales \
+    build-essential \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-vcstools \
+    ros-noetic-ros-core \
+    ros-noetic-ros-base \
+    ros-noetic-rosserial-arduino \
+    ros-noetic-robot-localization \
+    ros-noetic-point-cloud-transport \
+    ros-noetic-pid \
+    ros-noetic-joy \
+    ros-noetic-joy-teleop \
+    ros-noetic-sbg-driver \
+    ros-noetic-cv-bridge \
+    ros-noetic-image-view \
+    ros-noetic-rqt-gui \
+    ros-noetic-smach-ros \
+    ros-noetic-usb-cam \
+    libjpeg-dev \
+    zlib1g-dev \
+    tmux \
+    vim \
+    iputils-ping \
+    iproute2 \
+    docker.io \
+    wget \
+    python3-catkin-tools \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ROS1 Noetic GPG key and repository
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/ros1-latest.list > /dev/null
+
+# Set up rosdep
+RUN rosdep init && rosdep update --rosdistro $ROS_DISTRO
+
+# Install pip dependencies
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
+    && pip install keyboard sklearn \
+    && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
+
+# Install additional dependencies
+RUN wget http://packages.ros.org/ros.key -O - | apt-key add - \
+    && apt-get update \
+    && apt-get install -y python3-catkin-tools python3-pip tmux vim
+
+# Clone repositories
+RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
+    cd torchvision && \
+    git checkout release/0.16 && \
+    python3 setup.py bdist_wheel && \
+    cp dist/torchvision*.whl /opt && \
+    pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
+    cd ../ && \
+    rm -rf torchvision \
+    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
+    && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc \
+    && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
+    && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
+
+# Clone ZED ROS1 Wrapper and related dependencies
+WORKDIR /root/ros1_ws/src
+RUN git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git
+
+# Check that all the dependencies are satisfied
+WORKDIR /root/ros1_ws
+RUN cd src && git clone https://github.com/ros-drivers/nmea_msgs \
+  &&  git clone -b noetic https://github.com/ros-geographic-info/geographic_info.git && cd ..
+
+# Install any remaining dependencies
+RUN apt update -y || true && rosdep init && rosdep update && \
+  rosdep install --from-paths src --ignore-src -r -y && \
+  rm -rf /var/lib/apt/lists/*
+
+# Build the dependencies and the ZED ROS1 Wrapper
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
+  catkin_make --parallel-workers $(nproc) --symlink-install \
+  --event-handlers console_direct+ --base-paths src \
+  --cmake-args ' -DCMAKE_BUILD_TYPE=Release' \
+  ' -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs' \
+  ' -DCMAKE_CXX_FLAGS=\"-Wl,--allow-shlib-undefined\"' \
+  ' --no-warn-unused-cli' "
+
+# Set up user for Jetson
+RUN adduser jetson
+
+# Install ZED SDK for Jetson
+RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T36.3_v4.2.3.zstd.run \
+  && chmod +x *.run
+
+USER jetson
+RUN ./ZED_SDK_Tegra_L4T36.3_v4.2.3.zstd.run
+
+USER root
+
+# Keep the container running by default
+CMD ["bash", "-c", "tail -f /dev/null"]
+
