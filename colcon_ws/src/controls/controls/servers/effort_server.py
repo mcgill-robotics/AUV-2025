@@ -5,7 +5,6 @@ from rclpy.node import Node
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
 from rclpy.action.server import GoalResponse, CancelResponse
-from my_robot_interfaces.action import CountUntil
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import ReentrantCallbackGroup
 import time
@@ -23,15 +22,15 @@ which sets the pids to the current position.
 
 
 class EffortServer(BaseServer):
-    def __init__(self, node_name):
-        super().__init__(node_name)
+    def __init__(self, node_name_used):
+        super().__init__(node_name_used)
 
         self.goal_handle_ : ServerGoalHandle = None #initializing a goal handle that can be used later
 
 
         self.server = ActionServer(
             self,
-            EffortAction
+            EffortAction,
             "/controls/server/effort",
             EffortAction,
             execute_cb=self.callback,
@@ -39,7 +38,6 @@ class EffortServer(BaseServer):
             cancel_callback=self.cancel_callback,
             execute_callback= self.execute_callback,
             callback_group=ReentrantCallbackGroup()
-            
         )
       
 

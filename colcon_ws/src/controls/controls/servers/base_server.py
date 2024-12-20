@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rclpy
+from rclpy.node import Node
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose, Quaternion, Vector3
 import numpy as np
@@ -18,9 +19,9 @@ and a method to publish setpoints to the pids.
 """
 
 
-class BaseServer:
-    def __init__(self, node) -> None:
-        self.node_control = node
+class BaseServer(Node):
+    def __init__(self, node_name):
+        super().__init__(node_name)
         self.cancelled = False
         self.goal = None
         self.pose = None
@@ -31,57 +32,57 @@ class BaseServer:
         self.establish_state_subscribers()
 
     def establish_effort_publishers(self):
-        self.pub_surge = self.node_control.create_publisher(Float64, "/controls/force/surge", 1)
-        self.pub_sway = self.node_control.create_publisher(Float64, "/controls/force/surge", 1)
-        self.pub_heave = self.node_control.create_publisher(Float64, "/controls/force/heave", 1)
-        self.pub_roll = self.node_control.create_publisher(Float64, "/controls/torque/roll", 1)
-        self.pub_pitch = self.node_control.create_publisher(
+        self.pub_surge = self.create_publisher(Float64, "/controls/force/surge", 1)
+        self.pub_sway = self.create_publisher(Float64, "/controls/force/surge", 1)
+        self.pub_heave = self.create_publisher(Float64, "/controls/force/heave", 1)
+        self.pub_roll = self.create_publisher(Float64, "/controls/torque/roll", 1)
+        self.pub_pitch = self.create_publisher(
             Float64, "/controls/torque/pitch", 1
         )
-        self.pub_yaw = self.node_control.create_publisher(Float64, "/controls/torque/yaw", 1)
-        self.pub_global_x = self.node_control.create_publisher(
+        self.pub_yaw = self.create_publisher(Float64, "/controls/torque/yaw", 1)
+        self.pub_global_x = self.create_publisher(
             Float64, "/controls/force/global/x", 1
         )
-        self.pub_global_y = self.node_control.create_publisher(
+        self.pub_global_y = self.create_publisher(
             Float64, "/controls/force/global/y", 1
         )
-        self.pub_global_z = self.node_control.create_publisher(
+        self.pub_global_z = self.create_publisher(
             Float64, "/controls/force/global/z", 1
         )
 
     def establish_pid_publishers(self):
-        self.pub_z_pid = self.node_control.create_publisher(
+        self.pub_z_pid = self.create_publisher(
             Float64, "/controls/pid/z/setpoint", 1
         )
-        self.pub_y_pid = self.node_control.create_publisher(
+        self.pub_y_pid = self.create_publisher(
             Float64, "/controls/pid/y/setpoint", 1
         )
-        self.pub_x_pid = self.node_control.create_publisher(
+        self.pub_x_pid = self.create_publisher(
             Float64, "/controls/pid/x/setpoint", 1
         )
-        self.pub_quat_pid = self.node_control.create_publisher(
+        self.pub_quat_pid = self.create_publisher(
             Quaternion, "/controls/pid/quat/setpoint", 1
         )
 
     def establish_pid_enable_publishers(self):
-        self.pub_x_enable = self.node_control.create_publisher(
-            "/controls/pid/x/enable", Bool, queue_size=1
+        self.pub_x_enable = self.create_publisher(
+            Bool, "/controls/pid/x/enable", 1
         )
-        self.pub_y_enable = self.node_control.create_publisher(
-            "/controls/pid/y/enable", Bool, queue_size=1
+        self.pub_y_enable = self.create_publisher(
+            Bool, "/controls/pid/y/enable", 1
         )
-        self.pub_z_enable = self.node_control.create_publisher(
-            "/controls/pid/z/enable", Bool, queue_size=1
+        self.pub_z_enable = self.create_publisher(
+            Bool, "/controls/pid/z/enable", 1
         )
-        self.pub_quat_enable = self.node_control.create_publisher(
-            "/controls/pid/quat/enable", Bool, queue_size=1
+        self.pub_quat_enable = self.create_publisher(
+            Bool, "/controls/pid/quat/enable", 1
         )
 
     def establish_state_subscribers(self):
-        self.sub = self.node_control.create_subscription("/state/pose", Pose, self.set_pose)
-        self.sub = self.node_control.create_subscription("/state/theta/x", Float64, self.set_theta_x)
-        self.sub = self.node_control.create_subscription("/state/theta/y", Float64, self.set_theta_y)
-        self.sub = self.node_control.create_subscription("/state/theta/z", Float64, self.set_theta_z)
+        self.sub = self.create_subscription(Pose, "/state/pose", self.set_pose)
+        self.sub = self.create_subscription(Float64, "/state/theta/x", self.set_theta_x)
+        self.sub = self.create_subscription(Float64, "/state/theta/y", self.set_theta_y)
+        self.sub = self.create_subscription(Float64, "/state/theta/z", self.set_theta_z)
 
     # callback for subscriber
     def set_pose(self, data):
