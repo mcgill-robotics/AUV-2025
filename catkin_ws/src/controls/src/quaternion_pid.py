@@ -98,9 +98,9 @@ class QuaternionPID:
         curr_time = rospy.get_time()
         delta_t = curr_time - self.previous_time
         self.previous_time = curr_time
-        axis = np.array([error_quat.x, error_quat.y, error_quat.z])
+        axis = np.array([error_quat.x, error_quat.y, error_quat.z]) * 2 #multiplied by 2, maybe dirft is happening bcuz the P, I terms are halved, make control effort stronger
         diff = axis * delta_t
-        self.torque_integral = self.torque_integral + diff
+        self.torque_integral = np.clip(self.torque_integral + diff, -self.windup_limit, self.windup_limit)  # Per-axis clamping
         proportional_effort = np.zeros(3)
         if np.linalg.norm(self.torque_integral) > self.windup_limit:
             self.torque_integral = (
@@ -109,9 +109,9 @@ class QuaternionPID:
                 / np.linalg.norm(self.torque_integral)
             )
 
-        proportional_effort[0] = self.Kp * error_quat.x
-        proportional_effort[1] = self.Kp * error_quat.y
-        proportional_effort[2] = self.Kp * error_quat.z
+        proportional_effort[0] = self.Kp * axis[0]
+        proportional_effort[1] = self.Kp * axis[1]
+        proportional_effort[2] = self.Kp * axis[2]
 
         # Calculate derivative term
         derivative_effort = self.Kd * self.angular_velocity
