@@ -15,6 +15,10 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip python3.10-venv || \
     apt-get install -y python3-venv
 
+RUN apt-get install vim -y
+RUN apt-get install tmux -y
+RUN apt-get install git -y
+
 # Sources config files on terminal bootup by adding to .bashrc
 RUN echo "source ../opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source ../ros_entrypoint.sh" >> ~/.bashrc
