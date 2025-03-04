@@ -14,7 +14,7 @@ def generate_launch_description():
     # microros launch needs ot be added
 
     thrust_mapper_node = Node(
-        package='propulsion2',
+        package='propulsion',
         executable='thrust_mapper',
         name='thrust_mapper',
         parameters=[

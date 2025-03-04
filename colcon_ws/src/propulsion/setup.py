@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'propulsion2'
+package_name = 'propulsion'
 
 setup(
     name=package_name,
@@ -25,8 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'thrust_mapper = propulsion2.thrust_mapper:main',
-            'drytest = propulsion2.drytest:main',
+            'thrust_mapper = propulsion.thrust_mapper:main',
+            'drytest = propulsion.drytest:main',
         ],
     },
 )
