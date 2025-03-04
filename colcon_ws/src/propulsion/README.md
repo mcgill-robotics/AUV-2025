@@ -43,4 +43,6 @@ The following improvements need to be implemented and documented:
 2. Add `auv_msgs` and `microros_agent` as dependencies.
 3. Convert `/propulsion/microseconds` to an `Int16MultiArray`.
 4. Ensure Micro-ROS setup is reconfigured when the repository is compiled.
-5. Clean up the propulsion package.
+5. Add sim conditional argument in setup.py.
+6. Compare package to that of ros 1.
+7. Clean up the propulsion package, including setup.py and dependencies.
