@@ -46,7 +46,7 @@ class ThrustMapper(Node):
         self.re_arm()
 
         # Q: where should this be placed exactly?
-        time.sleep(7.0)  # TODO: FIX - wait for 7 sec to sync with arduino?
+        time.sleep(2.0)  # TODO: FIX - wait for 7 sec to sync with arduino?
 
     def inverse_transformation_matrix(self):
         T = np.array(
