@@ -11,7 +11,13 @@ def generate_launch_description():
 
     # sim argument needs to be added
 
-    # microros launch needs ot be added
+    micro_ros_agent_node = Node(
+        package='micro_ros_agent',
+        executable='micro_ros_agent',
+        name='micro_ros_agent',
+        arguments=["serial", "--dev", "/dev/ttyACM0", "--baud-rate", "115200"],
+        output='screen'
+    )
 
     thrust_mapper_node = Node(
         package='propulsion',
@@ -28,6 +34,8 @@ def generate_launch_description():
         respawn=True,
         output='screen'
     )
+
     return LaunchDescription([
+        micro_ros_agent_node,
         thrust_mapper_node
     ])
