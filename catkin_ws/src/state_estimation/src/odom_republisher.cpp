@@ -26,8 +26,6 @@ ros::Publisher pub_depth_status;
 
 double depth;
 
-double RAD_TO_DEG = 180.0 / 3.14159265;
-
 void broad_cast_pose(const geometry_msgs::Pose &msg);
 
 void depth_cb(const std_msgs::Float64::ConstPtr &msg)
@@ -66,10 +64,6 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     std_msgs::Float64 yaw_msg;
     std_msgs::Float64 pitch_msg;
     std_msgs::Float64 roll_msg;
-
-    // yaw *= RAD_TO_DEG;
-    // pitch *= RAD_TO_DEG;
-    // roll *= RAD_TO_DEG;
 
     yaw_msg.data = yaw;
     pitch_msg.data = pitch;
