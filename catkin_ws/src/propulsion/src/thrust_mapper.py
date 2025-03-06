@@ -6,7 +6,6 @@ Description: Thrust mapper node subscribes to effort topic, converts the wrench 
 and then finally converts the forces to pwm signals and publishes them.
 
 """
-
 import numpy as np
 import rospy
 from thrust_mapper_utils import *
@@ -16,7 +15,7 @@ from geometry_msgs.msg import Wrench
 # constant parameters of the thruster positions
 l = rospy.get_param("distance_thruster_thruster_length")
 w = rospy.get_param("distance_thruster_thruster_width")
-alpha = np.radians(rospy.get_param("angle_thruster")) #this for some reason is set to 45
+alpha = np.radians(rospy.get_param("angle_thruster")) 
 a = rospy.get_param("distance_thruster_middle_length")
 
 
@@ -24,7 +23,7 @@ a = rospy.get_param("distance_thruster_middle_length")
 #Verify directions (forward thrust should move vehicle forward)
 #rostopic pub /controls/effort geometry_msgs/Wrench "force:
 
-#This looks problematic, column is thruster and row is DOf
+#This looks problematic, column is thruster and row is DOf, need to check with mech
 T = np.array(
     [
         [np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)], #this row uses cos and -cos to model how thrusters contri to forward mtoion(surge)
@@ -44,7 +43,6 @@ T = np.array(
         ],
     ]
 )
-
 
 # Matrix representation of the system of equations representing the thrust to wrench conversion
 # Ex: Force_X = (1)BACK_LEFT_Thruster + (1)HEAVE_BACK_LEFTboard_Thrust
@@ -87,7 +85,6 @@ def wrench_to_thrust(w):
 
     # Convert forces to pwm signals and publish
     forces_to_pwm_publisher(tf)
-
 
 def forces_to_pwm_publisher(forces_msg):
     """
