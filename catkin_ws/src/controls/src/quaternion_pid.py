@@ -103,11 +103,7 @@ class QuaternionPID:
         self.torque_integral = np.clip(self.torque_integral + diff, -self.windup_limit, self.windup_limit)  # Per-axis clamping
         proportional_effort = np.zeros(3)
         if np.linalg.norm(self.torque_integral) > self.windup_limit:
-            self.torque_integral = (
-                self.windup_limit
-                * self.torque_integral
-                / np.linalg.norm(self.torque_integral)
-            )
+            self.torque_integral = (self.windup_limit * self.torque_integral/ np.linalg.norm(self.torque_integral))
 
         proportional_effort[0] = self.Kp * axis[0]
         proportional_effort[1] = self.Kp * axis[1]
