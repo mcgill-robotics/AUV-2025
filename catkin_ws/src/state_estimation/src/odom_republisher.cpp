@@ -28,13 +28,15 @@ double depth;
 
 double RAD_TO_DEG = 180.0 / 3.14159265;
 
-void broad_cast_pose(const geometry_msgs::Pose& msg);
+void broad_cast_pose(const geometry_msgs::Pose &msg);
 
-void depth_cb(const std_msgs::Float64::ConstPtr& msg) {
-    depth = msg->data * -1;
+void depth_cb(const std_msgs::Float64::ConstPtr &msg)
+{
+    depth = msg->data * 1; // changed from -1 to 1. I think this is why we observed negative depth.
 }
 
-void odom_cb(const nav_msgs::Odometry::ConstPtr& msg) {
+void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
+{
 
     std_msgs::Float64 z;
     z.data = depth;
@@ -46,9 +48,6 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr& msg) {
     geometry_msgs::Quaternion q_nwu_auv = msg->pose.pose.orientation;
     geometry_msgs::Vector3 av = msg->twist.twist.angular;
 
-
-
-
     geometry_msgs::Pose pose = msg->pose.pose;
     pose.position.z = depth;
 
@@ -57,20 +56,20 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr& msg) {
     pub_z.publish(z);
     pub_pose.publish(pose);
 
-    tf2::Quaternion quat_tf2_format(q_nwu_auv.x,q_nwu_auv.y,q_nwu_auv.z,q_nwu_auv.w);
+    tf2::Quaternion quat_tf2_format(q_nwu_auv.x, q_nwu_auv.y, q_nwu_auv.z, q_nwu_auv.w);
     tf2::Matrix3x3 mat(quat_tf2_format);
     double yaw;
     double pitch;
     double roll;
-    mat.getEulerYPR(yaw,pitch,roll);
+    mat.getEulerYPR(yaw, pitch, roll);
 
     std_msgs::Float64 yaw_msg;
     std_msgs::Float64 pitch_msg;
     std_msgs::Float64 roll_msg;
 
-    yaw *= RAD_TO_DEG;
-    pitch *= RAD_TO_DEG;
-    roll *= RAD_TO_DEG;
+    // yaw *= RAD_TO_DEG;
+    // pitch *= RAD_TO_DEG;
+    // roll *= RAD_TO_DEG;
 
     yaw_msg.data = yaw;
     pitch_msg.data = pitch;
@@ -83,13 +82,15 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr& msg) {
     pub_theta_z.publish(yaw_msg);
 
     broad_cast_pose(pose);
-
 }
 
-void broad_cast_pose(const geometry_msgs::Pose& msg) {
-    if(update_state_on_clock) {
+void broad_cast_pose(const geometry_msgs::Pose &msg)
+{
+    if (update_state_on_clock)
+    {
         ros::Time now = ros::Time::now();
-        if(now == last_clock_msg) {
+        if (now == last_clock_msg)
+        {
             return;
         }
         last_clock_msg.sec = now.sec;
@@ -118,34 +119,24 @@ void broad_cast_pose(const geometry_msgs::Pose& msg) {
     br.sendTransform(transformStamped2);
 }
 
-
-
-
-int main(int argc, char **argv) {
-    ros::init(argc,argv,"odom_republish");
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "odom_republish");
     ros::NodeHandle n;
 
-  
+    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, &odom_cb);
+    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z", 100, &depth_cb);
 
-    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered",100,&odom_cb);
-    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z",100,&depth_cb);
-
-  
-
-    pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose",1);
-    pub_x = n.advertise<std_msgs::Float64>("/state/x",1);
-    pub_y = n.advertise<std_msgs::Float64>("/state/y",1);
-    pub_z = n.advertise<std_msgs::Float64>("/state/z",1);
-    pub_theta_x = n.advertise<std_msgs::Float64>("/state/theta/x",1);
-    pub_theta_y = n.advertise<std_msgs::Float64>("/state/theta/y",1);
-    pub_theta_z = n.advertise<std_msgs::Float64>("/state/theta/z",1);
-    pub_av = n.advertise<geometry_msgs::Vector3>("/state/angular_velocity",1);
-
+    pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose", 1);
+    pub_x = n.advertise<std_msgs::Float64>("/state/x", 1);
+    pub_y = n.advertise<std_msgs::Float64>("/state/y", 1);
+    pub_z = n.advertise<std_msgs::Float64>("/state/z", 1);
+    pub_theta_x = n.advertise<std_msgs::Float64>("/state/theta/x", 1);
+    pub_theta_y = n.advertise<std_msgs::Float64>("/state/theta/y", 1);
+    pub_theta_z = n.advertise<std_msgs::Float64>("/state/theta/z", 1);
+    pub_av = n.advertise<geometry_msgs::Vector3>("/state/angular_velocity", 1);
 
     ros::param::get("/update_state_on_clock", update_state_on_clock);
-    
-
-
 
     ros::spin();
     return 0;
