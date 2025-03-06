@@ -1,6 +1,7 @@
 <launch>
     <arg name="sim" default="false" />
 	<arg name="actions" default="false" />
+	
 	<group unless="$(arg actions)">
 		<group unless="$(arg sim)"> 
 			<node name="z_pid" pkg="pid" type="controller" >
@@ -58,6 +59,8 @@
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
+
+		<!-- ====== SIM SECTION START ====== -->
 		<group if="$(arg sim)">  
 			<node name="z_pid" pkg="pid" type="controller" >
 				<param name="Kp" value="20" />
@@ -162,4 +165,6 @@
 			<param name="windup_limit" value="30" />
 		</node>
 	</group>
+
+		<!-- ====== SIM SECTION END ====== -->
 </launch>
