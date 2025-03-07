@@ -20,7 +20,7 @@ def degreesToVector(yawDegrees):
 
 
 def vectorToYawDegrees(x, y):
-    angle_radians = math.atan2(x,y)
+    angle_radians = math.atan2(y,x)
     return math.degrees(angle_radians)
     # zero_angle_vector = np.array([1, 0])
     # arg_vector = np.array([x, y])
