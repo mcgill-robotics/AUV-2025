@@ -20,11 +20,13 @@ def degreesToVector(yawDegrees):
 
 
 def vectorToYawDegrees(x, y):
-    zero_angle_vector = np.array([1, 0])
-    arg_vector = np.array([x, y])
-    magnitude_arg_vector = np.linalg.norm(arg_vector)
-    dot_product = np.dot(zero_angle_vector, arg_vector)
-    return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
+    angle_radians = math.atan2(x,y)
+    return math.degrees(angle_radians)
+    # zero_angle_vector = np.array([1, 0])
+    # arg_vector = np.array([x, y])
+    # magnitude_arg_vector = np.linalg.norm(arg_vector)
+    # dot_product = np.dot(zero_angle_vector, arg_vector)
+    # return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
 
 def normalize_vector(vector2D):
@@ -40,7 +42,7 @@ def dotProduct(v1, v2):
     return v1[0] * v2[0] + v1[1] * v2[1]
 
 
-def quaternion_between_vectors(v1, v2):
+def quaternion_between_vectors(v1, v2): #if colinear vectors, divide by 0 error 
     v1 = v1 / np.linalg.norm(v1)
     v2 = v2 / np.linalg.norm(v2)
 
@@ -54,14 +56,15 @@ def quaternion_between_vectors(v1, v2):
 
 
 def euler_to_quaternion(roll, pitch, yaw):
-    q = transformations.quaternion_from_euler(
-        math.pi * roll / 180, math.pi * pitch / 180, math.pi * yaw / 180, "rxyz"
-    )
-    return [q[3], q[0], q[1], q[2]]
+    roll_radians = math.radians(roll)
+    pitch_radians = math.radians(pitch)
+    yaw_radians = math.radians(yaw)
+    q = transformations.quaternion_from_euler(roll_radians, pitch_radians, yaw_radians, "sxyz") #ros follows a static frame
+    return [q[0], q[1], q[2], q[3]] #quats are represented as x,y,z,w. Should check this in all codebase
 
 
-def countdown(secs):
-    pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
-    end_time = rospy.get_time() + secs
-    while rospy.get_time() < end_time:
-        pub_mission_display.publish(str(end_time - rospy.get_time()))
+# def countdown(secs):
+#     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+#     end_time = rospy.get_time() + secs
+#     while rospy.get_time() < end_time:
+#         pub_mission_display.publish(str(end_time - rospy.get_time()))
