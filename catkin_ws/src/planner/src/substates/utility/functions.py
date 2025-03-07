@@ -42,17 +42,20 @@ def dotProduct(v1, v2):
     return v1[0] * v2[0] + v1[1] * v2[1]
 
 
-def quaternion_between_vectors(v1, v2): #if colinear vectors, divide by 0 error 
+def quaternion_between_vectors(v1, v2):
     v1 = v1 / np.linalg.norm(v1)
     v2 = v2 / np.linalg.norm(v2)
-
-    dot_product = np.dot(v1, v2)
-    cross_product = np.cross(v1, v2)
-    angle = np.arccos(dot_product)
-    axis = cross_product / np.linalg.norm(cross_product)
-    rotation_quaternion = quaternion.from_rotation_vector(axis * angle)
-
-    return rotation_quaternion
+    dot = np.dot(v1, v2)
+    
+    if np.isclose(dot, 1.0):  #checking for colinearity
+        return np.quaternion(1.0, 0.0, 0.0, 0.0)  
+    elif np.isclose(dot, -1.0): 
+        return np.quaternion(0.0, 0.0, 0.0, 1.0)  #180 about Z
+    else:
+        axis = np.cross(v1, v2)
+        axis /= np.linalg.norm(axis)
+        angle = np.arccos(dot)
+        return quaternion.from_rotation_vector(axis * angle)
 
 
 def euler_to_quaternion(roll, pitch, yaw):
