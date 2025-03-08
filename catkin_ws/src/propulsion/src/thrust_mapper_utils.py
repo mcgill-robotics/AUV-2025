@@ -2,7 +2,14 @@
 MAX_FWD_FORCE = 4.52 * 9.81
 MAX_BKWD_FORCE = -3.52 * 9.81
 
-thruster_mount_dirs = [0.5, -0.5, -1, 1, 1, 0.5, -1, -0.5]
+# Linear transition region around zero force (Newtons)
+DEADBAND_EPSILON = 2.0  # Tune based on thruster response
+#Creates a smooth transition around zero force to avoid abrupt changes in PWM.
+
+
+thruster_mount_dirs = [1, -1, -1, 1, 1, -1, -1, 1]
+#1 is forward, -1 is backward, 0.5 is half thrust in specific direction
+#If force is exactly zero, returns 1500 μs (neutral signal, no movement).
 
 def force_to_pwm(force):
     """

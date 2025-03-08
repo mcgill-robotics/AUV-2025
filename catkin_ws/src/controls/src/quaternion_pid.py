@@ -98,7 +98,7 @@ class QuaternionPID:
         curr_time = rospy.get_time()
         delta_t = curr_time - self.previous_time
         self.previous_time = curr_time
-        axis = np.array([error_quat.x, error_quat.y, error_quat.z])
+        axis = np.array([error_quat.x, error_quat.y, error_quat.z]) * 2
         diff = axis * delta_t
         self.torque_integral = self.torque_integral + diff
         proportional_effort = np.zeros(3)
