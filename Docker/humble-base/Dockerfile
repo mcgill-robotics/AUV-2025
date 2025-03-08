@@ -38,10 +38,11 @@ RUN apt-get update && rosdep update && \
 
 RUN ../ros_entrypoint.sh colcon build
 
-RUN bash -c "source install/local_setup.bash" && \
-    bash -c "ros2 run micro_ros_setup create_agent_ws.sh" && \
-    ros2 run micro_ros_setup build_agent.sh && \
-    source install/local_setup.bash
+RUN bash -c "source install/setup.bash && \
+    ros2 run micro_ros_setup create_agent_ws.sh && \
+    source install/local_setup.sh && \
+    ../ros_entrypoint.sh ros2 run micro_ros_setup build_agent.sh && \
+    source install/local_setup.bash"
     
 WORKDIR /
 RUN echo "source /microros_ws/install/local_setup.bash" >> ~/.bashrc
