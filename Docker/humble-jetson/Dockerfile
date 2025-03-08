@@ -1,9 +1,9 @@
 # Building Humble Container
-FROM osrf/ros:humble-desktop
+FROM ros:humble-ros-base
 
 # Setup Base Configurations 
-RUN sudo apt-get clean\
-    && apt-get update -y && apt-get install -y locales\
+RUN apt-get update --allow-releaseinfo-change && apt-get install -y locales\
+    apt-get install -y curl && \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
@@ -12,7 +12,8 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en     
 
 # Install Python and pip
-RUN apt-get update && \
+RUN apt-get update --allow-releaseinfo-change && \
+    apt-get install -y curl && \
     apt-get install -y python3 python3-pip python3.10-venv || \
     apt-get install -y python3-venv
 
