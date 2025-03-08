@@ -5,9 +5,9 @@ services:
     build: 
       context: ../../.
       dockerfile: Docker/humble-base/Dockerfile
-      # platforms:
-      #   - linux/amd64
-      #   - linux/arm64
+      platforms:
+        - linux/amd64
+        - linux/arm64
     volumes:
       - ros2:/var/lib/ros/data
     environment:
@@ -21,6 +21,5 @@ services:
 
     command: tail -f /dev/null
 
-  
 volumes:
   ros2:
