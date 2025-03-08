@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y locales\
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-ENV LC_ALL en_US.UTF-8 
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en     
+ENV LC_ALL=en_US.UTF-8 
+ENV LANG=en_US.UTF-8  
+ENV LANGUAGE=en_US:en     
 
 # Install Python and pip
 RUN apt-get update && \
@@ -20,7 +20,7 @@ RUN echo "source ../opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source ../ros_entrypoint.sh" >> ~/.bashrc
 
 # Sourcing terminal and copying repos
-COPY /colcon_ws ./colcon_ws
+COPY colcon_ws ./colcon_ws
 # Due to ROS 2 being ran on multiple ws, might have to config in future
 WORKDIR /colcon_ws
 RUN ../ros_entrypoint.sh colcon build --symlink-install --packages-skip vision micro_ros_agent
@@ -38,10 +38,11 @@ RUN apt-get update && rosdep update && \
 
 RUN ../ros_entrypoint.sh colcon build
 
-RUN bash -c "source install/local_setup.bash" && \
-    bash -c "ros2 run micro_ros_setup create_agent_ws.sh" && \
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+    source install/local_setup.bash && \
+    ros2 run micro_ros_setup create_agent_ws.sh && \
     ros2 run micro_ros_setup build_agent.sh && \
-    source install/local_setup.bash
+    source install/local_setup.bash"
     
 WORKDIR /
 RUN echo "source /microros_ws/install/local_setup.bash" >> ~/.bashrc
