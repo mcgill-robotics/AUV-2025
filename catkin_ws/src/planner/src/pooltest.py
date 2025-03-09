@@ -17,7 +17,7 @@ def main():
         # Move down by 0.5 meters
         rospy.loginfo("Moving down by 0.5 meters...")
         controls.moveDelta([0, 0, -0.5])
-        rospy.sleep(10)  # Adjust sleep duration to ensure the motion completes
+        rospy.sleep(10)  
 
         # Move in a square pattern locally
         rospy.loginfo("Executing square pattern movement...")
