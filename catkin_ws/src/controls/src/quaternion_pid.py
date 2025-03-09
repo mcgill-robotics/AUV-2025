@@ -98,7 +98,7 @@ class QuaternionPID:
         curr_time = rospy.get_time()
         delta_t = curr_time - self.previous_time
         self.previous_time = curr_time
-        axis = np.array([error_quat.x, error_quat.y, error_quat.z]) * 2 #multiplied by 2, maybe dirft is happening bcuz the P, I terms are halved, make control effort stronger
+        axis = np.array([error_quat.x, error_quat.y, error_quat.z])
         diff = axis * delta_t
         self.torque_integral = np.clip(self.torque_integral + diff, -self.windup_limit, self.windup_limit)  # Per-axis clamping
         proportional_effort = np.zeros(3)
