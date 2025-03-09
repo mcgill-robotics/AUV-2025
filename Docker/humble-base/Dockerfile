@@ -2,13 +2,14 @@
 FROM osrf/ros:humble-desktop
 
 # Setup Base Configurations 
-RUN apt-get update && apt-get install -y locales\
+RUN sudo apt-get clean\
+    && apt-get update -y && apt-get install -y locales\
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-ENV LC_ALL en_US.UTF-8 
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en     
+ENV LC_ALL=en_US.UTF-8 
+ENV LANG=en_US.UTF-8  
+ENV LANGUAGE=en_US:en     
 
 # Install Python and pip
 RUN apt-get update && \
@@ -20,7 +21,8 @@ RUN echo "source ../opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source ../ros_entrypoint.sh" >> ~/.bashrc
 
 # Sourcing terminal and copying repos
-COPY /colcon_ws ./colcon_ws
+COPY colcon_ws ./colcon_ws
+
 WORKDIR /colcon_ws
 RUN ../ros_entrypoint.sh colcon build --symlink-install --packages-skip vision
 
