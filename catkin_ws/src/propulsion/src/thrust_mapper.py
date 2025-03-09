@@ -28,19 +28,19 @@ a = rospy.get_param("distance_thruster_middle_length")
 T = np.array(
     [
         [np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)], #this row uses cos and -cos to model how thrusters contri to forward mtoion(surge)
-        [-np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)], #sin -sin to capture lateral sway
-        [0, -1, -1, 0, 0, -1, -1, 0],#show whcih thrusters provide vertical force !!!
-        [0, w / 2, w / 2, 0, 0, -w / 2, -w / 2, 0], # 4-5contribute to the rotational forces (roll, pitch) about the center of mass. Incorrect values or signs here could cause unwanted tilting or rotation.
-        [0, -a, a, 0, 0, a, -a, 0],
+        [np.sin(alpha), 0, 0, np.sin(alpha), -np.sin(alpha), 0, 0, -np.sin(alpha)], #sin -sin to capture lateral sway
+        [0, 1, 1, 0, 0, 1, 1, 0],#show whcih thrusters provide vertical force !!!
+        [0, - w / 2, - w / 2, 0, 0, w / 2, w / 2, 0], # 4-5contribute to the rotational forces (roll, pitch) about the center of mass. Incorrect values or signs here could cause unwanted tilting or rotation.
+        [0, a, -a, 0, 0, -a, a, 0],
         [ #all this is yaw
+            - w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
+            0,
+            0,
             w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
+            - w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
             0,
             0,
-            -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
             w / 2 * np.cos(alpha) + l / 2 * np.sin(alpha),
-            0,
-            0,
-            -w / 2 * np.cos(alpha) - l / 2 * np.sin(alpha),
         ],
     ]
 )
@@ -52,7 +52,7 @@ T = np.array(
 # matrix transformation wrench -> thrust
 T_inv = np.linalg.pinv(T)
 """--------------------------------------------------"""
-rospy.sleep(7.0)  # TODO: FIX - wait for 7 sec to sync with arduino?
+rospy.sleep(1.0)  # TODO: FIX - wait for 1 sec to sync with arduino?
 
 
 def wrench_to_thrust(w):

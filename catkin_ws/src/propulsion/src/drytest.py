@@ -4,7 +4,6 @@ import rospy
 from auv_msgs.msg import ThrusterMicroseconds
 from thrust_mapper_utils import *
 from geometry_msgs.msg import Wrench
-import keyboard
 
 force_amt = 0.1  # 10%
 
@@ -14,7 +13,7 @@ reset = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
 reset_cmd = ThrusterMicroseconds(reset)
 pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 effort_pub = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
-rospy.sleep(7)
+rospy.sleep(1)
 
 rospy.init_node("thrusters_test")
 
@@ -100,56 +99,36 @@ while not rospy.is_shutdown():
             desired_effort.torque.y = 0
             desired_effort.torque.z = 0
 
-            if keyboard.is_pressed("esc"):
+            user_input = input("Enter a command (WASD/QE/IJKL/UO/ESC to exit): ").lower()
+
+            if user_input == "esc":
                 break
-            if keyboard.is_pressed("w"):
-                desired_effort.force.x = (
-                    desired_effort.force.x + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("s"):
-                desired_effort.force.x = (
-                    desired_effort.force.x + force_amt * MAX_BKWD_FORCE
-                )
-            if keyboard.is_pressed("a"):
-                desired_effort.force.y = (
-                    desired_effort.force.y + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("d"):
-                desired_effort.force.y = (
-                    desired_effort.force.y + force_amt * MAX_BKWD_FORCE
-                )
-            if keyboard.is_pressed("q"):
-                desired_effort.force.z = (
-                    desired_effort.force.z + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("e"):
-                desired_effort.force.z = (
-                    desired_effort.force.z + force_amt * MAX_BKWD_FORCE
-                )
-            if keyboard.is_pressed("o"):
-                desired_effort.torque.y = (
-                    desired_effort.torque.x + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("u"):
-                desired_effort.torque.y = (
-                    desired_effort.torque.x + force_amt * MAX_BKWD_FORCE
-                )
-            if keyboard.is_pressed("i"):
-                desired_effort.torque.y = (
-                    desired_effort.torque.y + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("k"):
-                desired_effort.torque.y = (
-                    desired_effort.torque.y + force_amt * MAX_BKWD_FORCE
-                )
-            if keyboard.is_pressed("j"):
-                desired_effort.torque.z = (
-                    desired_effort.torque.z + force_amt * MAX_FWD_FORCE
-                )
-            if keyboard.is_pressed("l"):
-                desired_effort.torque.z = (
-                    desired_effort.torque.z + force_amt * MAX_BKWD_FORCE
-                )
+
+                # Handle the user input and adjust forces and torques accordingly
+            if user_input == "w":
+                desired_effort.force.x += force_amt * MAX_FWD_FORCE
+            elif user_input == "s":
+                desired_effort.force.x += force_amt * MAX_BKWD_FORCE
+            elif user_input == "d":
+                desired_effort.force.y += force_amt * MAX_FWD_FORCE
+            elif user_input == "a":
+                desired_effort.force.y += force_amt * MAX_BKWD_FORCE
+            elif user_input == "e":
+                desired_effort.force.z += force_amt * MAX_FWD_FORCE
+            elif user_input == "q":
+                desired_effort.force.z += force_amt * MAX_BKWD_FORCE
+            elif user_input == "o":
+                desired_effort.torque.x += force_amt * MAX_FWD_FORCE
+            elif user_input == "u":
+                desired_effort.torque.x += force_amt * MAX_BKWD_FORCE
+            elif user_input == "i":
+                desired_effort.torque.y += force_amt * MAX_FWD_FORCE
+            elif user_input == "k":
+                desired_effort.torque.y += force_amt * MAX_BKWD_FORCE
+            elif user_input == "l":
+                desired_effort.torque.z += force_amt * MAX_FWD_FORCE
+            elif user_input == "j":
+                desired_effort.torque.z += force_amt * MAX_BKWD_FORCE
 
             effort_pub.publish(desired_effort)
     else:

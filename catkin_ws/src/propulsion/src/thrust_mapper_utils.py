@@ -8,7 +8,7 @@ DEADBAND_EPSILON = 2.0  # Tune based on thruster response
 #Creates a smooth transition around zero force to avoid abrupt changes in PWM.
 
 
-thruster_mount_dirs = [1, -1, -1, 1, -1, 0.5, -0.5, 1]
+thruster_mount_dirs = [1, 1, 1, 1, 1, 1, 1, 1]
 #1 is forward, -1 is backward, 0.5 is half thrust in specific direction
 #If force is exactly zero, returns 1500 μs (neutral signal, no movement).
 
