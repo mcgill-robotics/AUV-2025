@@ -46,7 +46,6 @@ def quaternion_between_vectors(v1, v2):
     v1 = v1 / np.linalg.norm(v1)
     v2 = v2 / np.linalg.norm(v2)
     dot = np.dot(v1, v2)
-    
     if np.isclose(dot, 1.0):  #checking for colinearity
         return np.quaternion(1.0, 0.0, 0.0, 0.0)  
     elif np.isclose(dot, -1.0): 
@@ -62,7 +61,7 @@ def euler_to_quaternion(roll, pitch, yaw):
     roll_radians = math.radians(roll)
     pitch_radians = math.radians(pitch)
     yaw_radians = math.radians(yaw)
-    q = transformations.quaternion_from_euler(roll_radians, pitch_radians, yaw_radians, "sxyz") #ros follows a static frame
+    q = transformations.quaternion_from_euler(yaw_radians, pitch_radians, roll_radians, "rzyx")
     return [q[0], q[1], q[2], q[3]] #quats are represented as x,y,z,w. Should check this in all codebase
 
 
