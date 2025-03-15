@@ -10,7 +10,7 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o 
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
   apt update
 
-# Install Required Dependencies in a Single Step (Improves Layer Caching)
+#install Required Dependencies in a Single Step and improved caching
 RUN apt-get update && apt-get install -y \
   curl locales python3-pip \
   python3-flake8-docstrings python3-pytest-cov ros-dev-tools \
@@ -22,10 +22,10 @@ RUN apt-get update && apt-get install -y \
   ros-humble-robot-localization ros-humble-point-cloud-transport \
   && rm -rf /var/lib/apt/lists/*
 
-# Set Up Locales
+
 RUN locale-gen en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
-# Create Workspace & Clone ROS2 Repositories (Move this down since it changes often)
+#create Workspace & Clone ROS2 Repositories. These change often so if something doesnt work, likely here 
 WORKDIR /root/ros2_ws/src
 RUN git clone --recursive https://github.com/stereolabs/zed-ros2-wrapper.git && \
   git clone https://github.com/ros-drivers/nmea_msgs.git && \
@@ -39,7 +39,7 @@ RUN apt update && rosdep init && rosdep update && \
   rosdep install --from-paths src --ignore-src -r -y && \
   rm -rf /var/lib/apt/lists/*
 
-# Build the ZED ROS2 Wrapper & Dependencies
+#this would fail if ros2 repos changed or some dependencies changed
 RUN /bin/bash -c "source /opt/ros/humble/setup.bash && \
   colcon build --parallel-workers $(nproc) --symlink-install \
   --event-handlers console_direct+ --base-paths src \
@@ -48,20 +48,20 @@ RUN /bin/bash -c "source /opt/ros/humble/setup.bash && \
   ' -DCMAKE_CXX_FLAGS=\"-Wl,--allow-shlib-undefined\"' \
   ' --no-warn-unused-cli'"
 
-# Create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
+#create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
 RUN adduser jetson --disabled-password --gecos "" 
 
-# Download & Install ZED SDK (Move this Down Since It’s a Big File)
+#download & Install ZED SDK (Move this Down Since It’s a Big File)
 WORKDIR /root/
 RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.2/ZED_SDK_Tegra_L4T36.4_v4.2.3.zstd.run && \
   chmod +x ZED_SDK_Tegra_L4T36.4_v4.2.3.zstd.run
 
-# Run ZED Installer as Root (Safer) Then Change Ownership
+#run ZED Installer as Root (Safer) Then Change Ownership
 RUN ./ZED_SDK_Tegra_L4T36.4_v4.2.3.zstd.run -- silent && \
   chown -R jetson:jetson /usr/local/zed
 
-# Set Default ROS Middleware
+#set Default ROS Middleware
 ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
-# Keep Container Running (Change if You Need a Different Entry Point)
+#keep Container Running (Change if You Need a Different Entry Point)
 CMD ["bash", "-c", "tail -f /dev/null"]
