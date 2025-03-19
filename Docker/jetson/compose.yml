@@ -14,6 +14,8 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
+      - ROS_MASTER_URI=http://ubuntu.local:11311
+      - ROS_HOSTNAME=douglas
 
     runtime: nvidia
     command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
@@ -40,6 +42,8 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
+      - ROS_MASTER_URI=http://ubuntu.local:11311
+      - ROS_HOSTNAME=zed
     runtime: nvidia
     network_mode: host
 
@@ -64,4 +68,6 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
+      - ROS_MASTER_URI=http://ubuntu.local:11311
+      - ROS_HOSTNAME=bridge
     network_mode: host
