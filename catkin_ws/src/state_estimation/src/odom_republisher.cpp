@@ -26,54 +26,65 @@ ros::Publisher pub_depth_status;
 
 double depth;
 
+double RAD_TO_DEG = 180.0 / 3.14159265;
+
 void broad_cast_pose(const geometry_msgs::Pose &msg);
 
 void depth_cb(const std_msgs::Float64::ConstPtr &msg)
 {
-    depth = msg->data * 1; // changed from -1 to 1. I think this is why we observed negative depth.
+    depth = msg->data * -1;
 }
 
 void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
-
-    std_msgs::Float64 z;
-    z.data = depth;
-    std_msgs::Float64 x;
+    std_msgs::Float64 x, y, z;
     x.data = msg->pose.pose.position.x;
-    std_msgs::Float64 y;
     y.data = msg->pose.pose.position.y;
+    z.data = depth; // use the depth from the depth callback
 
+    // get orientation and angular velocoty
     geometry_msgs::Quaternion q_nwu_auv = msg->pose.pose.orientation;
     geometry_msgs::Vector3 av = msg->twist.twist.angular;
 
     geometry_msgs::Pose pose = msg->pose.pose;
     pose.position.z = depth;
-
     pub_x.publish(x);
     pub_y.publish(y);
     pub_z.publish(z);
     pub_pose.publish(pose);
 
-    tf2::Quaternion quat_tf2_format(q_nwu_auv.x, q_nwu_auv.y, q_nwu_auv.z, q_nwu_auv.w);
-    tf2::Matrix3x3 mat(quat_tf2_format);
-    double yaw;
-    double pitch;
-    double roll;
+    // publish angular velocity
+    pub_av.publish(av);
+
+    // convert quaternion to Euler angles using tf2
+    tf2::Quaternion quat_tf2(q_nwu_auv.x, q_nwu_auv.y, q_nwu_auv.z, q_nwu_auv.w);
+    tf2::Matrix3x3 mat(quat_tf2);
+    double yaw, pitch, roll;
+    // Returns Euler angles in the order: yaw, pitch, roll (in radians)
     mat.getEulerYPR(yaw, pitch, roll);
 
-    std_msgs::Float64 yaw_msg;
-    std_msgs::Float64 pitch_msg;
-    std_msgs::Float64 roll_msg;
+    // If you need degrees instead, uncomment the following:
+    // yaw   *= RAD_TO_DEG;
+    // pitch *= RAD_TO_DEG;
+    // roll  *= RAD_TO_DEG;
 
+    // Prepare and publish Euler angle messages
+    std_msgs::Float64 yaw_msg, pitch_msg, roll_msg;
     yaw_msg.data = yaw;
     pitch_msg.data = pitch;
     roll_msg.data = roll;
+    pub_theta_x.publish(roll_msg);  // roll on state/theta/x
+    pub_theta_y.publish(pitch_msg); // pitch on state/theta/y
+    pub_theta_z.publish(yaw_msg);   // yaw on state/theta/z
 
-    // ROS_DEBUG("roll: %lf, pitch: %lf, yaw: %lf",roll, pitch, yaw);
-
-    pub_theta_x.publish(roll_msg);
-    pub_theta_y.publish(pitch_msg);
-    pub_theta_z.publish(yaw_msg);
+    // publish additional status messages
+    std_msgs::Int32 imu_status, dvl_status, depth_status;
+    imu_status.data = 1; // for example: 1 means "OK"
+    dvl_status.data = 1;
+    depth_status.data = 1;
+    pub_imu_status.publish(imu_status);
+    pub_dvl_status.publish(dvl_status);
+    pub_depth_status.publish(depth_status);
 
     broad_cast_pose(pose);
 }
@@ -87,8 +98,7 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
         {
             return;
         }
-        last_clock_msg.sec = now.sec;
-        last_clock_msg.nsec = now.nsec;
+        last_clock_msg = now;
     }
 
     static tf2_ros::TransformBroadcaster br;
@@ -118,9 +128,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "odom_republish");
     ros::NodeHandle n;
 
-    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, &odom_cb);
-    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z", 100, &depth_cb);
+    // Subscribers
+    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, odom_cb);
+    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z", 100, depth_cb);
 
+    // Publishers for state information
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose", 1);
     pub_x = n.advertise<std_msgs::Float64>("/state/x", 1);
     pub_y = n.advertise<std_msgs::Float64>("/state/y", 1);
@@ -129,6 +141,9 @@ int main(int argc, char **argv)
     pub_theta_y = n.advertise<std_msgs::Float64>("/state/theta/y", 1);
     pub_theta_z = n.advertise<std_msgs::Float64>("/state/theta/z", 1);
     pub_av = n.advertise<geometry_msgs::Vector3>("/state/angular_velocity", 1);
+    pub_imu_status = n.advertise<std_msgs::Int32>("/state/imu/status", 1);
+    pub_dvl_status = n.advertise<std_msgs::Int32>("/state/dvl/status", 1);
+    pub_depth_status = n.advertise<std_msgs::Int32>("/state/depth/status", 1);
 
     ros::param::get("/update_state_on_clock", update_state_on_clock);
 
