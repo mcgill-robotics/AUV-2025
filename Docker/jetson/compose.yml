@@ -16,6 +16,8 @@ services:
       - UDEV=on
       - ROS_MASTER_URI=http://ubuntu.local:11311
       - ROS_HOSTNAME=douglas
+      - ROS_IP=ubuntu.local
+      - ROS_DOMAIN_ID=0
 
     runtime: nvidia
     command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
@@ -44,6 +46,8 @@ services:
       - UDEV=on
       - ROS_MASTER_URI=http://ubuntu.local:11311
       - ROS_HOSTNAME=zed
+      - ROS_IP=ubuntu.local
+      - ROS_DOMAIN_ID=0
     runtime: nvidia
     network_mode: host
 
@@ -70,4 +74,6 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - ROS_MASTER_URI=http://ubuntu.local:11311
       - ROS_HOSTNAME=bridge
+      - ROS_IP=ubuntu.local
+      - ROS_DOMAIN_ID=0
     network_mode: host

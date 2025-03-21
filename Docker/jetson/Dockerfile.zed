@@ -62,6 +62,7 @@ RUN ./ZED_SDK_Tegra_L4T36.4_v4.2.3.zstd.run -- silent && \
 
 #set Default ROS Middleware
 ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ENV ROS_DOMAIN_ID=0
 
 #keep Container Running (Change if You Need a Different Entry Point)
 CMD ["bash", "-c", "tail -f /dev/null"]
