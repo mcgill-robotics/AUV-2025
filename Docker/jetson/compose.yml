@@ -15,7 +15,6 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
       - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_HOSTNAME=douglas
       - ROS_IP=ubuntu.local
       - ROS_DOMAIN_ID=0
 
@@ -45,7 +44,6 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
       - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_HOSTNAME=zed
       - ROS_IP=ubuntu.local
       - ROS_DOMAIN_ID=0
     runtime: nvidia
@@ -73,7 +71,6 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_HOSTNAME=bridge
       - ROS_IP=ubuntu.local
       - ROS_DOMAIN_ID=0
     network_mode: host
