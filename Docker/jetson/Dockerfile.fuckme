@@ -52,9 +52,13 @@ RUN mkdir -p /root/catkin_ws/src && \
     cd /root/catkin_ws/src && \
     git clone -b noetic-devel https://github.com/ros/catkin.git
 
-# Build and install catkin_make_isolated
-RUN cd /root/catkin_ws && \
-    ./src/catkin/cmake/isolated/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
+# Install the 'catkin' Python module in editable mode so it’s available system-wide.
+RUN pip3 install -e /root/catkin_ws/src/catkin
+
+# Copy the catkin_make_isolated script (located in the repository’s bin folder) into the PATH.
+RUN cd /root/catkin_ws/src/catkin && \
+    chmod +x bin/catkin_make_isolated && \
+    cp bin/catkin_make_isolated /usr/local/bin/
 
 # Build ROS1 Noetic from source using catkin_make_isolated. #FAILED HERE
 # catkin_make_isolated: command not found
