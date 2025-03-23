@@ -1,0 +1,73 @@
+# Dockerfile.bridge - A custom Noetic–Humble ros1_bridge on Ubuntu 22.04 (ARM64)
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# --- 1. Install basic build tools and prerequisites ---
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg2 \
+    lsb-release \
+    software-properties-common \
+    build-essential \
+    cmake \
+    python3-pip \
+    git \
+    wget
+
+RUN pip3 install colcon-common-extensions
+# --- 2. Install ROS 2 Humble (ARM64) from binary ---
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
+    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
+    > /etc/apt/sources.list.d/ros2-latest.list && \
+    apt-get update && \
+    apt-get install -y ros-humble-ros-base && \
+    echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
+
+# --- 3. Install Python packages for ROS1 building via pip (instead of apt for problematic packages) ---
+RUN pip3 install --upgrade pip
+RUN pip3 install rosdep catkin_pkg vcstool empy rosinstall-generator
+ENV PATH="/root/.local/bin:$PATH"
+# --- 4. Initialize rosdep ---
+RUN rosdep init && rosdep update
+
+# --- 5. Create and build a minimal ROS 1 Noetic workspace ---
+# Create workspace directory for ROS1 Noetic.
+RUN mkdir -p /root/noetic_ws/src
+WORKDIR /root/noetic_ws
+# Fetch only the core ros_comm packages.
+RUN rosinstall_generator ros_comm --rosdistro noetic --deps --tar > noetic-ros_comm.rosinstall && \
+    vcs import src < noetic-ros_comm.rosinstall
+
+# Instead of the plain rosdep install, use --skip-keys for packages that fail on Jammy.
+RUN apt-get update && \
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6 python3-catkin-pkg-modules python3-rosdistro-modules python3-vcstool" --rosdistro humble || true
+
+# Build ROS1 Noetic from source using catkin_make_isolated.
+RUN catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
+
+# --- 6. Create and build the ros1_bridge workspace ---
+RUN mkdir -p /root/bridge_ws/src
+WORKDIR /root/bridge_ws/src
+RUN git clone -b humble https://github.com/ros2/ros1_bridge.git
+
+WORKDIR /root/bridge_ws
+# Source both ROS2 and ROS1 installations, then build the ros1_bridge.
+RUN . /opt/ros/humble/setup.bash && \
+    . /root/noetic_ws/install_isolated/setup.bash && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6 python3-catkin-pkg-modules python3-rosdistro-modules python3-vcstool" --rosdistro humble && \
+    colcon build --symlink-install --packages-select ros1_bridge
+
+# --- 7. Set entrypoint to source all setups and run the dynamic bridge ---
+RUN echo 'source /opt/ros/humble/setup.bash && \
+    source /root/noetic_ws/install_isolated/setup.bash && \
+    source /root/bridge_ws/install/local_setup.bash && \
+    exec "$@"' > /ros_entrypoint.sh && chmod +x /ros_entrypoint.sh
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["ros2", "run", "ros1_bridge", "dynamic_bridge"]
