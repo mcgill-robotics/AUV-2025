@@ -74,3 +74,4 @@ services:
       - ROS_IP=ubuntu.local
       - ROS_DOMAIN_ID=0
     network_mode: host
+    command: bash -c "source /set_env.bash && source /opt/ros/foxy/setup.bash && ros2 run ros1_bridge dynamic_bridge"
