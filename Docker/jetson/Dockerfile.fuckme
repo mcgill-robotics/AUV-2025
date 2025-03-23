@@ -47,7 +47,17 @@ RUN rosinstall_generator ros_comm --rosdistro noetic --deps --tar > noetic-ros_c
 RUN apt-get update && \
     rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6 python3-catkin-pkg-modules python3-rosdistro-modules python3-vcstool" --rosdistro humble || true
 
-# Build ROS1 Noetic from source using catkin_make_isolated.
+# --- 5.1. Install catkin_make_isolated from source (to provide the missing command) ---
+RUN mkdir -p /root/catkin_ws/src && \
+    cd /root/catkin_ws/src && \
+    git clone -b noetic-devel https://github.com/ros/catkin.git
+
+# Build and install catkin_make_isolated
+RUN cd /root/catkin_ws && \
+    ./src/catkin/cmake/isolated/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
+
+# Build ROS1 Noetic from source using catkin_make_isolated. #FAILED HERE
+# catkin_make_isolated: command not found
 RUN catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
 
 # --- 6. Create and build the ros1_bridge workspace ---
