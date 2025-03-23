@@ -1,11 +1,7 @@
-# Dockerfile.bridge - A custom Noetic–Humble ros1_bridge on Ubuntu 22.04 (ARM64)
-
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
-
-# --- 1. Install basic build tools and prerequisites ---
 
 RUN apt-get update && apt-get install -y \
     curl \
@@ -19,7 +15,8 @@ RUN apt-get update && apt-get install -y \
     wget
 
 RUN pip3 install colcon-common-extensions
-# --- 2. Install ROS 2 Humble (ARM64) from binary ---
+
+#Install ROS 2 Humble from binary 
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
     gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
@@ -28,49 +25,47 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
     apt-get install -y ros-humble-ros-base && \
     echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
 
-# --- 3. Install Python packages for ROS1 building via pip (instead of apt for problematic packages) ---
+# Install Python packages for ROS1 building via pip
 RUN pip3 install --upgrade pip
 RUN pip3 install rosdep catkin_pkg vcstool empy rosinstall-generator
 ENV PATH="/root/.local/bin:$PATH"
-# --- 4. Initialize rosdep ---
+
 RUN rosdep init && rosdep update
 
-# --- 5. Create and build a minimal ROS 1 Noetic workspace ---
-# Create workspace directory for ROS1 Noetic.
 RUN mkdir -p /root/noetic_ws/src
 WORKDIR /root/noetic_ws
-# Fetch only the core ros_comm packages.
 RUN rosinstall_generator ros_comm --rosdistro noetic --deps --tar > noetic-ros_comm.rosinstall && \
     vcs import src < noetic-ros_comm.rosinstall
 
-# Instead of the plain rosdep install, use --skip-keys for packages that fail on Jammy.
 RUN apt-get update && \
     rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6 python3-catkin-pkg-modules python3-rosdistro-modules python3-vcstool" --rosdistro humble || true
 
-# --- 5.1. Install catkin_make_isolated from source (to provide the missing command) ---
 RUN mkdir -p /root/catkin_ws/src && \
     cd /root/catkin_ws/src && \
     git clone -b noetic-devel https://github.com/ros/catkin.git
 
-# Install the 'catkin' Python module in editable mode so it’s available system-wide.
 RUN pip3 install -e /root/catkin_ws/src/catkin
 
-# Copy the catkin_make_isolated script (located in the repository’s bin folder) into the PATH.
 RUN cd /root/catkin_ws/src/catkin && \
     chmod +x bin/catkin_make_isolated && \
     cp bin/catkin_make_isolated /usr/local/bin/
 
-# Build ROS1 Noetic from source using catkin_make_isolated. #FAILED HERE
-# catkin_make_isolated: command not found
+
+# --- Patch rosconsole for log4cxx compatibility ---
+RUN sed -i 's/logger->addAppender(new ROSConsoleStdioAppender);/logger->addAppender(log4cxx::AppenderPtr(new ROSConsoleStdioAppender));/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp && \
+    sed -i 's/return log4cxx::Logger::getLogger(name);/return log4cxx::Logger::getLogger(name).get();/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp && \
+    sed -i 's/logger->addAppender(g_log4cxx_appender);/logger->addAppender(log4cxx::AppenderPtr(g_log4cxx_appender));/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp && \
+    sed -i 's/logger->removeAppender(g_log4cxx_appender);/logger->removeAppender(log4cxx::AppenderPtr(g_log4cxx_appender));/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp && \
+    sed -i 's/->getLoggerRepository()/->getLoggerRepository().lock()/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp
+
+#WE ARE HERE
 RUN catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
 
-# --- 6. Create and build the ros1_bridge workspace ---
 RUN mkdir -p /root/bridge_ws/src
 WORKDIR /root/bridge_ws/src
 RUN git clone -b humble https://github.com/ros2/ros1_bridge.git
 
 WORKDIR /root/bridge_ws
-# Source both ROS2 and ROS1 installations, then build the ros1_bridge.
 RUN . /opt/ros/humble/setup.bash && \
     . /root/noetic_ws/install_isolated/setup.bash && \
     rosdep update && \
