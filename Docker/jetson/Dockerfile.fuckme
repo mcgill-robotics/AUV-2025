@@ -58,12 +58,14 @@ RUN sed -i 's/logger->addAppender(new ROSConsoleStdioAppender);/logger->addAppen
     sed -i 's/logger->removeAppender(g_log4cxx_appender);/logger->removeAppender(log4cxx::AppenderPtr(g_log4cxx_appender));/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp && \
     sed -i 's/->getLoggerRepository()/->getLoggerRepository().lock()/g' /root/noetic_ws/src/rosconsole/src/rosconsole/impl/rosconsole_log4cxx.cpp
 
-#WE ARE HERE
+RUN pip3 install empy==3.3.4
+
 RUN catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
 
+#NOW IT IS FAILING HERE - DAS IST TOp
 RUN mkdir -p /root/bridge_ws/src
 WORKDIR /root/bridge_ws/src
-RUN git clone -b humble https://github.com/ros2/ros1_bridge.git
+RUN git clone -b humble https://github.com/ros2/ros1_bridge.git 
 
 WORKDIR /root/bridge_ws
 RUN . /opt/ros/humble/setup.bash && \
