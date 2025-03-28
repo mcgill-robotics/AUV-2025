@@ -19,7 +19,7 @@ services:
       - ROS_DOMAIN_ID=0
 
     runtime: nvidia
-    command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
+    command: bash -c "roscore" 
     network_mode: host
     build: .
     deploy:
