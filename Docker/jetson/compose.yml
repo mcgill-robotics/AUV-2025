@@ -14,8 +14,8 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-      - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_IP=ubuntu.local
+      - ROS_MASTER_URI=http://192.168.0.105:11311
+      - ROS_IP=192.168.0.105
       - ROS_DOMAIN_ID=0
 
     runtime: nvidia
@@ -43,8 +43,8 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-      - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_IP=ubuntu.local
+      - ROS_MASTER_URI=http://192.168.0.105:11311
+      - ROS_IP=192.168.0.105
       - ROS_DOMAIN_ID=0
     runtime: nvidia
     network_mode: host
@@ -70,8 +70,8 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
-      - ROS_MASTER_URI=http://ubuntu.local:11311
-      - ROS_IP=ubuntu.local
+      - ROS_MASTER_URI=http://192.168.0.105:11311
+      - ROS_IP=192.168.0.105
       - ROS_DOMAIN_ID=0
     network_mode: host
     command: bash -c "source /set_env.bash && source /opt/ros/foxy/setup.bash && ros2 run ros1_bridge dynamic_bridge"
