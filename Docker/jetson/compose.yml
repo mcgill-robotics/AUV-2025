@@ -7,20 +7,17 @@ services:
       - type: bind
         source: ../../../AUV-2025
         target: /AUV-2025
-    image: "mcgillrobotics/auv_2025:jetson"
+    image: "mcgillrobotics/auv_2025:jetson" 
     privileged: true
+    container_name: douglas_noetic
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-      - ROS_MASTER_URI=http://192.168.0.105:11311
-      - ROS_IP=192.168.0.105
-      - ROS_DOMAIN_ID=0
+      - ROS_MASTER_URI=http://douglas_noetic:11311
 
     runtime: nvidia
-    command: bash -c "roscore" 
-    network_mode: host
     build: .
     deploy:
       resources:
@@ -29,6 +26,7 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    tty: true
 
   zed:
     volumes:
@@ -38,19 +36,15 @@ services:
       context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.zed
     privileged: true
+    container_name: zed_humble
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-      - ROS_MASTER_URI=http://192.168.0.105:11311
-      - ROS_IP=192.168.0.105
-      - ROS_DOMAIN_ID=0
+    
     runtime: nvidia
-    network_mode: host
-
     command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i" 
-
     deploy:
       resources:
         reservations:
@@ -58,10 +52,14 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-
+    tty: true
+    
   bridge:
     image: "mcgillrobotics/auv_2025:rosbridge"
+    container_name: bridge_bridge
+    depends_on:
+      - douglas
+      - zed
     build:
       context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.bridge
@@ -70,8 +68,5 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
-      - ROS_MASTER_URI=http://192.168.0.105:11311
-      - ROS_IP=192.168.0.105
-      - ROS_DOMAIN_ID=0
-    network_mode: host
-    command: bash -c "source /set_env.bash && source /opt/ros/foxy/setup.bash && ros2 run ros1_bridge dynamic_bridge"
+      - ROS_MASTER_URI=http://douglas_noetic:11311
+    tty: true
