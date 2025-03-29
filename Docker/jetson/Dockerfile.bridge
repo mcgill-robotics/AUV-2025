@@ -1,11 +1,4 @@
 FROM ros:foxy-ros1-bridge-focal
 
-COPY scripts/set_env.bash /set_env.bash
-
-SHELL ["/bin/bash"]
-
-ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-ENV ROS_DOMAIN_ID=0
-
-CMD ["bash", "-c", "source /opt/ros/foxy/setup.bash && source /set_env.bash && ros2 run ros1_bridge dynamic_bridge"]
+CMD ["bash", "-c", "source ros_entrypoint.sh && ros2 run ros1_bridge dynamic_bridge --bridge-all-topics"]
 
