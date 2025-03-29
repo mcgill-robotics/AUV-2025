@@ -1,0 +1,7 @@
+<launch>
+	<include file="$(find bringup)/launch/bringup.launch">
+		<arg name="bag" value="true" />
+	</include>
+	<include file="$(find planner)/launch/params.launch"/>
+	<node pkg="planner" name="grabber_test" type="grabber_test.py" respawn="False" output="screen"/>
+</launch>
