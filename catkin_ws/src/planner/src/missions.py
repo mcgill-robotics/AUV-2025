@@ -19,6 +19,7 @@ from substates.navigate_buoy import *
 from substates.navigate_pinger import *
 from substates.navigate_bin import *
 from substates.octagon_task import *
+from substates.navigate_torpedo import *
 from substates.quali import *
 
 
@@ -274,9 +275,44 @@ class Missions:
     ):
         global sm
 
-        """
-        ADD SOME TRANSITIONS HERE
-        """
+        first_state_name = first_state_name + count
+        second_state_name = "navigate_torpedo" + count
+        target_success_state_name = (
+            mission_after_success if mission_after_success is not None else "success"
+        )
+        if mission_after_timeout is not None:
+            target_timeout_state_name = mission_after_timeout
+        else:
+            target_timeout_state_name = (
+                "failure"
+                if target_success_state_name == "success"
+                else target_success_state_name
+            )
+            # find map 
+        smach.StateMachine.add(
+            first_state_name,
+            LinearSearch(
+                self.control, 
+                self.mapping, 
+                target_class="Bin", # where we train the model to recognize the red targets on map
+                min_objects=1 # number of targets that we need to recognize (might be 2 or 4 for me)
+            ),
+            transitions={
+                "success": second_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
+        )
+        # launch torpedo 
+        smach.StateMachine.add(
+            second_state_name,
+            NavigateTorpedo(self.control, self.mapping, self.state),
+            transitions={
+                "success": target_success_state_name,
+                "timeout": target_timeout_state_name,
+                "failure": "failure",
+            },
+        )
 
     def trick(
         self, first_state_name, count, mission_after_success, mission_after_timeout
@@ -408,7 +444,7 @@ if __name__ == "__main__":
         ["Buoy", missions.buoy, "find_buoy", 0],
         ["Octagon", missions.octagon, "find_octagon", 0],
         ["Pinger", missions.pinger, "navigate_pinger", 0],
-        ["Torpedo", missions.torpedo, "", 0],
+        ["Torpedo", missions.torpedo, "launch_torpedo", 0],
         ["Bins", missions.bins, "find_bin", 0],
         ["Quali", missions.quali, "navigate_gate_not_through", 0],
         ["Competition", None, None, 0],

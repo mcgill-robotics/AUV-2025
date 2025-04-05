@@ -98,6 +98,11 @@ class Controller:
             "/propulsion/microseconds", ThrusterMicroseconds, queue_size=1
         )
 
+        # Create publisher for torpedo topic
+        self.torpedo_state_pub = rospy.Publisher(
+            "/actuators/torpedo/launch", Bool, queue_size = 1
+        )
+
         self.clients = []
 
         self.EffortClient = actionlib.SimpleActionClient(
@@ -486,3 +491,10 @@ class Controller:
     def close_claw(self):
         # Set the claw state to False (close)
         self.claw_state_pub.publish(Bool(False))
+    
+    def fire_torpedo(self):
+        # Set the torpedo state to ready
+        self.torpedo_state_pub.publish(Bool(True))
+    # ask mech on their implementation to ask how they're going to control their launches
+    # maybe they have something that stops the firing, or else we take care of it
+    

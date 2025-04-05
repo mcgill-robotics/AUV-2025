@@ -19,9 +19,9 @@ class NavigateTorpedo(smach.State):
 
         self.thread_timer = None
         self.timeout_occurred = False
-        self.time_limit = rospy.get_param("") # reads params from ros params
-        self.centering_dist_threshold = rospy.get_param("")
-        self.centering_delta_increment = rospy.get_param("")
+        self.time_limit = rospy.get_param("torpedo_time_limit") # reads params from ros params
+        self.centering_dist_threshold = rospy.get_param("center_dist_threshold")
+        self.centering_delta_increment = rospy.get_param("centering_delta_increment")
         
         # Creates a ROS publisher to send status updates to the /mission_display topic
         self.pub_mission_display = rospy.Publisher(
@@ -33,58 +33,58 @@ class NavigateTorpedo(smach.State):
         self.timeout_occurred = True
         self.control.freeze_pose()
 
-    # implement colour detection helper function
-    # in open cv, you can maybe give a name to a camera
-    def get_limits(color):
-        c = np.uint8([[color]])  # BGR values
-        hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
+    # # implement colour detection helper function
+    # # in open cv, you can maybe give a name to a camera
+    # def get_limits(color):
+    #     c = np.uint8([[color]])  # BGR values
+    #     hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
 
-        hue = hsvC[0][0][0]  # Get the hue value
+    #     hue = hsvC[0][0][0]  # Get the hue value
 
-        # Handle red hue wrap-around
-        if hue >= 165:  # Upper limit for divided red hue
-            lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
-            upperLimit = np.array([180, 255, 255], dtype=np.uint8)
-        elif hue <= 15:  # Lower limit for divided red hue
-            lowerLimit = np.array([0, 100, 100], dtype=np.uint8)
-            upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
-        else:
-            lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
-            upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
+    #     # Handle red hue wrap-around
+    #     if hue >= 165:  # Upper limit for divided red hue
+    #         lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
+    #         upperLimit = np.array([180, 255, 255], dtype=np.uint8)
+    #     elif hue <= 15:  # Lower limit for divided red hue
+    #         lowerLimit = np.array([0, 100, 100], dtype=np.uint8)
+    #         upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
+    #     else:
+    #         lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
+    #         upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
 
-        return lowerLimit, upperLimit
+    #     return lowerLimit, upperLimit
     
-    def detect_target(self):
-        RED = [0, 0, 255]  # red in BGR colorspace
-        cap = cv2.VideoCapture(0)
+    # def detect_target(self):
+    #     RED = [0, 0, 255]  # red in BGR colorspace
+    #     cap = cv2.VideoCapture(0)
 
-        lowerLimit, upperLimit = self.get_limits(color=RED)
+    #     lowerLimit, upperLimit = self.get_limits(color=RED)
 
-        while True:
-            ret, frame = cap.read()
+    #     while True:
+    #         ret, frame = cap.read()
 
-            hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    #         hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-            mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
+    #         mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
 
-            mask_ = Image.fromarray(mask)
+    #         mask_ = Image.fromarray(mask)
 
-            bbox = mask_.getbbox()
+    #         bbox = mask_.getbbox()
             
-            if bbox is not None:
-                x1, y1, x2, y2 = bbox
+    #         if bbox is not None:
+    #             x1, y1, x2, y2 = bbox
 
-                if (x2 - x1) > 10 and (y2 - y1) > 10:
-                    frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
+    #             if (x2 - x1) > 10 and (y2 - y1) > 10:
+    #                 frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
 
-            cv2.imshow('frame', frame)
+    #         cv2.imshow('frame', frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+    #         if cv2.waitKey(1) & 0xFF == ord('q'):
+    #             break
 
-        cap.release()
+    #     cap.release()
 
-        cv2.destroyAllWindows()
+    #     cv2.destroyAllWindows()
 
 
     # implement centering of torpedo helper 
