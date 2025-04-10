@@ -9,29 +9,25 @@ def main():
     controls = Controller(rospy.Time(0))
 
     try:
+        #controls.rotateDeltaEuler([0.5,0,0])
         # Reset orientation to default
-        rospy.loginfo("Resetting orientation to default...")
-        controls.rotateEuler([0, 0, 0])
-        rospy.sleep(10)  # Give time for the rotation to complete
-
-        # Move down by 0.5 meters
-        rospy.loginfo("Moving down by 0.5 meters...")
-        controls.moveDelta([0, 0, -0.5])
-        rospy.sleep(10)  
+        #rospy.loginfo("Moving down by 0.5 meters...")
+        # controls.moveDelta([0, 0, -0.5])
+        #rospy.sleep(10)  
 
         # Move in a square pattern locally
         rospy.loginfo("Executing square pattern movement...")
-        controls.moveDeltaLocal([0.5, 0, 0])
+        controls.moveDelta([0, 0, -0.5])
         rospy.sleep(10)
 
-        controls.moveDeltaLocal([0, 0.5, 0])
-        rospy.sleep(10)
+        # controls.moveDeltaLocal([0, 0.5, 0])
+        # rospy.sleep(10)
 
-        controls.moveDeltaLocal([-0.5, 0, 0])
-        rospy.sleep(10)
+        # controls.moveDeltaLocal([-0.5, 0, 0])
+        # rospy.sleep(10)
 
-        controls.moveDeltaLocal([0, -0.5, 0])
-        rospy.sleep(10)
+        # controls.moveDeltaLocal([0, -0.5, 0])
+        # rospy.sleep(10)
 
     except rospy.ROSInterruptException:
         rospy.logerr("ROS Interrupt received. Stopping movements.")

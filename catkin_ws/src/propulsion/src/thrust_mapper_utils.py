@@ -6,7 +6,16 @@ MAX_BKWD_FORCE = -3.52 * 9.81 * SCALING_FACTOR
 DEADBAND_EPSILON = 1.5  #Tune based on thruster response
 #Creates a smooth transition around zero force to avoid abrupt changes in PWM.
 
-thruster_mount_dirs = [1, 1, 1, 1, 1, 1, 1, 1]
+thruster_mount_dirs = [ #rep physical orientation of thrusters
+    1,   # BACK_LEFT (CCW)
+    1,  # HEAVE_BACK_LEFT (CW)
+    1,   # HEAVE_FRONT_LEFT (CCW)
+    1,  # FRONT_LEFT (CW)
+    1,   # FRONT_RIGHT (CCW)
+    1,  # HEAVE_FRONT_RIGHT (CW)
+    1,   # HEAVE_BACK_RIGHT (CCW)
+    1   # BACK_RIGHT (CW)
+]
 #1 is forward, -1 is backward, 0.5 is half thrust in specific direction
 #If force is exactly zero, returns 1500 μs (neutral signal, no movement).
 
