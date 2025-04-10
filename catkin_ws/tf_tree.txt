@@ -1,0 +1,480 @@
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0773333 Max Delay: 0.62
+Frame: auv_rotation published by unknown_publisher Average Delay: 0 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: 0 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 23.2558 Hz, Average Delay: 0.029 Max Delay: 0.62
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.129655 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00166667 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00166667 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 15.9664 Hz, Average Delay: 0.0484211 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.135111 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00210526 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00210526 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 15.544 Hz, Average Delay: 0.0493333 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.135517 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00653061 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00653061 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 15.0778 Hz, Average Delay: 0.0465806 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.140263 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00761905 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00761905 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.5441 Hz, Average Delay: 0.0482587 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.140674 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00657534 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00657534 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.5342 Hz, Average Delay: 0.0494017 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.135098 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00785714 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00785714 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.2933 Hz, Average Delay: 0.0463197 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.130435 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00854167 Max Delay: 0
+Frame: base_link published by unknown_publisher Average Delay: -0.00854167 Max Delay: 0
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.1274 Hz, Average Delay: 0.0436601 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.121935 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00761905 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00761905 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0625 Hz, Average Delay: 0.0406006 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.124853 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00695652 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00695652 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.1036 Hz, Average Delay: 0.042137 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.119041 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00629032 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00629032 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.3326 Hz, Average Delay: 0.0402545 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.116296 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00715328 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00715328 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.2343 Hz, Average Delay: 0.0388046 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.107841 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00715232 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00715232 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.4809 Hz, Average Delay: 0.0352621 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.106772 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00711656 Max Delay: 0.02
+Frame: base_link published by unknown_publisher Average Delay: -0.00711656 Max Delay: 0.02
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.2937 Hz, Average Delay: 0.0347471 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.104293 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00651429 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00651429 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.1543 Hz, Average Delay: 0.0344765 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.105463 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00702703 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00702703 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0288 Hz, Average Delay: 0.0344957 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.103419 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.0073 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.0073 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.023 Hz, Average Delay: 0.0336177 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.10251 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00796209 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00796209 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0988 Hz, Average Delay: 0.0328743 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0987645 Max Delay: 0.88
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00855856 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00855856 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0907 Hz, Average Delay: 0.0310256 Max Delay: 0.88
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0990441 Max Delay: 1.02
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00846154 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00846154 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.3273 Hz, Average Delay: 0.0310961 Max Delay: 1.02
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0958596 Max Delay: 1.02
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00816327 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00816327 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0932 Hz, Average Delay: 0.0301292 Max Delay: 1.02
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0980537 Max Delay: 1.02
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00820312 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00820312 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0843 Hz, Average Delay: 0.0309271 Max Delay: 1.02
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0951125 Max Delay: 1.02
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00865672 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00865672 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.1377 Hz, Average Delay: 0.0294799 Max Delay: 1.02
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 0.0943034 Max Delay: 1.02
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00884892 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00884892 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 14.0931 Hz, Average Delay: 0.0290888 Max Delay: 1.02
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 8.67217 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00882759 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00882759 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.309723 Hz, Average Delay: 3.18493 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 8.26599 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00811881 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00811881 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.323351 Hz, Average Delay: 3.04613 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 7.9982 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00757962 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00757962 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.33449 Hz, Average Delay: 2.94318 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 7.64898 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00680851 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00680851 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.336764 Hz, Average Delay: 2.92392 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 7.47633 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00652819 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00652819 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.336734 Hz, Average Delay: 2.9234 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 7.18647 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00605714 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00605714 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.336673 Hz, Average Delay: 2.92294 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 6.93499 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00585635 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00585635 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.336823 Hz, Average Delay: 2.9218 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0
+
+
+
+RESULTS: for all Frames
+
+Frames:
+Frame: 100 published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: auv published by unknown_publisher Average Delay: 6.68469 Max Delay: 2891.72
+Frame: auv_rotation published by unknown_publisher Average Delay: -0.00568365 Max Delay: 0.14
+Frame: base_link published by unknown_publisher Average Delay: -0.00568365 Max Delay: 0.14
+Frame: depth published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: dvl published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Frame: imu published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+Node: unknown_publisher 0.336802 Hz, Average Delay: 2.9216 Max Delay: 2891.72
+Node: unknown_publisher(static) 5e+08 Hz, Average Delay: 0 Max Delay: 0

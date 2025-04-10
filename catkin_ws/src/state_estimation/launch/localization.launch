@@ -3,8 +3,9 @@
     <arg name="remove_gravity" default="true"/>
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
-      <param name="frequency" value="10"/>  
-      <param name="sensor_timeout" value="1.0"/>  
+      <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
+      <param name="frequency" value="20"/>  
+      <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
 
       <param name="print_diagnostics" value="true"/>
@@ -13,6 +14,7 @@
       <param name="odom_frame" value="odom"/>
       <param name="base_link_frame" value="auv"/>
       <param name="world_frame" value="odom"/>
+      <rosparam param="transform_orientation">[0, 0, 0, 1, 0, 0, 0]</rosparam> <!-- ENU orientation -->
 
       <param name="twist0" value="/sensors/dvl/twist"/>
       <param name="imu0" value="/sensors/imu/data"/> 
@@ -46,4 +48,5 @@
     </node>
 
     <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
+
 </launch>

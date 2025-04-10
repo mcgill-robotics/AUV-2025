@@ -63,11 +63,6 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     // Returns Euler angles in the order: yaw, pitch, roll (in radians)
     mat.getEulerYPR(yaw, pitch, roll);
 
-    // If you need degrees instead, uncomment the following:
-    // yaw   *= RAD_TO_DEG;
-    // pitch *= RAD_TO_DEG;
-    // roll  *= RAD_TO_DEG;
-
     // Prepare and publish Euler angle messages
     std_msgs::Float64 yaw_msg, pitch_msg, roll_msg;
     yaw_msg.data = yaw;
@@ -104,8 +99,8 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
     static tf2_ros::TransformBroadcaster br;
     geometry_msgs::TransformStamped transformStamped1;
     transformStamped1.header.stamp = ros::Time::now();
-    transformStamped1.header.frame_id = "world";
-    transformStamped1.child_frame_id = "auv_base";
+    transformStamped1.header.frame_id = "odom";
+    transformStamped1.child_frame_id = "base_link";
     transformStamped1.transform.translation.x = msg.position.x;
     transformStamped1.transform.translation.y = msg.position.y;
     transformStamped1.transform.translation.z = msg.position.z;
@@ -114,7 +109,7 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
 
     geometry_msgs::TransformStamped transformStamped2;
     transformStamped2.header.stamp = ros::Time::now();
-    transformStamped2.header.frame_id = "world_rotation";
+    transformStamped2.header.frame_id = "base_link";
     transformStamped2.child_frame_id = "auv_rotation";
     transformStamped2.transform.translation.x = 0;
     transformStamped2.transform.translation.y = 0;

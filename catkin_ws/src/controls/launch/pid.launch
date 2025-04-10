@@ -89,6 +89,7 @@
 			</node>
 
 			<node name="x_pid" pkg="pid" type="controller" >
+				<param name="frame_id" value="enu"/>
 				<param name="auto_reset" value="true" />
   				<param name="reset_integral_on_setpoint" value="true" />
 				<param name="Kp" value="5" /> 

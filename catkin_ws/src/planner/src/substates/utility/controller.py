@@ -364,27 +364,22 @@ class Controller:
 
     # move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.15, timeout=30):
-        # Get current position
         start_x = rospy.wait_for_message("/state/x", Float64).data
         start_y = rospy.wait_for_message("/state/y", Float64).data
         start_z = rospy.wait_for_message("/state/z", Float64).data
 
-        # Set target
         target_x = start_x + delta_x
         target_y = start_y + delta_y
         target_z = start_z + delta_z
-
-        # Enable PID
+      
         self.enable_pid("x", True)
         self.enable_pid("y", True)
         self.enable_pid("z", True)
 
-        # Set setpoints
         rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=1).publish(target_x)
         rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=1).publish(target_y)
         rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=1).publish(target_z)
 
-        # Wait until target reached or timeout
         start_time = rospy.Time.now()
         while (rospy.Time.now() - start_time).to_sec() < timeout:
             current_x = rospy.wait_for_message("/state/x", Float64).data

@@ -67,6 +67,8 @@ class QuaternionPID:
         self.previous_time = rospy.get_time()
 
     def set_enabled(self, data):
+        if not data.data:  # When disabling
+            self.torque_integral = np.array([0, 0, 0])
         self.enabled = data.data
 
     def execute(self):

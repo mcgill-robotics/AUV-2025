@@ -12,7 +12,7 @@ import quaternion
 from tf2_ros import TransformBroadcaster
 from robot_localization.srv import SetPose
 
-DEG_PER_RAD = 180 / np.pi
+
 NUMBER_OF_PINGERS = 4
 
 def reset_pose(pose):
@@ -42,9 +42,9 @@ def publish_bypass(pose, ang_vel):
             pose.orientation.w,
         ]
     )
-    roll = euler_dvlref_dvl[0] * DEG_PER_RAD
-    pitch = euler_dvlref_dvl[1] * DEG_PER_RAD
-    yaw = euler_dvlref_dvl[2] * DEG_PER_RAD
+    roll = euler_dvlref_dvl[0] 
+    pitch = euler_dvlref_dvl[1]
+    yaw = euler_dvlref_dvl[2]
 
     pub_theta_x.publish(roll)
     pub_theta_y.publish(pitch)
@@ -57,8 +57,8 @@ def publish_bypass(pose, ang_vel):
 
     t = TransformStamped()
     t.header.stamp = rospy.Time.now()
-    t.header.frame_id = "world"
-    t.child_frame_id = "auv_base"
+    t.header.frame_id = "odom"
+    t.child_frame_id = "base_link"
     t.transform.translation.x = pose.position.x
     t.transform.translation.y = pose.position.y
     t.transform.translation.z = pose.position.z
@@ -67,7 +67,7 @@ def publish_bypass(pose, ang_vel):
 
     t_rot = TransformStamped()
     t_rot.header.stamp = rospy.Time.now()
-    t_rot.header.frame_id = "world_rotation"
+    t_rot.header.frame_id = "odom"
     t_rot.child_frame_id = "auv_rotation"
     t_rot.transform.translation.x = 0
     t_rot.transform.translation.y = 0
@@ -77,8 +77,8 @@ def publish_bypass(pose, ang_vel):
 
 def cb_unity_state(msg):
     global reseted
-    pose_x = msg.position.z
-    pose_y = -msg.position.x
+    pose_x = msg.position.x
+    pose_y = msg.position.z
     pose_z = msg.position.y
     q_ESD_imunominaldown_x = msg.orientation.x
     q_ESD_imunominaldown_y = msg.orientation.y
@@ -91,9 +91,9 @@ def cb_unity_state(msg):
 
     q_ENU_imunominalup = q_ENU_ESD * q_ESD_imunominaldown * q_imunominaldown_imunominalup
 
-    twist_angular_e = msg.angular_velocity.z
+    twist_angular_e = -msg.angular_velocity.z
     twist_angular_n = msg.angular_velocity.x
-    twist_angular_u = -msg.angular_velocity.y
+    twist_angular_u = msg.angular_velocity.y
     twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
 
 
@@ -106,9 +106,9 @@ def cb_unity_state(msg):
     isHydrophonesActive = msg.isHydrophonesActive
 
 
-    velocity_enu = [msg.velocity.z, -msg.velocity.x, msg.velocity.y]
+    velocity_enu = [msg.velocity.x, msg.velocity.z, msg.velocity.y]
 
-    acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
+    acceleration_enu = [msg.linear_acceleration.x, msg.linear_acceleration.z, -msg.linear_acceleration.y]
 
     # HYDROPHONES
     if isHydrophonesActive:

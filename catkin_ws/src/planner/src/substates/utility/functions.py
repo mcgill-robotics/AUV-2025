@@ -61,7 +61,7 @@ def euler_to_quaternion(roll, pitch, yaw):
     roll_radians = math.radians(roll)
     pitch_radians = math.radians(pitch)
     yaw_radians = math.radians(yaw)
-    q = transformations.quaternion_from_euler(roll_radians, pitch_radians, yaw_radians, axes='rxyz')
+    q = transformations.quaternion_from_euler(yaw_radians, pitch_radians, roll_radians, axes='rxyz')
     return [q[0], q[1], q[2], q[3]] #quats are represented as x,y,z,w. Should check this in all codebase
 
 # quat = euler_to_quaternion(0, 0, 90)
