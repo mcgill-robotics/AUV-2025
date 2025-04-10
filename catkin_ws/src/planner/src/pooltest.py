@@ -5,7 +5,10 @@ from substates.utility.functions import countdown
 
 def main():
     rospy.init_node("pooltest")
+def main():
+    rospy.init_node("pooltest")
 
+    controls = Controller(rospy.Time(0))
     controls = Controller(rospy.Time(0))
 
     try:
