@@ -21,7 +21,7 @@ void odom_cb(const sensor_msgs::Imu::ConstPtr &msg)
     new_msg.header.frame_id = "imu";
     new_msg.angular_velocity_covariance[0] = angular_velocity_variance;
     new_msg.angular_velocity_covariance[4] = angular_velocity_variance;
-    new_msg.angular_velocity_covariance[8] = 0.5;
+    new_msg.angular_velocity_covariance[8] = angular_velocity_variance;
 
     new_msg.linear_acceleration_covariance[0] = acceleration_variance;
     new_msg.linear_acceleration_covariance[4] = acceleration_variance;
