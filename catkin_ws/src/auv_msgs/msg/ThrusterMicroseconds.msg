@@ -1,0 +1,11 @@
+#Thruster definitions
+uint8 BACK_LEFT=0
+uint8 HEAVE_BACK_LEFT=1
+uint8 HEAVE_FRONT_LEFT=2
+uint8 FRONT_LEFT=3
+uint8 FRONT_RIGHT=4
+uint8 HEAVE_FRONT_RIGHT=5
+uint8 HEAVE_BACK_RIGHT=6
+uint8 BACK_RIGHT=7
+
+uint16[8] microseconds
