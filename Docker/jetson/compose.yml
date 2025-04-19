@@ -18,6 +18,7 @@ services:
       - ROS_MASTER_URI=http://douglas_noetic:11311
       - ROS_IP=douglas_noetic
     runtime: nvidia
+    command: bash -c "source /opt/ros/noetic/setup.bash && roscore" 
     build: .
     deploy:
       resources:
@@ -74,5 +75,4 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - ROS_MASTER_URI=http://douglas_noetic:11311
       - ROS_IP=douglas_noetic
-    command: bash -c "source /opt/ros/noetic/setup.bash && roscore" 
     tty: true

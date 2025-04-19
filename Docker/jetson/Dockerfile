@@ -102,5 +102,5 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 
-CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash"]
+CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && sleep infinity"]
 RUN echo "tmux" >> ~/.bashrc
