@@ -70,4 +70,5 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - ROS_MASTER_URI=http://douglas_noetic:11311
+    command: bash -c "source /opt/ros/noetic/setup.bash && roscore" 
     tty: true
