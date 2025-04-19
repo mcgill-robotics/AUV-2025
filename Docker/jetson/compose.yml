@@ -43,9 +43,6 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-      - ROS_IP=douglas_noetic
-      
-    
     runtime: nvidia
     command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i" 
     network_mode: host 
