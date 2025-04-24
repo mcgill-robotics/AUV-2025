@@ -16,9 +16,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
       - ROS_MASTER_URI=http://localhost:11311
-      - ROS_IP=127.0.0.1
     runtime: nvidia
-    command: bash -c "source /opt/ros/noetic/setup.bash && roscore" 
     build: .
     deploy:
       resources:
@@ -46,7 +44,6 @@ services:
       - UDEV=on
     runtime: nvidia
     command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i" 
-    network_mode: host
     deploy:
       resources:
         reservations:
@@ -71,6 +68,5 @@ services:
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - ROS_MASTER_URI=http://localhost:11311
-      - ROS_IP=127.0.0.1
     tty: true
     network_mode: host

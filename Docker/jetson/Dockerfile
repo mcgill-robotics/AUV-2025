@@ -102,5 +102,5 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
-CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && sleep infinity"]
+CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && roscore"]
 RUN echo "tmux" >> ~/.bashrc
