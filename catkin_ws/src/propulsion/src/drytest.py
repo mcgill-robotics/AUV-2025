@@ -6,6 +6,9 @@ from thrust_mapper_utils import *
 from geometry_msgs.msg import Wrench
 import keyboard
 
+MAX_FWD_FORCE = 4 * 9.81 # Max forward force (in Newtons) that all thruster can exert based on Thruster Test May 2025
+MAX_BKWD_FORCE = -2 * 9.81 # Max backward force (in Newtons) that all thruster can exert based on Thruster Test May 2025
+
 force_amt = 0.1  # 10%
 
 # TODO: update if necessary

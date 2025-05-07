@@ -6,7 +6,7 @@ and then converts the forces to PWM signals and publishes them.
 
 import numpy as np
 import rospy
-from thrust_mapper_utils import *  # Assumes force_to_pwm, thruster_mount_dirs, etc. are defined here.
+from thrust_mapper_utils import thruster_mount_dirs, force_to_pwm_thruster  # Assumes force_to_pwm, thruster_mount_dirs, etc. are defined here.
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench, Vector3
 from nav_msgs.msg import Odometry
@@ -115,14 +115,14 @@ class ThrusterMapper:
         Applies individual limits to prevent overcurrent.
         """
         pwm_arr = [None] * 8
-        pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm(forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
-        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm(forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
-        pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm(forces_msg.HEAVE_FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_LEFT])
-        pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm(forces_msg.FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_LEFT])
-        pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm(forces_msg.FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_RIGHT])
-        pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm(forces_msg.HEAVE_FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_RIGHT])
-        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm(forces_msg.HEAVE_BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_RIGHT])
-        pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm(forces_msg.BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.BACK_RIGHT])
+        pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm_thruster(8,forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
+        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm_thruster(7,forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
+        pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm_thruster(6,forces_msg.HEAVE_FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_LEFT])
+        pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm_thruster(5,forces_msg.FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_LEFT])
+        pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm_thruster(4,forces_msg.FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_RIGHT])
+        pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_RIGHT] = force_to_pwm_thruster(3,forces_msg.HEAVE_FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_RIGHT])
+        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_RIGHT] = force_to_pwm_thruster(2,forces_msg.HEAVE_BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_RIGHT])
+        pwm_arr[ThrusterMicroseconds.BACK_RIGHT] = force_to_pwm_thruster(1,forces_msg.BACK_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.BACK_RIGHT])
     
         # Retrieve PWM limits from parameters
         thruster_lower_limit = rospy.get_param("thruster_PWM_lower_limit")
