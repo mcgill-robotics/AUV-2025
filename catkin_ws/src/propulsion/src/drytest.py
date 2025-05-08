@@ -26,7 +26,7 @@ def simultaneous_forwards_test():
     while not rospy.is_shutdown():
         print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
         
-        cmd = [force_to_pwm(force_amt * MAX_FWD_FORCE)] * 8
+        cmd = [force_to_pwm_thruster(i + 1, force_amt * MAX_FWD_FORCE * thruster_mount_dirs[i]) for i in range(8)]
         pub.publish(cmd)
         rospy.sleep(1.0)
         pub.publish(reset_cmd)
@@ -41,7 +41,7 @@ def simultaneous_forwards_test():
 def optimized_dry_test(t):
     print("- spinning at " + str(100 * force_amt) + "% max forwards force for 1s")
     cmd = reset.copy()
-    cmd[t - 1] = force_to_pwm(force_amt * MAX_FWD_FORCE * thruster_mount_dirs[t-1])
+    cmd[t - 1] = force_to_pwm_thruster(t, force_amt * MAX_FWD_FORCE * thruster_mount_dirs[t - 1])
     pub.publish(cmd)
     rospy.sleep(1.0)
     pub.publish(reset_cmd)
