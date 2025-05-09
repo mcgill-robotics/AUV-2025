@@ -97,8 +97,8 @@ else: # We now use new thruster mapping
     # Forward Motion
     forward_pwm = hover_pwm.copy()
     forward_pwm[BACK_LEFT] = force_to_pwm_thruster(8,frwd_force)
-    forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(5,frwd_force)
-    forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(4,frwd_force)
+    forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(5,-1.0 * frwd_force)
+    forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(4,-1.0 * frwd_force)
     forward_pwm[BACK_RIGHT] = force_to_pwm_thruster(1,frwd_force)
 
     print(f"[INFO] Publishing forward command: {forward_pwm}")
