@@ -40,7 +40,7 @@ old_coeffs = (
 )
 
 # -------------------- ROS Setup --------------------
-rospy.init_node("drift_test")
+rospy.init_node("mech_test")
 pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 rospy.sleep(2.0)  # Allow time for publishers to initialize
 
@@ -108,6 +108,3 @@ else: # We now use new thruster mapping
     # Reset all thrusters to idle
     pwm_pub.publish(reset_cmd)
     print("[INFO] Test complete. Thrusters reset to neutral.")
-
-
-
