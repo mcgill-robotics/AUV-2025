@@ -25,13 +25,20 @@ RUN apt-get update && apt-get install -y \
 
 RUN locale-gen en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
-#create Workspace & Clone ROS2 Repositories. These change often so if something doesnt work, likely here 
+# Create workspace
 WORKDIR /root/ros2_ws/src
-RUN git clone --recursive https://github.com/stereolabs/zed-ros2-wrapper.git && \
-  git clone https://github.com/ros-drivers/nmea_msgs.git && \
-  git clone -b ros2 https://github.com/ros-geographic-info/geographic_info.git && \
-  git clone -b humble https://github.com/stereolabs/zed-ros2-interfaces.git && \
-  git clone --recursive https://github.com/majdkhalife/cob_common.git
+
+# Download specific release of zed-ros2-wrapper (stable, ROS2 Humble compatible)
+RUN curl -L https://github.com/stereolabs/zed-ros2-wrapper/archive/refs/tags/humble-v4.2.x.tar.gz -o zed-ros2-wrapper.tar.gz && \
+    tar -xzf zed-ros2-wrapper.tar.gz && \
+    mv zed-ros2-wrapper-humble-v4.2.x zed-ros2-wrapper && \
+    rm zed-ros2-wrapper.tar.gz
+
+# Clone other ROS 2 packages
+RUN git clone https://github.com/ros-drivers/nmea_msgs.git && \
+    git clone -b ros2 https://github.com/ros-geographic-info/geographic_info.git && \
+    git clone -b humble https://github.com/stereolabs/zed-ros2-interfaces.git && \
+    git clone --recursive https://github.com/majdkhalife/cob_common.git
 
 # Install Dependencies Using rosdep
 WORKDIR /root/ros2_ws
