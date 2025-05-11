@@ -106,22 +106,23 @@ RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 RUN apt update \
     && apt install -y zstd
 
-#create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
+# Create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
 RUN adduser jetson --disabled-password --gecos "" 
 
-#download & Install ZED SDK (Move this Down Since It’s a Big File)
+# Download & Install ZED SDK
 WORKDIR /root/
 RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
   chmod +x ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run
 
-#run ZED Installer as Root (Safer) Then Change Ownership
+# Run ZED Installer as Root (Safer) Then Change Ownership
 RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
   chown -R jetson:jetson /usr/local/zed
 
 USER root
-WORKDIR /AUV-2025/catkin_ws/src
+WORKDIR /AUV-2025/catkin_ws
 
-RUN git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
+RUN cd src && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
     cd .. && \
     source /opt/ros/noetic/setup.bash && \
     rosdep update && \
