@@ -32,7 +32,7 @@ emergency_triggered = False
 def emergency_reset_loop():
     global emergency_triggered
     while not rospy.is_shutdown():
-        if keyboard.is_pressed('r'):
+        if keyboard.is_pressed('esc'):
             rospy.logwarn("[SAFETY] Reset key pressed. Resetting thrusters and restarting test.")
             pwm_pub.publish(ThrusterMicroseconds(microseconds=[1500]*8))
             emergency_triggered = True
