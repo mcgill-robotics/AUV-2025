@@ -98,6 +98,7 @@ while not rospy.is_shutdown():
         frwd_force = float(user_input)
 
         while not go:
+            emergency_triggered = False
             pwm_pub.publish(reset_cmd) # For safety
             user_input = input("\n[INPUT] Specify VERTICAL force per thruster, in kg: ") 
             vert_force = float(user_input)
@@ -143,6 +144,8 @@ while not rospy.is_shutdown():
         frwd_force = float(user_input) * g
 
         while not go:
+            emergency_triggered = False
+            pwm_pub.publish(reset_cmd) # For safety
             user_input = input("\n[INPUT] Specify VERTICAL force per thruster, in kg: ") 
             vert_force = float(user_input) * g
             print(f"[INFO] Using NEW mapping at {vert_force:.2f} N vertical and {frwd_force:.2f} N forward")
