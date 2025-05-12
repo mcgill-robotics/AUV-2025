@@ -64,6 +64,7 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-cv-bridge \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
+    ros-noetic-rviz \
     ros-noetic-smach-ros \
     ros-noetic-usb-cam \
     ros-noetic-robot-localization
