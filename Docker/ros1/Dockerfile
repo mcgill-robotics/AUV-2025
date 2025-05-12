@@ -124,6 +124,7 @@ WORKDIR /AUV-2025/catkin_ws
 
 RUN cd src && \
     git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-examples.git && \
     cd .. && \
     source /opt/ros/noetic/setup.bash && \
     rosdep update && \
