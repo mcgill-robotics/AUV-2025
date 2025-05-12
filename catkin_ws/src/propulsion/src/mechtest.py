@@ -176,4 +176,3 @@ while not rospy.is_shutdown():
 
         pwm_pub.publish(reset_cmd)
         print("[INFO] Test complete. Thrusters reset to neutral.")
-hello
