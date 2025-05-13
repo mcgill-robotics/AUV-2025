@@ -19,14 +19,16 @@ from .functions import *
 import numpy as np
 import quaternion
 import math
-
+import numpy as np
+from math import cos, sin
+from std_msgs.msg import Bool
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
-do_displace = Bool(True)
-do_not_displace = Bool(False)
-is_local = Bool(True)
-is_not_local = Bool(False)
+do_displace = True
+do_not_displace = False
+is_local = True
+is_not_local = False
 
 """
 Helper class for the planner. Takes in simple commands, converts them to 
@@ -39,22 +41,39 @@ class Controller:
         print("starting controller")
         self.header_time = header_time
 
-        self.x = None
-        self.y = None
-        self.z = None
-        self.theta_x = None
-        self.theta_y = None
-        self.theta_z = None
-        self.orientation = None
+        self.x =0.0
+        self.y = 0.0
+        self.z = 0.0
+        self.theta_x = 0.0
+        self.theta_y = 0.0
+        self.theta_z = 0.0
+        self.orientation = 0.0
+        self.yaw = 0.0
 
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
         self.tf_header = Header(frame_id="world_rotation")
 
-        self.sub = rospy.Subscriber("/state/pose", Pose, self.set_position)
-        self.sub_theta_x = rospy.Subscriber("/state/theta/x", Float64, self.set_theta_x)
-        self.sub_theta_y = rospy.Subscriber("/state/theta/y", Float64, self.set_theta_y)
-        self.sub_theta_z = rospy.Subscriber("/state/theta/z", Float64, self.set_theta_z)
+        self.current_x = rospy.Subscriber(
+            "/state/x", Float64, self.set_current_x, queue_size=1
+        )
+        self.current_y = rospy.Subscriber(
+            "/state/y", Float64, self.set_current_y, queue_size=1)
+        self.current_z = rospy.Subscriber(
+            "/state/z", Float64, self.set_current_z, queue_size=1
+        )
+
+        self.current_yaw = rospy.Subscriber("/state/yaw", Float64, self.set_current_yaw)
+        self.current_roll = rospy.Subscriber("/state/theta/x", Float64, self.set_theta_x, queue_size=1)
+        self.current_pitch = rospy.Subscriber("/state/theta/y", Float64, self.set_theta_y, queue_size=1)
+ 
+
+        self.sub_x = rospy.Subscriber("/state/x", Float64, self.set_x, queue_size=1)
+        self.sub_y = rospy.Subscriber("/state/y", Float64, self.set_y, queue_size=1)
+        self.sub_z = rospy.Subscriber("/state/z", Float64, self.set_z, queue_size=1)
+        self.sub_quat = rospy.Subscriber(
+            "/state/pose", Pose, self.set_position, queue_size=1
+        )
 
         self.pub_x_enable = rospy.Publisher(
             "/controls/pid/x/enable", Bool, queue_size=1
@@ -68,6 +87,10 @@ class Controller:
         self.pub_quat_enable = rospy.Publisher(
             "/controls/pid/quat/enable", Bool, queue_size=1
         )
+
+        self.x_setpoint_pub = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
+        self.y_setpoint_pub = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
+        self.z_setpoint_pub = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=10)
 
         # for killing
         self.pub_surge = rospy.Publisher("/controls/force/surge", Float64, queue_size=1)
@@ -146,6 +169,41 @@ class Controller:
 
         print("All state information received, controller is active.")
 
+    def set_current_x(self, msg: Float64):
+        """Callback to cache the latest /state/x float."""
+        self.current_x = msg.data
+
+    def set_current_y(self, msg: Float64):
+        """Callback to cache the latest /state/x float."""
+        self.current_y = msg.data
+    
+    def set_current_z(self, msg: Float64):
+        """Callback to cache the latest /state/x float."""
+        self.current_z = msg.data
+    
+    def set_current_yaw(self, msg: Float64):
+        """Callback to cache the latest /state/x float."""
+        self.current_yaw = msg.data
+
+    def set_theta_z(self, msg):
+        self.theta_z = msg.data
+
+    
+
+
+    def set_x(self, msg: Float64):
+        self.x = msg.data
+
+    def set_y(self, msg: Float64):
+        self.y = msg.data
+
+    def set_z(self, msg: Float64):
+        self.z = msg.data
+
+    def set_theta_z(self, data):
+        self.theta_z = data.data
+
+
     def set_position(self, data):
         self.x = data.position.x
         self.y = data.position.y
@@ -167,7 +225,7 @@ class Controller:
         to the world frame.
         """
         trans = self.tf_buffer.lookup_transform(
-            "world_rotation", "auv_rotation", self.header_time
+            "auv", "base_link", self.header_time
         )
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
@@ -209,8 +267,8 @@ class Controller:
         x, y, z, tw, tx, ty, tz = state
         goal = StateQuaternionGoal()
 
-        goal.displace = displace
-        goal.local = local
+        goal.displace = Bool(displace) 
+        goal.local  = Bool(local)
 
         goal.pose.position.x = 0 if x is None else x
         goal.do_x = Bool(False) if x is None else Bool(True)
@@ -243,9 +301,9 @@ class Controller:
                     ang
                 )
             )
-        w, x, y, z = ang
+        x, y, z,w = ang
         goal_state = self.get_state_goal(
-            [None, None, None, w, x, y, z], do_not_displace
+            [None, None, None, x, y, z, w], do_not_displace
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
@@ -335,67 +393,76 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     # rotate by this amount (quaternion)
-    def rotateDelta(self, delta):
+    def rotateDelta(self, delta, displace=True):
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError(
                 "Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
                     delta
                 )
             )
+        self.enable_pid("quat", True)
         w, x, y, z = delta
-        goal_state = self.get_state_goal([None, None, None, w, x, y, z], do_displace)
-
-        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        goal_state = self.get_state_goal([None, None, None, w, x, y, z], displace)
+        self.enable_pid("quat", False)
+        return self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        
 
     # rotate by this amount (euler)
     def rotateDeltaEuler(self, delta):
+        self.enable_pid("quat", True)
         x, y, z = delta
-        if x is None:
-            x = 0
-        if y is None:
-            y = 0
-        if z is None:
-            z = 0
-        self.rotateDelta(euler_to_quaternion(x, y, z))
+        qx, qy, qz, qw = euler_to_quaternion(x, y, z)
+        if qw < 0:
+            qx, qy, qz, qw = -qx, -qy, -qz, -qw
+        resp = self.rotateDelta([qw, qx, qy, qz], displace=True)
+        self.enable_pid("quat", False)
+        return resp
+
 
     def enable_pid(self, axis, state):
         pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
         pub.publish(Bool(state))
 
     # move by this amount in local space (i.e. z is always heave)
-    def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.15, timeout=30):
-        start_x = rospy.wait_for_message("/state/x", Float64).data
-        start_y = rospy.wait_for_message("/state/y", Float64).data
-        start_z = rospy.wait_for_message("/state/z", Float64).data
+    def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
+        start_x = self.x
+        start_y = self.y 
+        start_z = self.z
 
-        target_x = start_x + delta_x
-        target_y = start_y + delta_y
+        # ---- rotate into global frame ----
+        yaw = self.yaw
+        dx_g = delta_x * cos(yaw) - delta_y * sin(yaw)
+        dy_g = delta_x * sin(yaw) + delta_y * cos(yaw)
+
+        target_x = start_x + dx_g
+        target_y = start_y + dy_g
         target_z = start_z + delta_z
-      
+
+        # enable your PIDs
         self.enable_pid("x", True)
         self.enable_pid("y", True)
         self.enable_pid("z", True)
 
-        rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=1).publish(target_x)
-        rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=1).publish(target_y)
-        rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=1).publish(target_z)
+        # publish setpoints
+        self.x_setpoint_pub.publish(target_x)
+        self.y_setpoint_pub.publish(target_y)
+        self.z_setpoint_pub.publish(target_z)
 
+        # loop until within tolerance or timeout
+        rate = rospy.Rate(10)
         start_time = rospy.Time.now()
         while (rospy.Time.now() - start_time).to_sec() < timeout:
-            current_x = rospy.wait_for_message("/state/x", Float64).data
-            current_y = rospy.wait_for_message("/state/y", Float64).data
-            current_z = rospy.wait_for_message("/state/z", Float64).data
-
-            if (abs(current_x - target_x) < tolerance and 
-                abs(current_y - target_y) < tolerance and 
-                abs(current_z - target_z) < tolerance):
+            if (abs(self.x - target_x) < tolerance and
+                abs(self.y - target_y) < tolerance and
+                abs(self.z - target_z) < tolerance):
                 break
-            rospy.sleep(0.1)
+            rate.sleep()
 
-        # Disable PID
+        # disable PIDs
         self.enable_pid("x", False)
         self.enable_pid("y", False)
         self.enable_pid("z", False)
+
 
 
     # set torque

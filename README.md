@@ -1,6 +1,7 @@
 # AUV
 
 *This project is currently under development*
+fire branch no cap
 
 Ahoy! This project contains software intended to run on the custom-built Douglas AUV to compete at RoboSub2025 on behalf of McGill Robotics.
 
