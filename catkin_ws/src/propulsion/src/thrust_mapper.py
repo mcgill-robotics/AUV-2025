@@ -23,16 +23,16 @@ T = np.array([
     # SURGE (X)
     [ np.cos(alpha),  0,0, -np.cos(alpha), -np.cos(alpha),0,0,  np.cos(alpha)],
     # SWAY (Y)
-    [ np.sin(alpha),0,0,  np.sin(alpha), -np.sin(alpha),0,0, -np.sin(alpha)],
+    [ -np.sin(alpha),0,0,  -np.sin(alpha), np.sin(alpha),0,0, np.sin(alpha)],
     # HEAVE (Z)
-    [0,1,1,0,0,1,1,0],
+    [0,-1,-1,0,0,-1,-1,0],
     # ROLL (X-rotation)
     [0,  w/2,w/2,0,0, -w/2,-w/2,0],
     # PITCH (Y-rotation)
-    [0,a,-a,0,0,   -a,a,0],
+    [0,-a,a,0,0,   a,-a,0],
     # YAW (Z-rotation)
-    [ - (a*np.sin(alpha) + (w/2)*np.cos(alpha)),  0,  0,  (a*np.sin(alpha) + (w/2)*np.cos(alpha)),
-      - (a*np.sin(alpha) + (w/2)*np.cos(alpha)),  0,  0,  (a*np.sin(alpha) + (w/2)*np.cos(alpha)) ]
+    [ - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)),
+      - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)) ]
 ])
 T_inv = np.linalg.pinv(T)
 print("T =", T)
