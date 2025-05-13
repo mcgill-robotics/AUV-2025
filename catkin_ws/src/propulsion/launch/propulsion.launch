@@ -1,5 +1,6 @@
 <launch>
     <arg name="sim" default="false" />
+    <arg name="record" default="true" />
     
     <!-- Serial connection for real thrusters -->
     <group unless="$(arg sim)">
@@ -16,6 +17,17 @@
     <param name="distance_thruster_thruster_width" value="0.47" />
     <param name="angle_thruster" value="45" />
     <param name="distance_thruster_middle_length" value="0.0925" />
+
+    <!-- Record propulsion values -->
+    <node pkg="rosbag" type="record" name="rosbag_propulsion"
+        if="$(arg record)"
+        args="/propulsion/forces"
+    />
+    <!-- Record controls effort thrust forces -->
+    <node pkg="rosbag" type="record" name="rosbag_effort"
+        if="$(arg record)"
+        args="/controls/effort"
+    />
 
     <!-- Thruster allocation nodes -->
     <node name="thrust_mapper" pkg="propulsion" type="thrust_mapper.py" output="screen"/>

@@ -1,5 +1,6 @@
 <launch>
 	<arg name="vision" default="false" />
+	<arg name="record" default="true" />
 
 	<include file="$(find sensors)/launch/sensors_status.launch"/>
 	
@@ -9,10 +10,24 @@
 	<include file="$(find sensors)/launch/imu.launch"/>
 	<include file="$(find sensors)/launch/hydrophones.launch"/>
 
+	<node pkg="rosbag" type="record" name="rosbag_imu"
+		if="$(arg record)"
+		args="/sensors/imu/raw /sensors/imu/angular_velocity /sensors/imu/quaternion"
+	/>
+
+	<node pkg="rosbag" type="record" name="rosbag_dvl"
+		if="$(arg record)"
+		args="/sensors/dvl/pose"
+	/>
+
+	<node pkg="rosbag" type="record" name="rosbag_depth"
+		if="$(arg record)"
+		args="/sensors/depth/z"
+	/>
+
 	<group if="$(arg vision)">
      	<include file="$(find sensors)/launch/stream-down-cam.launch"/>
      	<include file="$(find sensors)/launch/stream-front-cam.launch"/>
 	</group>
-
 
 </launch>
