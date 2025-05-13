@@ -131,7 +131,7 @@ while not rospy.is_shutdown():
 
         print(f"[INFO] Publishing forward command: {forward_pwm}")
         pwm_pub.publish(ThrusterMicroseconds(microseconds=forward_pwm))
-        safe_sleep(5.0)
+        safe_sleep(15.0)
 
         if emergency_triggered:
             continue
@@ -172,7 +172,7 @@ while not rospy.is_shutdown():
 
         print(f"[INFO] Publishing forward command: {forward_pwm}")
         pwm_pub.publish(ThrusterMicroseconds(microseconds=forward_pwm))
-        safe_sleep(5.0)
+        safe_sleep(15.0)
 
         if emergency_triggered:
             continue
