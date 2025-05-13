@@ -21,13 +21,14 @@ import quaternion
 import math
 import numpy as np
 from math import cos, sin
+from std_msgs.msg import Bool
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
-do_displace = Bool(True)
-do_not_displace = Bool(False)
-is_local = Bool(True)
-is_not_local = Bool(False)
+do_displace = True
+do_not_displace = False
+is_local = True
+is_not_local = False
 
 """
 Helper class for the planner. Takes in simple commands, converts them to 
@@ -224,7 +225,7 @@ class Controller:
         to the world frame.
         """
         trans = self.tf_buffer.lookup_transform(
-            "world_rotation", "auv_rotation", self.header_time
+            "auv", "base_link", self.header_time
         )
         offset_local = Vector3(lx, ly, lz)
         self.tf_header.stamp = self.header_time
@@ -266,8 +267,8 @@ class Controller:
         x, y, z, tw, tx, ty, tz = state
         goal = StateQuaternionGoal()
 
-        goal.displace = displace
-        goal.local = local
+        goal.displace = Bool(displace) 
+        goal.local  = Bool(local)
 
         goal.pose.position.x = 0 if x is None else x
         goal.do_x = Bool(False) if x is None else Bool(True)
@@ -392,7 +393,7 @@ class Controller:
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
     # rotate by this amount (quaternion)
-    def rotateDelta(self, delta):
+    def rotateDelta(self, delta, displace=True):
         if any(x is None for x in delta) and any(x is not None for x in delta):
             raise ValueError(
                 "Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
@@ -401,18 +402,21 @@ class Controller:
             )
         self.enable_pid("quat", True)
         w, x, y, z = delta
-        goal_state = self.get_state_goal([None, None, None, w, x, y, z], do_displace)
-        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        goal_state = self.get_state_goal([None, None, None, w, x, y, z], displace)
         self.enable_pid("quat", False)
-
+        return self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+        
 
     # rotate by this amount (euler)
     def rotateDeltaEuler(self, delta):
         self.enable_pid("quat", True)
         x, y, z = delta
         qx, qy, qz, qw = euler_to_quaternion(x, y, z)
-        self.rotateDelta([qw, qx, qy, qz])
+        if qw < 0:
+            qx, qy, qz, qw = -qx, -qy, -qz, -qw
+        resp = self.rotateDelta([qw, qx, qy, qz], displace=True)
         self.enable_pid("quat", False)
+        return resp
 
 
     def enable_pid(self, axis, state):
