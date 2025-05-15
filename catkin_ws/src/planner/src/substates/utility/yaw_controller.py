@@ -1,108 +1,102 @@
 #!/usr/bin/env python3
+
+import sys
 import math
 import rospy
-from std_msgs.msg      import Float64, Bool
-from geometry_msgs.msg import Quaternion, Vector3, Twist
-from tf.transformations import quaternion_from_euler, quaternion_multiply
+from std_msgs.msg import Bool
+from geometry_msgs.msg import Quaternion
+from nav_msgs.msg import Odometry
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
-class YawController:
+class YawRamp:
     def __init__(self):
-        self.yaw= None       
-        self.last_error = None       
+        self.yaw = None
+        #sbscribe to EKF‐filtered odometry for a smooth yaw estimate
+        rospy.Subscriber("/odometry/filtered", Odometry, self._odom_cb, queue_size=1)
 
-        rospy.Subscriber("/state/theta/z",Float64,lambda m: setattr(self, "yaw", m.data),queue_size=1)
+        # Publishers for PID axis enables and quaternion setpoint
+        self.pub_q_enable = rospy.Publisher("/controls/pid/quat/enable", Bool, queue_size=1)
+        self.pub_q_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
+        for axis in "xyz":
+            setattr(self,
+                    f"pub_{axis}_enable",
+                    rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1))
 
-        rospy.Subscriber("/controls/pid/quat/error",Float64,lambda m: setattr(self, "last_error", m.data),queue_size=1)
-
-        self._pub_quat_enable   = rospy.Publisher("/controls/pid/quat/enable",Bool, queue_size=1)
-        self._pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint",Quaternion, queue_size=1)
-
-        self._pub_x_enable = rospy.Publisher("/controls/pid/x/enable", Bool, queue_size=1)
-        self._pub_y_enable = rospy.Publisher("/controls/pid/y/enable", Bool, queue_size=1)
-        self._pub_z_enable = rospy.Publisher("/controls/pid/z/enable", Bool, queue_size=1)
-
+    def _odom_cb(self, msg):
+        # Extract yaw from odometry quaternion
+        q = msg.pose.pose.orientation
+        _, _, yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+        self.yaw = yaw
 
     @staticmethod
     def _wrap(angle):
+        # Wrap angle to (-pi, pi]
         return math.atan2(math.sin(angle), math.cos(angle))
 
-    def run(self,delta_deg: float,tol_deg:float = 1.0,timeout_s: float = 13.0,step_deg:  float = 2.0):
-        """
-        Rotate in place by +delta_deg (CCW positive) **via a ramp**:
-        - send small `step_deg` yaw increments to the quaternion PID
-        - block until |error| < tol_deg or timeout_s expires
-        """
-        tol= math.radians(tol_deg)
-        step_rad= math.radians(abs(step_deg)) * (1 if delta_deg >= 0 else -1)
-        total_rad = math.radians(delta_deg)
+    def run(self, delta_deg: float, step_deg: float = 3, tol_deg: float = 1.0, rate_hz: int = 200, timeout_s: float = 40.0):
 
-        rate = rospy.Rate(30)
-        t_start = rospy.Time.now()
-        
+        # Compute tolerance in radians
+        tol_rad = math.radians(tol_deg)
+        max_step_rad = math.radians(step_deg)
+        rate = rospy.Rate(rate_hz)
+        t0 = rospy.Time.now()
 
-        # 1) wait for first yaw sample --------------------------------------
+        # 1) Wait for first yaw reading
         while self.yaw is None and not rospy.is_shutdown():
-            if (rospy.Time.now() - t_start).to_sec() > timeout_s:
-                rospy.logerr("YawController: no yaw feedback – aborting")
+            if (rospy.Time.now() - t0).to_sec() > timeout_s:
+                rospy.logerr("YawRamp: no odometry - aborting")
                 return
             rate.sleep()
 
-        # 2) disable XYZ PIDs, enable quaternion PID ------------------------
-        for pub in (self._pub_x_enable, self._pub_y_enable, self._pub_z_enable):
+        # Determine targets
+        yaw_start = self.yaw
+        yaw_target = self._wrap(yaw_start + math.radians(delta_deg))
+        rospy.loginfo(
+            "YawRamp: start %.2f°, target %.2f° (Δ %.1f°)",
+            math.degrees(yaw_start), math.degrees(yaw_target), delta_deg
+        )
+        print(f"[DEBUG] Starting yaw: {math.degrees(yaw_start):.2f}°, Target yaw: {math.degrees(yaw_target):.2f}°")
+
+        # Disable x/y/z PIDs and enable quaternion PID
+        for pub in (self.pub_x_enable, self.pub_y_enable, self.pub_z_enable):
             pub.publish(False)
-        self._pub_quat_enable.publish(True)
-        rospy.loginfo("YawController: ramping %.1f° turn (step %.1f°)", delta_deg, step_deg)
+        self.pub_q_enable.publish(True)
 
-        sent_rad = 0.0
-        # 3) RAMP: feed the PID small increments ----------------------------
-        while abs(sent_rad - total_rad) > 1e-4 and not rospy.is_shutdown():
-            incr = step_rad
-            print("incr %.2f rad (%.2f°)" % (incr, math.degrees(incr)))
-
-            # clamp last increment so we don't overshoot the target
-            if abs(total_rad - sent_rad) < abs(step_rad):
-                incr = total_rad - sent_rad
-                print("clamping incr to %.2f rad" % incr)
-            sent_rad += incr
-
-            goal_yaw = self._wrap(self.yaw + incr)
-            q = quaternion_from_euler(0, 0, goal_yaw)
-            self._pub_quat_setpoint.publish(Quaternion(*q))
-            print("sent %.2f rad (%.2f°) to quaternion PID" % (incr, math.degrees(incr)))
-            print("goal yaw %.2f rad (%.2f°)" % (goal_yaw, math.degrees(goal_yaw)))
-            print("sent yaw %.2f rad (%.2f°)" % (self.yaw, math.degrees(self.yaw)))
-            rate.sleep()
-
-        # 4) wait until error < tolerance -----------------------------------
-        t_wait = rospy.Time.now()
+        #use actual current yaw each iteration
         while not rospy.is_shutdown():
-            if self.last_error is not None:
-                # convert quaternion-error scalar to angle error (rad):
-                #   angle  = 2 * arccos(w)
-                angle_err = abs(2.0 * math.acos(max(-1.0, min(1.0, self.last_error))))
-                if angle_err < tol:
-                    rospy.loginfo("YawController: done (angle error %.2f°)",math.degrees(angle_err))
-                    break
-            if (rospy.Time.now() - t_wait).to_sec() > timeout_s:
-                if self.last_error is not None:
-                    angle_err = 2.0 * math.acos(max(-1.0, min(1.0, self.last_error)))
-                    err_deg   = math.degrees(angle_err)
-                else:
-                    err_deg = float('nan')
-                rospy.logwarn("YawController: timeout waiting for convergence (err %.2f°)", err_deg)
-                break
-            rate.sleep()
-        # 5) turn the quaternion PID back off -------------------------------
-        self._pub_quat_enable.publish(False)
-        err_deg = math.degrees(self.last_error) if self.last_error else float('nan')
-        rospy.loginfo("YawController: done (final error %.2f°)", err_deg)
+            curr = self.yaw
+            err = self._wrap(yaw_target - curr)
+            print(f"[DEBUG] Current yaw: {math.degrees(curr):.2f}°, Error to target: {math.degrees(err):.2f}°")
 
-# ---------------------------------------------------------------------------
-# if __name__ == "__main__":
-#     rospy.init_node("yaw_turn_ramp")
-#     ctrl = YawController()
-#     try:
-#         rospy.loginfo("Spinning 90° in place…")
-#         ctrl.run(delta_deg=90.0, step_deg=1.0)
-#     except rospy.ROSInterruptException:
-#         pass
+            #check if within tolerance
+            if abs(err) < tol_rad:
+                rospy.loginfo("YawRamp: reached target (|err| %.2f°)", math.degrees(err))
+                print(f"[DEBUG] Final yaw within tol: {math.degrees(curr):.2f}°")
+                break
+
+            # Determine step direction based on error sign
+            step = max_step_rad if abs(err) > max_step_rad else abs(err)
+            step_signed = step if err >= 0 else -step
+
+            #only move if step_signed actually moves toward target
+            new_setpoint = self._wrap(curr + step_signed)
+            #debug whether moving closer
+            prev_dist = abs(self._wrap(yaw_target - curr))
+            new_dist = abs(self._wrap(yaw_target - new_setpoint))
+            if new_dist < prev_dist:
+                print(f"[DEBUG] Advancing setpoint by {math.degrees(step_signed):.2f}° to {math.degrees(new_setpoint):.2f}°")
+                q = quaternion_from_euler(0, 0, new_setpoint)
+                self.pub_q_setpoint.publish(Quaternion(*q))
+            else:
+                print(f"[DEBUG] Step would increase error ({math.degrees(prev_dist):.2f}°→{math.degrees(new_dist):.2f}°), skipping move")
+
+            rate.sleep()
+            #timeout check
+            if (rospy.Time.now() - t0).to_sec() > timeout_s:
+                rospy.logwarn("YawRamp: timeout, err ≈ %.2f°", math.degrees(err))
+                print(f"[DEBUG] Timeout at yaw {math.degrees(curr):.2f}°, err {math.degrees(err):.2f}°")
+                break
+
+        self.pub_q_enable.publish(False)
+        rospy.loginfo("YawRamp: done")
+
