@@ -22,6 +22,8 @@ import math
 import numpy as np
 from math import cos, sin
 from std_msgs.msg import Bool
+from geometry_msgs.msg import Quaternion
+from nav_msgs.msg import Odometry
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
@@ -48,7 +50,19 @@ class Controller:
         self.theta_y = 0.0
         self.theta_z = 0.0
         self.orientation = 0.0
-        self.yaw = 0.0
+        self.current_yaw_value = None
+        rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
+
+        # publisher for a direct yaw‐torque command
+        # 
+        self.pub_heading_sp = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1) 
+        self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
+        self.last_quat_error = None
+        rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
+        self.pub_quat_enable = rospy.Publisher( "/controls/pid/quat/enable", Bool, queue_size=1)
+
+        self.pub_yaw_torque = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+
 
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
@@ -177,6 +191,11 @@ class Controller:
         """Callback to cache the latest /state/x float."""
         self.current_y = msg.data
     
+    def _set_current_yaw(self, msg: Float64):
+        """Callback to cache latest yaw in radians."""
+        self.current_yaw_value = msg.data
+
+
     def set_current_z(self, msg: Float64):
         """Callback to cache the latest /state/x float."""
         self.current_z = msg.data
@@ -317,7 +336,61 @@ class Controller:
         if z is None:
             z = self.theta_z
         self.rotate(euler_to_quaternion(x, y, z))
+    
 
+    # def rotateYaw(self,delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
+    #     """
+    #     Rotate in place by delta_degrees (positive = left).
+    #     Blocks until the yaw‐error < tol_degrees or timeout expires.
+    #     """
+    #     # wrap any angle into (–π, π]
+    #     def wrap(err):
+    #         return math.atan2(sin(err), cos(err))
+    #     # 1) wait for a valid current yaw
+    #     yaw_err=0.0
+    #     start = rospy.Time.now()
+    #     rate = rospy.Rate(20)
+    #     while self.current_yaw_value is None and not rospy.is_shutdown():
+    #         if (rospy.Time.now() - start).to_sec() > timeout:
+    #             raise RuntimeError("never saw /state/theta/z")
+    #         rate.sleep()
+
+    #     # 2) compute our target yaw
+    #     begin = self.current_yaw_value
+    #     target = wrap(begin + math.radians(delta_degrees))
+    #     print("target", target)
+    #     tol= math.radians(tol_degrees)
+    #     q = quaternion_from_euler(0, 0, target, axes="sxyz")
+    #     print("q", q)
+    #     # 3) publish the quaternion setpoint
+    #     qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+    #     print("qt", qt)
+    #     self.pub_quat_setpoint.publish(qt)
+
+    #     # 4) disable x,y,z controllers and enable only the quaternion‐PID
+    #     self.enable_pid("x",    False)
+    #     self.enable_pid("y",    False)
+    #     self.enable_pid("z",    False)
+    #     self.enable_pid("quat", True)
+
+    #     # 5) now wait for the /controls/pid/quat/error topic to start publishing…
+    #     start = rospy.Time.now()
+    #     while not rospy.is_shutdown():
+    #         if self.last_quat_error is not None:
+    #             yaw_err = self.last_quat_error.z
+    #             if abs(yaw_err) < tol:
+    #                 break
+    #         if (rospy.Time.now() - start).to_sec() > timeout:
+    #             print("YABABABABBDDOOOOOO")
+    #             rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
+    #             break
+    #         rate.sleep()
+
+    #     # 6) finally, turn the quaternion‐PID back off
+    #     self.enable_pid("quat", False)
+
+        
+        # helper to wrap shortest path
     def state(self, pos, ang):
         x, y, z = pos
         if any(x is None for x in ang) and any(x is not None for x in ang):
