@@ -132,5 +132,8 @@ RUN cd src && \
     catkin build && \
     source devel/setup.bash
 
+# Placed here for quick building prior to pool test, should be pushed up
+RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
+
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc

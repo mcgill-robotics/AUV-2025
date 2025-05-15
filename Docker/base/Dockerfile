@@ -8,7 +8,6 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8  
 ENV LANGUAGE en_US:en     
 
-
 # Install all needed deps and compile the mesa llvmpipe driver from source.
 RUN apt-get update && apt-get install -y wget \
     && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
@@ -27,10 +26,10 @@ RUN apt-get update && apt-get install -y wget \
     ros-noetic-rviz \
     ros-noetic-smach-ros \
     ros-noetic-robot-localization \ 
+    ros-noetic-foxglove-bridge \
     git-lfs \
     git \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
-
 
 RUN pip3 install --no-cache-dir numpy-quaternion keyboard \
     && pip install --no-cache-dir --upgrade numpy
