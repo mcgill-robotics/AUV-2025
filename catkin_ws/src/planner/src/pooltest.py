@@ -14,7 +14,8 @@ def main():
     try:
         rospy.loginfo("Executing square pattern movement…")
         print("jdkns")
-        yaw_ctrl.run(-90, step_deg=1, tol_deg=1, timeout_s=40)
+        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=200, timeout_s=20)
+        #negative is CCW, thus positive is CW. Das ist top 
         # Move forward 0.5 m in the local X direction
         # controls.rotateDeltaEuler([0,0,90])
         print("AAAAAAAAAAAAA")

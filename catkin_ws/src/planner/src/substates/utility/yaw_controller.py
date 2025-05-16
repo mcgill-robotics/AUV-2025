@@ -33,7 +33,7 @@ class YawRamp:
         # Wrap angle to (-pi, pi]
         return math.atan2(math.sin(angle), math.cos(angle))
 
-    def run(self, delta_deg: float, step_deg: float = 3, tol_deg: float = 1.0, rate_hz: int = 200, timeout_s: float = 40.0):
+    def run(self, delta_deg: float, step_deg: float = 5, tol_deg: float = 1.0, rate_hz: int = 350, timeout_s: float = 40.0):
 
         # Compute tolerance in radians
         tol_rad = math.radians(tol_deg)
