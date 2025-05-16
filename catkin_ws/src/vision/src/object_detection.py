@@ -6,6 +6,7 @@ import torch
 import ast
 from cv_bridge import CvBridge
 from ultralytics import YOLO
+import cv2 as cv
 
 from object_detection_utils import *
 from lane_marker_measure import measure_lane_marker
@@ -13,6 +14,8 @@ from lane_marker_measure import measure_lane_marker
 from auv_msgs.msg import VisionObject, VisionObjectArray
 from std_msgs.msg import Int32MultiArray
 from sensor_msgs.msg import Image
+from hsv_filter import HSVFilter
+TRACKBAR_WINDOW = 'Trackbars'
 
 
 def is_vision_ready(camera_id):
@@ -163,6 +166,84 @@ def publish_detection_frame(detection_frame_array):
         detection_frame_arrayMsg.array = detection_frame_array
         pub_viewframe_detection.publish(detection_frame_arrayMsg)
 
+def init_control_gui():
+    # initializing gui
+    cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
+    cv.resizeWindow(TRACKBAR_WINDOW, 350, 750)
+
+    #requires callback function so just placeholder instead
+    def nothing(position):
+        pass
+
+    # Create trackbars for tuning
+    # OpenCV scale for HSV is H:0-179, S:0-255, V:0-255
+    cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
+    cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
+    cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
+    # Set default value for change in saturation values
+    cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
+    cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
+    cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
+    #trackbars for change in saturation values
+    cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
+
+# returns an HSV Filter object based on GUI values
+def get_hsv_filter():
+    hsv_filter = HSVFilter()
+    hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
+    hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
+    hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
+    hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
+    hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
+    hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
+    hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
+    hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
+    hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
+    hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
+    return hsv_filter
+
+def apply_hsv_filter(original_image, hsv_filter = None):
+    hsv = cv.cvtColor(original_image, cv.Color_BGR2HSV)
+
+    # if no defined filter, then use filter values from gui
+    if not hsv_filter:
+        hsv_filter = get_hsv_filter()
+    
+    # add or subtract saturation and value
+    h, s, v = cv.split(hsv)
+    s = shift_channel(s, hsv_filter.sAdd)
+    s = shift_channel(s, -hsv_filter.sSub)
+    v = shift_channel(v, hsv_filter.vAdd)
+    v = shift_channel(v, -hsv_filter.vSub)
+    hsv = cv.merge([h, s, v])
+
+    # set min and max hsv values to display
+    minHSV = np.array([hsv_filter.hMin, hsv_filter.sMin, hsv_filter.vMin])
+    maxHSV = np.array([hsv_filter.hMax, hsv_filter.sMax, hsv_filter.vMax])
+    # apply threshold
+    mask = cv.inRange(hsv, minHSV, maxHSV)
+    result = cv.bitwise_and(hsv, hsv, mask=mask)
+    img =  cv.cvtColor(result, cv.Color_BGR2HSV)
+
+    return img
+
+def shift_channel(c, amount):
+    if amount > 0:
+        lim = 255 - amount
+        c[c >= lim] = 255
+        c[c < lim] += amount
+    elif amount < 0:
+        amount = -amount
+        lim = amount
+        c[c <= lim] = 0
+        c[c < lim] -= amount
+    return c
 
 def vision_cb(raw_image, camera_id):
     if not is_vision_ready(camera_id):
