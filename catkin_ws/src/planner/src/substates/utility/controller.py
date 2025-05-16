@@ -50,7 +50,9 @@ class Controller:
         self.theta_y = 0.0
         self.theta_z = 0.0
         self.orientation = 0.0
-        self.current_yaw_value = None
+        self.yaw = None
+
+       
         rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
 
         # publisher for a direct yaw‐torque command
@@ -62,6 +64,12 @@ class Controller:
         self.pub_quat_enable = rospy.Publisher( "/controls/pid/quat/enable", Bool, queue_size=1)
 
         self.pub_yaw_torque = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+        rospy.Subscriber("/state/x",Float64, lambda m: setattr(self,"x",m.data), queue_size=1)
+        rospy.Subscriber("/state/y",Float64, lambda m: setattr(self,"y",m.data), queue_size=1)
+        rospy.Subscriber("/state/z",Float64, lambda m: setattr(self,"z",m.data), queue_size=1)
+        rospy.Subscriber("/state/theta/z", Float64, lambda m: setattr(self, "yaw", m.data), queue_size=1)
+
+
 
 
         self.tf_buffer = Buffer()
@@ -503,9 +511,8 @@ class Controller:
         start_z = self.z
 
         # ---- rotate into global frame ----
-        yaw = self.yaw
-        dx_g = delta_x * cos(yaw) - delta_y * sin(yaw)
-        dy_g = delta_x * sin(yaw) + delta_y * cos(yaw)
+        dx_g = delta_x * cos(self.yaw) - delta_y * sin(self.yaw)
+        dy_g = delta_x * sin(self.yaw) + delta_y * cos(self.yaw)
 
         target_x = start_x + dx_g
         target_y = start_y + dy_g
@@ -536,6 +543,82 @@ class Controller:
         self.enable_pid("y", False)
         self.enable_pid("z", False)
 
+    # def moveDeltaLocal(self,
+    #                delta_x: float,
+    #                delta_y: float,
+    #                delta_z: float,
+    #                step_len: float = 0.1,      # meters per step
+    #                tol: float     = 0.05,     # meters
+    #                rate_hz: int   = 20,
+    #                timeout: float = 30.0):
+    #     """
+    #     Move in the vehicle's local frame by (delta_x, delta_y, delta_z),
+    #     but do it in small steps so we can monitor and correct along the way.
+    #     """
+    #     rate = rospy.Rate(rate_hz)
+    #     t0 = rospy.Time.now()
+
+    #     # Wait for a valid yaw and position
+    #     while (self.yaw is None or None in (self.x, self.y, self.z)) and not rospy.is_shutdown():
+    #         if (rospy.Time.now() - t0).to_sec() > timeout:
+    #             rospy.logerr("moveDeltaLocal: no state feedback, aborting")
+    #             return
+    #         rate.sleep()
+
+    #     # Compute final global targets
+    #     # transform only once for the full delta
+    #     dxg = delta_x * math.cos(self.yaw) - delta_y * math.sin(self.yaw)
+    #     dyg = delta_x * math.sin(self.yaw) + delta_y * math.cos(self.yaw)
+    #     tgt_x = self.x + dxg
+    #     tgt_y = self.y + dyg
+    #     tgt_z = self.z + delta_z
+
+    #     rospy.loginfo("moveDeltaLocal: target = (%.2f, %.2f, %.2f)", tgt_x, tgt_y, tgt_z)
+    #     print(f"[DEBUG] start=({self.x:.2f},{self.y:.2f},{self.z:.2f}) → target=({tgt_x:.2f},{tgt_y:.2f},{tgt_z:.2f})")
+
+    #     # Enable PIDs
+    #     for axis in ("x","y","z"):
+    #         self.enable_pid(axis, True)
+
+    #     # Incremental loop
+    #     while not rospy.is_shutdown():
+    #         now = rospy.Time.now()
+    #         if (now - t0).to_sec() > timeout:
+    #             rospy.logwarn("moveDeltaLocal: timeout at ({:.2f},{:.2f},{:.2f})".format(self.x,self.y,self.z))
+    #             break
+
+    #         # Compute current error
+    #         ex = tgt_x - self.x
+    #         ey = tgt_y - self.y
+    #         ez = tgt_z - self.z
+    #         dist = math.sqrt(ex*ex + ey*ey + ez*ez)
+    #         print(f"[DEBUG] current=({self.x:.2f},{self.y:.2f},{self.z:.2f}), err=({ex:.2f},{ey:.2f},{ez:.2f}), |e|={dist:.2f}")
+
+    #         if dist < tol:
+    #             rospy.loginfo("moveDeltaLocal: reached target within %.2f m", tol)
+    #             break
+
+    #         # Step in local frame proportional to error direction
+    #         step_ratio = step_len / dist if dist > step_len else 1.0
+    #         # desired global next point
+    #         nx = self.x + ex * step_ratio
+    #         ny = self.y + ey * step_ratio
+    #         nz = self.z + ez * step_ratio
+
+    #         print(f"[DEBUG] stepping to=({nx:.2f},{ny:.2f},{nz:.2f})")
+
+    #         # Publish the new setpoints
+    #         self.x_setpoint_pub.publish(nx)
+    #         self.y_setpoint_pub.publish(ny)
+    #         self.z_setpoint_pub.publish(nz)
+
+    #         rate.sleep()
+
+    #     # Disable PIDs
+    #     for axis in ("x","y","z"):
+    #         self.enable_pid(axis, False)
+
+    #     rospy.loginfo("moveDeltaLocal: done")
 
 
     # set torque
