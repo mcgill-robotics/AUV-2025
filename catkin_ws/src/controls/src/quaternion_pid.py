@@ -6,6 +6,7 @@ from geometry_msgs.msg import Pose, Vector3, Quaternion
 import numpy as np
 import quaternion
 
+
 class QuaternionPID:
 
     def __init__(self):
@@ -120,11 +121,17 @@ class QuaternionPID:
 
         control_effort = proportional_effort - derivative_effort + integral_effort
 
-        inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
-                                    [0.000000000000000,  0.709487776484284, 0.003794052280665],
-                                    [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
+        # inertial_matrix = np.array([[0.042999259180866,  0.000000000000000, -0.016440893216213],
+        #                             [0.000000000000000,  0.709487776484284, 0.003794052280665],
+        #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
 
-
+        inertial_matrix = np.array(
+            [
+                [1, 0.0, 0.0],
+                [0.0, 1, 0.0],
+                [0.0, 0.0, 0.5],
+            ]
+        )
 
         torque = np.matmul(inertial_matrix, control_effort)
         return torque
