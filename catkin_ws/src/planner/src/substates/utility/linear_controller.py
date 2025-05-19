@@ -6,13 +6,11 @@ from geometry_msgs.msg import Point, Twist
 from math import atan2, sqrt, sin, cos
 from std_msgs.msg import Bool, Float64
 
-
 class LinearController:
 
     def __init__(self):
         self.x = 0.0
         self.y = 0.0
-        self.z = 0.0
         self.theta = 0.0
         self.x_setpoint_pub = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
         self.y_setpoint_pub = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
@@ -33,7 +31,7 @@ class LinearController:
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         rospy.sleep(1.0)  # Let odometry settle
 
-        # Compute target in odom frame
+        #compute target in odom frame
         target_x = self.x + delta_x
         target_y = self.y + delta_y
 
@@ -42,7 +40,6 @@ class LinearController:
         # --- Step 2: POSITION CONTROL using PIDs ---
         self.enable_pid("x", True)
         self.enable_pid("y", True)
-        self.enable_pid("z", True)
 
         self.x_setpoint_pub.publish(target_x)
         self.y_setpoint_pub.publish(target_y)
@@ -54,7 +51,6 @@ class LinearController:
         while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
             err_x = abs(self.x - target_x)
             err_y = abs(self.y - target_y)
-            # err_z = abs(self.z - target_z)
 
             rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
             if err_x < tolerance and err_y < tolerance:
@@ -64,4 +60,3 @@ class LinearController:
         # Disable PIDs
         self.enable_pid("x", False)
         self.enable_pid("y", False)
-        self.enable_pid("z", False)
