@@ -18,7 +18,7 @@ w = rospy.get_param("distance_thruster_thruster_width")
 alpha = np.radians(rospy.get_param("angle_thruster"))
 a = rospy.get_param("distance_thruster_middle_length")
 
-# Matrix mapping from thruster forces to wrench (6x8)
+# Matrix mapping from thruster forces to wrench (6x8) - need two matrices; one for sim one for rl.
 T = np.array([
     # SURGE (X)
     [ np.cos(alpha),  0,0, -np.cos(alpha), -np.cos(alpha),0,0,  np.cos(alpha)],
@@ -96,6 +96,9 @@ class ThrusterMapper:
         
         # Calculate the thruster forces using the pseudo-inverse
         converted_w = np.matmul(T_inv, a_vec)
+        scale = np.array([1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
+        converted_w = (converted_w.flatten() * scale).reshape((8,1))
+
         tf_msg = ThrusterForces()
         tf_msg.BACK_LEFT = converted_w[0][0]
         tf_msg.HEAVE_BACK_LEFT = converted_w[1][0]
@@ -118,8 +121,8 @@ class ThrusterMapper:
         Applies individual limits to prevent overcurrent.
         """
         pwm_arr = [None] * 8
-        pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm_thruster(2,forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
-        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm_thruster(1,forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
+        pwm_arr[ThrusterMicroseconds.BACK_LEFT] = force_to_pwm_thruster(1,forces_msg.BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.BACK_LEFT])
+        pwm_arr[ThrusterMicroseconds.HEAVE_BACK_LEFT] = force_to_pwm_thruster(2,forces_msg.HEAVE_BACK_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_BACK_LEFT])
         pwm_arr[ThrusterMicroseconds.HEAVE_FRONT_LEFT] = force_to_pwm_thruster(3,forces_msg.HEAVE_FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.HEAVE_FRONT_LEFT])
         pwm_arr[ThrusterMicroseconds.FRONT_LEFT] = force_to_pwm_thruster(4,forces_msg.FRONT_LEFT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_LEFT])
         pwm_arr[ThrusterMicroseconds.FRONT_RIGHT] = force_to_pwm_thruster(5,forces_msg.FRONT_RIGHT * thruster_mount_dirs[ThrusterMicroseconds.FRONT_RIGHT])
