@@ -150,8 +150,8 @@ while not rospy.is_shutdown():
             vert_force = float(user_input) * g
             print(f"[INFO] Using NEW mapping at {vert_force:.2f} N vertical and {frwd_force:.2f} N forward")
 
-            hover_pwm = [1500, force_to_pwm_thruster(7, vert_force), force_to_pwm_thruster(6, vert_force), 1500,
-                         1500, force_to_pwm_thruster(3, vert_force), force_to_pwm_thruster(2, vert_force), 1500]
+            hover_pwm = [1500, force_to_pwm_thruster(2, vert_force), force_to_pwm_thruster(3, vert_force), 1500,
+                         1500, force_to_pwm_thruster(6, vert_force), force_to_pwm_thruster(7, vert_force), 1500]
 
             print(f"[INFO] Publishing hover command: {hover_pwm}")
             pwm_pub.publish(ThrusterMicroseconds(microseconds=hover_pwm))
@@ -165,10 +165,10 @@ while not rospy.is_shutdown():
                 go = True
 
         forward_pwm = hover_pwm.copy()
-        forward_pwm[BACK_LEFT] = force_to_pwm_thruster(8, frwd_force)
-        forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(5, -frwd_force)
-        forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(4, -frwd_force)
-        forward_pwm[BACK_RIGHT] = force_to_pwm_thruster(1, frwd_force)
+        forward_pwm[BACK_LEFT] = force_to_pwm_thruster(1, frwd_force)
+        forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(4, -frwd_force)
+        forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(5, -frwd_force)
+        forward_pwm[BACK_RIGHT] = force_to_pwm_thruster(8, frwd_force)
 
         print(f"[INFO] Publishing forward command: {forward_pwm}")
         pwm_pub.publish(ThrusterMicroseconds(microseconds=forward_pwm))
