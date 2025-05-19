@@ -25,7 +25,7 @@ T = np.array([
     # SWAY (Y)
     [ -np.sin(alpha),0,0,  -np.sin(alpha), np.sin(alpha),0,0, np.sin(alpha)],
     # HEAVE (Z)
-    [0,-1,-1,0,0,-1,-1,0],
+    [0,-1,-1,0,0,-1,-1,0], #ALL NEGATIVE IRL, ALL POSITIVE WHEN TESTING ON SIM
     # ROLL (X-rotation)
     [0,  w/2,w/2,0,0, -w/2,-w/2,0],
     # PITCH (Y-rotation)

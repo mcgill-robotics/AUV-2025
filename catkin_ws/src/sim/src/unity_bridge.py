@@ -80,7 +80,7 @@ def cb_unity_state(msg):
     pose_y = -msg.position.x
     # pose_x = 0
     # pose_y = 0
-    pose_z = msg.position.y
+    pose_z = -msg.position.y
     q_ESD_imunominaldown_x = msg.orientation.x
     q_ESD_imunominaldown_y = msg.orientation.y
     q_ESD_imunominaldown_z = msg.orientation.z

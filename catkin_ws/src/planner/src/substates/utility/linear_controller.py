@@ -46,7 +46,7 @@ class LinearController:
         # self.z_setpoint_pub.publish(target_z)
         print("PUBLSIH")
 
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(20)
         start_time = rospy.Time.now()
         while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
             err_x = abs(self.x - target_x)
