@@ -5,11 +5,9 @@ from std_msgs.msg import Bool, Float64
 class DepthController:
     def __init__(self):
         self.z = 0.0
-
         # publishers
         self.z_setpoint_pub = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=20)
         self.pid_enable_pub = rospy.Publisher("/controls/pid/z/enable", Bool, queue_size=1)
-
         # subscriber for current depth
         rospy.Subscriber("/state/z", Float64, self.newOdom)
 
