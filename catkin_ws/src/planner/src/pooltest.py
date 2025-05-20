@@ -13,18 +13,15 @@ def main():
     yaw_ctrl = YawRamp()
     try:
         rospy.loginfo("Executing square pattern movement…")
-        print("jdkns")
-        # 
-        #negative is CCW, thus positive is CW. Das ist top 
+        # negative is CCW, thus positive is CW.
         # Move forward 0.5 m in the local X direction
         # controls.rotateDeltaEuler([0,0,90])
-        print("AAAAAAAAAAAAA")
+        rospy.loginfo("Attempting to move x by -0.5...")
 
         # rospy.sleep(10)
         controls.moveDeltaLocal(-0.5, 0, 0)
-        rospy.sleep(3)
 
-        print("shaa")
+        rospy.loginfo("Attempting to move x by -0.5...")
         yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
         rospy.sleep(3)
 
@@ -37,10 +34,6 @@ def main():
         rospy.sleep(3)
 
         print("BOom")
-
-
-
-
 
         # Then strafe in local Y
         #controls.moveDeltaLocal(0, -0.5, 0)
