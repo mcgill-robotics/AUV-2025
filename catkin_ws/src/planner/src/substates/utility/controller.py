@@ -2,6 +2,15 @@
 
 import rospy
 import actionlib
+
+import math
+from math import cos, sin
+import numpy as np
+from .functions import *
+
+from geometry_msgs.msg import Quaternion
+import tf2_geometry_msgs
+
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
 from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import (
@@ -13,17 +22,6 @@ from auv_msgs.msg import (
 )
 from actionlib_msgs.msg import GoalStatus
 from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
-import math
-from .functions import *
-import numpy as np
-import quaternion
-import math
-import numpy as np
-from math import cos, sin
-from std_msgs.msg import Bool
-from geometry_msgs.msg import Quaternion
-from nav_msgs.msg import Odometry
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
@@ -32,13 +30,11 @@ do_not_displace = False
 is_local = True
 is_not_local = False
 
-"""
-Helper class for the planner. Takes in simple commands, converts them to 
-goals and sends them to the control servers.
-"""
-
-
 class Controller:
+    """
+    Helper class for the planner. Takes in simple commands, converts them to 
+    goals and sends them to the control servers.
+    """
     def __init__(self, header_time):
         print("starting controller")
         self.header_time = header_time
@@ -344,58 +340,72 @@ class Controller:
         if z is None:
             z = self.theta_z
         self.rotate(euler_to_quaternion(x, y, z))
-    
 
-    # def rotateYaw(self,delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
-    #     """
-    #     Rotate in place by delta_degrees (positive = left).
-    #     Blocks until the yaw‐error < tol_degrees or timeout expires.
-    #     """
-    #     # wrap any angle into (–π, π]
-    #     def wrap(err):
-    #         return math.atan2(sin(err), cos(err))
-    #     # 1) wait for a valid current yaw
-    #     yaw_err=0.0
-    #     start = rospy.Time.now()
-    #     rate = rospy.Rate(20)
-    #     while self.current_yaw_value is None and not rospy.is_shutdown():
-    #         if (rospy.Time.now() - start).to_sec() > timeout:
-    #             raise RuntimeError("never saw /state/theta/z")
-    #         rate.sleep()
+    def rotateYaw(self,delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
+        """
+        Rotate in place by delta_degrees (positive = counter-clockwise).
+        Blocks until the (yaw-error) < tol_degrees or timeout expires.
+        """
 
-    #     # 2) compute our target yaw
-    #     begin = self.current_yaw_value
-    #     target = wrap(begin + math.radians(delta_degrees))
-    #     print("target", target)
-    #     tol= math.radians(tol_degrees)
-    #     q = quaternion_from_euler(0, 0, target, axes="sxyz")
-    #     print("q", q)
-    #     # 3) publish the quaternion setpoint
-    #     qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
-    #     print("qt", qt)
-    #     self.pub_quat_setpoint.publish(qt)
+        def wrap(err):
+            """
+            Wraps any angle (radians) into (–π, π]
+            """
+            return math.atan2(sin(err), cos(err))
 
-    #     # 4) disable x,y,z controllers and enable only the quaternion‐PID
-    #     self.enable_pid("x",    False)
-    #     self.enable_pid("y",    False)
-    #     self.enable_pid("z",    False)
-    #     self.enable_pid("quat", True)
+        # 1) Wait for first yaw reading, otherwise sleep. Timeout if overtime.
+        yaw_err = 0.0
+        start = rospy.Time.now()
+        rate = rospy.Rate(20)
+        while self.current_yaw_value is None and not rospy.is_shutdown():
+            if (rospy.Time.now() - start).to_sec() > timeout:
+                raise RuntimeError("Topic missing: /state/theta/z, aborting process...")
+            rate.sleep()
 
-    #     # 5) now wait for the /controls/pid/quat/error topic to start publishing…
-    #     start = rospy.Time.now()
-    #     while not rospy.is_shutdown():
-    #         if self.last_quat_error is not None:
-    #             yaw_err = self.last_quat_error.z
-    #             if abs(yaw_err) < tol:
-    #                 break
-    #         if (rospy.Time.now() - start).to_sec() > timeout:
-    #             print("YABABABABBDDOOOOOO")
-    #             rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
-    #             break
-    #         rate.sleep()
+        # 2) Compute target yaw
+        begin = self.current_yaw_value
+        target = wrap(begin + math.radians(delta_degrees))
 
-    #     # 6) finally, turn the quaternion‐PID back off
-    #     self.enable_pid("quat", False)
+        tol= math.radians(tol_degrees)  # calculate tolerance 
+        q = quaternion_from_euler(0, 0, target, axes="sxyz")
+
+        rospy.loginfo(f"Target rotation angle: {target}")
+        rospy.loginfo(f"Target quaterion angle: {q}")
+
+        # 3) Publish correct quaternion setpoint to the controls server
+        qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3]) # use Quaternion msg type
+        print("qt", qt)
+        self.pub_quat_setpoint.publish(qt)
+
+        # 4) Disable x,y,z controllers and enable only the quaternion‐PID
+        # Note: this is done for consistency purposes, it is hard for the AUV to rotate while also moving
+        self.enable_pid("x",    False)
+        self.enable_pid("y",    False)
+        self.enable_pid("z",    False)
+        self.enable_pid("quat", True)
+
+        # 5) Wait for /controls/pid/quat/error topic to start publishing...
+        start = rospy.Time.now()
+        while not rospy.is_shutdown():
+            # Break the process if the error is below tolerance level
+            if self.last_quat_error is not None:
+                yaw_err = self.last_quat_error.z
+                if abs(yaw_err) < tol:
+                    break
+
+            # Quit process if timeout.
+            if (rospy.Time.now() - start).to_sec() > timeout:
+                print("YABABABABBDDOOOOOO")
+                rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
+                break
+
+            rate.sleep()
+
+        # 6) Turn the quaternion-PID off and enable XYZ PID
+        self.enable_pid("quat", False)
+        self.enable_pid("x",    True)
+        self.enable_pid("y",    True)
+        self.enable_pid("z",    True)
 
         
         # helper to wrap shortest path
