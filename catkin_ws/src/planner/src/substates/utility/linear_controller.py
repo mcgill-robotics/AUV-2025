@@ -31,7 +31,7 @@ class LinearController:
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         rospy.sleep(1.0)  # Let odometry settle
 
-        #compute target in odom frame
+        # Compute target in odom frame
         target_x = self.x + delta_x
         target_y = self.y + delta_y
 
@@ -44,7 +44,6 @@ class LinearController:
         self.x_setpoint_pub.publish(target_x)
         self.y_setpoint_pub.publish(target_y)
         # self.z_setpoint_pub.publish(target_z)
-        print("PUBLSIH")
 
         rate = rospy.Rate(20)
         start_time = rospy.Time.now()
@@ -52,9 +51,10 @@ class LinearController:
             err_x = abs(self.x - target_x)
             err_y = abs(self.y - target_y)
 
-            rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
+            # rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
             if err_x < tolerance and err_y < tolerance:
                 break
+
             rate.sleep()
 
         # Disable PIDs

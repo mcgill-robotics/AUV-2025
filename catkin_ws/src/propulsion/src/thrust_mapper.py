@@ -21,11 +21,11 @@ a = rospy.get_param("distance_thruster_middle_length")
 # Matrix mapping from thruster forces to wrench (6x8) - need two matrices; one for sim one for rl.
 T = np.array([
     # SURGE (X)
-    [ np.cos(alpha),  0,0, -np.cos(alpha), -np.cos(alpha),0,0,  np.cos(alpha)],
+    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
     # SWAY (Y)
-    [ -np.sin(alpha),0,0,  -np.sin(alpha), np.sin(alpha),0,0, np.sin(alpha)],
+    [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
     # HEAVE (Z)
-    [0,-1,-1,0,0,-1,-1,0],
+    [ 0, -1, -1, 0, 0, -1,-1,0],
     # ROLL (X-rotation)
     [0,  w/2,w/2,0,0, -w/2,-w/2,0],
     # PITCH (Y-rotation)

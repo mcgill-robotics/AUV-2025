@@ -53,9 +53,9 @@
 			</node>
 
 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
-				<param name="Kp" value="7.0" />
-				<param name="Ki" value="0.37" />
-				<param name="Kd" value="0.8"/>
+				<param name="Kp" value="3.5" />
+				<param name="Ki" value="0.38" />
+				<param name="Kd" value="0.9"/>
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
@@ -76,7 +76,7 @@
 			</node>
 			
 			<node name="y_pid" pkg="pid" type="controller" >
-				<param name="Kp" value="5" /> 
+				<param name="Kp" value="6" /> 
 				<param name="Ki" value="0" />
 				<param name="Kd" value="0.1" />
 				<param name="max_loop_frequency" value="100.0" />
@@ -92,7 +92,7 @@
 				<param name="frame_id" value="enu"/>
 				<param name="auto_reset" value="true" />
   				<param name="reset_integral_on_setpoint" value="true" />
-				<param name="Kp" value="5" /> 
+				<param name="Kp" value="6" /> 
 				<param name="Ki" value="0" />
 				<param name="Kd" value="0.1" />
 				<param name="max_loop_frequency" value="100.0" />
@@ -105,9 +105,9 @@
 			</node>
 
 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
-				<param name="Kp" value="5" />
-				<param name="Ki" value="0" />
-				<param name="Kd" value="0.1" />
+				<param name="Kp" value="0.48" />
+				<param name="Ki" value="0.0" />
+				<param name="Kd" value="0.25" />
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
