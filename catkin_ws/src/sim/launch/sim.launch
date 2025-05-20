@@ -43,6 +43,8 @@
         auv imu" />
         
       <node pkg="tf2_ros" type="static_transform_publisher" name="depth_transform_pub" args="0 0 0 0 0 0 1 auv depth" />
+      <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_auv" args="0 0 0 0 0 0 1 base_link auv"/>
+      <node pkg="tf2_ros" type="static_transform_publisher" name="debug_odom_auv" args="0 0 0 0 0 1 odom auv 100"/>  <!-- 100Hz publish rate -->
     </group>
 
     <include file="$(find bringup)/launch/bringup.launch">

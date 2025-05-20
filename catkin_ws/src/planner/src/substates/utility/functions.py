@@ -4,6 +4,7 @@ import numpy as np
 import quaternion
 import rospy
 from std_msgs.msg import String
+from tf.transformations import quaternion_from_euler
 
 def countdown(secs):
     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
@@ -20,11 +21,13 @@ def degreesToVector(yawDegrees):
 
 
 def vectorToYawDegrees(x, y):
-    zero_angle_vector = np.array([1, 0])
-    arg_vector = np.array([x, y])
-    magnitude_arg_vector = np.linalg.norm(arg_vector)
-    dot_product = np.dot(zero_angle_vector, arg_vector)
-    return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
+    angle_radians = math.atan2(y,x)
+    return math.degrees(angle_radians)
+    # zero_angle_vector = np.array([1, 0])
+    # arg_vector = np.array([x, y])
+    # magnitude_arg_vector = np.linalg.norm(arg_vector)
+    # dot_product = np.dot(zero_angle_vector, arg_vector)
+    # return math.acos(dot_product / magnitude_arg_vector) * 180 / math.pi
 
 
 def normalize_vector(vector2D):
@@ -43,25 +46,30 @@ def dotProduct(v1, v2):
 def quaternion_between_vectors(v1, v2):
     v1 = v1 / np.linalg.norm(v1)
     v2 = v2 / np.linalg.norm(v2)
-
-    dot_product = np.dot(v1, v2)
-    cross_product = np.cross(v1, v2)
-    angle = np.arccos(dot_product)
-    axis = cross_product / np.linalg.norm(cross_product)
-    rotation_quaternion = quaternion.from_rotation_vector(axis * angle)
-
-    return rotation_quaternion
+    dot = np.dot(v1, v2)
+    if np.isclose(dot, 1.0):  #checking for colinearity
+        return np.quaternion(1.0, 0.0, 0.0, 0.0)  
+    elif np.isclose(dot, -1.0): 
+        return np.quaternion(0.0, 0.0, 0.0, 1.0)  #180 about Z
+    else:
+        axis = np.cross(v1, v2)
+        axis /= np.linalg.norm(axis)
+        angle = np.arccos(dot)
+        return quaternion.from_rotation_vector(axis * angle)
 
 
 def euler_to_quaternion(roll, pitch, yaw):
-    q = transformations.quaternion_from_euler(
-        math.pi * roll / 180, math.pi * pitch / 180, math.pi * yaw / 180, "rxyz"
-    )
-    return [q[3], q[0], q[1], q[2]]
+    roll_radians = math.radians(roll)
+    pitch_radians = math.radians(pitch)
+    yaw_radians = math.radians(yaw)
+    q = transformations.quaternion_from_euler(roll_radians, pitch_radians, yaw_radians, axes='sxyz')
+    return [q[0], q[1], q[2], q[3]] #quats are represented as x,y,z,w. Should check this in all codebase
 
+# quat = euler_to_quaternion(0, 0, 90)
+# print(quat)
 
-def countdown(secs):
-    pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
-    end_time = rospy.get_time() + secs
-    while rospy.get_time() < end_time:
-        pub_mission_display.publish(str(end_time - rospy.get_time()))
+# def countdown(secs):
+#     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+#     end_time = rospy.get_time() + secs
+#     while rospy.get_time() < end_time:
+#         pub_mission_display.publish(str(end_time - rospy.get_time()))
