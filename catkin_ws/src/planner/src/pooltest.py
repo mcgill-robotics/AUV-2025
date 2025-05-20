@@ -13,27 +13,27 @@ def main():
     controls = Controller(rospy.Time(0))     # Only need one Controller instantiation
     yaw_ctrl = YawRamp()
     try:
-        # rospy.loginfo("Executing square pattern movement.")
+        rospy.loginfo("Executing square pattern movement.")
         # negative is CCW, thus positive is CW.
         # Move forward 0.5 m in the local X direction
         # controls.rotateDeltaEuler([0,0,90])
-        # rospy.loginfo("Attempting to move x by 2.0.")
-        # controls.moveDeltaLocal(2.0, 0, 0)
-        # rospy.loginfo("Completed move successfully.")
-
-        # rospy.loginfo("Attempting to rotate yaw  by 90 degrees counter-clockwise then 90 degrees clockwise")
-        # controls.rotateYaw(90)
-        # rospy.loginfo("Completed move successfully.")
-        
-        # rospy.loginfo("Attempting to move y by -2.0.")
-        # controls.moveDeltaLocal(0, -2.0, 0)
-        # rospy.loginfo("Completed move successfully.")
-
-        rospy.loginfo("Attempting to use the YawController to perform step-wise rotations.")
-        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+        rospy.loginfo("Attempting to move x by 2.0.")
+        controls.moveDeltaLocal(2.0, 0, 0)
         rospy.loginfo("Completed move successfully.")
 
-        # rospy.loginfo("Pool Test completed successfully.")
+        rospy.loginfo("Attempting to rotate yaw  by 90 degrees counter-clockwise then 90 degrees clockwise")
+        controls.rotateYaw(90)
+        rospy.loginfo("Completed move successfully.")
+        
+        rospy.loginfo("Attempting to move y by -2.0.")
+        controls.moveDeltaLocal(0, -2.0, 0)
+        rospy.loginfo("Completed move successfully.")
+
+        # rospy.loginfo("Attempting to use the YawController to perform step-wise rotations.")
+        # yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+        # rospy.loginfo("Completed move successfully.")
+
+        rospy.loginfo("Pool Test completed successfully.")
 
         # …and so on if you uncomment the rest
 
