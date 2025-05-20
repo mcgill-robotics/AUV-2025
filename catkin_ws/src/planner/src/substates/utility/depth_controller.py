@@ -12,15 +12,15 @@ class DepthController:
         self.pid_enable_pub  = rospy.Publisher("/controls/pid/z/enable",Bool,queue_size=1)
 
         # subscriber for current depth
-        rospy.Subscriber("/odometry/filtered", Odometry, self.newOdom)
+        rospy.Subscriber("/state/z", Float64, self.newOdom)
 
     def newOdom(self, msg):
-        self.z = msg.pose.pose.position.z
+        self.z = msg.data
 
     def enable_pid(self, state: bool):
         self.pid_enable_pub.publish(Bool(state))
 
-    def submergeBy(self, delta_z, tolerance=0.05, timeout=30.0):
+    def submergeBy(self, delta_z, tolerance=0.05, timeout=35.0):
         # give the PID node a moment to connect
         rospy.sleep(1.0)
         target_z = self.z + delta_z
