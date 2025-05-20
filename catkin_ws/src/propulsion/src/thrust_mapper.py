@@ -3,12 +3,12 @@
 Description: Thrust mapper node subscribes to the effort topic, converts the wrench readings to forces,
 and then converts the forces to PWM signals and publishes them.
 """
-
+import math
 import numpy as np
 import rospy
 from thrust_mapper_utils import thruster_mount_dirs, force_to_pwm_thruster 
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
-from geometry_msgs.msg import Wrench, Vector3
+from geometry_msgs.msg import Wrench, Vector3, Quaternion
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 
@@ -21,7 +21,7 @@ a = rospy.get_param("distance_thruster_middle_length")
 # Matrix mapping from thruster forces to wrench (6x8) - need two matrices; one for sim one for rl.
 T = np.array([
     # SURGE (X)
-    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
+    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0,  np.cos(alpha)],
     # SWAY (Y)
     [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
     # HEAVE (Z)
@@ -46,11 +46,12 @@ class ThrusterMapper:
     def __init__(self):
         # Initialize current orientation [roll, pitch, yaw]
         self.current_orientation = np.zeros(3)
-        rospy.Subscriber("/state", Odometry, self.orientation_cb)
+        self.odom_sub = rospy.Subscriber("/odometry/filtered", Odometry, self.orientation_cb)
         
         # Publishers for thruster microseconds and forces
         self.pub_us = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
         self.pub_forces = rospy.Publisher("/propulsion/forces", ThrusterForces, queue_size=1)
+
         
         # Subscribe to the effort command topic
         rospy.Subscriber("/controls/effort", Wrench, self.wrench_to_thrust)
@@ -59,21 +60,24 @@ class ThrusterMapper:
         """Callback to update the current orientation from Odometry."""
         q = msg.pose.pose.orientation
         self.current_orientation = euler_from_quaternion([q.x, q.y, q.z, q.w])
+        rospy.loginfo(self.current_orientation[2] / math.pi * 180)
     
     def global_to_body_frame(self, wrench):
         yaw = self.current_orientation[2]
+        # print(yaw)
         R = np.array([
-            [np.cos(yaw), np.sin(yaw), 0],   # Global X → Body X
-            [-np.sin(yaw), np.cos(yaw), 0],  # Global Y → Body Y
+            [np.cos(yaw), -np.sin(yaw), 0],   # Global X → Body X
+            [np.sin(yaw), np.cos(yaw), 0],  # Global Y → Body Y
             [0, 0, 1]                        # Global Z → Body Z
         ])
         # For relative commands, use identity matrix
         force_global = np.array([wrench.force.x, wrench.force.y, wrench.force.z])
-        force_body = R @ force_global 
+        # print(force_global)
+        force_body = R.T @ force_global 
+        # print(force_body)
         torque_global = np.array([wrench.torque.x, wrench.torque.y, wrench.torque.z])
-        torque_body = R @ torque_global
+        torque_body = R.T @ torque_global
         return Wrench(force=Vector3(*force_body), torque=Vector3(*torque_body))
-
 
 
     def wrench_to_thrust(self, wrench_msg):
