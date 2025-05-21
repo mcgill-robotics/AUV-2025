@@ -23,13 +23,13 @@ def main():
         rospy.loginfo("Completed move successfully.")
 
         rospy.loginfo("Attempting to rotate yaw by 90 degrees counter-clockwise then 90 degrees clockwise")
-        yaw_ctrl.run(90)
+        controls.rotateYaw(90)
         rospy.loginfo("Completed move successfully.")
 
         linear_controls.moveDeltaLocal(0, -2, 0)
 
-        rospy.loginfo("Attempting to rotate yaw  by 90 degrees counter-clockwise then 90 degrees clockwise")
-        yaw_ctrl.run(90) 
+        rospy.loginfo("Attempting to rotate yaw  by 50 degrees counter-clockwise then 90 degrees clockwise")
+        controls.rotateYaw(50)
         rospy.loginfo("Completed move successfully.")
         
         rospy.loginfo("Attempting to move x and y by 2.0.")

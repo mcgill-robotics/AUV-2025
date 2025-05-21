@@ -12,6 +12,10 @@ from geometry_msgs.msg import Wrench, Vector3, Quaternion
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 
+import tf2_ros
+import tf2_geometry_msgs
+from geometry_msgs.msg import WrenchStamped
+
 # Constant parameters of the thruster positions
 l = rospy.get_param("distance_thruster_thruster_length")
 w = rospy.get_param("distance_thruster_thruster_width")
@@ -55,6 +59,10 @@ class ThrusterMapper:
         
         # Subscribe to the effort command topic
         rospy.Subscriber("/controls/effort", Wrench, self.wrench_to_thrust)
+
+        #Buffer and Listener for reference frame transformation
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     
     def orientation_cb(self, msg):
         """Callback to update the current orientation from Odometry."""
@@ -62,40 +70,35 @@ class ThrusterMapper:
         self.current_orientation = euler_from_quaternion([q.x, q.y, q.z, q.w])
         rospy.loginfo(self.current_orientation[2] / math.pi * 180)
     
-    def global_to_body_frame(self, wrench):
-        yaw = self.current_orientation[2]
-        # print(yaw)
-        R = np.array([
-            [np.cos(yaw), -np.sin(yaw), 0],   # Global X → Body X
-            [np.sin(yaw), np.cos(yaw), 0],  # Global Y → Body Y
-            [0, 0, 1]                        # Global Z → Body Z
-        ])
-        # For relative commands, use identity matrix
-        force_global = np.array([wrench.force.x, wrench.force.y, wrench.force.z])
-        # print(force_global)
-        force_body = R.T @ force_global 
-        # print(force_body)
-        torque_global = np.array([wrench.torque.x, wrench.torque.y, wrench.torque.z])
-        torque_body = R.T @ torque_global
-        return Wrench(force=Vector3(*force_body), torque=Vector3(*torque_body))
-
-
     def wrench_to_thrust(self, wrench_msg):
         """
         Callback function that maps a received Wrench message into thruster forces.
         It first converts the wrench from global to body frame, then applies the
-        pseudo-inverse of the thruster mapping matrix.
+        pseudo-inverse of the thruster mapping matrix. We assume that all messages published on /controls/effort
+        are in the global frame.
+
         """
-        body_wrench = self.global_to_body_frame(wrench_msg)
+
+        wrench_stamped = WrenchStamped()
+        wrench_stamped.header.stamp = rospy.Time.now()
+        wrench_stamped.header.frame_id = "odom"
+        wrench_stamped.wrench = wrench_msg
+        
+        try:
+            body_wrench = self.tf_buffer.transform(wrench_stamped, target_frame="auv", timeout=rospy.Duration(1.0))
+        except (tf2_ros.LookupException, tf2_ros.ExtrapolationException, tf2_ros.ConnectivityException) as e:
+            rospy.logwarn(f"[TF2] Transform failed: {e}")
+            return
+
         
         # Construct the 6x1 vector from the body wrench
         a_vec = np.array([
-            [body_wrench.force.x],
-            [body_wrench.force.y],
-            [body_wrench.force.z],
-            [body_wrench.torque.x],
-            [body_wrench.torque.y],
-            [body_wrench.torque.z]
+            [body_wrench.wrench.force.x],
+            [body_wrench.wrench.force.y],
+            [body_wrench.wrench.force.z],
+            [body_wrench.wrench.torque.x],
+            [body_wrench.wrench.torque.y],
+            [body_wrench.wrench.torque.z]
         ])
         
         # Calculate the thruster forces using the pseudo-inverse
