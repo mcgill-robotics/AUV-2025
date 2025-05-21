@@ -31,6 +31,7 @@ class LinearController:
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         rospy.sleep(1.0)  # Let odometry settle
 
+        # TODO: Make this map after SLAM
         #compute target in odom frame
         target_x = self.x + delta_x
         target_y = self.y + delta_y
