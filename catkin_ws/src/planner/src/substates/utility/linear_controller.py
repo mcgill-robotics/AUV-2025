@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import rospy
 from nav_msgs.msg import Odometry
-from tf.transformations import euler_from_quaternion
-from geometry_msgs.msg import Point, Twist
+from actionlib_msgs.msg import GoalStatus
+from geometry_msgs.msg import Point, Twist, Wrench
 from math import atan2, sqrt, sin, cos
 from std_msgs.msg import Bool, Float64
-
+from auv_msgs.msg import (
+    ThrusterMicroseconds,
+)
 class LinearController:
 
     def __init__(self):
@@ -27,6 +29,55 @@ class LinearController:
     def enable_pid(self, axis, state):
         pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
         pub.publish(Bool(state))
+
+    
+    def kill(self):
+        pub_surge = rospy.Publisher("/controls/force/surge", Float64, queue_size=1)
+        pub_sway = rospy.Publisher("/controls/force/sway", Float64, queue_size=1)
+        pub_heave = rospy.Publisher("/controls/force/heave", Float64, queue_size=1)
+        pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
+        pub_pitch = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
+        pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+        pub_global_x = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
+        pub_global_y = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
+        pub_global_z = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
+        pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
+        pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
+
+        # Disable all active PIDs
+        self.enable_pid("x", False)
+        self.enable_pid("y", False)
+        self.enable_pid("z", False)
+        self.enable_pid("quat", False)
+
+        rospy.logwarn("Killing all thrusters and disabling PIDs...")
+
+        start = rospy.get_time()
+        while rospy.get_time() - start < 5:
+            pub_surge.publish(0)
+            pub_sway.publish(0)
+            pub_heave.publish(0)
+            pub_roll.publish(0)
+            pub_pitch.publish(0)
+            pub_yaw.publish(0)
+            pub_global_x.publish(0)
+            pub_global_y.publish(0)
+            pub_global_z.publish(0)
+
+            zero_wrench = Wrench()
+            zero_wrench.force.x = 0
+            zero_wrench.force.y = 0
+            zero_wrench.force.z = 0
+            zero_wrench.torque.x = 0
+            zero_wrench.torque.y = 0
+            zero_wrench.torque.z = 0
+            pub_effort.publish(zero_wrench)
+
+            # Send neutral PWM (1500) to all thrusters
+            pwm_pub.publish(ThrusterMicroseconds([1500] * 8))
+
+            rospy.sleep(0.1)
+
 
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         rospy.sleep(1.0)  # Let odometry settle
