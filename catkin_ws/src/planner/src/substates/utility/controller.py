@@ -367,6 +367,7 @@ class Controller:
         target = wrap(begin + math.radians(delta_degrees))
 
         tol= math.radians(tol_degrees)  # calculate tolerance 
+        rospy.loginfo(f"{target}")
         q = quaternion_from_euler(0, 0, target, axes="sxyz")
 
         rospy.loginfo(f"Target rotation angle: {target}")
@@ -379,8 +380,8 @@ class Controller:
 
         # 4) Disable x,y,z controllers and enable only the quaternion‐PID
         # Note: this is done for consistency purposes, it is hard for the AUV to rotate while also moving
-        self.enable_pid("x",    False)
-        self.enable_pid("y",    False)
+        self.enable_pid("x",    True)
+        self.enable_pid("y",    True)
         self.enable_pid("z",    False)
         self.enable_pid("quat", True)
 
@@ -395,17 +396,14 @@ class Controller:
 
             # Quit process if timeout.
             if (rospy.Time.now() - start).to_sec() > timeout:
-                print("YABABABABBDDOOOOOO")
                 rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
                 break
 
-            rate.sleep()
-
         # 6) Turn the quaternion-PID off and enable XYZ PID
         self.enable_pid("quat", False)
-        self.enable_pid("x",    True)
-        self.enable_pid("y",    True)
-        self.enable_pid("z",    True)
+        # self.enable_pid("x",    True)
+        # self.enable_pid("y",    True)
+        # self.enable_pid("z",    True)
 
         
         # helper to wrap shortest path

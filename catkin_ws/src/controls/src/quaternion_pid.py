@@ -15,6 +15,10 @@ class QuaternionPID:
         self.Ki = rospy.get_param("~Ki")
         self.Kd = rospy.get_param("~Kd")
 
+        rospy.loginfo(f"Using q kP: {self.Kp}")
+        rospy.loginfo(f"Using q kI: {self.Ki}")
+        rospy.loginfo(f"Using q kD: {self.Kd}")
+
         self.windup_limit = rospy.get_param("~windup_limit")
 
         self.body_quat = np.quaternion(1, 0, 0, 0)
@@ -84,7 +88,6 @@ class QuaternionPID:
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)
                 self.pub_yaw.publish(yaw_effort)
-            rate.sleep()
 
     def calculateQuatError(self, q1, q2):
         return q1.inverse() * q2

@@ -51,6 +51,13 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     pub_x.publish(x);
     pub_y.publish(y);
     pub_z.publish(z);
+
+    ROS_DEBUG("Euler angles: %f, %f, %f\n", 
+        msg->twist.twist.angular.x,
+        msg->twist.twist.angular.y,
+        msg->twist.twist.angular.z
+    );
+    
     pub_pose.publish(pose);
 
     // publish angular velocity
