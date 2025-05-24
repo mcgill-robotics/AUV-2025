@@ -26,8 +26,6 @@ ros::Publisher pub_depth_status;
 
 double depth;
 
-double RAD_TO_DEG = 180.0 / 3.14159265;
-
 void broad_cast_pose(const geometry_msgs::Pose &msg);
 
 void depth_cb(const std_msgs::Float64::ConstPtr &msg)
@@ -103,26 +101,16 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
         last_clock_msg = now;
     }
 
-    static tf2_ros::TransformBroadcaster br;
-    geometry_msgs::TransformStamped transformStamped1;
-    transformStamped1.header.stamp = ros::Time::now();
-    transformStamped1.header.frame_id = "odom";
-    transformStamped1.child_frame_id = "base_link";
-    transformStamped1.transform.translation.x = msg.position.x;
-    transformStamped1.transform.translation.y = msg.position.y;
-    transformStamped1.transform.translation.z = msg.position.z;
-    transformStamped1.transform.rotation = msg.orientation;
-    br.sendTransform(transformStamped1);
-
-    geometry_msgs::TransformStamped transformStamped2;
-    transformStamped2.header.stamp = ros::Time::now();
-    transformStamped2.header.frame_id = "base_link";
-    transformStamped2.child_frame_id = "auv_rotation";
-    transformStamped2.transform.translation.x = 0;
-    transformStamped2.transform.translation.y = 0;
-    transformStamped2.transform.translation.z = 0;
-    transformStamped2.transform.rotation = msg.orientation;
-    br.sendTransform(transformStamped2);
+    // static tf2_ros::TransformBroadcaster br;
+    // geometry_msgs::TransformStamped transformStamped;
+    // transformStamped1.header.stamp = ros::Time::now();
+    // transformStamped1.header.frame_id = "odom";
+    // transformStamped1.child_frame_id = "auv";
+    // transformStamped1.transform.translation.x = msg.position.x;
+    // transformStamped1.transform.translation.y = msg.position.y;
+    // transformStamped1.transform.translation.z = msg.position.z;
+    // transformStamped1.transform.rotation = msg.orientation;
+    // br.sendTransform(transformStamped);
 }
 
 int main(int argc, char **argv)

@@ -83,7 +83,6 @@ class LinearController:
         rospy.sleep(1.0)  # Let odometry settle
 
         # TODO: Make this map after SLAM
-        #compute target in odom frame
         # Compute target in odom frame
         target_x = self.x + delta_x
         target_y = self.y + delta_y
@@ -111,5 +110,5 @@ class LinearController:
             rate.sleep()
 
         # Disable PIDs
-        self.enable_pid("x", False)
-        self.enable_pid("y", False)
+        # self.enable_pid("x", False)
+        # self.enable_pid("y", False)

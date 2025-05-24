@@ -341,7 +341,7 @@ class Controller:
             z = self.theta_z
         self.rotate(euler_to_quaternion(x, y, z))
 
-    def rotateYaw(self,delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
+    def rotateYaw(self, delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
         """
         Rotate in place by delta_degrees (positive = counter-clockwise).
         Blocks until the (yaw-error) < tol_degrees or timeout expires.
@@ -382,7 +382,7 @@ class Controller:
         # Note: this is done for consistency purposes, it is hard for the AUV to rotate while also moving
         self.enable_pid("x",    True)
         self.enable_pid("y",    True)
-        self.enable_pid("z",    False)
+        self.enable_pid("z",    True)
         self.enable_pid("quat", True)
 
         # 5) Wait for /controls/pid/quat/error topic to start publishing...
@@ -400,12 +400,11 @@ class Controller:
                 break
 
         # 6) Turn the quaternion-PID off and enable XYZ PID
-        self.enable_pid("quat", False)
-        # self.enable_pid("x",    True)
-        # self.enable_pid("y",    True)
-        # self.enable_pid("z",    True)
+        # self.enable_pid("quat", False)
+        self.enable_pid("x",    True)
+        self.enable_pid("y",    True)
+        self.enable_pid("z",    True)
 
-        
         # helper to wrap shortest path
     def state(self, pos, ang):
         x, y, z = pos

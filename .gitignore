@@ -25,6 +25,8 @@ catkin_ws/.catkin_tools/
 *.png
 *.jpg
 *.bag
+*.gv
+
 *unity.lock
 
 #testing files

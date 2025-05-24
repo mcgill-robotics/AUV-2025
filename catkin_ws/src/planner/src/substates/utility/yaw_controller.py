@@ -43,7 +43,6 @@ class YawRamp:
         pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
         pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 
-
         self.pub_x_enable.publish(False)
         self.pub_y_enable.publish(False)
         self.pub_z_enable.publish(False)
