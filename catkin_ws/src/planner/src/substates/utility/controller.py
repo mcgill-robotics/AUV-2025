@@ -109,17 +109,17 @@ class Controller:
             "/controls/server/effort", EffortAction
         )
         self.clients.append(self.EffortClient)
-        print("Waiting for EffortServer to come online...")
-        self.EffortClient.wait_for_server()
+        # print("Waiting for EffortServer to come online...")
+        # self.EffortClient.wait_for_server()
 
         self.StateQuaternionStateClient = actionlib.SimpleActionClient(
             "/controls/server/state", StateQuaternionAction
         )
         self.clients.append(self.StateQuaternionStateClient)
-        print("Waiting for StateQuaternionStateServer to come online...")
-        self.StateQuaternionStateClient.wait_for_server()
+        # print("Waiting for StateQuaternionStateServer to come online...")
+        # self.StateQuaternionStateClient.wait_for_server()
 
-        print("Controller waiting to receive state information...")
+        # print("Controller waiting to receive state information...")
 
         # Check for missing state information in Controller
         while (
@@ -483,9 +483,9 @@ class Controller:
         self.enable_pid("x", True)
         self.enable_pid("y", True)
 
-        self.x_setpoint_pub.publish(target_x)
-        self.y_setpoint_pub.publish(target_y)
-        # self.z_setpoint_pub.publish(target_z)
+        self.pub_x_setpoint.publish(target_x)
+        self.pub_y_setpoint.publish(target_y)
+        # self.pub_z_setpoint.publish(target_z)
 
         rate = rospy.Rate(20)
         start_time = rospy.Time.now()
@@ -528,8 +528,6 @@ class Controller:
         """
 
         self.preempt_current_action()
-
-        rospy.logwarn()
 
         goal = self.get_effort_goal([0, 0, 0, 0, 0, 0])
         self.EffortClient.send_goal(goal)

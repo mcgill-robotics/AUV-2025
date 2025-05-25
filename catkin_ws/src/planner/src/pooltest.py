@@ -2,7 +2,6 @@
 import rospy
 from substates.utility.controller import Controller
 from substates.utility.yaw_controller import YawRamp
-from substates.utility.linear_controller import LinearController
 
 def main():
     """
@@ -12,7 +11,6 @@ def main():
     rospy.init_node("pooltest")
 
     controls = Controller(rospy.Time(0))    
-    linear_controls = LinearController()
     yaw_ctrl = YawRamp()
 
     try:
