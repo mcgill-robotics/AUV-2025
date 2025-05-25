@@ -86,8 +86,12 @@ jobs:
           cd Docker/ros1
           docker compose build
 
+      - name: List images
+        run: |
+          docker images
+
       - name: Tag and Push Image
         run: |
           cd Docker/ros1
-          docker tag ros1_douglas mcgillrobotics/auv_2025:ros1
+          docker tag ros1_douglas_1 mcgillrobotics/auv_2025:ros1
           docker push mcgillrobotics/auv_2025:ros1
