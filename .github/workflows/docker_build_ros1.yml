@@ -3,8 +3,12 @@ name: Docker Compose Build 'ros1' on ARM
 on:
   push:
     branches: [noetic]
+    paths:
+      - 'Docker/ros1/**'
   pull_request:
     branches: [noetic]
+    paths:
+      - 'Docker/ros1/**'
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'  # 4 AM Montreal time
