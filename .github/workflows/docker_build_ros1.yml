@@ -1,4 +1,4 @@
-name: Docker Compose Build 'ros1' on ARM
+name: Docker Build & Push for ros1
 
 on:
   push:
@@ -14,83 +14,29 @@ on:
     - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  build:
-    name: Build ros1 Image
+  build-and-push:
+    name: Build and optionally push ros1 Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates curl
-          sudo install -m 0755 -d /etc/apt/keyrings
-          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-          sudo chmod a+r /etc/apt/keyrings/docker.asc
-          echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image
-        run: |
-          cd Docker/ros1
-          docker build -t ros1_douglas .
-
-      - name: Save Docker Image
-        run: |
-          docker save ros1_douglas -o ros1_douglas.tar
-
-      - name: Upload Image Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ros1-image
-          path: ros1_douglas.tar
-
-  push-to-dockerhub:
-    name: Push ROS1 Image to Docker Hub
-    needs: build
-    runs-on: ubuntu-22.04-arm
-    if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates curl
-          sudo install -m 0755 -d /etc/apt/keyrings
-          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-          sudo chmod a+r /etc/apt/keyrings/docker.asc
-          echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-      - name: Download Docker Image Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ros1-image
-
-      - name: Load Docker Image
-        run: |
-          docker load -i ros1_douglas.tar
-
-      - name: Log in to Docker Hub
+      - name: Log in to Docker Hub (only if pushing)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag and Push Image
-        run: |
-          docker tag ros1_douglas mcgillrobotics/auv_2025:ros1
-          docker push mcgillrobotics/auv_2025:ros1
+      - name: Build and optionally push image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/ros1
+          file: Docker/ros1/Dockerfile
+          platforms: linux/arm64
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
+          tags: mcgillrobotics/auv_2025:ros1
