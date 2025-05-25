@@ -95,8 +95,8 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
-    && pip3 install keyboard \
+RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+    && pip3 install numpy-quaternion keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
