@@ -5,7 +5,6 @@ import math
 
 from auv_msgs.msg import VisionObject, VisionObjectArray
 
-
 # Callback when a new object detection frame is published.
 def object_detect_cb(msg):
     try:

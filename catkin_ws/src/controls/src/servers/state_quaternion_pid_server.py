@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import rospy
-from servers.base_server import BaseServer
-from std_msgs.msg import Bool
 import actionlib
+import rospy
+
+import numpy as np
+from servers.base_server import BaseServer
+
+from std_msgs.msg import Bool
 from auv_msgs.msg import StateQuaternionAction
 from geometry_msgs.msg import Quaternion
-import numpy as np
-import quaternion
-
 
 class StateQuaternionServer(BaseServer):
     def __init__(self):
@@ -62,133 +62,138 @@ class StateQuaternionServer(BaseServer):
         my_goal = self.goal_id
         self.cancelled = False
         self.goal = goal
-        if self.pose is not None:
-            goal_position = [
-                self.goal.pose.position.x,
-                self.goal.pose.position.y,
-                self.goal.pose.position.z,
-            ]
-            goal_quat = np.quaternion(
-                self.goal.pose.orientation.w,
-                self.goal.pose.orientation.x,
-                self.goal.pose.orientation.y,
-                self.goal.pose.orientation.z,
+
+        if self.pose is None:
+            print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
+            return
+
+        # Extract target position & orientation
+        goal_position = [
+            goal.pose.position.x,
+            goal.pose.position.y,
+            goal.pose.position.z,
+        ]
+        goal_quat = np.quaternion(
+            goal.pose.orientation.w,
+            goal.pose.orientation.x,
+            goal.pose.orientation.y,
+            goal.pose.orientation.z,
+        )
+
+        # Apply local/global and displacement options
+        if goal.local.data:
+            goal_position = self.local_to_global(goal_position)
+        if goal.displace.data:
+            goal_position, goal_quat = self.get_goal_after_displace(
+                goal_position, goal_quat
             )
-            if self.goal.local.data:
-                goal_position = self.local_to_global(goal_position)
-            if self.goal.displace.data:
-                goal_position, goal_quat = self.get_goal_after_displace(
-                    goal_position, goal_quat
+
+        # X axis
+        if goal.do_x.data:
+            self.previous_goal_x = goal_position[0]
+            self.pub_x_enable.publish(Bool(True))
+            self.pub_surge.publish(0)
+            self.pub_sway.publish(0)
+            self.pub_x_pid.publish(goal_position[0])
+        elif self.previous_goal_x is not None:      # Look for previous x goal if x is not found
+            goal_position[0] = self.previous_goal_x
+            self.pub_x_enable.publish(Bool(True))
+            self.pub_surge.publish(0)
+            self.pub_sway.publish(0)
+            self.pub_x_pid.publish(goal_position[0])
+        else:
+            goal_position[0] = None
+
+        # Y axis
+        if goal.do_y.data:
+            self.previous_goal_y = goal_position[1]
+            self.pub_y_enable.publish(Bool(True))
+            self.pub_surge.publish(0)
+            self.pub_sway.publish(0)
+            self.pub_y_pid.publish(goal_position[1])
+        elif self.previous_goal_y is not None:      # Look for previous y goal is y is not found
+            goal_position[1] = self.previous_goal_y
+            self.pub_y_enable.publish(Bool(True))
+            self.pub_surge.publish(0)
+            self.pub_sway.publish(0)
+            self.pub_y_pid.publish(goal_position[1])
+        else:
+            goal_position[1] = None
+
+        # Z axis with safety limits
+        if goal.do_z.data:
+            self.pub_z_enable.publish(Bool(True))
+            raw_z = goal_position[2]
+            min_z = rospy.get_param("min_safe_goal_depth")
+            max_z = rospy.get_param("max_safe_goal_depth")
+            safe_z = max(min(raw_z, max_z), min_z)
+            if safe_z != raw_z:
+                print(
+                    f"WARN: Goal changed from {raw_z}m to {safe_z}m for safety."
                 )
+            self.previous_goal_z = safe_z
+            goal_position[2] = safe_z
+            self.pub_heave.publish(0)
+            self.pub_z_pid.publish(safe_z)
+        elif self.previous_goal_z is not None:
+            goal_position[2] = self.previous_goal_z
+            self.pub_z_enable.publish(Bool(True))
+            self.pub_heave.publish(0)
+            self.pub_z_pid.publish(goal_position[2])
+        else:
+            goal_position[2] = None
 
-            if self.goal.do_x.data:
-                self.previous_goal_x = goal_position[0]
-                self.pub_x_enable.publish(Bool(True))
-                self.pub_surge.publish(0)
-                self.pub_sway.publish(0)
-                self.pub_x_pid.publish(goal_position[0])
-            elif self.previous_goal_x is not None:
-                goal_position[0] = self.previous_goal_x
-                self.pub_x_enable.publish(Bool(True))
-                self.pub_surge.publish(0)
-                self.pub_sway.publish(0)
-                self.pub_x_pid.publish(goal_position[0])
-            else:
-                goal_position[0] = None
+        # Quaternion orientation
+        if goal.do_quaternion.data:
+            self.previous_goal_quat = goal_quat
+            self.pub_quat_enable.publish(Bool(True))
+            q_msg = Quaternion(
+                w=goal_quat.w,
+                x=goal_quat.x,
+                y=goal_quat.y,
+                z=goal_quat.z,
+            )
+            self.pub_quat_pid.publish(q_msg)
+        elif self.previous_goal_quat is not None:
+            pq = self.previous_goal_quat
+            self.pub_quat_enable.publish(Bool(True))
+            q_msg = Quaternion(
+                w=pq.w, x=pq.x, y=pq.y, z=pq.z
+            )
+            self.pub_quat_pid.publish(q_msg)
+        else:
+            goal_quat = None
 
-            if self.goal.do_y.data:
-                self.previous_goal_y = goal_position[1]
-                self.pub_y_enable.publish(Bool(True))
-                self.pub_surge.publish(0)
-                self.pub_sway.publish(0)
-                self.pub_y_pid.publish(goal_position[1])
-            elif self.previous_goal_y is not None:
-                goal_position[1] = self.previous_goal_y
-                self.pub_y_enable.publish(Bool(True))
-                self.pub_surge.publish(0)
-                self.pub_sway.publish(0)
-                self.pub_y_pid.publish(goal_position[1])
-            else:
-                goal_position[1] = None
+        # Wait for settle
+        settle_time = rospy.get_param("time_to_settle")
+        loop_dt = 1.0 / rospy.get_param("settle_check_rate")
+        settled = False
 
-            if self.goal.do_z.data:
-                self.pub_z_enable.publish(Bool(True))
-
-                safe_goal = max(
-                    min(goal_position[2], rospy.get_param("max_safe_goal_depth")),
-                    rospy.get_param("min_safe_goal_depth"),
-                )
-                if safe_goal != goal_position[2]:
-                    print(
-                        "WARN: Goal changed from {}m to {}m for safety.".format(
-                            goal_position[2], safe_goal
-                        )
-                    )
-                self.previous_goal_z = safe_goal
-                goal_position[2] = safe_goal
-                self.pub_heave.publish(0)
-                self.pub_z_pid.publish(safe_goal)
-            elif self.previous_goal_z is not None:
-                goal_position[2] = self.previous_goal_z
-                self.pub_z_enable.publish(Bool(True))
-                self.pub_heave.publish(0)
-                self.pub_z_pid.publish(goal_position[2])
-            else:
-                goal_position[2] = None
-
-            if self.goal.do_quaternion.data:
-                self.previous_goal_quat = goal_quat
-                self.pub_quat_enable.publish(Bool(True))
-                goal_msg = Quaternion()
-                goal_msg.w = goal_quat.w
-                goal_msg.x = goal_quat.x
-                goal_msg.y = goal_quat.y
-                goal_msg.z = goal_quat.z
-                self.pub_quat_pid.publish(goal_msg)
-            elif self.previous_goal_quat is not None:
-                goal_quat = self.previous_goal_quat
-                self.pub_quat_enable.publish(Bool(True))
-                goal_msg = Quaternion()
-                goal_msg.w = goal_quat.w
-                goal_msg.x = goal_quat.x
-                goal_msg.y = goal_quat.y
-                goal_msg.z = goal_quat.z
-                self.pub_quat_pid.publish(goal_msg)
-            else:
-                goal_quat = None
-
-            time_to_settle = rospy.get_param("time_to_settle")
-            settle_check_loop_time = 1.0 / rospy.get_param("settle_check_rate")
-
-            settled = False
+        while (
+            not settled
+            and not self.cancelled
+            and my_goal == self.goal_id
+            and not rospy.is_shutdown()
+        ):
+            start_t = rospy.get_time()
             while (
-                not settled
-                and not self.cancelled
+                not self.cancelled
                 and my_goal == self.goal_id
+                and self.check_status(
+                    goal_position,
+                    goal_quat,
+                    goal.do_x.data,
+                    goal.do_y.data,
+                    goal.do_z.data,
+                    goal.do_quaternion.data,
+                )
                 and not rospy.is_shutdown()
             ):
-                start = rospy.get_time()
-                while (
-                    not self.cancelled
-                    and my_goal == self.goal_id
-                    and self.check_status(
-                        goal_position,
-                        goal_quat,
-                        self.goal.do_x.data,
-                        self.goal.do_y.data,
-                        self.goal.do_z.data,
-                        self.goal.do_quaternion.data,
-                    )
-                    and not rospy.is_shutdown()
-                ):
-
-                    if rospy.get_time() - start > time_to_settle:
-                        settled = True
-                        print("settled")
-                        break
-                    rospy.sleep(settle_check_loop_time)
-        else:
-            print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
+                if rospy.get_time() - start_t > settle_time:
+                    settled = True
+                    print("settled")
+                    break
+                rospy.sleep(loop_dt)
 
         if not self.cancelled and my_goal == self.goal_id:
             self.server.set_succeeded()

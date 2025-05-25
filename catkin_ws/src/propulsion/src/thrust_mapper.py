@@ -93,18 +93,17 @@ class ThrusterMapper:
         
         # Construct the 6x1 vector from the body wrench
         a_vec = np.array([
-            [body_wrench.wrench.force.x],
-            [body_wrench.wrench.force.y],
-            [body_wrench.wrench.force.z],
-            [body_wrench.wrench.torque.x],
-            [body_wrench.wrench.torque.y],
-            [body_wrench.wrench.torque.z]
+            [wrench_stamped.wrench.force.x],
+            [wrench_stamped.wrench.force.y],
+            [wrench_stamped.wrench.force.z],
+            [wrench_stamped.wrench.torque.x],
+            [wrench_stamped.wrench.torque.y],
+            [wrench_stamped.wrench.torque.z]
         ])
         
         # Calculate the thruster forces using the pseudo-inverse
         converted_w = np.matmul(T_inv, a_vec)
-        scale = np.array([1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
-        converted_w = (converted_w.flatten() * scale).reshape((8,1))
+        converted_w = (converted_w.flatten()).reshape((8,1))
 
         tf_msg = ThrusterForces()
         tf_msg.BACK_LEFT = converted_w[0][0]

@@ -8,10 +8,7 @@ from math import cos, sin
 import numpy as np
 from .functions import *
 
-from geometry_msgs.msg import Quaternion
-import tf2_geometry_msgs
-
-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion
 from std_msgs.msg import Float64, Bool, Header
 from auv_msgs.msg import (
     EffortAction,
@@ -21,6 +18,8 @@ from auv_msgs.msg import (
     ThrusterMicroseconds,
 )
 from actionlib_msgs.msg import GoalStatus
+
+import tf2_geometry_msgs
 from tf2_ros import Buffer, TransformListener
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -39,7 +38,7 @@ class Controller:
         print("starting controller")
         self.header_time = header_time
 
-        self.x =0.0
+        self.x = 0.0
         self.y = 0.0
         self.z = 0.0
         self.theta_x = 0.0
@@ -48,99 +47,64 @@ class Controller:
         self.orientation = 0.0
         self.yaw = None
 
-       
+        self.clients = []
+
         rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
 
-        # publisher for a direct yaw‐torque command
-        # 
-        self.pub_heading_sp = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1) 
-        self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
+        # Initialize pub/sub for quaternion controls in controls/quaternion_pid.py
         self.last_quat_error = None
-        rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
+        self.sub_curr_quat_error = rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
         self.pub_quat_enable = rospy.Publisher( "/controls/pid/quat/enable", Bool, queue_size=1)
+        self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
 
+        # Initialize pub for direct torques sent to controls
         self.pub_yaw_torque = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
-        rospy.Subscriber("/state/x",Float64, lambda m: setattr(self,"x",m.data), queue_size=1)
-        rospy.Subscriber("/state/y",Float64, lambda m: setattr(self,"y",m.data), queue_size=1)
-        rospy.Subscriber("/state/z",Float64, lambda m: setattr(self,"z",m.data), queue_size=1)
-        rospy.Subscriber("/state/theta/z", Float64, lambda m: setattr(self, "yaw", m.data), queue_size=1)
 
-
-
-
+        # Configure Transform Listener from the world frame
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
-        self.tf_header = Header(frame_id="world_rotation")
-
-        self.current_x = rospy.Subscriber(
-            "/state/x", Float64, self.set_current_x, queue_size=1
-        )
-        self.current_y = rospy.Subscriber(
-            "/state/y", Float64, self.set_current_y, queue_size=1)
-        self.current_z = rospy.Subscriber(
-            "/state/z", Float64, self.set_current_z, queue_size=1
-        )
-
-        self.current_yaw = rospy.Subscriber("/state/yaw", Float64, self.set_current_yaw)
-        self.current_roll = rospy.Subscriber("/state/theta/x", Float64, self.set_theta_x, queue_size=1)
-        self.current_pitch = rospy.Subscriber("/state/theta/y", Float64, self.set_theta_y, queue_size=1)
+        self.tf_header = Header(frame_id="map")
  
+        # Initialize state updates for the controller from state_estimation
+        self.sub_x = rospy.Subscriber("/state/x", Float64, self.set_x, queue_size=3)
+        self.sub_y = rospy.Subscriber("/state/y", Float64, self.set_y, queue_size=3)
+        self.sub_z = rospy.Subscriber("/state/z", Float64, self.set_z, queue_size=3)
+        self.sub_pose = rospy.Subscriber("/state/pose", Pose, self.set_position, queue_size=3)
 
-        self.sub_x = rospy.Subscriber("/state/x", Float64, self.set_x, queue_size=1)
-        self.sub_y = rospy.Subscriber("/state/y", Float64, self.set_y, queue_size=1)
-        self.sub_z = rospy.Subscriber("/state/z", Float64, self.set_z, queue_size=1)
-        self.sub_quat = rospy.Subscriber(
-            "/state/pose", Pose, self.set_position, queue_size=1
-        )
+        # Initialize PID enable topic publishers
+        self.pub_x_enable = rospy.Publisher("/controls/pid/x/enable", Bool, queue_size=1)
+        self.pub_y_enable = rospy.Publisher("/controls/pid/y/enable", Bool, queue_size=1)
+        self.pub_z_enable = rospy.Publisher("/controls/pid/z/enable", Bool, queue_size=1)
 
-        self.pub_x_enable = rospy.Publisher(
-            "/controls/pid/x/enable", Bool, queue_size=1
-        )
-        self.pub_y_enable = rospy.Publisher(
-            "/controls/pid/y/enable", Bool, queue_size=1
-        )
-        self.pub_z_enable = rospy.Publisher(
-            "/controls/pid/z/enable", Bool, queue_size=1
-        )
-        self.pub_quat_enable = rospy.Publisher(
-            "/controls/pid/quat/enable", Bool, queue_size=1
-        )
+        # Initialize PID setpoint topic publishers
+        self.pub_x_setpoint = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
+        self.pub_y_setpoint = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
+        self.pub_z_setpoint = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=10)
 
-        self.x_setpoint_pub = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
-        self.y_setpoint_pub = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
-        self.z_setpoint_pub = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=10)
-
-        # for killing
+        # Initialize relative force topic publishers
         self.pub_surge = rospy.Publisher("/controls/force/surge", Float64, queue_size=1)
         self.pub_sway = rospy.Publisher("/controls/force/sway", Float64, queue_size=1)
         self.pub_heave = rospy.Publisher("/controls/force/heave", Float64, queue_size=1)
         self.pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
-        self.pub_pitch = rospy.Publisher(
-            "/controls/torque/pitch", Float64, queue_size=1
-        )
+        self.pub_pitch = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
         self.pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+
+        # Initialize direct force topic publisher
         self.pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
-        self.pub_global_x = rospy.Publisher(
-            "/controls/force/global/x", Float64, queue_size=1
-        )
-        self.pub_global_y = rospy.Publisher(
-            "/controls/force/global/y", Float64, queue_size=1
-        )
-        self.pub_global_z = rospy.Publisher(
-            "/controls/force/global/z", Float64, queue_size=1
-        )
+
+        # Initialize global force topic publisher
+        self.pub_global_x = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
+        self.pub_global_y = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
+        self.pub_global_z = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
 
         # Create publishers for the dropper topic and the claw state topic
         self.claw_state_pub = rospy.Publisher(
             "/actuators/grabber/close", Bool, queue_size=1
         )
 
-        self.pwm_pub = rospy.Publisher(
-            "/propulsion/microseconds", ThrusterMicroseconds, queue_size=1
-        )
+        self.pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 
-        self.clients = []
-
+        # Initialize action clients for actions
         self.EffortClient = actionlib.SimpleActionClient(
             "/controls/server/effort", EffortAction
         )
@@ -157,6 +121,7 @@ class Controller:
 
         print("Controller waiting to receive state information...")
 
+        # Check for missing state information in Controller
         while (
             None
             in [
@@ -187,33 +152,10 @@ class Controller:
 
         print("All state information received, controller is active.")
 
-    def set_current_x(self, msg: Float64):
-        """Callback to cache the latest /state/x float."""
-        self.current_x = msg.data
+    def __del__(self):
+        self.kill()
 
-    def set_current_y(self, msg: Float64):
-        """Callback to cache the latest /state/x float."""
-        self.current_y = msg.data
-    
-    def _set_current_yaw(self, msg: Float64):
-        """Callback to cache latest yaw in radians."""
-        self.current_yaw_value = msg.data
-
-
-    def set_current_z(self, msg: Float64):
-        """Callback to cache the latest /state/x float."""
-        self.current_z = msg.data
-    
-    def set_current_yaw(self, msg: Float64):
-        """Callback to cache the latest /state/x float."""
-        self.current_yaw = msg.data
-
-    def set_theta_z(self, msg):
-        self.theta_z = msg.data
-
-    
-
-
+    # Setters
     def set_x(self, msg: Float64):
         self.x = msg.data
 
@@ -223,9 +165,14 @@ class Controller:
     def set_z(self, msg: Float64):
         self.z = msg.data
 
-    def set_theta_z(self, data):
-        self.theta_z = data.data
+    def set_theta_x(self, msg):
+        self.theta_x = msg.data
 
+    def set_theta_y(self, msg):
+        self.theta_y = msg.data
+
+    def set_theta_z(self, msg):
+        self.theta_z = msg.data
 
     def set_position(self, data):
         self.x = data.position.x
@@ -233,16 +180,7 @@ class Controller:
         self.z = data.position.z
         self.orientation = data.orientation
 
-    def set_theta_x(self, data):
-        self.theta_x = data.data
-
-    def set_theta_y(self, data):
-        self.theta_y = data.data
-
-    def set_theta_z(self, data):
-        self.theta_z = data.data
-
-    def transformLocalToGlobal(self, lx, ly, lz):
+    def transform_local_to_global(self, lx, ly, lz):
         """
         Performs a coordinate transformation from the auv body frame
         to the world frame.
@@ -260,8 +198,11 @@ class Controller:
             float(offset_global.vector.z),
         )
 
-    # method to easily get goal object
     def get_effort_goal(self, dofs):
+        """
+        Method which returns target goal for the current effort being exerted by controls.
+        """
+
         surge, sway, heave, roll, pitch, yaw = dofs
 
         goal = EffortGoal()
@@ -285,8 +226,13 @@ class Controller:
 
         return goal
 
-    # method to easily get goal object
     def get_state_goal(self, state, displace, local=is_not_local):
+        """
+        Method which returns the state goal of the current state action server.
+
+        Note: call with the correct state, displace. and local or unexpected behaviour
+        """
+
         x, y, z, tw, tx, ty, tz = state
         goal = StateQuaternionGoal()
 
@@ -310,14 +256,25 @@ class Controller:
 
         return goal
 
-    # preempt the current action
-    def preemptCurrentAction(self):
+    def preempt_current_action(self):
+        """
+        Kills action server executions towards specific goals if the goal status is continuing.
+        """
         for client in self.clients:
             if client.get_state() in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
                 client.cancel_goal()
+    
+    def enable_pid(self, axis, state):
+        """
+        Enables PID by switching the boolean in an axis's enable topic
+        """
+        pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
+        pub.publish(Bool(state))
 
-    # rotate to this rotation (quaternion)
     def rotate(self, ang):
+        """
+        Rotates to a specific quaternion orientation.
+        """
         if any(x is None for x in ang) and any(x is not None for x in ang):
             raise ValueError(
                 "Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
@@ -330,8 +287,10 @@ class Controller:
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    # rotate to this rotation (euler)
     def rotateEuler(self, ang):
+        """
+        Rotates the AUV to the specific euler angle (degrees).
+        """
         x, y, z = ang
         if x is None:
             x = self.theta_x
@@ -405,7 +364,7 @@ class Controller:
         self.enable_pid("y",    True)
         self.enable_pid("z",    True)
 
-        # helper to wrap shortest path
+    # TODO: Add documentation to everything below this
     def state(self, pos, ang):
         x, y, z = pos
         if any(x is None for x in ang) and any(x is not None for x in ang):
@@ -506,74 +465,88 @@ class Controller:
         self.enable_pid("quat", False)
         return resp
 
-
-    def enable_pid(self, axis, state):
-        pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
-        pub.publish(Bool(state))
-
-    # move by this amount in local space (i.e. z is always heave)
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
-        start_x = self.x
-        start_y = self.y 
-        start_z = self.z
+        """
+        Translate the AUV by a specified amount in x, y, z relative to the auv frame.
+        """
+        
+        rospy.sleep(1.0)  # Let odometry settle
 
-        # ---- rotate into global frame ----
-        dx_g = delta_x * cos(self.yaw) - delta_y * sin(self.yaw)
-        dy_g = delta_x * sin(self.yaw) + delta_y * cos(self.yaw)
+        # TODO: Make this map after SLAM
+        # 1) Compute target in odom frame
+        target_x = self.x + delta_x
+        target_y = self.y + delta_y
 
-        target_x = start_x + dx_g
-        target_y = start_y + dy_g
-        target_z = start_z + delta_z
+        print(f"Target x: {target_x:.3f}, y: {target_y:.3f}")
 
-        # enable your PIDs
+        # 2) Enable positional PID control
         self.enable_pid("x", True)
         self.enable_pid("y", True)
-        self.enable_pid("z", True)
 
-        # publish setpoints
         self.x_setpoint_pub.publish(target_x)
         self.y_setpoint_pub.publish(target_y)
-        self.z_setpoint_pub.publish(target_z)
+        # self.z_setpoint_pub.publish(target_z)
 
-        # loop until within tolerance or timeout
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(20)
         start_time = rospy.Time.now()
-        while (rospy.Time.now() - start_time).to_sec() < timeout:
-            if (abs(self.x - target_x) < tolerance and
-                abs(self.y - target_y) < tolerance and
-                abs(self.z - target_z) < tolerance):
+        while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
+            err_x = abs(self.x - target_x)
+            err_y = abs(self.y - target_y)
+
+            # rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
+            if err_x < tolerance and err_y < tolerance:
                 break
+
             rate.sleep()
 
-        # disable PIDs
-        self.enable_pid("x", False)
-        self.enable_pid("y", False)
-        self.enable_pid("z", False)
+        # Disable PIDs
+        # self.enable_pid("x", False)
+        # self.enable_pid("y", False)
 
-
-
-    # set torque
     def torque(self, vel):
+        """
+        Sets a torque value (x, y, z) and sets this as the goal in the effort server
+        """
         x, y, z = vel
         goal = self.get_effort_goal([None, None, None, x, y, z])
         self.EffortClient.send_goal(goal)
 
-    # set positional effort in local space (i.e. z is always heave)
     def forceLocal(self, vel):
+        """
+        Sets a positonal effort force in the local reference frame.
+
+        Note: z is unaffected bu this method (always heaving)
+        """
+
         x, y = vel
         goal = self.get_effort_goal([x, y, None, None, None, None])
         self.EffortClient.send_goal(goal)
 
-    # stop all thrusters
     def kill(self):
-        self.preemptCurrentAction()
+        """
+        Kills all the pid efforts active and removes all forces being applied on thrusters
+        """
+
+        self.preempt_current_action()
+
+        rospy.logwarn()
+
         goal = self.get_effort_goal([0, 0, 0, 0, 0, 0])
         self.EffortClient.send_goal(goal)
         self.pub_x_enable.publish(Bool(False))
         self.pub_y_enable.publish(Bool(False))
         self.pub_z_enable.publish(Bool(False))
         self.pub_quat_enable.publish(Bool(False))
+        
+        # Disable all active PIDs
+        self.enable_pid("x", False)
+        self.enable_pid("y", False)
+        self.enable_pid("z", False)
+        self.enable_pid("quat", False)
 
+        rospy.logwarn("Killing all thrusters and disabling PIDs...")
+
+        # Iterate during timeout
         start = rospy.get_time()
         while rospy.get_time() - start < 5:
             self.pub_surge.publish(0)
@@ -594,10 +567,9 @@ class Controller:
             zero_wrench.torque.y = 0
             zero_wrench.torque.z = 0
             self.pub_effort.publish(zero_wrench)
+            self.pwm_pub.publish(ThrusterMicroseconds([1500] * 8))
 
-            msg = ThrusterMicroseconds([1500] * 8)
-            self.pwm_pub.publish(msg)
-
+    # TODO: Debug and verify with tests
     def freeze_pose(self):
         goal = self.get_state_goal(
             [
@@ -613,12 +585,14 @@ class Controller:
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
+    # TODO: Debug and verify with tests
     def freeze_position(self):
         goal = self.get_state_goal(
             [self.x, self.y, self.z, None, None, None, None], do_not_displace
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
+    # TODO: Debug and verify with tests
     def freeze_rotation(self):
         goal = self.get_state_goal(
             [
@@ -634,7 +608,12 @@ class Controller:
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
+    # TODO: Debug and verify with tests
     def flatten(self):
+        """
+        Computes a new goal which flattens the AUV such that only the yaw component is maintained.
+        """
+
         orientation = np.quaternion(
             self.orientation.w,
             self.orientation.x,
@@ -655,11 +634,38 @@ class Controller:
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
 
-    def open_claw(self):
+    # TODO: Debug and verify with tests
+    def submergeBy(self, delta_z, tolerance=0.05, timeout=35.0):
+        rospy.sleep(2.0)
 
-        # Set the claw state to True (open)
+        # compute final target
+        target_z = self.z + delta_z
+        rospy.loginfo(f"depth submergeBy: current={self.z:.2f} -> target={target_z:.2f}")
+
+        self.enable_pid(True)
+        self.z_setpoint_pub.publish(Float64(target_z))
+
+        rate = rospy.Rate(20)
+        start = rospy.Time.now()
+
+        #dive until within tolerance (or timeout)
+        while not rospy.is_shutdown() and (rospy.Time.now() - start).to_sec() < timeout:
+            err_z = abs(self.z - target_z)
+            rospy.loginfo_throttle(1, f"depth error = {err_z:.3f}")
+            if err_z < tolerance:
+                rospy.loginfo("depth reached target depth")
+                break
+            rate.sleep()
+
+        rospy.loginfo(f"[depth] holding at {target_z:.2f} m to fight buoyancy")
+        while not rospy.is_shutdown():
+            self.z_setpoint_pub.publish(Float64(target_z))
+            rate.sleep()
+
+    # TODO: Debug and verify with tests
+    def open_claw(self):
         self.claw_state_pub.publish(Bool(True))
 
+    # TODO: Debug and verify with tests
     def close_claw(self):
-        # Set the claw state to False (close)
         self.claw_state_pub.publish(Bool(False))

@@ -14,21 +14,18 @@ class QuaternionPID:
         self.Kp = rospy.get_param("~Kp")
         self.Ki = rospy.get_param("~Ki")
         self.Kd = rospy.get_param("~Kd")
+        self.windup_limit = rospy.get_param("~windup_limit")    # windup_limit is the accumulation limit for the integral
 
-        rospy.loginfo(f"Using q kP: {self.Kp}")
-        rospy.loginfo(f"Using q kI: {self.Ki}")
-        rospy.loginfo(f"Using q kD: {self.Kd}")
-
-        self.windup_limit = rospy.get_param("~windup_limit")
-
-        self.body_quat = np.quaternion(1, 0, 0, 0)
-        self.angular_velocity = np.array([0.0, 0.0, 0.0])
-        self.goal_quat = None
+        self.body_quat = np.quaternion(1, 0, 0, 0)              # quaternion orientation of the body
+        self.angular_velocity = np.array([0.0, 0.0, 0.0])       # angular velocity from the PID
+        self.goal_quat = None                                   # goal quaternion orientation
         self.enabled = False
         self.previous_time = rospy.get_time()
-        self.torque_integral = np.array([0.0, 0.0, 0.0])
+        self.torque_integral = np.array([0.0, 0.0, 0.0])        # torque field used for integral accumulation during computing
 
-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.set_pose)
+        self.pose_sub = rospy.Subscriber(
+            "/state/pose", Pose, self.set_pose
+        )
         self.angular_velocity_sub = rospy.Subscriber(
             "/state/angular_velocity", Vector3, self.set_ang_vel
         )
@@ -38,13 +35,15 @@ class QuaternionPID:
         self.enable_sub = rospy.Subscriber(
             "/controls/pid/quat/enable", Bool, self.set_enabled
         )
-
-        self.pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher(
+            "/controls/torque/roll", Float64, queue_size=1
+        )
         self.pub_pitch = rospy.Publisher(
             "/controls/torque/pitch", Float64, queue_size=1
         )
-        self.pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
-
+        self.pub_yaw = rospy.Publisher(
+            "/controls/torque/yaw", Float64, queue_size=1
+        )
         self.pub_error_quat = rospy.Publisher(
             "/controls/pid/quat/error", Float64, queue_size=1
         )
