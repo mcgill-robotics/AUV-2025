@@ -81,10 +81,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker Compose file
+      - name: Build Dockerfile
         run: |
           cd Docker/ros1
-          docker compose build
+          docker build -t ros1_douglas .
 
       - name: List images
         run: |
@@ -93,5 +93,5 @@ jobs:
       - name: Tag and Push Image
         run: |
           cd Docker/ros1
-          docker tag ros1_douglas_1 mcgillrobotics/auv_2025:ros1
+          docker tag ros1_douglas mcgillrobotics/auv_2025:ros1
           docker push mcgillrobotics/auv_2025:ros1
