@@ -14,7 +14,8 @@ on:
     - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  docker-arm-ci:
+  build:
+    name: Build jetson Image
     runs-on: ubuntu-22.04-arm
 
     steps:

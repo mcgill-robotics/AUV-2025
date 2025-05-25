@@ -7,7 +7,7 @@ services:
       - type: bind
         source: ../../../AUV-2025
         target: /AUV-2025
-    image: "mcgillrobotics/auv_2025:jetson" 
+    image: "mcgillrobotics/auv_2025:ros1" 
     privileged: true
     environment:
       - DISPLAY
