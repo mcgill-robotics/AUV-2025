@@ -135,4 +135,3 @@ RUN cd src && \
 
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
-#test
