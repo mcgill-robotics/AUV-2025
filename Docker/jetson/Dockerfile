@@ -66,7 +66,8 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-rqt-gui \
     ros-noetic-smach-ros \
     ros-noetic-usb-cam \
-    ros-noetic-robot-localization
+    ros-noetic-robot-localization \
+    ros-noetic-foxglove-bridge
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -93,7 +94,7 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
     && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
@@ -102,9 +103,6 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
-
-# Placed here for quick building prior to pool test, should be pushed up
-RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
 
 CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && roscore"]
 RUN echo "tmux" >> ~/.bashrc

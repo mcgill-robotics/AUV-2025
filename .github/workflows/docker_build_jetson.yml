@@ -3,14 +3,19 @@ name: Docker Compose Build 'jetson' on ARM
 on:
   push:
     branches: [noetic]
+    paths:
+      - 'Docker/jetson/**'
   pull_request:
     branches: [noetic]
+    paths:
+      - 'Docker/jetson/**'
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  docker-arm-ci:
+  build:
+    name: Build jetson Image
     runs-on: ubuntu-22.04-arm
 
     steps:
