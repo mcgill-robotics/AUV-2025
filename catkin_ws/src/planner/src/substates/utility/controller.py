@@ -337,7 +337,7 @@ class Controller:
         print("qt", qt)
         self.pub_quat_setpoint.publish(qt)
 
-        # 4) Disable x,y,z controllers and enable only the quaternion‐PID
+        # 4)enable the x,y,z, and quaternion PIDs
         # Note: this is done for consistency purposes, it is hard for the AUV to rotate while also moving
         self.enable_pid("x",    True)
         self.enable_pid("y",    True)
