@@ -34,17 +34,22 @@ jobs:
             $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
-          sudo apt-get install -y \
-            docker-ce \
-            docker-ce-cli \
-            containerd.io \
-            docker-buildx-plugin \
-            docker-compose-plugin
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-      - name: Build Docker Compose file
+      - name: Build Docker Image
         run: |
           cd Docker/ros1
-          docker compose build
+          docker build -t ros1_douglas .
+
+      - name: Save Docker Image
+        run: |
+          docker save ros1_douglas -o ros1_douglas.tar
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ros1-image
+          path: ros1_douglas.tar
 
   push-to-dockerhub:
     name: Push ROS1 Image to Docker Hub
@@ -68,12 +73,16 @@ jobs:
             $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
-          sudo apt-get install -y \
-            docker-ce \
-            docker-ce-cli \
-            containerd.io \
-            docker-buildx-plugin \
-            docker-compose-plugin
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      - name: Download Docker Image Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ros1-image
+
+      - name: Load Docker Image
+        run: |
+          docker load -i ros1_douglas.tar
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -81,17 +90,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Dockerfile
-        run: |
-          cd Docker/ros1
-          docker build -t ros1_douglas .
-
-      - name: List images
-        run: |
-          docker images
-
       - name: Tag and Push Image
         run: |
-          cd Docker/ros1
           docker tag ros1_douglas mcgillrobotics/auv_2025:ros1
           docker push mcgillrobotics/auv_2025:ros1
