@@ -49,6 +49,8 @@ class Controller:
 
         self.clients = []
 
+        rospy.Subscriber("/state/theta/x", Float64, lambda msg: setattr(self, "current_roll_value", msg.data), queue_size=1)
+        rospy.Subscriber("/state/theta/y", Float64, lambda msg: setattr(self, "current_pitch_value", msg.data), queue_size=1)
         rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
 
         # Initialize pub/sub for quaternion controls in controls/quaternion_pid.py
@@ -180,23 +182,13 @@ class Controller:
         self.z = data.position.z
         self.orientation = data.orientation
 
-    def transform_local_to_global(self, lx, ly, lz):
+    def wrap(self, err):
         """
-        Performs a coordinate transformation from the auv body frame
-        to the world frame.
+        Wraps any angle (radians) into (–π, π]
         """
-        trans = self.tf_buffer.lookup_transform(
-            "auv", "base_link", self.header_time
-        )
-        offset_local = Vector3(lx, ly, lz)
-        self.tf_header.stamp = self.header_time
-        offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
-        offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
-        return (
-            float(offset_global.vector.x),
-            float(offset_global.vector.y),
-            float(offset_global.vector.z),
-        )
+        return math.atan2(sin(err), cos(err))
+
+
 
     def get_effort_goal(self, dofs):
         """
@@ -271,34 +263,56 @@ class Controller:
         pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
         pub.publish(Bool(state))
 
-    def rotate(self, ang):
-        """
-        Rotates to a specific quaternion orientation.
-        """
-        if any(x is None for x in ang) and any(x is not None for x in ang):
-            raise ValueError(
-                "Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
-                    ang
-                )
-            )
-        x, y, z,w = ang
-        goal_state = self.get_state_goal(
-            [None, None, None, x, y, z, w], do_not_displace
-        )
-        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+    def rotate(self, x: float, y: float, z: float, timeout: float = 10, tol_degrees: float = 1.0):
+        '''
+        Roll, Pitch, and Yaw by x,y, and z (degrees) respectively. This follows the Roll-Pitch-Yaw order convention. 
+        Positive = counter-clockwise.
+        PIDs are kept on after target is reached to maintain target heading. 
+        '''
+        # 1) Wait for first angle readings, otherwise sleep. Timeout if overtime.       
+        err= np.zeros(3)
+        start = rospy.Time.now()
+        rate = rospy.Rate(20)
+        while (self.current_roll_value is None or
+            self.current_pitch_value is None or
+            self.current_yaw_value is None) and not rospy.is_shutdown():
+            if (rospy.Time.now() - start).to_sec() > timeout:
+                raise RuntimeError("Topic missing, aborting process...")
+            rate.sleep()
 
-    def rotateEuler(self, ang):
-        """
-        Rotates the AUV to the specific euler angle (degrees).
-        """
-        x, y, z = ang
-        if x is None:
-            x = self.theta_x
-        if y is None:
-            y = self.theta_y
-        if z is None:
-            z = self.theta_z
-        self.rotate(euler_to_quaternion(x, y, z))
+        # 2) Compute target heading
+        target_roll = self.wrap(self.current_roll_value + math.radians(x))
+        target_pitch = self.wrap(self.current_pitch_value + math.radians(y))
+        target_yaw = self.wrap(self.current_yaw_value + math.radians(z))
+
+        tol = math.radians(tol_degrees) # Calculate tolerance
+        rospy.loginfo(f"Target Heading: {math.degrees(target_roll)}°, {math.degrees(target_pitch)}°, {math.degrees(target_yaw)}° ")
+        q = quaternion_from_euler(target_roll, target_pitch, target_yaw, axes = "rxyz") # rxyz is given since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
+
+        # 3) Publish correct quaternion setpoint to the controls server
+        qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+        self.pub_quat_setpoint.publish(qt)
+
+        # 4)enable the x,y,z, and quaternion PIDs
+        self.enable_pid("x",    True)
+        self.enable_pid("y",    True)
+        self.enable_pid("z",    True)
+        self.enable_pid("quat", True)
+
+        # 5) Wait for /controls/pid/quat/error topic to start publishing...
+        start = rospy.Time.now()
+        while not rospy.is_shutdown():
+            # Break the process if the error is below tolerance level
+            if self.last_quat_error is not None:
+                err = np.array([self.last_quat_error.x, self.last_quat_error.y, self.last_quat_error.z])
+                if np.linalg.norm(err) < tol:
+                    break
+
+            # Quit process if timeout.
+            if (rospy.Time.now() - start).to_sec() > timeout:
+                err_norm = np.linalg.norm(err)
+                rospy.logwarn("rotate timed out: %.1f error", err_norm)       
+
 
     def rotateYaw(self, delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
         """
@@ -306,11 +320,7 @@ class Controller:
         Blocks until the (yaw-error) < tol_degrees or timeout expires.
         """
 
-        def wrap(err):
-            """
-            Wraps any angle (radians) into (–π, π]
-            """
-            return math.atan2(sin(err), cos(err))
+
 
         # 1) Wait for first yaw reading, otherwise sleep. Timeout if overtime.
         yaw_err = 0.0
@@ -323,7 +333,7 @@ class Controller:
 
         # 2) Compute target yaw
         begin = self.current_yaw_value
-        target = wrap(begin + math.radians(delta_degrees))
+        target = self.wrap(begin + math.radians(delta_degrees))
 
         tol= math.radians(tol_degrees)  # calculate tolerance 
         rospy.loginfo(f"{target}")
@@ -349,20 +359,14 @@ class Controller:
         while not rospy.is_shutdown():
             # Break the process if the error is below tolerance level
             if self.last_quat_error is not None:
-                yaw_err = self.last_quat_error.z
-                if abs(yaw_err) < tol:
+                err = np.array([self.last_quat_error.x, self.last_quat_error.y, self.last_quat_error.z])
+                if np.linalg.norm(err) < tol:
                     break
 
             # Quit process if timeout.
             if (rospy.Time.now() - start).to_sec() > timeout:
-                rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
-                break
-
-        # 6) Turn the quaternion-PID off and enable XYZ PID
-        # self.enable_pid("quat", False)
-        self.enable_pid("x",    True)
-        self.enable_pid("y",    True)
-        self.enable_pid("z",    True)
+                err_norm = np.linalg.norm(err)
+                rospy.logwarn("rotate timed out: %.1f error", err_norm)  
 
     # TODO: Add documentation to everything below this
     def state(self, pos, ang):
@@ -476,25 +480,28 @@ class Controller:
         # 1) Compute target in odom frame
         target_x = self.x + delta_x
         target_y = self.y + delta_y
+        target_z = self.z + delta_z
 
-        print(f"Target x: {target_x:.3f}, y: {target_y:.3f}")
+        print(f"Target x: {target_x:.3f}, y: {target_y:.3f}, z: {target_z:.3f}")
 
         # 2) Enable positional PID control
         self.enable_pid("x", True)
         self.enable_pid("y", True)
+        self.enable_pid("z", True)
 
         self.pub_x_setpoint.publish(target_x)
         self.pub_y_setpoint.publish(target_y)
-        # self.pub_z_setpoint.publish(target_z)
+        self.pub_z_setpoint.publish(target_z)
 
         rate = rospy.Rate(20)
         start_time = rospy.Time.now()
         while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
             err_x = abs(self.x - target_x)
             err_y = abs(self.y - target_y)
+            err_z = abs(self.z - target_z)
 
             # rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
-            if err_x < tolerance and err_y < tolerance:
+            if err_x < tolerance and err_y < tolerance and err_z < tolerance:
                 break
 
             rate.sleep()

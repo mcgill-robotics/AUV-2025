@@ -21,6 +21,9 @@
 		<arg name="q_dvlnominalup_dvlup_y" default="0.0" />
 		<arg name="q_dvlnominalup_dvlup_z" default="-0.707" />
 
+		<arg name="auv_dvl_offset_x" default="0.0" />
+		<arg name="auv_dvl_offset_y" default="0.0" />
+		<arg name="auv_dvl_offset_z" default="0.0" />
 
 		<node name="dvl_transform_pub" pkg="tf2_ros" type="static_transform_publisher" args="
 		$(arg auv_dvl_offset_x) $(arg auv_dvl_offset_y) $(arg auv_dvl_offset_z) 

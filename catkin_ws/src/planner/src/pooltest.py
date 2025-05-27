@@ -16,22 +16,22 @@ def main():
     try:
         rospy.loginfo("Executing square pattern movement.")
         # negative is CCW, thus positive is CW.
-        rospy.loginfo("Attempting to move x and y by 2.0.")
-        controls.moveDeltaLocal(2.0, 0, 0)
+        rospy.loginfo("Attempting to move x by 2.0 and z by -1.0.")
+        controls.moveDeltaLocal(2.0, 0, -1.0)
         rospy.loginfo("Completed move successfully.")
 
-        rospy.loginfo("Attempting to rotate yaw by 90 degrees counter-clockwise then 90 degrees clockwise")
-        controls.rotateYaw(90)
+        rospy.loginfo("Attempting to yaw by 90 degrees counter-clockwise")
+        controls.rotate(0.0,0.0,90.0)
         rospy.loginfo("Completed move successfully.")
 
         controls.moveDeltaLocal(0, -2, 0)
 
-        rospy.loginfo("Attempting to rotate yaw  by 50 degrees counter-clockwise then 90 degrees clockwise")
-        controls.rotateYaw(50)
+        rospy.loginfo("Attempting to yaw by 50 degrees counter-clockwise then 90 degrees clockwise")
+        controls.rotate(0.0,0.0,50.0)
         rospy.loginfo("Completed move successfully.")
         
         rospy.loginfo("Attempting to move x and y by 2.0.")
-        controls.moveDeltaLocal(2.0, -2.0, 0)
+        controls.moveDeltaLocal(2.0, -2.0, 0.0)
         rospy.loginfo("Completed move successfully.")
 
         rospy.loginfo("Pool Test completed successfully.")
