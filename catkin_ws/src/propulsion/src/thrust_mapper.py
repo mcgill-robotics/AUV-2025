@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Description: Thrust mapper node subscribes to the effort topic, converts the wrench readings to forces,
+Description: Thrust mapper node subscribes to the effort topic, converts the wrench readings to thruster forces,
 and then converts the forces to PWM signals and publishes them.
 """
 import math
@@ -39,8 +39,8 @@ T = np.array([
       - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)) ]
 ])
 T_inv = np.linalg.pinv(T)
-print("T =", T)
-print("T_inv =", T_inv)
+#print("T =", T)
+#print("T_inv =", T_inv)
 
 # Temporary wait to allow sync with Arduino (adjust as needed)
 rospy.sleep(4.0)
@@ -81,15 +81,9 @@ class ThrusterMapper:
 
         wrench_stamped = WrenchStamped()
         wrench_stamped.header.stamp = rospy.Time.now()
-        wrench_stamped.header.frame_id = "odom"
+        wrench_stamped.header.frame_id = "auv"
         wrench_stamped.wrench = wrench_msg
         
-        try:
-            body_wrench = self.tf_buffer.transform(wrench_stamped, target_frame="auv", timeout=rospy.Duration(1.0))
-        except (tf2_ros.LookupException, tf2_ros.ExtrapolationException, tf2_ros.ConnectivityException) as e:
-            rospy.logwarn(f"[TF2] Transform failed: {e}")
-            return
-
         
         # Construct the 6x1 vector from the body wrench
         a_vec = np.array([
