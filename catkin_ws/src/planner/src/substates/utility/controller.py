@@ -287,7 +287,7 @@ class Controller:
 
         tol = math.radians(tol_degrees) # Calculate tolerance
         rospy.loginfo(f"Target Heading: {math.degrees(target_roll)}°, {math.degrees(target_pitch)}°, {math.degrees(target_yaw)}° ")
-        q = quaternion_from_euler(target_roll, target_pitch, target_yaw, axes = "rxyz") # rxyz is given since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
+        q = quaternion_from_euler(target_roll, target_pitch, target_yaw, axes = "sxyz") # sxyz is given since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
 
         # 3) Publish correct quaternion setpoint to the controls server
         qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
