@@ -10,17 +10,12 @@ import rospy
 import actionlib
 import rosbag
 
-<<<<<<< HEAD
-# === ROS Messages ===
-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion
-=======
 import math
 from math import cos, sin
 import numpy as np
 from .functions import *
 
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion, TwistWithCovarianceStamped
->>>>>>> 21b27d9e (Add: Recorder class for pool tests)
 from std_msgs.msg import Float64, Bool, Header
 from actionlib_msgs.msg import GoalStatus
 
@@ -32,12 +27,8 @@ from auv_msgs.msg import (
     StateQuaternionGoal,
     ThrusterMicroseconds,
 )
-<<<<<<< HEAD
-=======
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-from actionlib_msgs.msg import GoalStatus
->>>>>>> 21b27d9e (Add: Recorder class for pool tests)
 
 # === TF Tools ===
 import tf2_geometry_msgs

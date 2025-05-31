@@ -22,3 +22,7 @@ catkin_package(	CATKIN_DEPENDS
 	tf
 )
 
+catkin_install_python(
+  PROGRAMS src/substates/utility/recorder.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

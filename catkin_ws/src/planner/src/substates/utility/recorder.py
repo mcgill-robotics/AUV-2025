@@ -100,4 +100,20 @@ if __name__ == "__main__":
     recorder = TopicBagRecorder(TOPICS)
 
     rospy.loginfo("[bag_recorder] Recording started. Press Ctrl+C to stop and close bag files.")
-    rospy.spin()
+    
+    try:
+        rospy.loginfo("Recorder Entering spin(). Press Ctrl+C to exit.")
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        # Thrown if Ctrl+C is pressed during spin() or if rospy.signal_shutdown() is called
+        rospy.loginfo("Recorder  ROSInterruptException caught (node interrupted).")
+    finally:
+        # In case spin() returns or an exception is raised, ensure shutdown is signaled
+        if not rospy.is_shutdown():
+            rospy.loginfo("Recorder  Signaling shutdown from finally block.")
+            rospy.signal_shutdown("Exiting node")
+
+        # The cleanup callback (registered via on_shutdown) will be invoked automatically.
+        rospy.loginfo("Recorder  Exiting main().")
+
+    
