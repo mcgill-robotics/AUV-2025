@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 	vision
 	smach
 	tf
+	rosbag
 )
 
 catkin_package(	CATKIN_DEPENDS 

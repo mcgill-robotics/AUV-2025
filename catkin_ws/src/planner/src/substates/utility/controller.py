@@ -8,9 +8,19 @@ import numpy as np
 # === ROS Core ===
 import rospy
 import actionlib
+import rosbag
 
+<<<<<<< HEAD
 # === ROS Messages ===
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion
+=======
+import math
+from math import cos, sin
+import numpy as np
+from .functions import *
+
+from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion, TwistWithCovarianceStamped
+>>>>>>> 21b27d9e (Add: Recorder class for pool tests)
 from std_msgs.msg import Float64, Bool, Header
 from actionlib_msgs.msg import GoalStatus
 
@@ -22,6 +32,12 @@ from auv_msgs.msg import (
     StateQuaternionGoal,
     ThrusterMicroseconds,
 )
+<<<<<<< HEAD
+=======
+from sensor_msgs.msg import Imu
+from nav_msgs.msg import Odometry
+from actionlib_msgs.msg import GoalStatus
+>>>>>>> 21b27d9e (Add: Recorder class for pool tests)
 
 # === TF Tools ===
 import tf2_geometry_msgs
@@ -35,6 +51,8 @@ from .functions import (
     euler_to_quaternion,
 )
 
+
+from .recorder import TopicBagRecorder
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
@@ -164,6 +182,16 @@ class Controller:
                     debug_str += state_axis_name + ", "
             print(debug_str)
             rospy.sleep(1)
+
+                
+        TOPICS = {
+            "/odometry/filtered": Odometry,
+            "/sensors/dvl/twist": TwistWithCovarianceStamped,
+            "/sensors/imu/data": Imu,
+            "/sensors/depth/z": Float64
+        }
+
+        self.recorder = TopicBagRecorder(TOPICS)
 
         print("All state information received, controller is active.")
 

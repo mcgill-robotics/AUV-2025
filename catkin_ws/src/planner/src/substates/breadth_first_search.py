@@ -5,9 +5,13 @@ import smach
 import threading
 from std_msgs.msg import String
 
-
-# search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
 class BreadthFirstSearch(smach.State):
+    """
+    SMACH State which searches for objects by moving in a growing square.
+
+    (i.e. each side of square grows in size after every rotation)
+    """
+
     def __init__(self, control, mapping, target_class, min_objects):
         super().__init__(outcomes=["success", "failure", "timeout"])
         self.control = control
@@ -26,6 +30,18 @@ class BreadthFirstSearch(smach.State):
             "/mission_display", String, queue_size=1
         )
 
+        
+        self.detectedObject = False
+        self.target_class = target_class
+        self.min_objects = min_objects
+        self.expansionAmt = rospy.get_param("bfs_expansion_size")
+        
+        self.thread_timer = None
+        self.timeout_occurred = False
+        self.time_limit = rospy.get_param("object_search_time_limit")
+
+        self.pub_mission_display = rospy.Publisher(
+            "/mission_display", String, queue_size=1
     def do_breadth_first_search(self):
         movement = [0, self.expansionAmt, 0]
         while not rospy.is_shutdown():
