@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
+# === Standard Library ===
+import math
+from math import sin, cos
+import numpy as np
+
+# === ROS Core ===
 import rospy
 import actionlib
 
-import math
-from math import cos, sin
-import numpy as np
-from .functions import *
-
+# === ROS Messages ===
 from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion
 from std_msgs.msg import Float64, Bool, Header
+from actionlib_msgs.msg import GoalStatus
+
+# === AUV Custom Messages ===
 from auv_msgs.msg import (
     EffortAction,
     EffortGoal,
@@ -17,10 +22,19 @@ from auv_msgs.msg import (
     StateQuaternionGoal,
     ThrusterMicroseconds,
 )
-from actionlib_msgs.msg import GoalStatus
 
+# === TF Tools ===
 import tf2_geometry_msgs
 from tf2_ros import Buffer, TransformListener
+from tf.transformations import quaternion_from_euler, quaternion_multiply
+
+# === Local Utilities ===
+# TODO: Clean the functions file. Most of the functions there aren't used. 
+from .functions import (
+    vectorToYawDegrees,
+    euler_to_quaternion,
+)
+
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
 
@@ -45,8 +59,6 @@ class Controller:
         self.theta_y = 0.0
         self.theta_z = 0.0
         self.orientation = 0.0
-        self.yaw = None
-
         self.clients = []
 
         rospy.Subscriber("/state/theta/x", Float64, lambda msg: setattr(self, "current_roll_value", msg.data), queue_size=1)
@@ -124,6 +136,7 @@ class Controller:
         # print("Controller waiting to receive state information...")
 
         # Check for missing state information in Controller
+        # TODO: This while loop is broken. We intialize the attributes to 0.0 above. I tried initializing to None, the code gets stuck in the while loop forever.
         while (
             None
             in [
@@ -263,9 +276,9 @@ class Controller:
         pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
         pub.publish(Bool(state))
 
-    def rotate(self, x: float, y: float, z: float, timeout: float = 10, tol_degrees: float = 1.0):
+    def rotate(self, x: float, y: float, z: float, timeout: float = 20, tol_degrees: float = 1.0):
         '''
-        Roll, Pitch, and Yaw by x,y, and z (degrees) respectively. This follows the Roll-Pitch-Yaw order convention. 
+        Performs a relative rotation using the AUV's local body axes (rxyz). This follows the Roll-Pitch-Yaw order convention. 
         Positive = counter-clockwise.
         PIDs are kept on after target is reached to maintain target heading. 
         '''
@@ -280,26 +293,26 @@ class Controller:
                 raise RuntimeError("Topic missing, aborting process...")
             rate.sleep()
 
-        # 2) Compute target heading
-        target_roll = self.wrap(self.current_roll_value + math.radians(x))
-        target_pitch = self.wrap(self.current_pitch_value + math.radians(y))
-        target_yaw = self.wrap(self.current_yaw_value + math.radians(z))
+        # 2) Get current attitude
+        current_q = np.array([self.orientation.x, self.orientation.y, self.orientation.z, self.orientation.w])
 
         tol = math.radians(tol_degrees) # Calculate tolerance
-        rospy.loginfo(f"Target Heading: {math.degrees(target_roll)}°, {math.degrees(target_pitch)}°, {math.degrees(target_yaw)}° ")
-        q = quaternion_from_euler(target_roll, target_pitch, target_yaw, axes = "sxyz") # sxyz is given since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
 
-        # 3) Publish correct quaternion setpoint to the controls server
-        qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+       # 3) Calculate change in attitude
+        delta_q = quaternion_from_euler(math.radians(x), math.radians(y), math.radians(z), axes = "rxyz") # rxyz is used since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
+
+        # 4) Publish correct quaternion setpoint to the controls server
+        target_q = quaternion_multiply(current_q, delta_q)
+        qt = Quaternion(x=target_q[0], y=target_q[1], z=target_q[2], w=target_q[3])
         self.pub_quat_setpoint.publish(qt)
 
-        # 4)enable the x,y,z, and quaternion PIDs
+        # 5)enable the x,y,z, and quaternion PIDs
         self.enable_pid("x",    True)
         self.enable_pid("y",    True)
         self.enable_pid("z",    True)
         self.enable_pid("quat", True)
 
-        # 5) Wait for /controls/pid/quat/error topic to start publishing...
+        # 6) Wait for /controls/pid/quat/error topic to start publishing...
         start = rospy.Time.now()
         while not rospy.is_shutdown():
             # Break the process if the error is below tolerance level
