@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensors
   roscpp REQUIRED
 	rospy
+  planner
   tf
 	tf2
 	tf2_geometry_msgs
@@ -20,6 +21,7 @@ catkin_package( CATKIN_DEPENDS
   sensors
   roscpp
 	rospy
+  planner
 	tf2
 	tf2_geometry_msgs
 	tf2_ros

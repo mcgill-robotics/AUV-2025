@@ -2,6 +2,12 @@ import os
 import rospy
 import rosbag
 import rospkg
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import TwistWithCovarianceStamped
+from nav_msgs.msg import Odometry
+from std_msgs.msg import Float64
+
+
 
 from datetime import datetime
 
@@ -81,11 +87,17 @@ class TopicBagRecorder:
         rospy.loginfo("[bag_recorder] All bags closed.")
 
 
-# if __name__ == "__main__":
-#     rospy.init_node("per_topic_bag_recorder")
+if __name__ == "__main__":
+    rospy.init_node("recorder")
 
-#     # Instantiate the recorder: it will open one .bag per topic and start subscribing.
-#     recorder = TopicBagRecorder(TOPICS)
+    # Instantiate the recorder: it will open one .bag per topic and start subscribing.
+    TOPICS = {
+            "/odometry/filtered": Odometry,
+            "/sensors/dvl/twist": TwistWithCovarianceStamped,
+            "/sensors/imu/data": Imu,
+            "/sensors/depth/z": Float64
+        }
+    recorder = TopicBagRecorder(TOPICS)
 
-#     rospy.loginfo("[bag_recorder] Recording started. Press Ctrl+C to stop and close bag files.")
-#     rospy.spin()
+    rospy.loginfo("[bag_recorder] Recording started. Press Ctrl+C to stop and close bag files.")
+    rospy.spin()

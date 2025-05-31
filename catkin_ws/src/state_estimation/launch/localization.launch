@@ -57,6 +57,8 @@
     </node>
 
     <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
+
+    
     
     <!-- Log the data of odometry -->
     <node pkg="rosbag" type="record" name="rosbag_odom"
@@ -67,5 +69,7 @@
     <node pkg="rosbag" type="record" name="rosbag_state_estimation"
       args="/state/pose"
     />
+
+    <node pkg="planner" type="recorder.py" name="recorder" output="screen" />
 
 </launch>
