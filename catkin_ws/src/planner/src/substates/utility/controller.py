@@ -33,7 +33,7 @@ from nav_msgs.msg import Odometry
 # === TF Tools ===
 import tf2_geometry_msgs
 from tf2_ros import Buffer, TransformListener
-from tf.transformations import quaternion_from_euler, quaternion_multiply
+from tf.transformations import quaternion_from_euler, quaternion_multiply, euler_from_quaternion
 
 # === Local Utilities ===
 # TODO: Clean the functions file. Most of the functions there aren't used. 
@@ -61,18 +61,12 @@ class Controller:
         print("starting controller")
         self.header_time = header_time
 
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
-        self.theta_x = 0.0
-        self.theta_y = 0.0
-        self.theta_z = 0.0
-        self.orientation = 0.0
+        self.x = None
+        self.y = None
+        self.z = None
+        self.orientation = None
         self.clients = []
 
-        rospy.Subscriber("/state/theta/x", Float64, lambda msg: setattr(self, "current_roll_value", msg.data), queue_size=1)
-        rospy.Subscriber("/state/theta/y", Float64, lambda msg: setattr(self, "current_pitch_value", msg.data), queue_size=1)
-        rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
 
         # Initialize pub/sub for quaternion controls in controls/quaternion_pid.py
         self.last_quat_error = None
@@ -139,10 +133,7 @@ class Controller:
             "/controls/server/state", StateQuaternionAction
         )
         self.clients.append(self.StateQuaternionStateClient)
-        # print("Waiting for StateQuaternionStateServer to come online...")
-        # self.StateQuaternionStateClient.wait_for_server()
 
-        # print("Controller waiting to receive state information...")
 
         # Check for missing state information in Controller
         # TODO: This while loop is broken. We intialize the attributes to 0.0 above. I tried initializing to None, the code gets stuck in the while loop forever.
@@ -152,9 +143,6 @@ class Controller:
                 self.x,
                 self.y,
                 self.z,
-                self.theta_x,
-                self.theta_y,
-                self.theta_z,
                 self.orientation,
             ]
             and not rospy.is_shutdown()
@@ -164,9 +152,6 @@ class Controller:
                 (self.x, "x"),
                 (self.y, "y"),
                 (self.z, "z"),
-                (self.theta_x, "theta x"),
-                (self.theta_y, "theta y"),
-                (self.theta_z, "theta z"),
                 (self.orientation, "quat."),
             ]:
                 if state_axis is None:
@@ -199,20 +184,14 @@ class Controller:
     def set_z(self, msg: Float64):
         self.z = msg.data
 
-    def set_theta_x(self, msg):
-        self.theta_x = msg.data
-
-    def set_theta_y(self, msg):
-        self.theta_y = msg.data
-
-    def set_theta_z(self, msg):
-        self.theta_z = msg.data
-
     def set_position(self, data):
         self.x = data.position.x
         self.y = data.position.y
         self.z = data.position.z
         self.orientation = data.orientation
+
+        q = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
+        self.current_roll_value, self.current_pitch_value, self.current_yaw_value = euler_from_quaternion(q)
 
     def wrap(self, err):
         """
@@ -340,7 +319,7 @@ class Controller:
                 if np.linalg.norm(err) < tol:
                     break
 
-            # Quit process if timeout.
+            # Send warning if timeout.
             if (rospy.Time.now() - start).to_sec() > timeout:
                 err_norm = np.linalg.norm(err)
                 rospy.logwarn("rotate timed out: %.1f error", err_norm)       
@@ -425,15 +404,6 @@ class Controller:
         goal_state = self.get_state_goal([x, y, z, w, wx, wy, wz], do_displace)
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    def stateEuler(self, pos, ang):
-        wx, wy, wz = ang
-        if wx is None:
-            wx = self.theta_x
-        if wy is None:
-            wy = self.theta_y
-        if wz is None:
-            wz = self.theta_z
-        self.state(pos, euler_to_quaternion(wx, wy, wz))
 
     def stateDeltaEuler(self, pos, ang):
         wx, wy, wz = ang
@@ -490,17 +460,6 @@ class Controller:
         return self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
         
 
-    # rotate by this amount (euler)
-    def rotateDeltaEuler(self, delta):
-        self.enable_pid("quat", True)
-        x, y, z = delta
-        qx, qy, qz, qw = euler_to_quaternion(x, y, z)
-        if qw < 0:
-            qx, qy, qz, qw = -qx, -qy, -qz, -qw
-        resp = self.rotateDelta([qw, qx, qy, qz], displace=True)
-        self.enable_pid("quat", False)
-        return resp
-
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         """
         Translate the AUV by a specified amount in x, y, z relative to the auv frame.
@@ -538,10 +497,16 @@ class Controller:
 
             rate.sleep()
 
-        # Disable PIDs
-        # self.enable_pid("x", False)
-        # self.enable_pid("y", False)
 
+    def semi_circle(self,r: float,d: float,lookahead: float):     
+        initial_x = self.x   
+
+    
+    
+    
+    
+    
+    
     def torque(self, vel):
         """
         Sets a torque value (x, y, z) and sets this as the goal in the effort server
@@ -670,34 +635,6 @@ class Controller:
             [None, None, None, final.w, final.x, final.y, final.z], do_not_displace
         )
         self.StateQuaternionStateClient.send_goal_and_wait(goal)
-
-    # TODO: Debug and verify with tests
-    def submergeBy(self, delta_z, tolerance=0.05, timeout=35.0):
-        rospy.sleep(2.0)
-
-        # compute final target
-        target_z = self.z + delta_z
-        rospy.loginfo(f"depth submergeBy: current={self.z:.2f} -> target={target_z:.2f}")
-
-        self.enable_pid(True)
-        self.z_setpoint_pub.publish(Float64(target_z))
-
-        rate = rospy.Rate(20)
-        start = rospy.Time.now()
-
-        #dive until within tolerance (or timeout)
-        while not rospy.is_shutdown() and (rospy.Time.now() - start).to_sec() < timeout:
-            err_z = abs(self.z - target_z)
-            rospy.loginfo_throttle(1, f"depth error = {err_z:.3f}")
-            if err_z < tolerance:
-                rospy.loginfo("depth reached target depth")
-                break
-            rate.sleep()
-
-        rospy.loginfo(f"[depth] holding at {target_z:.2f} m to fight buoyancy")
-        while not rospy.is_shutdown():
-            self.z_setpoint_pub.publish(Float64(target_z))
-            rate.sleep()
 
     # TODO: Debug and verify with tests
     def open_claw(self):
