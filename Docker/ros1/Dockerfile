@@ -1,11 +1,10 @@
-FROM dustynv/pytorch:2.1-r35.3.1
+FROM dustynv/pytorch:2.1-r35.4.1
 
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
     dirmngr \
     gnupg2 \
     && rm -rf /var/lib/apt/lists/*
-
 
 #key expired? -> fetch the current key and store it in /usr/share/keyrings
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
@@ -15,7 +14,6 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros1-archive-keyring.gpg] \
     http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" \
     > /etc/apt/sources.list.d/ros1.list
-
 
 
 # setup environment
@@ -69,6 +67,7 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-cv-bridge \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
+    ros-noetic-rviz \
     ros-noetic-smach-ros \
     ros-noetic-usb-cam \
     ros-noetic-robot-localization
@@ -105,6 +104,39 @@ RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noet
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update && apt-get install -y docker.io && pip install sklearn
+RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
+RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
+RUN apt update \
+    && apt install -y zstd
+
+# Create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
+RUN adduser jetson --disabled-password --gecos "" 
+
+# Download & Install ZED SDK
+WORKDIR /root/
+RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
+    chmod +x ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run
+
+# Run ZED Installer as Root (Safer) Then Change Ownership
+RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
+    chown -R jetson:jetson /usr/local/zed
+
+USER root
+WORKDIR /AUV-2025/catkin_ws
+
+RUN cd src && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-examples.git && \
+    cd .. && \
+    source /opt/ros/noetic/setup.bash && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    catkin build && \
+    source devel/setup.bash
+
+# Placed here for quick building prior to pool test, should be pushed up
+RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
+
+SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
