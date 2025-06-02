@@ -1,5 +1,7 @@
 FROM mcgillrobotics/auv_2025:base
 
+RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
+
 RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
     && pip install --no-cache-dir --upgrade numpy \
     && pip3 install scikit-learn

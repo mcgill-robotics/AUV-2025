@@ -2,31 +2,58 @@
 import rospy
 from substates.utility.controller import Controller
 from substates.utility.functions import countdown
+from substates.utility.yaw_controller import YawRamp
+import numpy as np
 
-rospy.init_node("pooltest")
+def main():
+    rospy.init_node("pooltest")
 
-controls = Controller(rospy.Time(0))
+    # Only need one Controller instantiation
+    controls = Controller(rospy.Time(0))
+    yaw_ctrl = YawRamp()
+    try:
+        rospy.loginfo("Executing square pattern movement…")
+        print("jdkns")
+        # 
+        #negative is CCW, thus positive is CW. Das ist top 
+        # Move forward 0.5 m in the local X direction
+        # controls.rotateDeltaEuler([0,0,90])
+        print("AAAAAAAAAAAAA")
 
-#controls.flatten()
-#controls.moveDelta([0,0,-0.3])
-#print("FLATTENING")
-# controls.freeze_pose()
-# controls.freeze_position()
-# controls.freeze_rotation()
+        # rospy.sleep(10)
+        controls.moveDeltaLocal(-0.5, 0, 0)
+        rospy.sleep(3)
 
-#controls.move([0, 0, -0.75])
-#controls.moveDelta([1, 0, 0])
-#controls.moveDeltaLocal([0, 0, -1])
-# controls.rotate([1, 0, 0, 0])
-# controls.rotateDelta([1, 0, 0, 0])
-#controls.rotateEuler([0, 0, 0])
-controls.rotateEuler([0, 0, 0])
-controls.moveDelta([0,0,-0.5])
+        print("shaa")
+        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+        rospy.sleep(3)
 
-controls.moveDeltaLocal([0.5,0,0])
-controls.moveDeltaLocal([0,0.5,0])
-controls.moveDeltaLocal([-0.5,0,0])
-controls.moveDeltaLocal([0,-0.5,0])
-while not rospy.is_shutdown():
-    continue
-controls.kill()
+        print("move")
+        controls.moveDeltaLocal(0, -0.5, 0)
+        rospy.sleep(3)
+
+        print("sha2")
+        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+        rospy.sleep(3)
+
+        print("BOom")
+
+
+
+
+
+        # Then strafe in local Y
+        #controls.moveDeltaLocal(0, -0.5, 0)
+ 
+        #controls.moveDeltaLocal(0, 0 , -0.6)
+        # rospy.sleep(10)
+
+        # …and so on if you uncomment the rest
+    except rospy.ROSInterruptException:
+        rospy.logerr("ROS Interrupt received. Stopping movements.")
+    finally:
+        rospy.loginfo("Shutting down controls…")
+        controls.kill()
+
+if __name__ == "__main__":
+    main()

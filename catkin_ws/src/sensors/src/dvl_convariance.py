@@ -2,7 +2,7 @@
 
 import rospy
 import serial
-from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped, TwistStamped, Pose
 from tf import transformations
 import numpy as np
 
