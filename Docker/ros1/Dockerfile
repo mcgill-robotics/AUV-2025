@@ -119,11 +119,10 @@ RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_T
 # Run ZED Installer as Root (Safer) Then Change Ownership
 RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
     chown -R jetson:jetson /usr/local/zed
-  chmod +x ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run
 
 # Run ZED Installer as Root (Safer) Then Change Ownership
 RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
-  chown -R jetson:jetson /usr/local/zed
+    chown -R jetson:jetson /usr/local/zed
 
 
 USER root
