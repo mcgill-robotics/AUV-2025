@@ -48,9 +48,6 @@ rospy.sleep(4.0)
 
 class ThrusterMapper:
     def __init__(self):
-        # Initialize current orientation [roll, pitch, yaw]
-        self.current_orientation = np.zeros(3)
-        self.odom_sub = rospy.Subscriber("/odometry/filtered", Odometry, self.orientation_cb)
         
         # Publishers for thruster microseconds and forces
         self.pub_us = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
@@ -64,11 +61,6 @@ class ThrusterMapper:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     
-    def orientation_cb(self, msg):
-        """Callback to update the current orientation from Odometry."""
-        q = msg.pose.pose.orientation
-        self.current_orientation = euler_from_quaternion([q.x, q.y, q.z, q.w])
-        rospy.loginfo(self.current_orientation[2] / math.pi * 180)
     
     def wrench_to_thrust(self, wrench_msg):
         """
