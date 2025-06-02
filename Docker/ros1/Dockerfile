@@ -10,11 +10,9 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
     | gpg --dearmor -o /usr/share/keyrings/ros1-archive-keyring.gpg
 
-# 2. register the repo, instructing APT to trust that key
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros1-archive-keyring.gpg] \
     http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" \
     > /etc/apt/sources.list.d/ros1.list
-
 
 # setup environment
 ENV LANG C.UTF-8

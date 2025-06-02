@@ -6,17 +6,13 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     gnupg2 \
     && rm -rf /var/lib/apt/lists/*
 
-
 #key expired? -> fetch the current key and store it in /usr/share/keyrings
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
     | gpg --dearmor -o /usr/share/keyrings/ros1-archive-keyring.gpg
 
-# 2. register the repo, instructing APT to trust that key
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros1-archive-keyring.gpg] \
     http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" \
     > /etc/apt/sources.list.d/ros1.list
-
-
 
 # setup environment
 ENV LANG C.UTF-8
@@ -105,6 +101,11 @@ RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noet
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update && apt-get install -y docker.io && pip install sklearn
+RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
+RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
+# Placed here for quick building prior to pool test, should be pushed up
+RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
+
+CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && roscore"]
 RUN echo "tmux" >> ~/.bashrc
