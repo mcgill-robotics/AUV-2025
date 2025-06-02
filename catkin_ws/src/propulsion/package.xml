@@ -9,7 +9,7 @@
 	  
   <maintainer email="dev@mcgillrobotics.com">McGill Robotics</maintainer>
   <license>GPLv3</license>
-  <url type="repository">https://github.com/mcgill-robotics/AUV-2020</url>
+  <url type="repository">https://github.com/mcgill-robotics/AUV-2025</url>
   <author email="vasily.fedotov@mail.mcgill.ca">Vasily Fedotov</author>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -19,11 +19,24 @@
   <build_depend>python3-numpy</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>nav_msgs</build_depend>
 
   <exec_depend>auv_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>python3-numpy</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
+
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-tf</exec_depend>
+
+  <export>
+    <rosdoc config="rosdoc.yaml"/>
+    <python_scripts>
+      <script>src/thrust_mapper.py</script>
+    </python_scripts>
+  </export>
 
 </package>

@@ -131,7 +131,7 @@ if __name__ == "__main__":
     yaw = None
     title = strftime("%d_%m_%Y_%H:%M:%S")
     bridge = CvBridge()
-    laditude_offset = rospy.get_param("~laditude_offset")
+    latitude_offset = rospy.get_param("~latitude_offset")
     longitude_offset = rospy.get_param("~longitude_offset")
     frame_rate = rospy.get_param("~frame_rate")
     data_dir = rospy.get_param("~output_dir")
@@ -144,15 +144,15 @@ if __name__ == "__main__":
         datum_name="WGS 84",
         area_of_interest=AreaOfInterest(
             west_lon_degree=longitude_offset,
-            south_lat_degree=laditude_offset,
+            south_lat_degree=latitude_offset,
             east_lon_degree=longitude_offset,
-            north_lat_degree=laditude_offset,
+            north_lat_degree=latitude_offset,
         ),
     )
     utm_crs = CRS.from_epsg(utm_crs_list[0].code)
     forwards = Transformer.from_crs("EPSG:4326", utm_crs, always_xy=True)
     backwards = Transformer.from_crs(utm_crs, "EPSG:4326", always_xy=True)
-    east_offset, north_offset = forwards.transform(laditude_offset, longitude_offset)
+    east_offset, north_offset = forwards.transform(latitude_offset, longitude_offset)
 
     pose_sub = rospy.Subscriber("/state/pose", Pose, pose_callback)
     image_sub = rospy.Subscriber("/vision/down_cam/image_raw", Image, image_callback)

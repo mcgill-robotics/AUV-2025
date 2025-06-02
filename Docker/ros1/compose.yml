@@ -1,0 +1,29 @@
+services: 
+  douglas:
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev
+      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: ../../../AUV-2025
+        target: /AUV-2025
+    image: "mcgillrobotics/auv_2025:jetson" 
+    privileged: true
+    environment:
+      - DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - UDEV=on
+      - ROS_MASTER_URI=http://localhost:11311
+    runtime: nvidia
+    command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
+    build: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    tty: true
+    network_mode: host

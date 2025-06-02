@@ -7,17 +7,16 @@ services:
       - type: bind
         source: ../../../AUV-2025
         target: /AUV-2025
-    image: "mcgillrobotics/auv_2025:jetson"
+    image: "mcgillrobotics/auv_2025:jetson" 
     privileged: true
+    container_name: douglas_noetic
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
-
+      - ROS_MASTER_URI=http://localhost:11311
     runtime: nvidia
-    command: bash -c ${OVERRIDE_COMMAND:-"tail -f /dev/null"}
-    network_mode: host
     build: .
     deploy:
       resources:
@@ -26,6 +25,8 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    tty: true
+    network_mode: host
 
   zed:
     volumes:
@@ -35,16 +36,14 @@ services:
       context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.zed
     privileged: true
+    container_name: zed_humble
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
       - UDEV=on
     runtime: nvidia
-    network_mode: host
-
-    command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash" 
-
+    command: bash -c "source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/local_setup.bash && ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i" 
     deploy:
       resources:
         reservations:
@@ -52,10 +51,14 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-
+    tty: true
+    
   bridge:
     image: "mcgillrobotics/auv_2025:rosbridge"
+    container_name: bridge_bridge
+    depends_on:
+      - douglas
+      - zed
     build:
       context: ../../../AUV-2025
       dockerfile: Docker/jetson/Dockerfile.bridge
@@ -64,4 +67,6 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - NVIDIA_VISIBLE_DEVICES=all
+      - ROS_MASTER_URI=http://localhost:11311
+    tty: true
     network_mode: host

@@ -1,45 +1,40 @@
 #include <ros/ros.h>
-#include <sstream>
-#include <std_msgs/Float64.h>
-#include <geometry_msgs/Vector3.h>
-#include <iostream>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-
-bool update_state_on_clock;
-ros::Time last_clock_msg;
+#include <geometry_msgs/TwistWithCovarianceStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 
 ros::Publisher pub_dvl;
-float variance;
+double variance;
 
-double RAD_TO_DEG = 180.0 / 3.14159265;
+void rawDvlCb(const geometry_msgs::TwistStamped::ConstPtr &msg)
+{
+    geometry_msgs::TwistWithCovarianceStamped out;
+    out.header = msg->header;
+    out.header.frame_id = "dvl"; // check auv if not work, should mathc your EKF base_link_frame
+    out.twist.twist = msg->twist;
 
-void odom_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
+    // Zero all covariances…
+    out.twist.covariance.assign(36, 0.0);
+    // then set x, y, z variances
+    out.twist.covariance[0] = variance;  // var(linear.x)
+    out.twist.covariance[7] = variance;  // var(linear.y)
+    out.twist.covariance[14] = variance; // var(linear.z)
 
-    geometry_msgs::PoseWithCovarianceStamped new_msg = *msg;
-    new_msg.header.frame_id = "dvl";
-    new_msg.pose.covariance[18] = variance;
-    new_msg.pose.covariance[24] = variance;
-    new_msg.pose.covariance[30] = variance;
-
-
-    pub_dvl.publish(new_msg);
-
+    pub_dvl.publish(out);
 }
 
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "dvl_republish");
+    ros::NodeHandle nh("~");
 
-int main(int argc, char **argv) {
-    ros::init(argc,argv,"dvl_republish");
-    ros::NodeHandle n;
+    nh.param("variance");
 
-  
+    // Advertise the _with_covariance message
+    pub_dvl = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/sensors/dvl/twist", 10);
 
-    ros::Subscriber odom_sub = n.subscribe("/sensors/dvl/raw",100,&odom_cb);
-
-  
-
-    pub_dvl = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/sensors/dvl/pose",1);   
-    ros::param::get("~variance",variance);
-
+    // Subscribe to your raw DVL velocities
+    ros::Subscriber sub = nh.subscribe<geometry_msgs::TwistStamped>(
+        "/sensors/dvl/raw", 10, rawDvlCb);
 
     ros::spin();
     return 0;

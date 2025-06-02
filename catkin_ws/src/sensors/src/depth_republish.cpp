@@ -1,47 +1,56 @@
 #include <ros/ros.h>
-#include <sstream>
 #include <std_msgs/Float64.h>
-#include <geometry_msgs/Vector3.h>
-#include <iostream>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
+// Node that republishes a depth (Float64) reading as a PoseWithCovarianceStamped on /sensors/depth/pose
 
-bool update_state_on_clock;
-ros::Time last_clock_msg;
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "depth_republisher");
+    ros::NodeHandle nh;
+    ros::NodeHandle pnh("~"); // private
 
-ros::Publisher pub_pose;
-float variance;
+    // Load variance parameter (default to 0.01 if not set)
+    double variance;
+    pnh.param("variance", variance, 0.01);
 
-double RAD_TO_DEG = 180.0 / 3.14159265;
+    // Publisher for the depth as a PoseWithCovarianceStamped
+    ros::Publisher pub_pose = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(
+        "/sensors/depth/pose", 10);
 
-void broad_cast_pose(const geometry_msgs::Pose& msg);
+    // Callback: convert Float64 depth to PoseWithCovarianceStamped
+    auto depth_cb = [&](const std_msgs::Float64::ConstPtr &msg)
+    {
+        geometry_msgs::PoseWithCovarianceStamped pose_msg;
+        pose_msg.header.stamp = ros::Time::now();
+        // Frame must match your EKF base_link_frame ("auv")
+        pose_msg.header.frame_id = "auv";
 
-void odom_cb(const std_msgs::Float64::ConstPtr& msg) {
+        // Position: only Z changes (invert sign if your sensor convention requires)
+        pose_msg.pose.pose.position.x = 0.0;
+        pose_msg.pose.pose.position.y = 0.0;
+        pose_msg.pose.pose.position.z = -msg->data;
 
-    geometry_msgs::PoseWithCovarianceStamped pose_msg;
-    pose_msg.pose.pose.position.z = msg->data *-1;
-    pose_msg.pose.covariance[2*6 + 2] = variance; //double check this later
-    pose_msg.header.frame_id = "depth";
-    pose_msg.header.stamp = ros::Time::now();
+        // Orientation: identity quaternion (no rotation)
+        pose_msg.pose.pose.orientation.x = 0.0;
+        pose_msg.pose.pose.orientation.y = 0.0;
+        pose_msg.pose.pose.orientation.z = 0.0;
+        pose_msg.pose.pose.orientation.w = 1.0;
 
-    pub_pose.publish(pose_msg);
+        // Initialize all covariances to zero
+        for (size_t i = 0; i < 36; ++i)
+        {
+            pose_msg.pose.covariance[i] = 0.0;
+        }
+        // Set variance on Z-axis (index 2*6 + 2 = 14)
+        pose_msg.pose.covariance[14] = variance;
 
-}
+        pub_pose.publish(pose_msg);
+    };
 
-
-int main(int argc, char **argv) {
-    ros::init(argc,argv,"depth_republish");
-    ros::NodeHandle n;
-
-  
-
-    ros::Subscriber odom_sub = n.subscribe("/sensors/depth/z",100,&odom_cb);
-
-  
-
-    pub_pose = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/sensors/depth/pose",1);   
-    ros::param::get("~variance",variance);
-
+    // Subscriber for the raw depth value
+    ros::Subscriber sub_depth = nh.subscribe<std_msgs::Float64>(
+        "/sensors/depth/z", 10, depth_cb);
 
     ros::spin();
     return 0;

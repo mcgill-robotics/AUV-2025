@@ -1,6 +1,7 @@
 <launch>
     <arg name="sim" default="false" />
 	<arg name="actions" default="false" />
+	
 	<group unless="$(arg actions)">
 		<group unless="$(arg sim)"> 
 			<node name="z_pid" pkg="pid" type="controller" >
@@ -58,11 +59,13 @@
 				<param name="windup_limit" value="30" />
 			</node>
 		</group>
+
+		<!-- ====== SIM SECTION START ====== -->
 		<group if="$(arg sim)">  
 			<node name="z_pid" pkg="pid" type="controller" >
 				<param name="Kp" value="20" />
 				<param name="Ki" value="4.0" />
-				<param name="Kd" value="5" />
+				<param name="Kd" value="2.0" />
 				<param name="max_loop_frequency" value="100.0" />
 				<param name="min_loop_frequency" value="100.0" />
 
@@ -86,6 +89,9 @@
 			</node>
 
 			<node name="x_pid" pkg="pid" type="controller" >
+				<param name="frame_id" value="enu"/>
+				<param name="auto_reset" value="true" />
+  				<param name="reset_integral_on_setpoint" value="true" />
 				<param name="Kp" value="5" /> 
 				<param name="Ki" value="0" />
 				<param name="Kd" value="0.1" />
@@ -140,9 +146,9 @@
 		</node>
 
 		<node name="x_pid" pkg="pid" type="controller" >
-			<param name="Kp" value="16.6" /> 
-			<param name="Ki" value="0.15" />
-			<param name="Kd" value="18" />
+			<param name="Kp" value="20.6" /> 
+			<param name="Ki" value="0.12" />
+			<param name="Kd" value="20" />
 			<param name="upper_limit" value="14" />
 			<param name="lower_limit" value="-6" />
 			<param name="windup_limit" value="6" />
@@ -162,4 +168,6 @@
 			<param name="windup_limit" value="30" />
 		</node>
 	</group>
+
+		<!-- ====== SIM SECTION END ====== -->
 </launch>

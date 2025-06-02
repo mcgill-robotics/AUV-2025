@@ -6,8 +6,6 @@ from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStam
 from tf import transformations
 import numpy as np
 
-RAD_PER_DEG = np.pi / 180.0
-
 def hamilton_product(q1,q2):
     w1,x1,y1,z1 = q1 #define first rotation
     w2,x2,y2,z2 = q2 #define second rotation
@@ -72,7 +70,7 @@ def parse_dead_reckon_report(line, quat_variance):
     report.pose.pose.position.y = y
     report.pose.pose.position.z = z
 
-    quaternion = transformations.quaternion_from_euler(roll * RAD_PER_DEG, pitch * RAD_PER_DEG, yaw * RAD_PER_DEG)
+    quaternion = transformations.quaternion_from_euler(np.radians(roll), np.radians(pitch) , np.radians(yaw))
     correction_quat = [0, 1, 0, 0]  #flip about x
     corrected_quat = hamilton_product(quaternion, correction_quat)
 
