@@ -37,12 +37,6 @@ from tf.transformations import quaternion_from_euler, quaternion_multiply, euler
 
 # === Local Utilities ===
 # TODO: Clean the functions file. Most of the functions there aren't used. 
-from .functions import (
-    vectorToYawDegrees,
-    euler_to_quaternion,
-)
-
-
 from .recorder import TopicBagRecorder
 
 # predefined bools so we don't have to write these out everytime we want to get a new goal
@@ -83,10 +77,7 @@ class Controller:
         self.tf_header = Header(frame_id="map")
  
         # Initialize state updates for the controller from state_estimation
-        self.sub_x = rospy.Subscriber("/state/x", Float64, self.set_x, queue_size=3)
-        self.sub_y = rospy.Subscriber("/state/y", Float64, self.set_y, queue_size=3)
-        self.sub_z = rospy.Subscriber("/state/z", Float64, self.set_z, queue_size=3)
-        self.sub_pose = rospy.Subscriber("/state/pose", Pose, self.set_position, queue_size=3)
+        self.sub_pose = rospy.Subscriber("/state/pose", Pose, self.set_pose, queue_size=3)
 
         # Initialize PID enable topic publishers
         self.pub_x_enable = rospy.Publisher("/controls/pid/x/enable", Bool, queue_size=1)
@@ -136,7 +127,6 @@ class Controller:
 
 
         # Check for missing state information in Controller
-        # TODO: This while loop is broken. We intialize the attributes to 0.0 above. I tried initializing to None, the code gets stuck in the while loop forever.
         while (
             None
             in [
@@ -175,16 +165,8 @@ class Controller:
         self.kill()
 
     # Setters
-    def set_x(self, msg: Float64):
-        self.x = msg.data
 
-    def set_y(self, msg: Float64):
-        self.y = msg.data
-
-    def set_z(self, msg: Float64):
-        self.z = msg.data
-
-    def set_position(self, data):
+    def set_pose(self, data):
         self.x = data.position.x
         self.y = data.position.y
         self.z = data.position.z
@@ -445,20 +427,6 @@ class Controller:
 
         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
 
-    # rotate by this amount (quaternion)
-    def rotateDelta(self, delta, displace=True):
-        if any(x is None for x in delta) and any(x is not None for x in delta):
-            raise ValueError(
-                "Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
-                    delta
-                )
-            )
-        self.enable_pid("quat", True)
-        w, x, y, z = delta
-        goal_state = self.get_state_goal([None, None, None, w, x, y, z], displace)
-        self.enable_pid("quat", False)
-        return self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
-        
 
     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
         """
@@ -498,6 +466,7 @@ class Controller:
             rate.sleep()
 
 
+    #TODO: write this method that makes the AUV go in a semi-circle maneuver for Pre-Qualification. 
     def semi_circle(self,r: float,d: float,lookahead: float):     
         initial_x = self.x   
 
