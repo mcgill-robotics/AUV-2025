@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="planner" name="prequal_controller" type="pre_qual.py" respawn="False" output="screen"/>
+</launch>
