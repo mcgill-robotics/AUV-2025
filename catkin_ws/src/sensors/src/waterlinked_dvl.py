@@ -57,9 +57,9 @@ def parse_dead_reckon_report(line, quat_variance):
     tokens = line.split(",")
     time_stamp = float(tokens[1])
     x = float(tokens[2])
-    y = float(tokens[3])
-    z = float(tokens[4])
-    std = float(tokens[5])
+    y = float(tokens[3])        # distance in y direction (in meters)
+    z = float(tokens[4])        # distance in downward direction (in meters)
+    std = float(tokens[5])      # standard deviation (in meters)
     roll = float(tokens[6])
     pitch = float(tokens[7])
     yaw = float(tokens[8])
@@ -98,7 +98,6 @@ def main():
     port = rospy.get_param("~port")
     baudrate = rospy.get_param("~baudrate")
     quat_variance = rospy.get_param("~quat_variance")
-
 
     try:
         conn = serial.Serial(port)
