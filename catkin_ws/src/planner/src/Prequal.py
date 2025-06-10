@@ -56,7 +56,7 @@ def main():
     controls = Controller(rospy.Time(0))    
 
     try:
-        Path, waypoints = generate_trajectory(d = 2.0, r = 0.75)
+        Path, waypoints = generate_trajectory(d = 2.0, r = 0.75) # d and r to be adjusted visually in the pool. 
         controls.LoS(Path, 0.5)
 
     except rospy.ROSInterruptException:

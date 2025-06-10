@@ -5,6 +5,8 @@ import math
 from math import sin, cos
 import numpy as np
 from scipy.spatial import KDTree
+from scipy.interpolate import BSpline
+
 
 # === ROS Core ===
 import rospy
