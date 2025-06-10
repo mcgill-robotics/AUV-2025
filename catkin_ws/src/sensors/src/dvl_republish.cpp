@@ -32,10 +32,6 @@ int main(int argc, char **argv)
     // Advertise the _with_covariance message
     pub_dvl = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/sensors/dvl/twist", 10);
 
-    // Subscribe to your raw DVL velocities
-    ros::Subscriber sub = nh.subscribe<geometry_msgs::TwistStamped>(
-        "/sensors/dvl/raw", 10, rawDvlCb);
-
     ros::spin();
     return 0;
 }
