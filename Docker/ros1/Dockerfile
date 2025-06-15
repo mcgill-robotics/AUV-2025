@@ -69,7 +69,9 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-smach-ros \
     ros-noetic-usb-cam \
     ros-noetic-robot-localization \
-    ros-noetic-foxglove-bridge
+    ros-noetic-foxglove-bridge \
+    ros-noetic-xacro \
+    ros-noetic-robot-state-publisher
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
