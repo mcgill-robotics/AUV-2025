@@ -58,8 +58,8 @@ thruster_mount_dirs = [ #rep physical orientation of thrusters
     1,   # HEAVE_BACK_RIGHT (CCW)
     1   # BACK_RIGHT (CW)
 ]
-#1 is forward, -1 is backward, 0.5 is half thrust in specific direction
-#If force is exactly zero, returns 1500 μs (neutral signal, no movement).
+# 1 is forward, -1 is backward, 0.5 is half thrust in specific direction
+# If force is exactly zero, returns 1500 μs (neutral signal, no movement).
 
 
 
@@ -77,18 +77,18 @@ def force_to_pwm(force, coeffs_left, coeffs_right):
     Returns:
         int: PWM signal in microseconds, clipped to [1100, 1900] µs (ESC input range)
     """
-    if abs(force) <= deadband_eps:
+    if abs(1* force) <= deadband_eps:
         # Linear interpolation within deadband to ensure smooth transition
         pwm_pos_eps = np.polyval(coeffs_right, deadband_eps)
         pwm_neg_eps = np.polyval(coeffs_left, -deadband_eps)
-        if force >= 0:
-            pwm = 1500 + (force / deadband_eps) * (pwm_pos_eps - 1500)
+        if 1 * force >= 0:
+            pwm = 1500 + (1 * force / deadband_eps) * (pwm_pos_eps - 1500)
         else:
-            pwm = 1500 + (force / deadband_eps) * (1500 - pwm_neg_eps)
-    elif force < -deadband_eps:
-        pwm = np.polyval(coeffs_left, force)
+            pwm = 1500 + (1 * force / deadband_eps) * (1500 - pwm_neg_eps)
+    elif 1 * force < -deadband_eps:
+        pwm = np.polyval(coeffs_left, 1 * force)
     else:
-        pwm = np.polyval(coeffs_right, force)
+        pwm = np.polyval(coeffs_right, 1 * force)
 
     return int(np.clip(pwm, 1100, 1900))
 

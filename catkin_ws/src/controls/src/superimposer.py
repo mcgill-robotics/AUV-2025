@@ -10,6 +10,9 @@ from tf2_ros import Buffer, TransformListener
 
 
 class Superimposer:
+    """
+    Manages and superimposes force inputs in both the global and local reference frames.
+    """
     def __init__(self):
         # forces in robot reference frame
         self.surge = Superimposer.Degree_Of_Freedom("/controls/force/surge")
@@ -28,24 +31,22 @@ class Superimposer:
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer)
 
-        # avoid creating a new Header object for every update
+        # avoid creating a new Header object for every update and just update the time
         # just update the time
-        self.header = Header(frame_id="auv_rotation")
+        self.header = Header(frame_id="auv")
 
         self.pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
 
     def update_effort(self, _):
         """
-        superimposer keeps track of force inputs expressed in both
-        the global, and AUV reference frame. This provides the ability
-        for nodes publishing to superimposer to express inputs in either
+        Superimposer keeps track of force inputs expressed in both the global, and AUV reference frame. 
+        
+        This provides the ability for nodes publishing to superimposer to express inputs in either
         reference frame (ie. to go down, the node would publish to 'global_z'
         without having to take into account the orientation of the AUV)
         The 'global' force inputs are translated into the AUV reference frame
-        and superimposed with the 'AUV frame' inputs prior to updating
-        effort
+        and superimposed with the 'AUV frame' inputs prior to updating effort.
         """
-
         surge = self.surge.val
         sway = self.sway.val
         heave = self.heave.val
@@ -53,8 +54,9 @@ class Superimposer:
         pitch = self.pitch.val
         yaw = self.yaw.val
 
+        # Obtains the global and relative forces to superimpose
         force_global = Vector3(self.global_x.val, self.global_y.val, self.global_z.val)
-        force_auv = Vector3(surge, sway, heave)
+        force_auv = Vector3(surge, sway, heave)     
         torque_auv = Vector3(roll, pitch, yaw)
 
         self.header.stamp = rospy.Time.now()
@@ -64,7 +66,7 @@ class Superimposer:
             # convert global force vector into robot reference frame
             # TODO use message filters to assure tf/data is available
             trans = self.tf_buffer.lookup_transform(
-                "auv_rotation", "world_rotation", rospy.Time(0)
+                "auv", "odom", rospy.Time.now()
             )
 
             force_global_transformed = tf2_geometry_msgs.do_transform_vector3(
@@ -76,25 +78,23 @@ class Superimposer:
                 force_auv.x + force_global_transformed.vector.x,
                 force_auv.y + force_global_transformed.vector.y,
                 force_auv.z + force_global_transformed.vector.z,
-            )
+            )   
 
-        except Exception as e:
-            # TODO: only for specific exceptions where no transforms buffered
-            # assume global and AUV reference frames are colinear
-            # (AUV is not rotated), add the vectors without transform
+        except Exception as e:      # (AUV is not rotated), add the vectors without transform
             force_auv = Vector3(
                 force_auv.x + self.global_x.val,
                 force_auv.y + self.global_y.val,
                 force_auv.z + self.global_z.val,
             )
 
-            # print("exception ---", type(e), e)
-
         # publish superimposed effort
         effort = Wrench(force=force_auv, torque=torque_auv)
         self.pub_effort.publish(effort)
 
     class Degree_Of_Freedom:
+        """
+        Defines a degree of freedom which subscribes to a topic and stores the data as a field.
+        """
         def __init__(self, sub_topic):
             self.val = 0.0
             rospy.Subscriber(sub_topic, Float64, self.set_cb)

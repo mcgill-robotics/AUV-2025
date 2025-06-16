@@ -1,0 +1,2907 @@
+diff --git a/.github/workflows/docker_build_ros1.yml b/.github/workflows/docker_build.yml
+similarity index 96%
+rename from .github/workflows/docker_build_ros1.yml
+rename to .github/workflows/docker_build.yml
+index 542a338c..20807540 100644
+--- a/.github/workflows/docker_build_ros1.yml
++++ b/.github/workflows/docker_build.yml
+@@ -1,4 +1,4 @@
+-name: Docker Compose Build 'ros1' on ARM
++name: Docker Compose Build on ARM
+ 
+ on:
+   push:
+diff --git a/.github/workflows/docker_build_jetson.yml b/.github/workflows/docker_build_jetson.yml
+deleted file mode 100644
+index 46895385..00000000
+--- a/.github/workflows/docker_build_jetson.yml
++++ /dev/null
+@@ -1,41 +0,0 @@
+-name: Docker Compose Build 'jetson' on ARM
+-
+-on:
+-  push:
+-    branches: [noetic]
+-  pull_request:
+-    branches: [noetic]
+-  workflow_dispatch:
+-  schedule:
+-    - cron: '0 8 * * *'  # 4 AM Montreal time
+-
+-jobs:
+-  docker-arm-ci:
+-    runs-on: ubuntu-22.04-arm
+-
+-    steps:
+-      - name: Checkout repository
+-        uses: actions/checkout@v3
+-
+-      - name: Install Docker
+-        run: |
+-          sudo apt-get update
+-          sudo apt-get install -y ca-certificates curl
+-          sudo install -m 0755 -d /etc/apt/keyrings
+-          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+-          sudo chmod a+r /etc/apt/keyrings/docker.asc
+-          echo \
+-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+-            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+-          sudo apt-get update
+-          sudo apt-get install -y \
+-            docker-ce \
+-            docker-ce-cli \
+-            containerd.io \
+-            docker-buildx-plugin \
+-            docker-compose-plugin
+-      - name: Build Docker Compose file
+-        run: |
+-          cd Docker/jetson
+-          docker compose build
+diff --git a/.gitignore b/.gitignore
+index b98e08f0..03556546 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -25,6 +25,8 @@ catkin_ws/.catkin_tools/
+ *.png
+ *.jpg
+ *.bag
++*.gv
++
+ *unity.lock
+ 
+ #testing files
+diff --git a/Docker/base/Dockerfile b/Docker/base/Dockerfile
+index ca69b412..81ce2f10 100644
+--- a/Docker/base/Dockerfile
++++ b/Docker/base/Dockerfile
+@@ -9,8 +9,9 @@ ENV LANG en_US.UTF-8
+ ENV LANGUAGE en_US:en     
+ 
+ # Install all needed deps and compile the mesa llvmpipe driver from source.
+-# Delete previous GPG key retrieval
+ RUN apt-get update && apt-get install -y wget \
++    && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
++    && wget http://packages.ros.org/ros.key -O - | apt-key add - \
+     && apt-get update \
+     && apt-get install -y python3-catkin-tools python3-pip python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+     && apt-get install -y --no-install-recommends \
+diff --git a/Docker/ros1/display.rules b/Docker/ros1/display.rules
+index e59295a8..15d546ea 100644
+--- a/Docker/ros1/display.rules
++++ b/Docker/ros1/display.rules
+@@ -1 +1 @@
+-SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0483", ATTRS{serial}=="13942270", SYMLINK+="display"
++SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0483", ATTRS{serial}=="16184740", SYMLINK+="display"
+diff --git a/Docker/ros1/dvl.rules b/Docker/ros1/dvl.rules
+index e3569991..34c1804a 100644
+--- a/Docker/ros1/dvl.rules
++++ b/Docker/ros1/dvl.rules
+@@ -1 +1 @@
+-SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0483", ATTRS{serial}=="15945630", SYMLINK+="dvl"
++SUBSYSTEM=="tty", KERNEL=="ttyUSB[0-9]*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="0001", SYMLINK+="dvl"
+diff --git a/Docker/sim/Dockerfile b/Docker/sim/Dockerfile
+index 2da35b77..2b0774df 100644
+--- a/Docker/sim/Dockerfile
++++ b/Docker/sim/Dockerfile
+@@ -1,17 +1,5 @@
+ FROM mcgillrobotics/auv_2025:base
+ 
+-# Fix GPG key errors from foxglove installation
+-RUN sudo rm /etc/apt/sources.list.d/ros-latest.list && sudo rm /etc/apt/sources.list.d/ros1-latest.list
+-RUN sudo apt update
+-RUN sudo apt install -y curl gnupg2 lsb-release
+-RUN echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/ros1-latest.list
+-RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+-RUN sudo apt update
+-RUN sudo apt install -y software-properties-common
+-RUN sudo add-apt-repository universe
+-RUN sudo apt update
+-#
+-
+ RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
+ 
+ RUN pip3 install --no-cache-dir numpy-quaternion ultralytics \
+diff --git a/catkin_ws/.catkin_workspace b/catkin_ws/.catkin_workspace
+new file mode 100644
+index 00000000..52fd97e7
+--- /dev/null
++++ b/catkin_ws/.catkin_workspace
+@@ -0,0 +1 @@
++# This file currently only serves to mark the location of a catkin workspace for tool integration
+diff --git a/catkin_ws/src/CMakeLists.txt b/catkin_ws/src/CMakeLists.txt
+new file mode 120000
+index 00000000..20168168
+--- /dev/null
++++ b/catkin_ws/src/CMakeLists.txt
+@@ -0,0 +1 @@
++/opt/ros/noetic/share/catkin/cmake/toplevel.cmake
+\ No newline at end of file
+diff --git a/catkin_ws/src/controls/launch/pid.launch b/catkin_ws/src/controls/launch/pid.launch
+index fa0ba7ad..e9bc2d0e 100644
+--- a/catkin_ws/src/controls/launch/pid.launch
++++ b/catkin_ws/src/controls/launch/pid.launch
+@@ -53,9 +53,9 @@
+ 			</node>
+ 
+ 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
+-				<param name="Kp" value="7.0" />
+-				<param name="Ki" value="0.37" />
+-				<param name="Kd" value="0.8"/>
++				<param name="Kp" value="3.5" />
++				<param name="Ki" value="0.38" />
++				<param name="Kd" value="0.9"/>
+ 				<param name="windup_limit" value="30" />
+ 			</node>
+ 		</group>
+@@ -76,7 +76,7 @@
+ 			</node>
+ 			
+ 			<node name="y_pid" pkg="pid" type="controller" >
+-				<param name="Kp" value="5" /> 
++				<param name="Kp" value="6" /> 
+ 				<param name="Ki" value="0" />
+ 				<param name="Kd" value="0.1" />
+ 				<param name="max_loop_frequency" value="100.0" />
+@@ -92,7 +92,7 @@
+ 				<param name="frame_id" value="enu"/>
+ 				<param name="auto_reset" value="true" />
+   				<param name="reset_integral_on_setpoint" value="true" />
+-				<param name="Kp" value="5" /> 
++				<param name="Kp" value="6" /> 
+ 				<param name="Ki" value="0" />
+ 				<param name="Kd" value="0.1" />
+ 				<param name="max_loop_frequency" value="100.0" />
+@@ -105,9 +105,9 @@
+ 			</node>
+ 
+ 			<node name="quaternion_pid" pkg="controls" type="quaternion_pid.py" respawn="True" output="screen">
+-				<param name="Kp" value="5" />
+-				<param name="Ki" value="0" />
+-				<param name="Kd" value="0.1" />
++				<param name="Kp" value="0.48" />
++				<param name="Ki" value="0.0" />
++				<param name="Kd" value="0.25" />
+ 				<param name="windup_limit" value="30" />
+ 			</node>
+ 		</group>
+diff --git a/catkin_ws/src/controls/src/quaternion_pid.py b/catkin_ws/src/controls/src/quaternion_pid.py
+index 61d4a4fb..c4f38fd6 100755
+--- a/catkin_ws/src/controls/src/quaternion_pid.py
++++ b/catkin_ws/src/controls/src/quaternion_pid.py
+@@ -14,17 +14,18 @@ class QuaternionPID:
+         self.Kp = rospy.get_param("~Kp")
+         self.Ki = rospy.get_param("~Ki")
+         self.Kd = rospy.get_param("~Kd")
++        self.windup_limit = rospy.get_param("~windup_limit")    # windup_limit is the accumulation limit for the integral
+ 
+-        self.windup_limit = rospy.get_param("~windup_limit")
+-
+-        self.body_quat = np.quaternion(1, 0, 0, 0)
+-        self.angular_velocity = np.array([0.0, 0.0, 0.0])
+-        self.goal_quat = None
++        self.body_quat = np.quaternion(1, 0, 0, 0)              # quaternion orientation of the body
++        self.angular_velocity = np.array([0.0, 0.0, 0.0])       # angular velocity from the PID
++        self.goal_quat = None                                   # goal quaternion orientation
+         self.enabled = False
+         self.previous_time = rospy.get_time()
+-        self.torque_integral = np.array([0.0, 0.0, 0.0])
++        self.torque_integral = np.array([0.0, 0.0, 0.0])        # torque field used for integral accumulation during computing
+ 
+-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.set_pose)
++        self.pose_sub = rospy.Subscriber(
++            "/state/pose", Pose, self.set_pose
++        )
+         self.angular_velocity_sub = rospy.Subscriber(
+             "/state/angular_velocity", Vector3, self.set_ang_vel
+         )
+@@ -34,15 +35,17 @@ class QuaternionPID:
+         self.enable_sub = rospy.Subscriber(
+             "/controls/pid/quat/enable", Bool, self.set_enabled
+         )
+-
+-        self.pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
++        self.pub_roll = rospy.Publisher(
++            "/controls/torque/roll", Float64, queue_size=1
++        )
+         self.pub_pitch = rospy.Publisher(
+             "/controls/torque/pitch", Float64, queue_size=1
+         )
+-        self.pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+-
++        self.pub_yaw = rospy.Publisher(
++            "/controls/torque/yaw", Float64, queue_size=1
++        )
+         self.pub_error_quat = rospy.Publisher(
+-            "/controls/pid/quat/error", Float64, queue_size=1
++            "/controls/pid/quat/error", Vector3, queue_size=1
+         )
+ 
+     def set_pose(self, data):
+@@ -84,7 +87,6 @@ class QuaternionPID:
+                 self.pub_roll.publish(roll_effort)
+                 self.pub_pitch.publish(pitch_effort)
+                 self.pub_yaw.publish(yaw_effort)
+-            rate.sleep()
+ 
+     def calculateQuatError(self, q1, q2):
+         return q1.inverse() * q2
+@@ -92,11 +94,18 @@ class QuaternionPID:
+     def controlEffort(self):
+         # Calculate error values
+         error_quat = self.calculateQuatError(self.body_quat, self.goal_quat)
+-        self.pub_error_quat.publish(error_quat.w)
+ 
+         if error_quat.w < 0:
+             error_quat = -error_quat
+ 
++        self.pub_error_quat.publish(Vector3(
++            x=error_quat.x,
++            y=error_quat.y,
++            z=error_quat.z
++            ))
++
++
++
+         curr_time = rospy.get_time()
+         delta_t = curr_time - self.previous_time
+         self.previous_time = curr_time
+@@ -141,4 +150,4 @@ if __name__ == "__main__":
+     rospy.init_node("quaternion_pid")
+     pid = QuaternionPID()
+     pid.execute()
+-    rospy.spin()
++    rospy.spin()
+\ No newline at end of file
+diff --git a/catkin_ws/src/controls/src/servers/state_quaternion_pid_server.py b/catkin_ws/src/controls/src/servers/state_quaternion_pid_server.py
+index 4695663b..fe5a7c7e 100644
+--- a/catkin_ws/src/controls/src/servers/state_quaternion_pid_server.py
++++ b/catkin_ws/src/controls/src/servers/state_quaternion_pid_server.py
+@@ -1,14 +1,14 @@
+ #!/usr/bin/env python3
+ 
++import actionlib
+ import rospy
++
++import numpy as np
+ from servers.base_server import BaseServer
++
+ from std_msgs.msg import Bool
+-import actionlib
+ from auv_msgs.msg import StateQuaternionAction
+ from geometry_msgs.msg import Quaternion
+-import numpy as np
+-import quaternion
+-
+ 
+ class StateQuaternionServer(BaseServer):
+     def __init__(self):
+@@ -62,133 +62,138 @@ class StateQuaternionServer(BaseServer):
+         my_goal = self.goal_id
+         self.cancelled = False
+         self.goal = goal
+-        if self.pose is not None:
+-            goal_position = [
+-                self.goal.pose.position.x,
+-                self.goal.pose.position.y,
+-                self.goal.pose.position.z,
+-            ]
+-            goal_quat = np.quaternion(
+-                self.goal.pose.orientation.w,
+-                self.goal.pose.orientation.x,
+-                self.goal.pose.orientation.y,
+-                self.goal.pose.orientation.z,
+-            )
+-            if self.goal.local.data:
+-                goal_position = self.local_to_global(goal_position)
+-            if self.goal.displace.data:
+-                goal_position, goal_quat = self.get_goal_after_displace(
+-                    goal_position, goal_quat
+-                )
+ 
+-            if self.goal.do_x.data:
+-                self.previous_goal_x = goal_position[0]
+-                self.pub_x_enable.publish(Bool(True))
+-                self.pub_surge.publish(0)
+-                self.pub_sway.publish(0)
+-                self.pub_x_pid.publish(goal_position[0])
+-            elif self.previous_goal_x is not None:
+-                goal_position[0] = self.previous_goal_x
+-                self.pub_x_enable.publish(Bool(True))
+-                self.pub_surge.publish(0)
+-                self.pub_sway.publish(0)
+-                self.pub_x_pid.publish(goal_position[0])
+-            else:
+-                goal_position[0] = None
++        if self.pose is None:
++            print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
++            return
++
++        # Extract target position & orientation
++        goal_position = [
++            goal.pose.position.x,
++            goal.pose.position.y,
++            goal.pose.position.z,
++        ]
++        goal_quat = np.quaternion(
++            goal.pose.orientation.w,
++            goal.pose.orientation.x,
++            goal.pose.orientation.y,
++            goal.pose.orientation.z,
++        )
++
++        # Apply local/global and displacement options
++        if goal.local.data:
++            goal_position = self.local_to_global(goal_position)
++        if goal.displace.data:
++            goal_position, goal_quat = self.get_goal_after_displace(
++                goal_position, goal_quat
++            )
+ 
+-            if self.goal.do_y.data:
+-                self.previous_goal_y = goal_position[1]
+-                self.pub_y_enable.publish(Bool(True))
+-                self.pub_surge.publish(0)
+-                self.pub_sway.publish(0)
+-                self.pub_y_pid.publish(goal_position[1])
+-            elif self.previous_goal_y is not None:
+-                goal_position[1] = self.previous_goal_y
+-                self.pub_y_enable.publish(Bool(True))
+-                self.pub_surge.publish(0)
+-                self.pub_sway.publish(0)
+-                self.pub_y_pid.publish(goal_position[1])
+-            else:
+-                goal_position[1] = None
++        # X axis
++        if goal.do_x.data:
++            self.previous_goal_x = goal_position[0]
++            self.pub_x_enable.publish(Bool(True))
++            self.pub_surge.publish(0)
++            self.pub_sway.publish(0)
++            self.pub_x_pid.publish(goal_position[0])
++        elif self.previous_goal_x is not None:      # Look for previous x goal if x is not found
++            goal_position[0] = self.previous_goal_x
++            self.pub_x_enable.publish(Bool(True))
++            self.pub_surge.publish(0)
++            self.pub_sway.publish(0)
++            self.pub_x_pid.publish(goal_position[0])
++        else:
++            goal_position[0] = None
+ 
+-            if self.goal.do_z.data:
+-                self.pub_z_enable.publish(Bool(True))
++        # Y axis
++        if goal.do_y.data:
++            self.previous_goal_y = goal_position[1]
++            self.pub_y_enable.publish(Bool(True))
++            self.pub_surge.publish(0)
++            self.pub_sway.publish(0)
++            self.pub_y_pid.publish(goal_position[1])
++        elif self.previous_goal_y is not None:      # Look for previous y goal is y is not found
++            goal_position[1] = self.previous_goal_y
++            self.pub_y_enable.publish(Bool(True))
++            self.pub_surge.publish(0)
++            self.pub_sway.publish(0)
++            self.pub_y_pid.publish(goal_position[1])
++        else:
++            goal_position[1] = None
+ 
+-                safe_goal = max(
+-                    min(goal_position[2], rospy.get_param("max_safe_goal_depth")),
+-                    rospy.get_param("min_safe_goal_depth"),
++        # Z axis with safety limits
++        if goal.do_z.data:
++            self.pub_z_enable.publish(Bool(True))
++            raw_z = goal_position[2]
++            min_z = rospy.get_param("min_safe_goal_depth")
++            max_z = rospy.get_param("max_safe_goal_depth")
++            safe_z = max(min(raw_z, max_z), min_z)
++            if safe_z != raw_z:
++                print(
++                    f"WARN: Goal changed from {raw_z}m to {safe_z}m for safety."
+                 )
+-                if safe_goal != goal_position[2]:
+-                    print(
+-                        "WARN: Goal changed from {}m to {}m for safety.".format(
+-                            goal_position[2], safe_goal
+-                        )
+-                    )
+-                self.previous_goal_z = safe_goal
+-                goal_position[2] = safe_goal
+-                self.pub_heave.publish(0)
+-                self.pub_z_pid.publish(safe_goal)
+-            elif self.previous_goal_z is not None:
+-                goal_position[2] = self.previous_goal_z
+-                self.pub_z_enable.publish(Bool(True))
+-                self.pub_heave.publish(0)
+-                self.pub_z_pid.publish(goal_position[2])
+-            else:
+-                goal_position[2] = None
++            self.previous_goal_z = safe_z
++            goal_position[2] = safe_z
++            self.pub_heave.publish(0)
++            self.pub_z_pid.publish(safe_z)
++        elif self.previous_goal_z is not None:
++            goal_position[2] = self.previous_goal_z
++            self.pub_z_enable.publish(Bool(True))
++            self.pub_heave.publish(0)
++            self.pub_z_pid.publish(goal_position[2])
++        else:
++            goal_position[2] = None
+ 
+-            if self.goal.do_quaternion.data:
+-                self.previous_goal_quat = goal_quat
+-                self.pub_quat_enable.publish(Bool(True))
+-                goal_msg = Quaternion()
+-                goal_msg.w = goal_quat.w
+-                goal_msg.x = goal_quat.x
+-                goal_msg.y = goal_quat.y
+-                goal_msg.z = goal_quat.z
+-                self.pub_quat_pid.publish(goal_msg)
+-            elif self.previous_goal_quat is not None:
+-                goal_quat = self.previous_goal_quat
+-                self.pub_quat_enable.publish(Bool(True))
+-                goal_msg = Quaternion()
+-                goal_msg.w = goal_quat.w
+-                goal_msg.x = goal_quat.x
+-                goal_msg.y = goal_quat.y
+-                goal_msg.z = goal_quat.z
+-                self.pub_quat_pid.publish(goal_msg)
+-            else:
+-                goal_quat = None
++        # Quaternion orientation
++        if goal.do_quaternion.data:
++            self.previous_goal_quat = goal_quat
++            self.pub_quat_enable.publish(Bool(True))
++            q_msg = Quaternion(
++                w=goal_quat.w,
++                x=goal_quat.x,
++                y=goal_quat.y,
++                z=goal_quat.z,
++            )
++            self.pub_quat_pid.publish(q_msg)
++        elif self.previous_goal_quat is not None:
++            pq = self.previous_goal_quat
++            self.pub_quat_enable.publish(Bool(True))
++            q_msg = Quaternion(
++                w=pq.w, x=pq.x, y=pq.y, z=pq.z
++            )
++            self.pub_quat_pid.publish(q_msg)
++        else:
++            goal_quat = None
+ 
+-            time_to_settle = rospy.get_param("time_to_settle")
+-            settle_check_loop_time = 1.0 / rospy.get_param("settle_check_rate")
++        # Wait for settle
++        settle_time = rospy.get_param("time_to_settle")
++        loop_dt = 1.0 / rospy.get_param("settle_check_rate")
++        settled = False
+ 
+-            settled = False
++        while (
++            not settled
++            and not self.cancelled
++            and my_goal == self.goal_id
++            and not rospy.is_shutdown()
++        ):
++            start_t = rospy.get_time()
+             while (
+-                not settled
+-                and not self.cancelled
++                not self.cancelled
+                 and my_goal == self.goal_id
++                and self.check_status(
++                    goal_position,
++                    goal_quat,
++                    goal.do_x.data,
++                    goal.do_y.data,
++                    goal.do_z.data,
++                    goal.do_quaternion.data,
++                )
+                 and not rospy.is_shutdown()
+             ):
+-                start = rospy.get_time()
+-                while (
+-                    not self.cancelled
+-                    and my_goal == self.goal_id
+-                    and self.check_status(
+-                        goal_position,
+-                        goal_quat,
+-                        self.goal.do_x.data,
+-                        self.goal.do_y.data,
+-                        self.goal.do_z.data,
+-                        self.goal.do_quaternion.data,
+-                    )
+-                    and not rospy.is_shutdown()
+-                ):
+-
+-                    if rospy.get_time() - start > time_to_settle:
+-                        settled = True
+-                        print("settled")
+-                        break
+-                    rospy.sleep(settle_check_loop_time)
+-        else:
+-            print("FAILURE, STATE SERVER DOES NOT HAVE A POSE")
++                if rospy.get_time() - start_t > settle_time:
++                    settled = True
++                    print("settled")
++                    break
++                rospy.sleep(loop_dt)
+ 
+         if not self.cancelled and my_goal == self.goal_id:
+             self.server.set_succeeded()
+diff --git a/catkin_ws/src/controls/src/superimposer.py b/catkin_ws/src/controls/src/superimposer.py
+index e8beb1f0..0cfe50e2 100755
+--- a/catkin_ws/src/controls/src/superimposer.py
++++ b/catkin_ws/src/controls/src/superimposer.py
+@@ -10,6 +10,9 @@ from tf2_ros import Buffer, TransformListener
+ 
+ 
+ class Superimposer:
++    """
++    Manages and superimposes force inputs in both the global and local reference frames.
++    """
+     def __init__(self):
+         # forces in robot reference frame
+         self.surge = Superimposer.Degree_Of_Freedom("/controls/force/surge")
+@@ -28,24 +31,22 @@ class Superimposer:
+         self.tf_buffer = Buffer()
+         TransformListener(self.tf_buffer)
+ 
+-        # avoid creating a new Header object for every update
++        # avoid creating a new Header object for every update and just update the time
+         # just update the time
+-        self.header = Header(frame_id="auv_rotation")
++        self.header = Header(frame_id="auv")
+ 
+         self.pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
+ 
+     def update_effort(self, _):
+         """
+-        superimposer keeps track of force inputs expressed in both
+-        the global, and AUV reference frame. This provides the ability
+-        for nodes publishing to superimposer to express inputs in either
++        Superimposer keeps track of force inputs expressed in both the global, and AUV reference frame. 
++        
++        This provides the ability for nodes publishing to superimposer to express inputs in either
+         reference frame (ie. to go down, the node would publish to 'global_z'
+         without having to take into account the orientation of the AUV)
+         The 'global' force inputs are translated into the AUV reference frame
+-        and superimposed with the 'AUV frame' inputs prior to updating
+-        effort
++        and superimposed with the 'AUV frame' inputs prior to updating effort.
+         """
+-
+         surge = self.surge.val
+         sway = self.sway.val
+         heave = self.heave.val
+@@ -53,8 +54,9 @@ class Superimposer:
+         pitch = self.pitch.val
+         yaw = self.yaw.val
+ 
++        # Obtains the global and relative forces to superimpose
+         force_global = Vector3(self.global_x.val, self.global_y.val, self.global_z.val)
+-        force_auv = Vector3(surge, sway, heave)
++        force_auv = Vector3(surge, sway, heave)     
+         torque_auv = Vector3(roll, pitch, yaw)
+ 
+         self.header.stamp = rospy.Time.now()
+@@ -64,7 +66,7 @@ class Superimposer:
+             # convert global force vector into robot reference frame
+             # TODO use message filters to assure tf/data is available
+             trans = self.tf_buffer.lookup_transform(
+-                "auv_rotation", "world_rotation", rospy.Time(0)
++                "auv", "odom", rospy.Time.now()
+             )
+ 
+             force_global_transformed = tf2_geometry_msgs.do_transform_vector3(
+@@ -76,25 +78,23 @@ class Superimposer:
+                 force_auv.x + force_global_transformed.vector.x,
+                 force_auv.y + force_global_transformed.vector.y,
+                 force_auv.z + force_global_transformed.vector.z,
+-            )
++            )   
+ 
+-        except Exception as e:
+-            # TODO: only for specific exceptions where no transforms buffered
+-            # assume global and AUV reference frames are colinear
+-            # (AUV is not rotated), add the vectors without transform
++        except Exception as e:      # (AUV is not rotated), add the vectors without transform
+             force_auv = Vector3(
+                 force_auv.x + self.global_x.val,
+                 force_auv.y + self.global_y.val,
+                 force_auv.z + self.global_z.val,
+             )
+ 
+-            # print("exception ---", type(e), e)
+-
+         # publish superimposed effort
+         effort = Wrench(force=force_auv, torque=torque_auv)
+         self.pub_effort.publish(effort)
+ 
+     class Degree_Of_Freedom:
++        """
++        Defines a degree of freedom which subscribes to a topic and stores the data as a field.
++        """
+         def __init__(self, sub_topic):
+             self.val = 0.0
+             rospy.Subscriber(sub_topic, Float64, self.set_cb)
+diff --git a/catkin_ws/src/planner/CMakeLists.txt b/catkin_ws/src/planner/CMakeLists.txt
+index a5d90ad4..6695bd7a 100644
+--- a/catkin_ws/src/planner/CMakeLists.txt
++++ b/catkin_ws/src/planner/CMakeLists.txt
+@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
+ 	vision
+ 	smach
+ 	tf
++	rosbag
+ )
+ 
+ catkin_package(	CATKIN_DEPENDS 
+@@ -21,3 +22,7 @@ catkin_package(	CATKIN_DEPENDS
+ 	tf
+ )
+ 
++catkin_install_python(
++  PROGRAMS src/substates/utility/recorder.py
++  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
++)
+diff --git a/catkin_ws/src/planner/launch/Prequal.launch b/catkin_ws/src/planner/launch/Prequal.launch
+new file mode 100644
+index 00000000..fb6a2d9c
+--- /dev/null
++++ b/catkin_ws/src/planner/launch/Prequal.launch
+@@ -0,0 +1,3 @@
++<launch>
++    <node pkg="planner" name="prequal_controller" type="Prequal.py" respawn="False" output="screen"/>
++</launch>
+diff --git a/catkin_ws/src/planner/package.xml b/catkin_ws/src/planner/package.xml
+index ec9de559..b6452549 100644
+--- a/catkin_ws/src/planner/package.xml
++++ b/catkin_ws/src/planner/package.xml
+@@ -29,4 +29,6 @@
+   <exec_depend>std_msgs</exec_depend>
+   <exec_depend>tf</exec_depend>
+ 
++  <exec_depend>rosbag</exec_depend>
++
+ </package>
+diff --git a/catkin_ws/src/planner/src/Prequal.py b/catkin_ws/src/planner/src/Prequal.py
+new file mode 100644
+index 00000000..72260fc0
+--- /dev/null
++++ b/catkin_ws/src/planner/src/Prequal.py
+@@ -0,0 +1,71 @@
++#!/usr/bin/env python3
++import rospy
++from substates.utility.controller import Controller
++import numpy as np
++from scipy.interpolate import make_splprep
++
++
++def generate_trajectory(d=5.0, r=2.0, num_circle_pts=50, transition_pts=50):
++    waypoints = []
++
++    # 1. Submerge from surface to 0.5m depth (along Z)
++    z_surface = np.linspace(0.0, -0.5, transition_pts)
++    for z in z_surface:
++        waypoints.append([0, 0, z])  # X=0, Y=0
++
++    # 2. Move forward in +X (North) at constant depth
++    x_forward = np.linspace(0, d, transition_pts)
++    for x in x_forward:
++        waypoints.append([x, 0, -0.5])  # Y=0
++
++    # 3. Semi-circle turn (XY plane, counter-clockwise)
++    theta = np.linspace(0, np.pi, num_circle_pts)
++    circle_x = d + r * np.sin(theta)        # From d to d (center) + r*sin()
++    circle_y = r - r * np.cos(theta)        # From 0 to 2r
++    circle_z = -0.5 * np.ones_like(theta)   # Constant depth
++
++    for x, y, z in zip(circle_x, circle_y, circle_z):
++        waypoints.append([x, y, z])
++
++    # 4. Return back along -X (North) at Y=2r
++    x_back = np.linspace(d, 0, transition_pts)
++    for x in x_back:
++        waypoints.append([x, 2 * r, -0.5])
++
++    # Convert to NumPy array
++    waypoints = np.array(waypoints)
++    x, y, z = waypoints[:, 0], waypoints[:, 1], waypoints[:, 2]
++
++    # Remove near-duplicate points to avoid spline fitting error
++    unique_waypoints = [waypoints[0]]
++    for pt in waypoints[1:]:
++        if np.linalg.norm(pt - unique_waypoints[-1]) > 1e-6:
++            unique_waypoints.append(pt)
++    waypoints = np.array(unique_waypoints)
++    x, y, z = waypoints[:, 0], waypoints[:, 1], waypoints[:, 2]
++
++    # Fit spline with light smoothing
++    spline, u = make_splprep([x, y, z], s=1e-6)
++    return spline, waypoints
++
++
++
++def main():
++
++    rospy.init_node("Prequal_controller")
++    controls = Controller(rospy.Time(0))    
++
++    try:
++        Path, waypoints = generate_trajectory(d = 2.0, r = 0.75) # d and r to be adjusted visually in the pool. 
++        controls.LoS(Path, 0.5)
++
++    except rospy.ROSInterruptException:
++        rospy.logerr("ROS Interrupt received. Stopping movements.")
++    finally:
++        rospy.loginfo("Shutting down controls…")
++        controls.kill()
++
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/catkin_ws/src/planner/src/pooltest.py b/catkin_ws/src/planner/src/pooltest.py
+index a31bd272..94f09401 100755
+--- a/catkin_ws/src/planner/src/pooltest.py
++++ b/catkin_ws/src/planner/src/pooltest.py
+@@ -1,59 +1,47 @@
+ #!/usr/bin/env python3
+ import rospy
+ from substates.utility.controller import Controller
+-from substates.utility.functions import countdown
+ from substates.utility.yaw_controller import YawRamp
+-import numpy as np
+ 
+ def main():
++    """
++    Test file for running missions manually during pool tests.
++    """
++
+     rospy.init_node("pooltest")
+ 
+-    # Only need one Controller instantiation
+-    controls = Controller(rospy.Time(0))
++    controls = Controller(rospy.Time(0))    
+     yaw_ctrl = YawRamp()
+-    try:
+-        rospy.loginfo("Executing square pattern movement…")
+-        print("jdkns")
+-        # 
+-        #negative is CCW, thus positive is CW. Das ist top 
+-        # Move forward 0.5 m in the local X direction
+-        # controls.rotateDeltaEuler([0,0,90])
+-        print("AAAAAAAAAAAAA")
+-
+-        # rospy.sleep(10)
+-        controls.moveDeltaLocal(-0.5, 0, 0)
+-        rospy.sleep(3)
+-
+-        print("shaa")
+-        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+-        rospy.sleep(3)
+-
+-        print("move")
+-        controls.moveDeltaLocal(0, -0.5, 0)
+-        rospy.sleep(3)
+-
+-        print("sha2")
+-        yaw_ctrl.run(-90, step_deg=2, tol_deg=1, rate_hz=300, timeout_s=40)
+-        rospy.sleep(3)
+-
+-        print("BOom")
+ 
++    try:
++        rospy.loginfo("Executing square pattern movement.")
++        # negative is CCW, thus positive is CW.
++        rospy.loginfo("Attempting to move x by 2.0 and z by -1.0.")
++        controls.moveDeltaLocal(3.0, 0, -1.0)
++        rospy.loginfo("Completed move successfully.")
+ 
++        rospy.loginfo("Attempting to roll by 90 degrees")
++        controls.rotate(90.0,0.0,0.0)
++        rospy.loginfo("Completed move successfully.")
+ 
++        controls.moveDeltaLocal(0, -2, 0)
+ 
++        rospy.loginfo("Attempting to roll by -90 degrees")
++        controls.rotate(-90.0,0.0,0.0)
++        rospy.loginfo("Completed move successfully.")
++        
++        rospy.loginfo("Attempting to move x and y by 2.0.")
++        controls.moveDeltaLocal(2.0, -2.0, 0.0)
++        rospy.loginfo("Completed move successfully.")
+ 
+-        # Then strafe in local Y
+-        #controls.moveDeltaLocal(0, -0.5, 0)
+- 
+-        #controls.moveDeltaLocal(0, 0 , -0.6)
+-        # rospy.sleep(10)
++        rospy.loginfo("Pool Test completed successfully.")
+ 
+-        # …and so on if you uncomment the rest
+     except rospy.ROSInterruptException:
+         rospy.logerr("ROS Interrupt received. Stopping movements.")
+     finally:
+         rospy.loginfo("Shutting down controls…")
+         controls.kill()
+-
++        yaw_ctrl.kill()
++        
+ if __name__ == "__main__":
+     main()
+diff --git a/catkin_ws/src/planner/src/quali.py b/catkin_ws/src/planner/src/quali.py
+deleted file mode 100755
+index a0d02b6a..00000000
+--- a/catkin_ws/src/planner/src/quali.py
++++ /dev/null
+@@ -1,23 +0,0 @@
+-#!/usr/bin/env python3
+-import rospy
+-from substates.utility.controller import Controller
+-from substates.utility.functions import countdown
+-
+-rospy.init_node("quali")
+-print("_______SLEEPING__________")
+-countdown(30)
+-controls = Controller(rospy.Time(0))
+-print("STARTING")
+-controls.rotateDeltaEuler([0,0,0])
+-# controls.freeze_pose()
+-# controls.freeze_position()
+-# controls.freeze_rotation()
+-print("ROTATE")
+-controls.moveDelta([None, None, -0.75])
+-print("MOVE DELTA")
+-controls.forceLocal([20,0])
+-print("FORCE")
+-rospy.sleep(10)
+-
+-controls.kill()
+-
+diff --git a/catkin_ws/src/planner/src/substates/breadth_first_search.py b/catkin_ws/src/planner/src/substates/breadth_first_search.py
+index 80c0dc61..4a996af1 100644
+--- a/catkin_ws/src/planner/src/substates/breadth_first_search.py
++++ b/catkin_ws/src/planner/src/substates/breadth_first_search.py
+@@ -5,9 +5,13 @@ import smach
+ import threading
+ from std_msgs.msg import String
+ 
+-
+-# search for objects by moving in a growing square (i.e. each side of square grows in size after every rotation)
+ class BreadthFirstSearch(smach.State):
++    """
++    SMACH State which searches for objects by moving in a growing square.
++
++    (i.e. each side of square grows in size after every rotation)
++    """
++
+     def __init__(self, control, mapping, target_class, min_objects):
+         super().__init__(outcomes=["success", "failure", "timeout"])
+         self.control = control
+@@ -26,6 +30,18 @@ class BreadthFirstSearch(smach.State):
+             "/mission_display", String, queue_size=1
+         )
+ 
++        
++        self.detectedObject = False
++        self.target_class = target_class
++        self.min_objects = min_objects
++        self.expansionAmt = rospy.get_param("bfs_expansion_size")
++        
++        self.thread_timer = None
++        self.timeout_occurred = False
++        self.time_limit = rospy.get_param("object_search_time_limit")
++
++        self.pub_mission_display = rospy.Publisher(
++            "/mission_display", String, queue_size=1
+     def do_breadth_first_search(self):
+         movement = [0, self.expansionAmt, 0]
+         while not rospy.is_shutdown():
+diff --git a/catkin_ws/src/planner/src/substates/utility/controller.py b/catkin_ws/src/planner/src/substates/utility/controller.py
+index 29c0444e..c48a6590 100644
+--- a/catkin_ws/src/planner/src/substates/utility/controller.py
++++ b/catkin_ws/src/planner/src/substates/utility/controller.py
+@@ -1,9 +1,28 @@
+ #!/usr/bin/env python3
+ 
++# === Standard Library ===
++import math
++from math import sin, cos
++import numpy as np
++from scipy.spatial import KDTree
++from scipy.interpolate import BSpline
++
++
++# === ROS Core ===
+ import rospy
+ import actionlib
+-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench
++import rosbag
++
++import math
++from math import cos, sin
++import numpy as np
++from .functions import *
++
++from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Wrench, Quaternion, TwistWithCovarianceStamped
+ from std_msgs.msg import Float64, Bool, Header
++from actionlib_msgs.msg import GoalStatus
++
++# === AUV Custom Messages ===
+ from auv_msgs.msg import (
+     EffortAction,
+     EffortGoal,
+@@ -11,20 +30,18 @@ from auv_msgs.msg import (
+     StateQuaternionGoal,
+     ThrusterMicroseconds,
+ )
+-from actionlib_msgs.msg import GoalStatus
+-from tf2_ros import Buffer, TransformListener
+-import tf2_geometry_msgs
+-import math
+-from .functions import *
+-import numpy as np
+-import quaternion
+-import math
+-import numpy as np
+-from math import cos, sin
+-from std_msgs.msg import Bool
+-from geometry_msgs.msg import Quaternion
++from sensor_msgs.msg import Imu
+ from nav_msgs.msg import Odometry
+ 
++# === TF Tools ===
++import tf2_geometry_msgs
++from tf2_ros import Buffer, TransformListener
++from tf.transformations import quaternion_from_euler, quaternion_multiply, euler_from_quaternion
++
++# === Local Utilities ===
++# TODO: Clean the functions file. Most of the functions there aren't used. 
++from .recorder import TopicBagRecorder
++
+ # predefined bools so we don't have to write these out everytime we want to get a new goal
+ 
+ do_displace = True
+@@ -32,144 +49,93 @@ do_not_displace = False
+ is_local = True
+ is_not_local = False
+ 
+-"""
+-Helper class for the planner. Takes in simple commands, converts them to 
+-goals and sends them to the control servers.
+-"""
+-
+-
+ class Controller:
++    """
++    Helper class for the planner. Takes in simple commands, converts them to 
++    goals and sends them to the control servers.
++    """
+     def __init__(self, header_time):
+         print("starting controller")
+         self.header_time = header_time
+ 
+-        self.x =0.0
+-        self.y = 0.0
+-        self.z = 0.0
+-        self.theta_x = 0.0
+-        self.theta_y = 0.0
+-        self.theta_z = 0.0
+-        self.orientation = 0.0
+-        self.yaw = None
+-
+-       
+-        rospy.Subscriber("/state/theta/z", Float64, lambda msg: setattr(self, "current_yaw_value", msg.data), queue_size=1)
+-
+-        # publisher for a direct yaw‐torque command
+-        # 
+-        self.pub_heading_sp = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1) 
+-        self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
++        self.x = None
++        self.y = None
++        self.z = None
++        self.orientation = None
++        self.clients = []
++
++
++        # Initialize pub/sub for quaternion controls in controls/quaternion_pid.py
+         self.last_quat_error = None
+-        rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
++        self.sub_curr_quat_error = rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
+         self.pub_quat_enable = rospy.Publisher( "/controls/pid/quat/enable", Bool, queue_size=1)
++        self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
+ 
++        # Initialize pub for direct torques sent to controls
+         self.pub_yaw_torque = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
+-        rospy.Subscriber("/state/x",Float64, lambda m: setattr(self,"x",m.data), queue_size=1)
+-        rospy.Subscriber("/state/y",Float64, lambda m: setattr(self,"y",m.data), queue_size=1)
+-        rospy.Subscriber("/state/z",Float64, lambda m: setattr(self,"z",m.data), queue_size=1)
+-        rospy.Subscriber("/state/theta/z", Float64, lambda m: setattr(self, "yaw", m.data), queue_size=1)
+-
+-
+-
+ 
++        # Configure Transform Listener from the world frame
+         self.tf_buffer = Buffer()
+         TransformListener(self.tf_buffer)
+-        self.tf_header = Header(frame_id="world_rotation")
+-
+-        self.current_x = rospy.Subscriber(
+-            "/state/x", Float64, self.set_current_x, queue_size=1
+-        )
+-        self.current_y = rospy.Subscriber(
+-            "/state/y", Float64, self.set_current_y, queue_size=1)
+-        self.current_z = rospy.Subscriber(
+-            "/state/z", Float64, self.set_current_z, queue_size=1
+-        )
+-
+-        self.current_yaw = rospy.Subscriber("/state/yaw", Float64, self.set_current_yaw)
+-        self.current_roll = rospy.Subscriber("/state/theta/x", Float64, self.set_theta_x, queue_size=1)
+-        self.current_pitch = rospy.Subscriber("/state/theta/y", Float64, self.set_theta_y, queue_size=1)
++        self.tf_header = Header(frame_id="map")
+  
++        # Initialize state updates for the controller from state_estimation
++        self.sub_pose = rospy.Subscriber("/state/pose", Pose, self.set_pose, queue_size=3)
+ 
+-        self.sub_x = rospy.Subscriber("/state/x", Float64, self.set_x, queue_size=1)
+-        self.sub_y = rospy.Subscriber("/state/y", Float64, self.set_y, queue_size=1)
+-        self.sub_z = rospy.Subscriber("/state/z", Float64, self.set_z, queue_size=1)
+-        self.sub_quat = rospy.Subscriber(
+-            "/state/pose", Pose, self.set_position, queue_size=1
+-        )
++        # Initialize PID enable topic publishers
++        self.pub_x_enable = rospy.Publisher("/controls/pid/x/enable", Bool, queue_size=1)
++        self.pub_y_enable = rospy.Publisher("/controls/pid/y/enable", Bool, queue_size=1)
++        self.pub_z_enable = rospy.Publisher("/controls/pid/z/enable", Bool, queue_size=1)
+ 
+-        self.pub_x_enable = rospy.Publisher(
+-            "/controls/pid/x/enable", Bool, queue_size=1
+-        )
+-        self.pub_y_enable = rospy.Publisher(
+-            "/controls/pid/y/enable", Bool, queue_size=1
+-        )
+-        self.pub_z_enable = rospy.Publisher(
+-            "/controls/pid/z/enable", Bool, queue_size=1
+-        )
+-        self.pub_quat_enable = rospy.Publisher(
+-            "/controls/pid/quat/enable", Bool, queue_size=1
+-        )
++        # Initialize PID setpoint topic publishers
++        self.pub_x_setpoint = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
++        self.pub_y_setpoint = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
++        self.pub_z_setpoint = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=10)
+ 
+-        self.x_setpoint_pub = rospy.Publisher("/controls/pid/x/setpoint", Float64, queue_size=10)
+-        self.y_setpoint_pub = rospy.Publisher("/controls/pid/y/setpoint", Float64, queue_size=10)
+-        self.z_setpoint_pub = rospy.Publisher("/controls/pid/z/setpoint", Float64, queue_size=10)
+-
+-        # for killing
++        # Initialize relative force topic publishers
+         self.pub_surge = rospy.Publisher("/controls/force/surge", Float64, queue_size=1)
+         self.pub_sway = rospy.Publisher("/controls/force/sway", Float64, queue_size=1)
+         self.pub_heave = rospy.Publisher("/controls/force/heave", Float64, queue_size=1)
+         self.pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
+-        self.pub_pitch = rospy.Publisher(
+-            "/controls/torque/pitch", Float64, queue_size=1
+-        )
++        self.pub_pitch = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
+         self.pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
++
++        # Initialize direct force topic publisher
+         self.pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
+-        self.pub_global_x = rospy.Publisher(
+-            "/controls/force/global/x", Float64, queue_size=1
+-        )
+-        self.pub_global_y = rospy.Publisher(
+-            "/controls/force/global/y", Float64, queue_size=1
+-        )
+-        self.pub_global_z = rospy.Publisher(
+-            "/controls/force/global/z", Float64, queue_size=1
+-        )
++
++        # Initialize global force topic publisher
++        self.pub_global_x = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
++        self.pub_global_y = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
++        self.pub_global_z = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
+ 
+         # Create publishers for the dropper topic and the claw state topic
+         self.claw_state_pub = rospy.Publisher(
+             "/actuators/grabber/close", Bool, queue_size=1
+         )
+ 
+-        self.pwm_pub = rospy.Publisher(
+-            "/propulsion/microseconds", ThrusterMicroseconds, queue_size=1
+-        )
+-
+-        self.clients = []
++        self.pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
+ 
++        # Initialize action clients for actions
+         self.EffortClient = actionlib.SimpleActionClient(
+             "/controls/server/effort", EffortAction
+         )
+         self.clients.append(self.EffortClient)
+-        print("Waiting for EffortServer to come online...")
+-        self.EffortClient.wait_for_server()
++        # print("Waiting for EffortServer to come online...")
++        # self.EffortClient.wait_for_server()
+ 
+         self.StateQuaternionStateClient = actionlib.SimpleActionClient(
+             "/controls/server/state", StateQuaternionAction
+         )
+         self.clients.append(self.StateQuaternionStateClient)
+-        print("Waiting for StateQuaternionStateServer to come online...")
+-        self.StateQuaternionStateClient.wait_for_server()
+ 
+-        print("Controller waiting to receive state information...")
+ 
++        # Check for missing state information in Controller
+         while (
+             None
+             in [
+                 self.x,
+                 self.y,
+                 self.z,
+-                self.theta_x,
+-                self.theta_y,
+-                self.theta_z,
+                 self.orientation,
+             ]
+             and not rospy.is_shutdown()
+@@ -179,9 +145,6 @@ class Controller:
+                 (self.x, "x"),
+                 (self.y, "y"),
+                 (self.z, "z"),
+-                (self.theta_x, "theta x"),
+-                (self.theta_y, "theta y"),
+-                (self.theta_z, "theta z"),
+                 (self.orientation, "quat."),
+             ]:
+                 if state_axis is None:
+@@ -189,83 +152,45 @@ class Controller:
+             print(debug_str)
+             rospy.sleep(1)
+ 
+-        print("All state information received, controller is active.")
+-
+-    def set_current_x(self, msg: Float64):
+-        """Callback to cache the latest /state/x float."""
+-        self.current_x = msg.data
+-
+-    def set_current_y(self, msg: Float64):
+-        """Callback to cache the latest /state/x float."""
+-        self.current_y = msg.data
+-    
+-    def _set_current_yaw(self, msg: Float64):
+-        """Callback to cache latest yaw in radians."""
+-        self.current_yaw_value = msg.data
+-
+-
+-    def set_current_z(self, msg: Float64):
+-        """Callback to cache the latest /state/x float."""
+-        self.current_z = msg.data
+-    
+-    def set_current_yaw(self, msg: Float64):
+-        """Callback to cache the latest /state/x float."""
+-        self.current_yaw = msg.data
+-
+-    def set_theta_z(self, msg):
+-        self.theta_z = msg.data
+-
+-    
+-
+-
+-    def set_x(self, msg: Float64):
+-        self.x = msg.data
++                
++        TOPICS = {
++            "/odometry/filtered": Odometry,
++            "/sensors/dvl/twist": TwistWithCovarianceStamped,
++            "/sensors/imu/data": Imu,
++            "/sensors/depth/z": Float64
++        }
+ 
+-    def set_y(self, msg: Float64):
+-        self.y = msg.data
++        self.recorder = TopicBagRecorder(TOPICS)
+ 
+-    def set_z(self, msg: Float64):
+-        self.z = msg.data
++        print("All state information received, controller is active.")
+ 
+-    def set_theta_z(self, data):
+-        self.theta_z = data.data
++    def __del__(self):
++        self.kill()
+ 
++    # Setters
+ 
+-    def set_position(self, data):
++    def set_pose(self, data):
+         self.x = data.position.x
+         self.y = data.position.y
+         self.z = data.position.z
+         self.orientation = data.orientation
+ 
+-    def set_theta_x(self, data):
+-        self.theta_x = data.data
++        q = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
++        self.current_roll_value, self.current_pitch_value, self.current_yaw_value = euler_from_quaternion(q)
++
++    def wrap(self, err):
++        """
++        Wraps any angle (radians) into (–π, π]
++        """
++        return math.atan2(sin(err), cos(err))
+ 
+-    def set_theta_y(self, data):
+-        self.theta_y = data.data
+ 
+-    def set_theta_z(self, data):
+-        self.theta_z = data.data
+ 
+-    def transformLocalToGlobal(self, lx, ly, lz):
++    def get_effort_goal(self, dofs):
+         """
+-        Performs a coordinate transformation from the auv body frame
+-        to the world frame.
++        Method which returns target goal for the current effort being exerted by controls.
+         """
+-        trans = self.tf_buffer.lookup_transform(
+-            "auv", "base_link", self.header_time
+-        )
+-        offset_local = Vector3(lx, ly, lz)
+-        self.tf_header.stamp = self.header_time
+-        offset_local_stmp = Vector3Stamped(header=self.tf_header, vector=offset_local)
+-        offset_global = tf2_geometry_msgs.do_transform_vector3(offset_local_stmp, trans)
+-        return (
+-            float(offset_global.vector.x),
+-            float(offset_global.vector.y),
+-            float(offset_global.vector.z),
+-        )
+ 
+-    # method to easily get goal object
+-    def get_effort_goal(self, dofs):
+         surge, sway, heave, roll, pitch, yaw = dofs
+ 
+         goal = EffortGoal()
+@@ -289,8 +214,13 @@ class Controller:
+ 
+         return goal
+ 
+-    # method to easily get goal object
+     def get_state_goal(self, state, displace, local=is_not_local):
++        """
++        Method which returns the state goal of the current state action server.
++
++        Note: call with the correct state, displace. and local or unexpected behaviour
++        """
++
+         x, y, z, tw, tx, ty, tz = state
+         goal = StateQuaternionGoal()
+ 
+@@ -314,91 +244,127 @@ class Controller:
+ 
+         return goal
+ 
+-    # preempt the current action
+-    def preemptCurrentAction(self):
++    def preempt_current_action(self):
++        """
++        Kills action server executions towards specific goals if the goal status is continuing.
++        """
+         for client in self.clients:
+             if client.get_state() in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
+                 client.cancel_goal()
++    
++    def enable_pid(self, axis, state):
++        """
++        Enables PID by switching the boolean in an axis's enable topic
++        """
++        pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
++        pub.publish(Bool(state))
+ 
+-    # rotate to this rotation (quaternion)
+-    def rotate(self, ang):
+-        if any(x is None for x in ang) and any(x is not None for x in ang):
+-            raise ValueError(
+-                "Invalid rotate goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
+-                    ang
+-                )
+-            )
+-        x, y, z,w = ang
+-        goal_state = self.get_state_goal(
+-            [None, None, None, x, y, z, w], do_not_displace
+-        )
+-        self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
++    def rotate(self, x: float, y: float, z: float, timeout: float = 20, tol_degrees: float = 1.0):
++        '''
++        Performs a relative rotation using the AUV's local body axes (rxyz). This follows the Roll-Pitch-Yaw order convention. 
++        Positive = counter-clockwise.
++        PIDs are kept on after target is reached to maintain target heading. 
++        '''
++        # 1) Wait for first angle readings, otherwise sleep. Timeout if overtime.       
++        err= np.zeros(3)
++        start = rospy.Time.now()
++        rate = rospy.Rate(20)
++        while (self.current_roll_value is None or
++            self.current_pitch_value is None or
++            self.current_yaw_value is None) and not rospy.is_shutdown():
++            if (rospy.Time.now() - start).to_sec() > timeout:
++                raise RuntimeError("Topic missing, aborting process...")
++            rate.sleep()
+ 
+-    # rotate to this rotation (euler)
+-    def rotateEuler(self, ang):
+-        x, y, z = ang
+-        if x is None:
+-            x = self.theta_x
+-        if y is None:
+-            y = self.theta_y
+-        if z is None:
+-            z = self.theta_z
+-        self.rotate(euler_to_quaternion(x, y, z))
+-    
++        # 2) Get current attitude
++        current_q = np.array([self.orientation.x, self.orientation.y, self.orientation.z, self.orientation.w])
+ 
+-    # def rotateYaw(self,delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
+-    #     """
+-    #     Rotate in place by delta_degrees (positive = left).
+-    #     Blocks until the yaw‐error < tol_degrees or timeout expires.
+-    #     """
+-    #     # wrap any angle into (–π, π]
+-    #     def wrap(err):
+-    #         return math.atan2(sin(err), cos(err))
+-    #     # 1) wait for a valid current yaw
+-    #     yaw_err=0.0
+-    #     start = rospy.Time.now()
+-    #     rate = rospy.Rate(20)
+-    #     while self.current_yaw_value is None and not rospy.is_shutdown():
+-    #         if (rospy.Time.now() - start).to_sec() > timeout:
+-    #             raise RuntimeError("never saw /state/theta/z")
+-    #         rate.sleep()
+-
+-    #     # 2) compute our target yaw
+-    #     begin = self.current_yaw_value
+-    #     target = wrap(begin + math.radians(delta_degrees))
+-    #     print("target", target)
+-    #     tol= math.radians(tol_degrees)
+-    #     q = quaternion_from_euler(0, 0, target, axes="sxyz")
+-    #     print("q", q)
+-    #     # 3) publish the quaternion setpoint
+-    #     qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+-    #     print("qt", qt)
+-    #     self.pub_quat_setpoint.publish(qt)
+-
+-    #     # 4) disable x,y,z controllers and enable only the quaternion‐PID
+-    #     self.enable_pid("x",    False)
+-    #     self.enable_pid("y",    False)
+-    #     self.enable_pid("z",    False)
+-    #     self.enable_pid("quat", True)
+-
+-    #     # 5) now wait for the /controls/pid/quat/error topic to start publishing…
+-    #     start = rospy.Time.now()
+-    #     while not rospy.is_shutdown():
+-    #         if self.last_quat_error is not None:
+-    #             yaw_err = self.last_quat_error.z
+-    #             if abs(yaw_err) < tol:
+-    #                 break
+-    #         if (rospy.Time.now() - start).to_sec() > timeout:
+-    #             print("YABABABABBDDOOOOOO")
+-    #             rospy.logwarn("rotateYaw timed out: %.1f° error", yaw_err*180.0/math.pi)
+-    #             break
+-    #         rate.sleep()
+-
+-    #     # 6) finally, turn the quaternion‐PID back off
+-    #     self.enable_pid("quat", False)
++        tol = math.radians(tol_degrees) # Calculate tolerance
+ 
+-        
+-        # helper to wrap shortest path
++       # 3) Calculate change in attitude
++        delta_q = quaternion_from_euler(math.radians(x), math.radians(y), math.radians(z), axes = "rxyz") # rxyz is used since we want Intrinsic (body-frame) rotation: rotate around rotating AUV axes.
++
++        # 4) Publish correct quaternion setpoint to the controls server
++        target_q = quaternion_multiply(current_q, delta_q)
++        qt = Quaternion(x=target_q[0], y=target_q[1], z=target_q[2], w=target_q[3])
++        self.pub_quat_setpoint.publish(qt)
++
++        # 5)enable the x,y,z, and quaternion PIDs
++        self.enable_pid("x",    True)
++        self.enable_pid("y",    True)
++        self.enable_pid("z",    True)
++        self.enable_pid("quat", True)
++
++        # 6) Wait for /controls/pid/quat/error topic to start publishing...
++        start = rospy.Time.now()
++        while not rospy.is_shutdown():
++            # Break the process if the error is below tolerance level
++            if self.last_quat_error is not None:
++                err = np.array([self.last_quat_error.x, self.last_quat_error.y, self.last_quat_error.z])
++                if np.linalg.norm(err) < tol:
++                    break
++
++            # Send warning if timeout.
++            if (rospy.Time.now() - start).to_sec() > timeout:
++                err_norm = np.linalg.norm(err)
++                rospy.logwarn("rotate timed out: %.1f error", err_norm)       
++
++
++    def rotateYaw(self, delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
++        """
++        Rotate in place by delta_degrees (positive = counter-clockwise).
++        Blocks until the (yaw-error) < tol_degrees or timeout expires.
++        """
++
++
++
++        # 1) Wait for first yaw reading, otherwise sleep. Timeout if overtime.
++        yaw_err = 0.0
++        start = rospy.Time.now()
++        rate = rospy.Rate(20)
++        while self.current_yaw_value is None and not rospy.is_shutdown():
++            if (rospy.Time.now() - start).to_sec() > timeout:
++                raise RuntimeError("Topic missing: /state/theta/z, aborting process...")
++            rate.sleep()
++
++        # 2) Compute target yaw
++        begin = self.current_yaw_value
++        target = self.wrap(begin + math.radians(delta_degrees))
++
++        tol= math.radians(tol_degrees)  # calculate tolerance 
++        rospy.loginfo(f"{target}")
++        q = quaternion_from_euler(0, 0, target, axes="sxyz")
++
++        rospy.loginfo(f"Target rotation angle: {target}")
++        rospy.loginfo(f"Target quaterion angle: {q}")
++
++        # 3) Publish correct quaternion setpoint to the controls server
++        qt = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3]) # use Quaternion msg type
++        print("qt", qt)
++        self.pub_quat_setpoint.publish(qt)
++
++        # 4)enable the x,y,z, and quaternion PIDs
++        # Note: this is done for consistency purposes, it is hard for the AUV to rotate while also moving
++        self.enable_pid("x",    True)
++        self.enable_pid("y",    True)
++        self.enable_pid("z",    True)
++        self.enable_pid("quat", True)
++
++        # 5) Wait for /controls/pid/quat/error topic to start publishing...
++        start = rospy.Time.now()
++        while not rospy.is_shutdown():
++            # Break the process if the error is below tolerance level
++            if self.last_quat_error is not None:
++                err = np.array([self.last_quat_error.x, self.last_quat_error.y, self.last_quat_error.z])
++                if np.linalg.norm(err) < tol:
++                    break
++
++            # Quit process if timeout.
++            if (rospy.Time.now() - start).to_sec() > timeout:
++                err_norm = np.linalg.norm(err)
++                rospy.logwarn("rotate timed out: %.1f error", err_norm)  
++
++    # TODO: Add documentation to everything below this
+     def state(self, pos, ang):
+         x, y, z = pos
+         if any(x is None for x in ang) and any(x is not None for x in ang):
+@@ -423,15 +389,6 @@ class Controller:
+         goal_state = self.get_state_goal([x, y, z, w, wx, wy, wz], do_displace)
+         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+ 
+-    def stateEuler(self, pos, ang):
+-        wx, wy, wz = ang
+-        if wx is None:
+-            wx = self.theta_x
+-        if wy is None:
+-            wy = self.theta_y
+-        if wz is None:
+-            wz = self.theta_z
+-        self.state(pos, euler_to_quaternion(wx, wy, wz))
+ 
+     def stateDeltaEuler(self, pos, ang):
+         wx, wy, wz = ang
+@@ -473,100 +430,138 @@ class Controller:
+ 
+         self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+ 
+-    # rotate by this amount (quaternion)
+-    def rotateDelta(self, delta, displace=True):
+-        if any(x is None for x in delta) and any(x is not None for x in delta):
+-            raise ValueError(
+-                "Invalid rotateDelta goal: quaternion cannot have a combination of None and valid values. Goal received: {}".format(
+-                    delta
+-                )
+-            )
+-        self.enable_pid("quat", True)
+-        w, x, y, z = delta
+-        goal_state = self.get_state_goal([None, None, None, w, x, y, z], displace)
+-        self.enable_pid("quat", False)
+-        return self.StateQuaternionStateClient.send_goal_and_wait(goal_state)
+-        
+-
+-    # rotate by this amount (euler)
+-    def rotateDeltaEuler(self, delta):
+-        self.enable_pid("quat", True)
+-        x, y, z = delta
+-        qx, qy, qz, qw = euler_to_quaternion(x, y, z)
+-        if qw < 0:
+-            qx, qy, qz, qw = -qx, -qy, -qz, -qw
+-        resp = self.rotateDelta([qw, qx, qy, qz], displace=True)
+-        self.enable_pid("quat", False)
+-        return resp
+-
+-
+-    def enable_pid(self, axis, state):
+-        pub = rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1)
+-        pub.publish(Bool(state))
+ 
+-    # move by this amount in local space (i.e. z is always heave)
+     def moveDeltaLocal(self, delta_x, delta_y, delta_z, tolerance=0.05, timeout=30):
+-        start_x = self.x
+-        start_y = self.y 
+-        start_z = self.z
++        """
++        Translate the AUV by a specified amount in x, y, z relative to the auv frame.
++        """
++        
++        rospy.sleep(1.0)  # Let odometry settle
+ 
+-        # ---- rotate into global frame ----
+-        dx_g = delta_x * cos(self.yaw) - delta_y * sin(self.yaw)
+-        dy_g = delta_x * sin(self.yaw) + delta_y * cos(self.yaw)
++        # TODO: Make this map after SLAM
++        # 1) Compute target in odom frame
++        target_x = self.x + delta_x
++        target_y = self.y + delta_y
++        target_z = self.z + delta_z
+ 
+-        target_x = start_x + dx_g
+-        target_y = start_y + dy_g
+-        target_z = start_z + delta_z
++        print(f"Target x: {target_x:.3f}, y: {target_y:.3f}, z: {target_z:.3f}")
+ 
+-        # enable your PIDs
++        # 2) Enable positional PID control
+         self.enable_pid("x", True)
+         self.enable_pid("y", True)
+         self.enable_pid("z", True)
+ 
+-        # publish setpoints
+-        self.x_setpoint_pub.publish(target_x)
+-        self.y_setpoint_pub.publish(target_y)
+-        self.z_setpoint_pub.publish(target_z)
++        self.pub_x_setpoint.publish(target_x)
++        self.pub_y_setpoint.publish(target_y)
++        self.pub_z_setpoint.publish(target_z)
+ 
+-        # loop until within tolerance or timeout
+-        rate = rospy.Rate(10)
++        rate = rospy.Rate(20)
+         start_time = rospy.Time.now()
+-        while (rospy.Time.now() - start_time).to_sec() < timeout:
+-            if (abs(self.x - target_x) < tolerance and
+-                abs(self.y - target_y) < tolerance and
+-                abs(self.z - target_z) < tolerance):
++        while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
++            err_x = abs(self.x - target_x)
++            err_y = abs(self.y - target_y)
++            err_z = abs(self.z - target_z)
++
++            # rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
++            if err_x < tolerance and err_y < tolerance and err_z < tolerance:
+                 break
++
+             rate.sleep()
+ 
+-        # disable PIDs
+-        self.enable_pid("x", False)
+-        self.enable_pid("y", False)
+-        self.enable_pid("z", False)
++#TODO: Add search optimization using KDTree, and better i_target calculation using incrementation.
++def LoS(self, Path: BSpline, lookahead: float, n: int = 1000, freq: int = 10):
++    ''' Controls the AUV along the given Path using Line-of-Sight.
++    Path: BSpline instance that approximates the 3D trajectory. 
++    lookahead: Lookahead distance in meters
++    n: number of sampled points on the path
++    '''
++    us = np.linspace(0, 1, n)
++    pts = Path(us).T
++    arc_lengths = np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))
++    arc_lengths = np.insert(arc_lengths, 0, 0)
++    total_length = arc_lengths[-1]
++
++    tree = KDTree(pts)
++    rate = rospy.Rate(freq)
++
++    self.enable_pid("x", True)
++    self.enable_pid("y", True)
++    self.enable_pid("z", True)
++    self.enable_pid("quat", True)
++
++    i_target = 0
++    while not rospy.is_shutdown():
++        # --- Check if state is available
++        if None in [self.x, self.y, self.z]:
++            rospy.logwarn("Waiting for state estimate...")
++            rate.sleep()
++            continue
++
++        current_pos = np.array([self.x, self.y, self.z])
++        _, i_closest = tree.query(current_pos)
++        s_closest = arc_lengths[i_closest]
++
++        s_target = min(s_closest + lookahead, total_length)
++        i_target = np.searchsorted(arc_lengths, s_target)
++        i_target = min(i_target, n - 1)
+ 
++        target_x, target_y, target_z = pts[i_target]
++        self.pub_x_setpoint.publish(target_x)
++        self.pub_y_setpoint.publish(target_y)
++        self.pub_z_setpoint.publish(target_z)
+ 
++        if i_target == n - 1:
++            rospy.loginfo("Target reached.")
++            break
+ 
+-    # set torque
++        rate.sleep()
++
++    
++    
++    
++    
+     def torque(self, vel):
++        """
++        Sets a torque value (x, y, z) and sets this as the goal in the effort server
++        """
+         x, y, z = vel
+         goal = self.get_effort_goal([None, None, None, x, y, z])
+         self.EffortClient.send_goal(goal)
+ 
+-    # set positional effort in local space (i.e. z is always heave)
+     def forceLocal(self, vel):
++        """
++        Sets a positonal effort force in the local reference frame.
++
++        Note: z is unaffected bu this method (always heaving)
++        """
++
+         x, y = vel
+         goal = self.get_effort_goal([x, y, None, None, None, None])
+         self.EffortClient.send_goal(goal)
+ 
+-    # stop all thrusters
+     def kill(self):
+-        self.preemptCurrentAction()
++        """
++        Kills all the pid efforts active and removes all forces being applied on thrusters
++        """
++
++        self.preempt_current_action()
++
+         goal = self.get_effort_goal([0, 0, 0, 0, 0, 0])
+         self.EffortClient.send_goal(goal)
+         self.pub_x_enable.publish(Bool(False))
+         self.pub_y_enable.publish(Bool(False))
+         self.pub_z_enable.publish(Bool(False))
+         self.pub_quat_enable.publish(Bool(False))
++        
++        # Disable all active PIDs
++        self.enable_pid("x", False)
++        self.enable_pid("y", False)
++        self.enable_pid("z", False)
++        self.enable_pid("quat", False)
++
++        rospy.logwarn("Killing all thrusters and disabling PIDs...")
+ 
++        # Iterate during timeout
+         start = rospy.get_time()
+         while rospy.get_time() - start < 5:
+             self.pub_surge.publish(0)
+@@ -587,10 +582,9 @@ class Controller:
+             zero_wrench.torque.y = 0
+             zero_wrench.torque.z = 0
+             self.pub_effort.publish(zero_wrench)
++            self.pwm_pub.publish(ThrusterMicroseconds([1500] * 8))
+ 
+-            msg = ThrusterMicroseconds([1500] * 8)
+-            self.pwm_pub.publish(msg)
+-
++    # TODO: Debug and verify with tests
+     def freeze_pose(self):
+         goal = self.get_state_goal(
+             [
+@@ -606,12 +600,14 @@ class Controller:
+         )
+         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+ 
++    # TODO: Debug and verify with tests
+     def freeze_position(self):
+         goal = self.get_state_goal(
+             [self.x, self.y, self.z, None, None, None, None], do_not_displace
+         )
+         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+ 
++    # TODO: Debug and verify with tests
+     def freeze_rotation(self):
+         goal = self.get_state_goal(
+             [
+@@ -627,7 +623,12 @@ class Controller:
+         )
+         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+ 
++    # TODO: Debug and verify with tests
+     def flatten(self):
++        """
++        Computes a new goal which flattens the AUV such that only the yaw component is maintained.
++        """
++
+         orientation = np.quaternion(
+             self.orientation.w,
+             self.orientation.x,
+@@ -648,11 +649,10 @@ class Controller:
+         )
+         self.StateQuaternionStateClient.send_goal_and_wait(goal)
+ 
++    # TODO: Debug and verify with tests
+     def open_claw(self):
+-
+-        # Set the claw state to True (open)
+         self.claw_state_pub.publish(Bool(True))
+ 
++    # TODO: Debug and verify with tests
+     def close_claw(self):
+-        # Set the claw state to False (close)
+-        self.claw_state_pub.publish(Bool(False))
++        self.claw_state_pub.publish(Bool(False))
+\ No newline at end of file
+diff --git a/catkin_ws/src/planner/src/substates/utility/functions.py b/catkin_ws/src/planner/src/substates/utility/functions.py
+index 56908f24..ee3c65fc 100644
+--- a/catkin_ws/src/planner/src/substates/utility/functions.py
++++ b/catkin_ws/src/planner/src/substates/utility/functions.py
+@@ -4,7 +4,7 @@ import numpy as np
+ import quaternion
+ import rospy
+ from std_msgs.msg import String
+-from tf.transformations import quaternion_from_euler
++from tf.transformations import quaternion_from_euler, quaternion_multiply
+ 
+ def countdown(secs):
+     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)
+diff --git a/catkin_ws/src/planner/src/substates/utility/recorder.py b/catkin_ws/src/planner/src/substates/utility/recorder.py
+new file mode 100644
+index 00000000..97bea21a
+--- /dev/null
++++ b/catkin_ws/src/planner/src/substates/utility/recorder.py
+@@ -0,0 +1,119 @@
++import os
++import rospy
++import rosbag
++import rospkg
++from sensor_msgs.msg import Imu
++from geometry_msgs.msg import TwistWithCovarianceStamped
++from nav_msgs.msg import Odometry
++from std_msgs.msg import Float64
++
++
++
++from datetime import datetime
++
++def make_bag_filename(topic_name):
++    # e.g. topic_name="/odom" → basename="odom"
++    #      topic_name="/my_ns/scan" → basename="my_ns_scan"
++    basename = topic_name.lstrip("/").replace("/", "_")
++    now_str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
++    filename = f"{basename}_{now_str}.bag"
++    return filename
++
++class TopicBagRecorder:
++    def __init__(self, topics_dict):
++        """
++        topics_dict: { topic_name (str) : MessageClass }
++        """
++        self._bags = {}         # will hold rosbag.Bag instances, keyed by topic
++        self._subs = []         # keep subscriptions alive
++        self._topics = topics_dict
++
++        # Create a package
++        rospack = rospkg.RosPack()
++        try:
++            pkg_path = rospack.get_path("planner")
++        except rospkg.ResourceNotFound:
++            rospy.logerr(f"[bag_recorder] Package \'planner\' not found in ROS_PACKAGE_PATH.")
++            rospy.signal_shutdown("Package not found")
++            return
++        
++        self._bags_dir = os.path.join(pkg_path, "bags")
++        os.makedirs(self._bags_dir, exist_ok=True)
++
++        # for each topic, open a bag file and create a subscriber
++        for topic_name, msg_type in self._topics.items():
++            bag_path = os.path.join(self._bags_dir, make_bag_filename(topic_name))
++            rospy.loginfo(f"[bag_recorder] Opening bag for topic '{topic_name}': {bag_path}")
++            bag = rosbag.Bag(bag_path, mode="w")
++            self._bags[topic_name] = bag
++
++            # Create a subscriber for this topic. Use a λ to pass topic_name
++            sub = rospy.Subscriber(
++                topic_name,
++                msg_type,
++                callback=self._make_callback(topic_name),
++                queue_size=5,
++            )
++            self._subs.append(sub)
++
++        # Register shutdown hook to close all bags
++        rospy.on_shutdown(self._close_all_bags)
++
++    def _make_callback(self, topic_name):
++        """
++        Return a callback function that writes any incoming message
++        on 'topic_name' into that topic’s bag file.
++        """
++        def _cb(msg):
++            bag = self._bags.get(topic_name, None)
++            if bag is None:
++                rospy.logwarn(f"[bag_recorder] No bag found for topic '{topic_name}'")
++                return
++            # Write the raw message into the bag under the same topic name.
++            # Use the timestamp from the message header if present; otherwise use rospy.Time.now().
++            try:
++                stamp = msg.header.stamp
++            except AttributeError:
++                stamp = rospy.Time.now()
++            bag.write(topic_name, msg, t=stamp)
++        return _cb
++
++    def _close_all_bags(self):
++        """Called on rospy shutdown; closes every open rosbag."""
++        rospy.loginfo("[bag_recorder] Shutdown triggered. Closing all bag files...")
++        for topic_name, bag in self._bags.items():
++            rospy.loginfo(f"[bag_recorder] Closing bag for '{topic_name}'")
++            bag.close()
++        rospy.loginfo("[bag_recorder] All bags closed.")
++
++
++if __name__ == "__main__":
++    rospy.init_node("recorder")
++
++    # Instantiate the recorder: it will open one .bag per topic and start subscribing.
++    TOPICS = {
++            "/odometry/filtered": Odometry,
++            "/sensors/dvl/twist": TwistWithCovarianceStamped,
++            "/sensors/imu/data": Imu,
++            "/sensors/depth/z": Float64
++        }
++    recorder = TopicBagRecorder(TOPICS)
++
++    rospy.loginfo("[bag_recorder] Recording started. Press Ctrl+C to stop and close bag files.")
++    
++    try:
++        rospy.loginfo("Recorder Entering spin(). Press Ctrl+C to exit.")
++        rospy.spin()
++    except rospy.ROSInterruptException:
++        # Thrown if Ctrl+C is pressed during spin() or if rospy.signal_shutdown() is called
++        rospy.loginfo("Recorder  ROSInterruptException caught (node interrupted).")
++    finally:
++        # In case spin() returns or an exception is raised, ensure shutdown is signaled
++        if not rospy.is_shutdown():
++            rospy.loginfo("Recorder  Signaling shutdown from finally block.")
++            rospy.signal_shutdown("Exiting node")
++
++        # The cleanup callback (registered via on_shutdown) will be invoked automatically.
++        rospy.loginfo("Recorder  Exiting main().")
++
++    
+\ No newline at end of file
+diff --git a/catkin_ws/src/planner/src/substates/utility/yaw_controller.py b/catkin_ws/src/planner/src/substates/utility/yaw_controller.py
+index a4cfacf8..e9f078b4 100644
+--- a/catkin_ws/src/planner/src/substates/utility/yaw_controller.py
++++ b/catkin_ws/src/planner/src/substates/utility/yaw_controller.py
+@@ -1,102 +1,139 @@
+ #!/usr/bin/env python3
+-
+-import sys
+ import math
+ import rospy
++
+ from std_msgs.msg import Bool
+-from geometry_msgs.msg import Quaternion
+-from nav_msgs.msg import Odometry
+-from tf.transformations import quaternion_from_euler, euler_from_quaternion
++from actionlib_msgs.msg import GoalStatus
++from geometry_msgs.msg import Quaternion, Wrench
++from std_msgs.msg import Float64
++from tf.transformations import quaternion_from_euler
++from auv_msgs.msg import (
++    ThrusterMicroseconds,
++)
+ 
+ class YawRamp:
+     def __init__(self):
+         self.yaw = None
+-        #sbscribe to EKF‐filtered odometry for a smooth yaw estimate
+-        rospy.Subscriber("/odometry/filtered", Odometry, self._odom_cb, queue_size=1)
++        # Subscribe to current yaw value (in radians)
++        rospy.Subscriber("/state/theta/z", Float64, self.euler_cb, queue_size=15)
+ 
+-        # Publishers for PID axis enables and quaternion setpoint
++        # Publisher to enable quaternion PID controller
+         self.pub_q_enable = rospy.Publisher("/controls/pid/quat/enable", Bool, queue_size=1)
+         self.pub_q_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
+-        for axis in "xyz":
+-            setattr(self,
+-                    f"pub_{axis}_enable",
+-                    rospy.Publisher(f"/controls/pid/{axis}/enable", Bool, queue_size=1))
+ 
+-    def _odom_cb(self, msg):
+-        # Extract yaw from odometry quaternion
+-        q = msg.pose.pose.orientation
+-        _, _, yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+-        self.yaw = yaw
++        # Publishers to disable x/y/z linear PID controllers
++        self.pub_x_enable = rospy.Publisher("/controls/pid/x/enable", Bool, queue_size=1)
++        self.pub_y_enable = rospy.Publisher("/controls/pid/y/enable", Bool, queue_size=1)
++        self.pub_z_enable = rospy.Publisher("/controls/pid/z/enable", Bool, queue_size=1)
++
++    def euler_cb(self, msg):
++        self.yaw = msg.data
++    
++    def kill(self):
++        rospy.logwarn("YawRamp: KILL sequence initiated – stopping all motion")
++
++        pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
++        pub_pitch = rospy.Publisher("/controls/torque/pitch", Float64, queue_size=1)
++        pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
++
++        pub_global_x = rospy.Publisher("/controls/force/global/x", Float64, queue_size=1)
++        pub_global_y = rospy.Publisher("/controls/force/global/y", Float64, queue_size=1)
++        pub_global_z = rospy.Publisher("/controls/force/global/z", Float64, queue_size=1)
++
++        pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
++        pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
++
++        self.pub_x_enable.publish(False)
++        self.pub_y_enable.publish(False)
++        self.pub_z_enable.publish(False)
++        self.pub_q_enable.publish(False)
++
++        start = rospy.get_time()
++        while rospy.get_time() - start < 5:
++            pub_roll.publish(0)
++            pub_pitch.publish(0)
++            pub_yaw.publish(0)
++
++            pub_global_x.publish(0)
++            pub_global_y.publish(0)
++            pub_global_z.publish(0)
++
++            zero_wrench = Wrench()
++            zero_wrench.force.x = 0
++            zero_wrench.force.y = 0
++            zero_wrench.force.z = 0
++            zero_wrench.torque.x = 0
++            zero_wrench.torque.y = 0
++            zero_wrench.torque.z = 0
++            pub_effort.publish(zero_wrench)
+ 
++            pwm_pub.publish(ThrusterMicroseconds([1500] * 8))  #neutral signal
++
++            rospy.sleep(0.1)
++
++        rospy.loginfo("YawRamp: Kill sequence complete")
++ 
++    
+     @staticmethod
+     def _wrap(angle):
+-        # Wrap angle to (-pi, pi]
++        """Wraps angle to the (-pi, pi] range to avoid discontinuities"""
+         return math.atan2(math.sin(angle), math.cos(angle))
+ 
+-    def run(self, delta_deg: float, step_deg: float = 5, tol_deg: float = 1.0, rate_hz: int = 350, timeout_s: float = 40.0):
++    #here timeout is how much time youre giving the robot to get to the angle with error 0.5.
++    def run(self, delta_deg: float, step_deg: float = 5, tol_deg: float = 0.5, rate_hz: int = 350, timeout_s: float = 40.0):
+ 
+-        # Compute tolerance in radians
+         tol_rad = math.radians(tol_deg)
+         max_step_rad = math.radians(step_deg)
+         rate = rospy.Rate(rate_hz)
+-        t0 = rospy.Time.now()
++        start_time = rospy.Time.now()
+ 
+-        # 1) Wait for first yaw reading
+         while self.yaw is None and not rospy.is_shutdown():
+-            if (rospy.Time.now() - t0).to_sec() > timeout_s:
+-                rospy.logerr("YawRamp: no odometry - aborting")
++            if (rospy.Time.now() - start_time).to_sec() > timeout_s:
++                rospy.logerr("YawRamp: No yaw data received - aborting")
+                 return
+             rate.sleep()
+ 
+-        # Determine targets
+         yaw_start = self.yaw
+         yaw_target = self._wrap(yaw_start + math.radians(delta_deg))
++
+         rospy.loginfo(
+-            "YawRamp: start %.2f°, target %.2f° (Δ %.1f°)",
++            "YawRamp: start = %.2f°, target = %.2f°, Δ = %.2f°",
+             math.degrees(yaw_start), math.degrees(yaw_target), delta_deg
+         )
+-        print(f"[DEBUG] Starting yaw: {math.degrees(yaw_start):.2f}°, Target yaw: {math.degrees(yaw_target):.2f}°")
+ 
+-        # Disable x/y/z PIDs and enable quaternion PID
+-        for pub in (self.pub_x_enable, self.pub_y_enable, self.pub_z_enable):
+-            pub.publish(False)
++        # Disable linear PID controllers
++        self.pub_x_enable.publish(False)
++        self.pub_y_enable.publish(False)
++        self.pub_z_enable.publish(False)
++
++        # Enable quaternion (angular) PID controller
+         self.pub_q_enable.publish(True)
+ 
+-        #use actual current yaw each iteration
++        #step-wise adjustment loop
+         while not rospy.is_shutdown():
+-            curr = self.yaw
+-            err = self._wrap(yaw_target - curr)
+-            print(f"[DEBUG] Current yaw: {math.degrees(curr):.2f}°, Error to target: {math.degrees(err):.2f}°")
+-
+-            #check if within tolerance
+-            if abs(err) < tol_rad:
+-                rospy.loginfo("YawRamp: reached target (|err| %.2f°)", math.degrees(err))
+-                print(f"[DEBUG] Final yaw within tol: {math.degrees(curr):.2f}°")
++            curr_yaw = self.yaw
++            error = self._wrap(yaw_target - curr_yaw)
++
++            rospy.loginfo_throttle(1.0, "YawRamp Current: %.2f°, Error: %.2f°", math.degrees(curr_yaw), math.degrees(error))
++
++            if abs(error) < tol_rad:
++                rospy.loginfo("YawRamp: Reached target (error = %.2f°)", math.degrees(error))
+                 break
+ 
+-            # Determine step direction based on error sign
+-            step = max_step_rad if abs(err) > max_step_rad else abs(err)
+-            step_signed = step if err >= 0 else -step
+-
+-            #only move if step_signed actually moves toward target
+-            new_setpoint = self._wrap(curr + step_signed)
+-            #debug whether moving closer
+-            prev_dist = abs(self._wrap(yaw_target - curr))
+-            new_dist = abs(self._wrap(yaw_target - new_setpoint))
+-            if new_dist < prev_dist:
+-                print(f"[DEBUG] Advancing setpoint by {math.degrees(step_signed):.2f}° to {math.degrees(new_setpoint):.2f}°")
+-                q = quaternion_from_euler(0, 0, new_setpoint)
+-                self.pub_q_setpoint.publish(Quaternion(*q))
+-            else:
+-                print(f"[DEBUG] Step would increase error ({math.degrees(prev_dist):.2f}°→{math.degrees(new_dist):.2f}°), skipping move")
++            #choose direction of rotation and size of step(smaller step = more accurate but longer wait time)
++            step = min(max_step_rad, abs(error))
++            step_signed = step if error >= 0 else -step
++            new_setpoint_yaw = self._wrap(curr_yaw + step_signed)
+ 
+-            rate.sleep()
+-            #timeout check
+-            if (rospy.Time.now() - t0).to_sec() > timeout_s:
+-                rospy.logwarn("YawRamp: timeout, err ≈ %.2f°", math.degrees(err))
+-                print(f"[DEBUG] Timeout at yaw {math.degrees(curr):.2f}°, err {math.degrees(err):.2f}°")
++            # Publish updated quaternion setpoint
++            quat = quaternion_from_euler(0, 0, new_setpoint_yaw)
++            self.pub_q_setpoint.publish(Quaternion(*quat))
++
++            # Check for timeout
++            if (rospy.Time.now() - start_time).to_sec() > timeout_s:
++                rospy.logwarn("YawRamp: Timeout. Final error = %.2f°", math.degrees(error))
+                 break
++            rate.sleep()
+ 
+         self.pub_q_enable.publish(False)
+-        rospy.loginfo("YawRamp: done")
+-
++        rospy.loginfo("YawRamp: Rotation complete.")
+diff --git a/catkin_ws/src/propulsion/src/mechtest.py b/catkin_ws/src/propulsion/src/mechtest.py
+index 9af987ee..b8d2c696 100644
+--- a/catkin_ws/src/propulsion/src/mechtest.py
++++ b/catkin_ws/src/propulsion/src/mechtest.py
+@@ -150,8 +150,8 @@ while not rospy.is_shutdown():
+             vert_force = float(user_input) * g
+             print(f"[INFO] Using NEW mapping at {vert_force:.2f} N vertical and {frwd_force:.2f} N forward")
+ 
+-            hover_pwm = [1500, force_to_pwm_thruster(2, vert_force), force_to_pwm_thruster(3, vert_force), 1500,
+-                         1500, force_to_pwm_thruster(6, vert_force), force_to_pwm_thruster(7, vert_force), 1500]
++            hover_pwm = [1500, force_to_pwm_thruster(7, vert_force), force_to_pwm_thruster(6, vert_force), 1500,
++                         1500, force_to_pwm_thruster(3, vert_force), force_to_pwm_thruster(2, vert_force), 1500]
+ 
+             print(f"[INFO] Publishing hover command: {hover_pwm}")
+             pwm_pub.publish(ThrusterMicroseconds(microseconds=hover_pwm))
+@@ -165,10 +165,10 @@ while not rospy.is_shutdown():
+                 go = True
+ 
+         forward_pwm = hover_pwm.copy()
+-        forward_pwm[BACK_LEFT] = force_to_pwm_thruster(1, frwd_force)
+-        forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(4, -frwd_force)
+-        forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(5, -frwd_force)
+-        forward_pwm[BACK_RIGHT] = force_to_pwm_thruster(8, frwd_force)
++        forward_pwm[BACK_LEFT] = force_to_pwm_thruster(8, frwd_force)
++        forward_pwm[FRONT_LEFT] = force_to_pwm_thruster(5, -frwd_force)
++        forward_pwm[FRONT_RIGHT] = force_to_pwm_thruster(4, -frwd_force)
++        forward_pwm[BACK_RIGHT] = force_to_pwm_thruster(1, frwd_force)
+ 
+         print(f"[INFO] Publishing forward command: {forward_pwm}")
+         pwm_pub.publish(ThrusterMicroseconds(microseconds=forward_pwm))
+diff --git a/catkin_ws/src/propulsion/src/thrust_mapper.py b/catkin_ws/src/propulsion/src/thrust_mapper.py
+index ec88470a..9017c385 100755
+--- a/catkin_ws/src/propulsion/src/thrust_mapper.py
++++ b/catkin_ws/src/propulsion/src/thrust_mapper.py
+@@ -1,42 +1,46 @@
+ #!/usr/bin/env python3
+ """
+-Description: Thrust mapper node subscribes to the effort topic, converts the wrench readings to forces,
++Description: Thrust mapper node subscribes to the effort topic, converts the wrench readings to thruster forces,
+ and then converts the forces to PWM signals and publishes them.
+ """
+-
++import math
+ import numpy as np
+ import rospy
+-from thrust_mapper_utils import thruster_mount_dirs, force_to_pwm_thruster  # Assumes force_to_pwm, thruster_mount_dirs, etc. are defined here.
++from thrust_mapper_utils import thruster_mount_dirs, force_to_pwm_thruster 
+ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
+-from geometry_msgs.msg import Wrench, Vector3
++from geometry_msgs.msg import Wrench, Vector3, Quaternion
+ from nav_msgs.msg import Odometry
+ from tf.transformations import euler_from_quaternion
+ 
++import tf2_ros
++import tf2_geometry_msgs
++from geometry_msgs.msg import WrenchStamped
++
+ # Constant parameters of the thruster positions
+ l = rospy.get_param("distance_thruster_thruster_length")
+ w = rospy.get_param("distance_thruster_thruster_width")
+ alpha = np.radians(rospy.get_param("angle_thruster"))
+ a = rospy.get_param("distance_thruster_middle_length")
+ 
+-# Matrix mapping from thruster forces to wrench (6x8)
++# Matrix mapping from thruster forces to wrench (6x8) - need two matrices; one for sim one for rl.
+ T = np.array([
+     # SURGE (X)
+-    [ np.cos(alpha),  0,0, -np.cos(alpha), -np.cos(alpha),0,0,  np.cos(alpha)],
++    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0,  np.cos(alpha)],
+     # SWAY (Y)
+-    [ -np.sin(alpha),0,0,  -np.sin(alpha), np.sin(alpha),0,0, np.sin(alpha)],
++    [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
+     # HEAVE (Z)
+-    [0,-1,-1,0,0,-1,-1,0],
++    [ 0, -1, -1, 0, 0, -1,-1,0],
+     # ROLL (X-rotation)
+     [0,  w/2,w/2,0,0, -w/2,-w/2,0],
+     # PITCH (Y-rotation)
+-    [0,-a,a,0,0,   a,-a,0],
++    [0,-a,a,0,0,a,-a,0],
+     # YAW (Z-rotation)
+     [ - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)),
+       - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)) ]
+ ])
+ T_inv = np.linalg.pinv(T)
+-print("T =", T)
+-print("T_inv =", T_inv)
++#print("T =", T)
++#print("T_inv =", T_inv)
+ 
+ # Temporary wait to allow sync with Arduino (adjust as needed)
+ rospy.sleep(4.0)
+@@ -44,55 +48,49 @@ rospy.sleep(4.0)
+ 
+ class ThrusterMapper:
+     def __init__(self):
+-        # Initialize current orientation [roll, pitch, yaw]
+-        self.current_orientation = np.zeros(3)
+-        rospy.Subscriber("/state", Odometry, self.orientation_cb)
+         
+         # Publishers for thruster microseconds and forces
+         self.pub_us = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
+         self.pub_forces = rospy.Publisher("/propulsion/forces", ThrusterForces, queue_size=1)
++
+         
+         # Subscribe to the effort command topic
+         rospy.Subscriber("/controls/effort", Wrench, self.wrench_to_thrust)
++
++        #Buffer and Listener for reference frame transformation
++        self.tf_buffer = tf2_ros.Buffer()
++        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+     
+-    def orientation_cb(self, msg):
+-        """Callback to update the current orientation from Odometry."""
+-        q = msg.pose.pose.orientation
+-        self.current_orientation = euler_from_quaternion([q.x, q.y, q.z, q.w])
+     
+-    def global_to_body_frame(self, wrench):
+-        yaw = self.current_orientation[2]
+-        R = np.array([
+-            [np.cos(yaw), np.sin(yaw), 0],   # Global X → Body X
+-            [-np.sin(yaw), np.cos(yaw), 0],  # Global Y → Body Y
+-            [0, 0, 1]                        # Global Z → Body Z
+-        ])
+-        # For relative commands, use identity matrix
+-        force_body = np.array([wrench.force.x, wrench.force.y, wrench.force.z])
+-        torque_body = np.array([wrench.torque.x, wrench.torque.y, wrench.torque.z])
+-        return Wrench(force=Vector3(*force_body), torque=Vector3(*torque_body))
+-
+-
+     def wrench_to_thrust(self, wrench_msg):
+         """
+         Callback function that maps a received Wrench message into thruster forces.
+         It first converts the wrench from global to body frame, then applies the
+-        pseudo-inverse of the thruster mapping matrix.
++        pseudo-inverse of the thruster mapping matrix. We assume that all messages published on /controls/effort
++        are in the global frame.
++
+         """
+-        body_wrench = self.global_to_body_frame(wrench_msg)
++
++        wrench_stamped = WrenchStamped()
++        wrench_stamped.header.stamp = rospy.Time.now()
++        wrench_stamped.header.frame_id = "auv"
++        wrench_stamped.wrench = wrench_msg
++        
+         
+         # Construct the 6x1 vector from the body wrench
+         a_vec = np.array([
+-            [body_wrench.force.x],
+-            [body_wrench.force.y],
+-            [body_wrench.force.z],
+-            [body_wrench.torque.x],
+-            [body_wrench.torque.y],
+-            [body_wrench.torque.z]
++            [wrench_stamped.wrench.force.x],
++            [wrench_stamped.wrench.force.y],
++            [wrench_stamped.wrench.force.z],
++            [wrench_stamped.wrench.torque.x],
++            [wrench_stamped.wrench.torque.y],
++            [wrench_stamped.wrench.torque.z]
+         ])
+         
+         # Calculate the thruster forces using the pseudo-inverse
+         converted_w = np.matmul(T_inv, a_vec)
++        converted_w = (converted_w.flatten()).reshape((8,1))
++
+         tf_msg = ThrusterForces()
+         tf_msg.BACK_LEFT = converted_w[0][0]
+         tf_msg.HEAVE_BACK_LEFT = converted_w[1][0]
+diff --git a/catkin_ws/src/propulsion/src/thrust_mapper_utils.py b/catkin_ws/src/propulsion/src/thrust_mapper_utils.py
+index ca57e1fd..bdea8485 100755
+--- a/catkin_ws/src/propulsion/src/thrust_mapper_utils.py
++++ b/catkin_ws/src/propulsion/src/thrust_mapper_utils.py
+@@ -58,8 +58,8 @@ thruster_mount_dirs = [ #rep physical orientation of thrusters
+     1,   # HEAVE_BACK_RIGHT (CCW)
+     1   # BACK_RIGHT (CW)
+ ]
+-#1 is forward, -1 is backward, 0.5 is half thrust in specific direction
+-#If force is exactly zero, returns 1500 μs (neutral signal, no movement).
++# 1 is forward, -1 is backward, 0.5 is half thrust in specific direction
++# If force is exactly zero, returns 1500 μs (neutral signal, no movement).
+ 
+ 
+ 
+@@ -77,18 +77,18 @@ def force_to_pwm(force, coeffs_left, coeffs_right):
+     Returns:
+         int: PWM signal in microseconds, clipped to [1100, 1900] µs (ESC input range)
+     """
+-    if abs(force) <= deadband_eps:
++    if abs(1* force) <= deadband_eps:
+         # Linear interpolation within deadband to ensure smooth transition
+         pwm_pos_eps = np.polyval(coeffs_right, deadband_eps)
+         pwm_neg_eps = np.polyval(coeffs_left, -deadband_eps)
+-        if force >= 0:
+-            pwm = 1500 + (force / deadband_eps) * (pwm_pos_eps - 1500)
++        if 1 * force >= 0:
++            pwm = 1500 + (1 * force / deadband_eps) * (pwm_pos_eps - 1500)
+         else:
+-            pwm = 1500 + (force / deadband_eps) * (1500 - pwm_neg_eps)
+-    elif force < -deadband_eps:
+-        pwm = np.polyval(coeffs_left, force)
++            pwm = 1500 + (1 * force / deadband_eps) * (1500 - pwm_neg_eps)
++    elif 1 * force < -deadband_eps:
++        pwm = np.polyval(coeffs_left, 1 * force)
+     else:
+-        pwm = np.polyval(coeffs_right, force)
++        pwm = np.polyval(coeffs_right, 1 * force)
+ 
+     return int(np.clip(pwm, 1100, 1900))
+ 
+@@ -104,4 +104,4 @@ def force_to_pwm_thruster(thruster_index, force):
+         int: PWM signal for that specific thruster
+     """
+     coeffs_left, coeffs_right = thruster_poly_coeffs[thruster_index - 1]
+-    return force_to_pwm(force, coeffs_left, coeffs_right)
++    return force_to_pwm(force, coeffs_left, coeffs_right)
+\ No newline at end of file
+diff --git a/catkin_ws/src/sensors/src/dvl_convariance.py b/catkin_ws/src/sensors/src/dvl_convariance.py
+deleted file mode 100755
+index 10fdcff1..00000000
+--- a/catkin_ws/src/sensors/src/dvl_convariance.py
++++ /dev/null
+@@ -1,98 +0,0 @@
+-#!/usr/bin/env python3
+-
+-import rospy
+-import serial
+-from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped, TwistStamped, Pose
+-from tf import transformations
+-import numpy as np
+-
+-RAD_PER_DEG = np.pi / 180.0
+-
+-
+-def parse_dead_reckon_report(line, quat_variance):
+-    tokens = line.split(",")
+-    time_stamp = float(tokens[1])
+-    x = float(tokens[2])
+-    y = float(tokens[3])
+-    z = float(tokens[4])
+-    std = float(tokens[5])
+-    roll = float(tokens[6])
+-    pitch = float(tokens[7])
+-    yaw = float(tokens[8])
+-    status = bool(tokens[9])
+-    return [roll, pitch, yaw]
+-
+-
+-
+-def main():
+-    rospy.init_node("waterlinked_driver")
+-
+-    pub_vr = rospy.Publisher("/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1)
+-    pub_dr = rospy.Publisher("/sensors/dvl/pose", PoseWithCovarianceStamped, queue_size=1)
+-
+-    port = rospy.get_param("~port")
+-    baudrate = rospy.get_param("~baudrate")
+-    quat_variance = rospy.get_param("~quat_variance")
+-
+-
+-    try:
+-        conn = serial.Serial(port)
+-    except serial.serialutil.SerialException:
+-        rospy.logerr("ERR: /dev/dvl directory does not exist")
+-        rospy.sleep(5)
+-        exit()
+-
+-    conn.timeout = 10
+-    # dvl's baud has been set to 115200 but its default is 9600.
+-    # There is a way to set the baudrate of the dvl through a command.
+-    conn.baudrate = baudrate
+-
+-    if not conn.isOpen():
+-        conn.open()
+-
+-    conn.send_break()
+-    conn.flush()
+-
+-    conn.write("wcr\r\n".encode("utf-8"))
+-    conn.flush()
+-
+-    print("Reset dead reckoning.")
+-
+-    while conn.is_open and not rospy.is_shutdown():
+-        try:
+-            line = conn.readline().decode("utf-8")
+-            if line.startswith("wra"):
+-                print("INFO: DVL dead reckoning reset successful.")
+-                break
+-            elif line.startswith("wrn"):
+-                print("WARN: DVL dead reckoning reset failed.")
+-                break
+-        except Exception as e:
+-            print(e)
+-            break
+-
+-    # Only grabbing data we care about but this dvl can be used for more.
+-    # Refer to work horse manual for more info
+-    start = rospy.Time.now()
+-    eulers = []
+-    while conn.is_open and not rospy.is_shutdown() and rospy.Time.now() - start < rospy.Duration(30):
+-        try:
+-            line = conn.readline().decode("utf-8")
+-            # print(line)
+-            if line.startswith("wrp"):
+-                eulers.append(parse_dead_reckon_report(line, quat_variance))
+-        except Exception as e:
+-            print(e)
+-            conn.close()
+-            exit()
+-    eulers = np.array(eulers)
+-    eulers_cov = np.cov(eulers.T)
+-    print('Eulers Covariance:')
+-    print(eulers_cov)
+-
+-
+-if __name__ == "__main__":
+-    try:
+-        main()
+-    except KeyboardInterrupt:
+-        exit()
+diff --git a/catkin_ws/src/sensors/src/dvl_republish.cpp b/catkin_ws/src/sensors/src/dvl_republish.cpp
+index 4073390e..3dde3558 100755
+--- a/catkin_ws/src/sensors/src/dvl_republish.cpp
++++ b/catkin_ws/src/sensors/src/dvl_republish.cpp
+@@ -32,10 +32,6 @@ int main(int argc, char **argv)
+     // Advertise the _with_covariance message
+     pub_dvl = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/sensors/dvl/twist", 10);
+ 
+-    // Subscribe to your raw DVL velocities
+-    ros::Subscriber sub = nh.subscribe<geometry_msgs::TwistStamped>(
+-        "/sensors/dvl/raw", 10, rawDvlCb);
+-
+     ros::spin();
+     return 0;
+ }
+diff --git a/catkin_ws/src/sensors/src/waterlinked_dvl.py b/catkin_ws/src/sensors/src/waterlinked_dvl.py
+index 3c596156..76364703 100755
+--- a/catkin_ws/src/sensors/src/waterlinked_dvl.py
++++ b/catkin_ws/src/sensors/src/waterlinked_dvl.py
+@@ -57,9 +57,9 @@ def parse_dead_reckon_report(line, quat_variance):
+     tokens = line.split(",")
+     time_stamp = float(tokens[1])
+     x = float(tokens[2])
+-    y = float(tokens[3])
+-    z = float(tokens[4])
+-    std = float(tokens[5])
++    y = float(tokens[3])        # distance in y direction (in meters)
++    z = float(tokens[4])        # distance in downward direction (in meters)
++    std = float(tokens[5])      # standard deviation (in meters)
+     roll = float(tokens[6])
+     pitch = float(tokens[7])
+     yaw = float(tokens[8])
+@@ -99,7 +99,6 @@ def main():
+     baudrate = rospy.get_param("~baudrate")
+     quat_variance = rospy.get_param("~quat_variance")
+ 
+-
+     try:
+         conn = serial.Serial(port)
+     except serial.serialutil.SerialException:
+diff --git a/catkin_ws/src/sim/src/unity_bridge.py b/catkin_ws/src/sim/src/unity_bridge.py
+index 9f6c5f9e..27a25350 100755
+--- a/catkin_ws/src/sim/src/unity_bridge.py
++++ b/catkin_ws/src/sim/src/unity_bridge.py
+@@ -76,11 +76,11 @@ def publish_bypass(pose, ang_vel):
+ 
+ def cb_unity_state(msg):
+     global reseted
+-    pose_x = -msg.position.z
++    # Flips to the right-hand rule
++    pose_x = msg.position.z
+     pose_y = -msg.position.x
+-    # pose_x = 0
+-    # pose_y = 0
+     pose_z = msg.position.y
++
+     q_ESD_imunominaldown_x = msg.orientation.x
+     q_ESD_imunominaldown_y = msg.orientation.y
+     q_ESD_imunominaldown_z = msg.orientation.z
+@@ -92,11 +92,26 @@ def cb_unity_state(msg):
+ 
+     q_ENU_imunominalup = q_ENU_ESD * q_ESD_imunominaldown * q_imunominaldown_imunominalup
+ 
+-    twist_angular_e = msg.angular_velocity.z
+-    twist_angular_n = msg.angular_velocity.x
+-    twist_angular_u = -msg.angular_velocity.y
+-    twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
+-
++    # TODO: Rename coordinate frames because they are not ENU
++    twist_enu = [
++        -msg.angular_velocity.z, 
++        msg.angular_velocity.x,
++        msg.angular_velocity.y
++    ]
++
++    # Flips to the right-hand rule
++    velocity_enu = [
++        msg.velocity.z, 
++        -msg.velocity.x, 
++        msg.velocity.y
++    ]
++
++    # Flips to the right-hand rule
++    acceleration_enu = [
++        msg.linear_acceleration.z, 
++        -msg.linear_acceleration.x,
++        msg.linear_acceleration.y
++    ]
+ 
+     frequencies = msg.frequencies
+     times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
+@@ -106,11 +121,6 @@ def cb_unity_state(msg):
+     isDepthSensorActive = msg.isDepthSensorActive
+     isHydrophonesActive = msg.isHydrophonesActive
+ 
+-
+-    velocity_enu = [-msg.velocity.z, -msg.velocity.x, msg.velocity.y]
+-
+-    acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
+-
+     # HYDROPHONES
+     if isHydrophonesActive:
+         for i in range(NUMBER_OF_PINGERS):
+@@ -119,7 +129,6 @@ def cb_unity_state(msg):
+             hydrophones_msg.times = times[i]
+             pub_hydrophones_sensor.publish(hydrophones_msg)
+ 
+-
+     if bypass:
+         pose = Pose()
+         pose.position.x = pose_x
+@@ -135,7 +144,7 @@ def cb_unity_state(msg):
+         
+         ang_vel = Vector3(*ang_vel_auv)
+ 
+-        publish_bypass(pose, ang_vel)
++        publish_bypass(pose, ang_vel)   # bypasses the actual conversion and uses direct positions from the sim
+         
+         return
+     elif not reseted:
+@@ -175,7 +184,6 @@ def cb_unity_state(msg):
+             x=q_ENU_imuup.x, y=q_ENU_imuup.y, z=q_ENU_imuup.z, w=q_ENU_imuup.w
+         )
+ 
+-
+         twist_imu = quaternion.rotate_vectors(
+             q_ENU_imuup.inverse(), twist_enu
+         )
+diff --git a/catkin_ws/src/state_estimation/CMakeLists.txt b/catkin_ws/src/state_estimation/CMakeLists.txt
+index a45660d1..43877123 100644
+--- a/catkin_ws/src/state_estimation/CMakeLists.txt
++++ b/catkin_ws/src/state_estimation/CMakeLists.txt
+@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
+   sensors
+   roscpp REQUIRED
+ 	rospy
++  planner
+   tf
+ 	tf2
+ 	tf2_geometry_msgs
+@@ -20,6 +21,7 @@ catkin_package( CATKIN_DEPENDS
+   sensors
+   roscpp
+ 	rospy
++  planner
+ 	tf2
+ 	tf2_geometry_msgs
+ 	tf2_ros
+diff --git a/catkin_ws/src/state_estimation/launch/localization-dvl.launch b/catkin_ws/src/state_estimation/launch/localization-dvl.launch
+deleted file mode 100644
+index 0fd72d7b..00000000
+--- a/catkin_ws/src/state_estimation/launch/localization-dvl.launch
++++ /dev/null
+@@ -1,62 +0,0 @@
+-<launch>
+-
+-    <arg name="remove_gravity" default="true"/>
+-
+-    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+-      <param name="frequency" value="10"/>  
+-      <param name="sensor_timeout" value="1.0"/>  
+-      <param name="two_d_mode" value="false"/>
+-
+-      <param name="print_diagnostics" value="true"/>
+-
+-      <param name="map_frame" value="map"/>
+-      <param name="odom_frame" value="odom"/>
+-      <param name="base_link_frame" value="base_link"/>
+-      <param name="world_frame" value="odom"/>
+-
+-      <param name="twist0" value="/sensors/dvl/twist"/>
+-      <param name="imu0" value="/sensors/imu/data"/> 
+-      <param name="depth0" value="/sensors/depth/pose"/>
+-      <param name="pose0" value="/sensors/dvl/pose"/>
+-
+-      <param name="debug" value="true" />
+-
+-      <rosparam param="twist0_config">[false,  false,  false, 
+-                                      false, false, false, 
+-                                      true, true, true, 
+-                                      false, false, false,
+-                                      false, false, false]</rosparam>
+-
+-      <rosparam param="imu0_config">[false, false, false, 
+-                                     true,  true,  true, 
+-                                     false, false, false, 
+-                                     true,  true,  true,
+-                                     true, true, true]</rosparam>
+-      
+-      <rosparam param="depth0_config">[false, false, true, 
+-                                       false, false, false, 
+-                                       false, false, false, 
+-                                       false, false, false,
+-                                       false, false, false]</rosparam>
+-      
+-      <rosparam param="pose0_config">[true, true, true,
+-                                      true, true, true,
+-                                      false, false, false,
+-                                      false, false, false,
+-                                      false, false, false]</rosparam>
+-
+-      <param name="imu0_differential" value="false"/>
+-      <param name="depth0_differential" value="false"/>
+-      <param name="pose0_differential" value="false"/>
+-
+-      <param name="twist0_relative" value="false"/>
+-      <param name="imu0_relative" value="true"/>
+-      <param name="depth0_relative" value="false"/>
+-      <param name="pose0_relative" value="true"/>
+-
+-      <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
+-      
+-    </node>
+-
+-    <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
+-</launch>
+diff --git a/catkin_ws/src/state_estimation/launch/localization.launch b/catkin_ws/src/state_estimation/launch/localization.launch
+index bef6c338..6888abf5 100644
+--- a/catkin_ws/src/state_estimation/launch/localization.launch
++++ b/catkin_ws/src/state_estimation/launch/localization.launch
+@@ -4,7 +4,7 @@
+ 
+     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+       <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
+-      <param name="frequency" value="20"/>  
++      <param name="frequency" value="40"/>  
+       <param name="sensor_timeout" value="0.5"/>  
+       <param name="two_d_mode" value="false"/>
+ 
+@@ -32,14 +32,23 @@
+                                      true,  true,  true, 
+                                      false, false, false, 
+                                      true,  true,  true,
+-                                     true, true, true]</rosparam>
++                                     true,  true,  true]</rosparam>
+       
+-      <rosparam param="depth0_config">[false, false, true, 
+-                                       false, false, false, 
+-                                       false, false, false, 
+-                                       false, false, false,
+-                                       false, false, false]</rosparam>
++      <rosparam param="depth0_config">
++      [false, false, true, 
++       false, false, false, 
++       false, false, false, 
++       false, false, false,
++       false, false, false]
++      </rosparam>
+ 
++      <rosparam param="initial_state">
++      [0.0,  0.0,  0.0,
++       0.0,  0.0,  0.0,
++       0.0,  0.0,  0.0,
++       0.0,  0.0,  0.0,
++       0.0,  0.0,  0.0]
++       </rosparam>
+ 
+       <param name="depth0_relative" value="false"/>
+ 
+@@ -48,6 +57,8 @@
+     </node>
+ 
+     <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
++
++    
+     
+     <!-- Log the data of odometry -->
+     <node pkg="rosbag" type="record" name="rosbag_odom"
+@@ -59,4 +70,6 @@
+       args="/state/pose"
+     />
+ 
++    <node pkg="planner" type="recorder.py" name="recorder" output="screen" />
++
+ </launch>
+diff --git a/catkin_ws/src/state_estimation/package.xml b/catkin_ws/src/state_estimation/package.xml
+index f5eca562..58ab36c6 100644
+--- a/catkin_ws/src/state_estimation/package.xml
++++ b/catkin_ws/src/state_estimation/package.xml
+@@ -15,6 +15,8 @@
+   <build_depend>auv_msgs</build_depend>
+   <build_depend>roscpp</build_depend>
+   <build_depend>sensors</build_depend>
++  <build_depend>planner</build_depend>
++  <build_depend>std_msgs</build_depend>
+   <build_depend>geometry_msgs</build_depend>
+   <build_depend>nav_msgs</build_depend>
+   <build_depend>rospy</build_depend>
+@@ -30,6 +32,8 @@
+   <exec_depend>auv_msgs</exec_depend>
+   <exec_depend>roscpp</exec_depend>
+   <exec_depend>sensors</exec_depend>
++  <exec_depend>planner</exec_depend>
++  <exec_depend>std_msgs</exec_depend>
+   <exec_depend>geometry_msgs</exec_depend>
+   <exec_depend>nav_msgs</exec_depend>
+   <exec_depend>rospy</exec_depend>
+diff --git a/catkin_ws/src/state_estimation/src/odom_republisher.cpp b/catkin_ws/src/state_estimation/src/odom_republisher.cpp
+index feb86640..7fbc4f8d 100644
+--- a/catkin_ws/src/state_estimation/src/odom_republisher.cpp
++++ b/catkin_ws/src/state_estimation/src/odom_republisher.cpp
+@@ -26,8 +26,6 @@ ros::Publisher pub_depth_status;
+ 
+ double depth;
+ 
+-double RAD_TO_DEG = 180.0 / 3.14159265;
+-
+ void broad_cast_pose(const geometry_msgs::Pose &msg);
+ 
+ void depth_cb(const std_msgs::Float64::ConstPtr &msg)
+@@ -51,6 +49,13 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
+     pub_x.publish(x);
+     pub_y.publish(y);
+     pub_z.publish(z);
++
++    ROS_DEBUG("Euler angles: %f, %f, %f\n", 
++        msg->twist.twist.angular.x,
++        msg->twist.twist.angular.y,
++        msg->twist.twist.angular.z
++    );
++    
+     pub_pose.publish(pose);
+ 
+     // publish angular velocity
+@@ -96,26 +101,16 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
+         last_clock_msg = now;
+     }
+ 
+-    static tf2_ros::TransformBroadcaster br;
+-    geometry_msgs::TransformStamped transformStamped1;
+-    transformStamped1.header.stamp = ros::Time::now();
+-    transformStamped1.header.frame_id = "odom";
+-    transformStamped1.child_frame_id = "base_link";
+-    transformStamped1.transform.translation.x = msg.position.x;
+-    transformStamped1.transform.translation.y = msg.position.y;
+-    transformStamped1.transform.translation.z = msg.position.z;
+-    transformStamped1.transform.rotation = msg.orientation;
+-    br.sendTransform(transformStamped1);
+-
+-    geometry_msgs::TransformStamped transformStamped2;
+-    transformStamped2.header.stamp = ros::Time::now();
+-    transformStamped2.header.frame_id = "base_link";
+-    transformStamped2.child_frame_id = "auv_rotation";
+-    transformStamped2.transform.translation.x = 0;
+-    transformStamped2.transform.translation.y = 0;
+-    transformStamped2.transform.translation.z = 0;
+-    transformStamped2.transform.rotation = msg.orientation;
+-    br.sendTransform(transformStamped2);
++    // static tf2_ros::TransformBroadcaster br;
++    // geometry_msgs::TransformStamped transformStamped;
++    // transformStamped1.header.stamp = ros::Time::now();
++    // transformStamped1.header.frame_id = "odom";
++    // transformStamped1.child_frame_id = "auv";
++    // transformStamped1.transform.translation.x = msg.position.x;
++    // transformStamped1.transform.translation.y = msg.position.y;
++    // transformStamped1.transform.translation.z = msg.position.z;
++    // transformStamped1.transform.rotation = msg.orientation;
++    // br.sendTransform(transformStamped);
+ }
+ 
+ int main(int argc, char **argv)
+diff --git a/catkin_ws/src/vision/src/object_map.py b/catkin_ws/src/vision/src/object_map.py
+index b2833b55..dc6200a9 100755
+--- a/catkin_ws/src/vision/src/object_map.py
++++ b/catkin_ws/src/vision/src/object_map.py
+@@ -5,7 +5,6 @@ import math
+ 
+ from auv_msgs.msg import VisionObject, VisionObjectArray
+ 
+-
+ # Callback when a new object detection frame is published.
+ def object_detect_cb(msg):
+     try:
+diff --git a/scripts/detect_device.sh b/scripts/detect_device.sh
+deleted file mode 100644
+index 8c18e2e5..00000000
+--- a/scripts/detect_device.sh
++++ /dev/null
+@@ -1,21 +0,0 @@
+-#!/bin/bash
+-
+-echo "Please unplug the device you're trying to identify."
+-read -p "Press Enter when ready..."
+-
+-# List current /dev/tty* devices
+-before=($(ls /dev/tty*))
+-echo "Captured list before plugging in the device."
+-
+-echo
+-echo "Now plug in the device."
+-read -p "Press Enter when the device is plugged in..."
+-
+-# List /dev/tty* devices again
+-after=($(ls /dev/tty*))
+-echo "Captured list after plugging in the device."
+-
+-# Compare the two lists to find the difference
+-echo
+-echo "New device(s) detected:"
+-diff <(printf "%s\n" "${before[@]}" | sort) <(printf "%s\n" "${after[@]}" | sort) | grep '^>' | sed 's/^> //'
+\ No newline at end of file
+diff --git a/scripts/map_device.sh b/scripts/map_device.sh
+deleted file mode 100755
+index 5aa56e63..00000000
+--- a/scripts/map_device.sh
++++ /dev/null
+@@ -1,52 +0,0 @@
+-#!/bin/bash
+-
+-# Ask for device path
+-read -p "Enter the device path (e.g., /dev/ttyUSB0 or /dev/ttyACM0): " DEVICE
+-
+-# Check device existence
+-if [ ! -e "$DEVICE" ]; then
+-    echo "Error: Device $DEVICE does not exist."
+-    exit 1
+-fi
+-
+-# Ask for rules filename
+-read -p "Enter the name for the .rules file (e.g., imu.rules): " RULE_FILE
+-
+-# Validate filename
+-if [[ ! "$RULE_FILE" =~ \.rules$ ]]; then
+-    echo "Error: Filename must end with .rules"
+-    exit 1
+-fi
+-
+-# Ask for symlink name
+-read -p "Enter the name for the symlink (e.g., imu, gps, sensor1): " SYMLINK_NAME
+-
+-# Get udev info
+-UDEV_OUTPUT=$(udevadm info -a -n "$DEVICE")
+-
+-# Extract fields
+-idVendor=$(echo "$UDEV_OUTPUT" | grep -m1 'ATTRS{idVendor}' | sed -E 's/.*=="(.*)"/\1/')
+-idProduct=$(echo "$UDEV_OUTPUT" | grep -m1 'ATTRS{idProduct}' | sed -E 's/.*=="(.*)"/\1/')
+-serial=$(echo "$UDEV_OUTPUT" | grep -m1 'ATTRS{serial}' | sed -E 's/.*=="(.*)"/\1/')
+-
+-# Determine device type
+-KERNEL=$(basename "$DEVICE")
+-if [[ "$KERNEL" == ttyUSB* ]]; then
+-    KERNEL_PATTERN="ttyUSB[0-9]*"
+-elif [[ "$KERNEL" == ttyACM* ]]; then
+-    KERNEL_PATTERN="ttyACM[0-9]*"
+-else
+-    echo "Error: Unsupported device type $KERNEL"
+-    exit 1
+-fi
+-
+-# Build the rule
+-RULE="SUBSYSTEM==\"tty\", KERNEL==\"$KERNEL_PATTERN\", ATTRS{idVendor}==\"$idVendor\", ATTRS{idProduct}==\"$idProduct\", ATTRS{serial}==\"$serial\", SYMLINK+=\"$SYMLINK_NAME\""
+-
+-# Save the rule
+-echo "$RULE" > "$RULE_FILE"
+-
+-# Output
+-echo "✅ Rule saved to $RULE_FILE:"
+-echo "$RULE"
+-

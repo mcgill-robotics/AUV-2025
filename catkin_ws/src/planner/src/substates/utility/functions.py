@@ -4,7 +4,7 @@ import numpy as np
 import quaternion
 import rospy
 from std_msgs.msg import String
-from tf.transformations import quaternion_from_euler
+from tf.transformations import quaternion_from_euler, quaternion_multiply
 
 def countdown(secs):
     pub_mission_display = rospy.Publisher("/mission_display", String, queue_size=1)

@@ -1,4 +1,4 @@
-name: Docker Compose Build 'jetson' on ARM
+name: Docker Compose Build on ARM
 
 on:
   push:
@@ -37,5 +37,5 @@ jobs:
             docker-compose-plugin
       - name: Build Docker Compose file
         run: |
-          cd Docker/jetson
+          cd Docker/ros1
           docker compose build

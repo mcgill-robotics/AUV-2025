@@ -76,11 +76,11 @@ def publish_bypass(pose, ang_vel):
 
 def cb_unity_state(msg):
     global reseted
-    pose_x = -msg.position.z
+    # Flips to the right-hand rule
+    pose_x = msg.position.z
     pose_y = -msg.position.x
-    # pose_x = 0
-    # pose_y = 0
     pose_z = msg.position.y
+
     q_ESD_imunominaldown_x = msg.orientation.x
     q_ESD_imunominaldown_y = msg.orientation.y
     q_ESD_imunominaldown_z = msg.orientation.z
@@ -92,11 +92,26 @@ def cb_unity_state(msg):
 
     q_ENU_imunominalup = q_ENU_ESD * q_ESD_imunominaldown * q_imunominaldown_imunominalup
 
-    twist_angular_e = msg.angular_velocity.z
-    twist_angular_n = msg.angular_velocity.x
-    twist_angular_u = -msg.angular_velocity.y
-    twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
+    # TODO: Rename coordinate frames because they are not ENU
+    twist_enu = [
+        -msg.angular_velocity.z, 
+        msg.angular_velocity.x,
+        msg.angular_velocity.y
+    ]
 
+    # Flips to the right-hand rule
+    velocity_enu = [
+        msg.velocity.z, 
+        -msg.velocity.x, 
+        msg.velocity.y
+    ]
+
+    # Flips to the right-hand rule
+    acceleration_enu = [
+        msg.linear_acceleration.z, 
+        -msg.linear_acceleration.x,
+        msg.linear_acceleration.y
+    ]
 
     frequencies = msg.frequencies
     times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
@@ -106,11 +121,6 @@ def cb_unity_state(msg):
     isDepthSensorActive = msg.isDepthSensorActive
     isHydrophonesActive = msg.isHydrophonesActive
 
-
-    velocity_enu = [-msg.velocity.z, -msg.velocity.x, msg.velocity.y]
-
-    acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
-
     # HYDROPHONES
     if isHydrophonesActive:
         for i in range(NUMBER_OF_PINGERS):
@@ -118,7 +128,6 @@ def cb_unity_state(msg):
             hydrophones_msg.frequency = frequencies[i]
             hydrophones_msg.times = times[i]
             pub_hydrophones_sensor.publish(hydrophones_msg)
-
 
     if bypass:
         pose = Pose()
@@ -135,7 +144,7 @@ def cb_unity_state(msg):
         
         ang_vel = Vector3(*ang_vel_auv)
 
-        publish_bypass(pose, ang_vel)
+        publish_bypass(pose, ang_vel)   # bypasses the actual conversion and uses direct positions from the sim
         
         return
     elif not reseted:
@@ -174,7 +183,6 @@ def cb_unity_state(msg):
         imu_msg.orientation = Quaternion(
             x=q_ENU_imuup.x, y=q_ENU_imuup.y, z=q_ENU_imuup.z, w=q_ENU_imuup.w
         )
-
 
         twist_imu = quaternion.rotate_vectors(
             q_ENU_imuup.inverse(), twist_enu
