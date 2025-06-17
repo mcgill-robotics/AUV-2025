@@ -1,14 +1,16 @@
-name: Docker Build & Push for base
+name: Docker Build & Push for base and sim
 
 on:
   push:
     branches: [noetic]
     paths:
       - 'Docker/base/**'
+      - 'Docker/sim/**'
   pull_request:
     branches: [noetic]
     paths:
       - 'Docker/base/**'
+      - 'Docker/sim/**'
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'  # 4 AM Montreal time
@@ -40,3 +42,31 @@ jobs:
           platforms: linux/amd64, linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:base
+          
+  build-and-push-sim:
+    name: Build and optionally push sim Docker image
+    runs-on: ubuntu-22.04-arm
+    needs: build-and-push-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub (only if pushing)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and optionally push image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/sim
+          file: Docker/sim/Dockerfile
+          platforms: linux/amd64, linux/arm64
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
+          tags: mcgillrobotics/auv_2025:sim
