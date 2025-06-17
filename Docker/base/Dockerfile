@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y locales \
     git \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
 
-RUN pip3 install --no-cache-dir numpy-quaternion keyboard numpy --upgrade
+RUN pip3 install --no-cache-dir numpy-quaternion ultralytics keyboard numpy scikit-learn --upgrade
 
 RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
