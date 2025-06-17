@@ -2,19 +2,14 @@
 FROM ros:noetic-ros-base
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
 
-RUN apt-get update && apt-get install -y locales\
-    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-ENV LC_ALL en_US.UTF-8 
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en     
-
-# Install all needed deps and compile the mesa llvmpipe driver from source.
-# Delete previous GPG key retrieval
-RUN apt-get update && apt-get install -y wget \
-    && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+RUN apt-get update && apt-get install -y locales \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
+    && apt-get install -y wget python3-catkin-tools python3-pip python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
     && apt-get install -y --no-install-recommends \
     ros-noetic-rosserial-arduino \
     ros-noetic-pid \
@@ -26,14 +21,13 @@ RUN apt-get update && apt-get install -y wget \
     ros-noetic-rqt-gui \
     ros-noetic-rviz \
     ros-noetic-smach-ros \
-    ros-noetic-robot-localization \ 
+    ros-noetic-robot-localization \
     ros-noetic-foxglove-bridge \
     git-lfs \
     git \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
 
-RUN pip3 install --no-cache-dir numpy-quaternion keyboard \
-    && pip install --no-cache-dir --upgrade numpy
+RUN pip3 install --no-cache-dir numpy-quaternion keyboard numpy --upgrade
 
 RUN rm -f /usr/local/bin/cmake  \
     && sudo apt-get autoremove -y  \
