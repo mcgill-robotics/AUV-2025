@@ -1,6 +1,8 @@
 # Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y locales\
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
@@ -39,5 +41,3 @@ RUN rm -f /usr/local/bin/cmake  \
     && rm -rf /root/.cache/pip \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc
-
-# attempting to trigger workflow
