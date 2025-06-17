@@ -106,7 +106,7 @@ jobs:
   build-and-push-actions:
     name: Build and optionally push actions Docker image
     runs-on: ubuntu-22.04-arm
-    needs: build-and-push-base
+    #needs: build-and-push-base
 
     steps:
       - name: Checkout code
