@@ -1,0 +1,31 @@
+<launch>
+    <arg name="localization"            default="false"/>
+    <arg     if="$(arg localization)" name="args" default=""/>
+    <arg unless="$(arg localization)" name="args" default="--delete_db_on_start"/>
+   
+    <arg name="rgb_topic"               default="/zed/zed_node/rgb/image_rect_color" />
+    <arg name="depth_topic"             default="/zed/zed_node/depth/depth_registered" />
+    <arg name="camera_info_topic"       default="/zed/zed_node/rgb/camera_info" />
+    <arg name="depth_camera_info_topic" default="/zed/zed_node/depth/camera_info" />
+
+    <arg name="odom_topic"              default="/zed/zed_node/odom" />   
+
+    <node name="rtabmap_viz" pkg="rtabmap_viz" type="rtabmap_viz" output="screen" args="" launch-prefix="">   
+        <remap from="rgb/image"         to="$(arg rgb_topic)"/>
+        <remap from="depth/image"       to="$(arg depth_topic)"/>
+        <remap from="rgb/camera_info"   to="$(arg camera_info_topic)"/>
+        <remap from="grid_map"          to="map" />
+        <remap from="odom"              to="$(arg odom_topic)"/>
+    </node> 
+
+    <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen" args="$(arg args)" launch-prefix="">
+        <rosparam command="load" file="$(find zed_rtabmap_example)/params/rtabmap.yaml" />
+   
+        <remap from="rgb/image"         to="$(arg rgb_topic)"/>
+        <remap from="depth/image"       to="$(arg depth_topic)"/>
+        <remap from="rgb/camera_info"   to="$(arg camera_info_topic)"/>
+        <remap from="grid_map"          to="map" />
+        <remap from="odom"              to="$(arg odom_topic)"/>
+       
+    </node>
+</launch>
