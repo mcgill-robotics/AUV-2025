@@ -9,6 +9,17 @@
     <arg name="depth_camera_info_topic" default="/zed/zed_node/depth/camera_info" />
 
     <arg name="odom_topic"              default="/zed/zed_node/odom" />   
+    <!--<arg name="odom_topic"              default="odom" />-->
+
+    <!-- Visual Odometry -->
+    <!--
+    <node name="rtabmap_stereo_odometry" pkg="rtabmap_ros" type="stereo_odometry" output="screen" args="" launch-prefix="">    
+        <remap from="/left/image_rect"      to="zed/zed_node/left/image_rect_color"/>
+        <remap from="/right/image_rect"     to="zed/zed_node/right/image_rect_color"/>
+        <remap from="/left/camera_info"     to="zed/zed_node/left/camera_info"/>
+        <remap from="/right/camera_info"    to="zed/zed_node/right/camera_info"/>
+    </node>
+    -->
 
     <node name="rtabmap_viz" pkg="rtabmap_viz" type="rtabmap_viz" output="screen" args="" launch-prefix="">   
         <remap from="rgb/image"         to="$(arg rgb_topic)"/>

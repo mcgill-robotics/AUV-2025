@@ -1,24 +1,20 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rtabmap</name>
-  <version>0.21.13</version>
-  <description>RTAB-Map's standalone library.</description>
-  <maintainer email="matlabbe@gmail.com">Mathieu Labbe</maintainer>
-  <license>BSD</license>
-  
-  <buildtool_depend>cmake</buildtool_depend>
+  <name>zed_rtabmap_example</name>
+  <version>3.0.0</version>
+  <description>"zed_rtabmap_example" is a ROS package to show how to use the ROS wrapper with <a href="http://introlab.github.io/rtabmap/">"RTAB-MAP"</a></description>
 
-  <build_depend>proj</build_depend>
-  <depend>cv_bridge</depend>
-  <depend>libg2o</depend>
-  <depend>gtsam</depend>
-  <depend>libpcl-all-dev</depend> <!--  include libvtk-qt -->
-  <depend>libsqlite3-dev</depend>
-  <depend>liboctomap-dev</depend>
-  <depend>qt_gui_cpp</depend> <!-- libqt4-dev or libqt5-dev -->
-  <depend>zlib</depend>
+  <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
+  <license>MIT</license>
 
-  <export>
-	  <build_type>cmake</build_type>
-  </export>
+  <url type="website">http://stereolabs.com/</url>
+  <url type="repository">https://github.com/stereolabs/zed-ros-wrapper</url>
+  <url type="bugtracker">https://github.com/stereolabs/zed-ros-wrapper/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>  
+
+  <exec_depend>rtabmap</exec_depend>
+  <exec_depend>rtabmap_ros</exec_depend>
+  <exec_depend>zed_wrapper</exec_depend>
+  <exec_depend>rviz</exec_depend>
 </package>
