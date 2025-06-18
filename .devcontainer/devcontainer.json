@@ -1,0 +1,26 @@
+{
+  "name": "AUV SLAM Dev",
+  "image": "majdkhalife/auv-slam:latest",              
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",       
+        "ms-vscode.cpptools",       
+        "ms-python.python"
+      ],
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      }
+    }
+  },
+
+  "runArgs": [
+    "--network=host",
+    "--privileged",             // for USB/camera access
+    "--device=/dev/video0",     // map your camera
+    "--device=/dev/video1"      // if you have dual cameras
+  ],
+  "workspaceFolder": "/workspace/catkin_ws/src",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/catkin_ws/src,type=bind,consistency=cached",
+  "postCreateCommand": "bash -lc \"source /opt/ros/noetic/setup.bash && catkin build\""
+}

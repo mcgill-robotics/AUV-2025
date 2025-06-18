@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rtabmap</name>
+  <version>0.21.13</version>
+  <description>RTAB-Map's standalone library.</description>
+  <maintainer email="matlabbe@gmail.com">Mathieu Labbe</maintainer>
+  <license>BSD</license>
+  
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>proj</build_depend>
+  <depend>cv_bridge</depend>
+  <depend>libg2o</depend>
+  <depend>gtsam</depend>
+  <depend>libpcl-all-dev</depend> <!--  include libvtk-qt -->
+  <depend>libsqlite3-dev</depend>
+  <depend>liboctomap-dev</depend>
+  <depend>qt_gui_cpp</depend> <!-- libqt4-dev or libqt5-dev -->
+  <depend>zlib</depend>
+
+  <export>
+	  <build_type>cmake</build_type>
+  </export>
+</package>

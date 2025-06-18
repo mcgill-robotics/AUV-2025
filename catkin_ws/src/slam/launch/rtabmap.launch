@@ -1,0 +1,5 @@
+<launch>
+<node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" args="--Grid/RangeMax 5 --delete_db_on_start --udebug --uinfo --params">
+   <param name="Optimizer/Iterations" type="int" value="50"/>
+</node>
+</launch>
