@@ -5,7 +5,7 @@ import math
 from math import sin, cos
 import numpy as np
 from scipy.spatial import KDTree
-from scipy.interpolate import BSpline
+from scipy.interpolate import splev
 
 
 # === ROS Core ===
@@ -468,54 +468,61 @@ class Controller:
 
             rate.sleep()
 
-#TODO: Add search optimization using KDTree, and better i_target calculation using incrementation.
-def LoS(self, Path: BSpline, lookahead: float, n: int = 1000, freq: int = 10):
-    ''' Controls the AUV along the given Path using Line-of-Sight.
-    Path: BSpline instance that approximates the 3D trajectory. 
-    lookahead: Lookahead distance in meters
-    n: number of sampled points on the path
-    '''
-    us = np.linspace(0, 1, n)
-    pts = Path(us).T
-    arc_lengths = np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))
-    arc_lengths = np.insert(arc_lengths, 0, 0)
-    total_length = arc_lengths[-1]
+#TODO: Upgrade this to use make_splprep and BSpline objects when we have newer version of SciPy installed
 
-    tree = KDTree(pts)
-    rate = rospy.Rate(freq)
+    def LoS(self, Path, lookahead: float, n: int = 1000, freq: int = 10):
+        ''' 
+        Controls the AUV along the given Path using Line-of-Sight.
+    
+        Args:
+            Path: Tuple (tck) from scipy.interpolate.splprep
+            lookahead: Lookahead distance in meters
+            n: Number of sampled points along the path
+            freq: Loop rate in Hz
+        '''
+        tck = Path  # Explicit renaming for clarity
+        us = np.linspace(0, 1, n)
+        pts = np.array(splev(us, tck)).T  # Evaluate and transpose to (n, 3)
 
-    self.enable_pid("x", True)
-    self.enable_pid("y", True)
-    self.enable_pid("z", True)
-    self.enable_pid("quat", True)
+        arc_lengths = np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))
+        arc_lengths = np.insert(arc_lengths, 0, 0)
+        total_length = arc_lengths[-1]
 
-    i_target = 0
-    while not rospy.is_shutdown():
-        # --- Check if state is available
-        if None in [self.x, self.y, self.z]:
-            rospy.logwarn("Waiting for state estimate...")
+        tree = KDTree(pts)
+        rate = rospy.Rate(freq)
+
+        self.enable_pid("x", True)
+        self.enable_pid("y", True)
+        self.enable_pid("z", True)
+        self.enable_pid("quat", True)
+
+        i_target = 0
+        while not rospy.is_shutdown():
+            # Ensure state is ready
+            if None in [self.x, self.y, self.z]:
+                rospy.logwarn("Waiting for state estimate...")
+                rate.sleep()
+                continue
+
+            current_pos = np.array([self.x, self.y, self.z])
+            _, i_closest = tree.query(current_pos)
+            s_closest = arc_lengths[i_closest]
+
+            s_target = min(s_closest + lookahead, total_length)
+            i_target = np.searchsorted(arc_lengths, s_target)
+            i_target = min(i_target, n - 1)
+            rospy.loginfo(f" Step: {i_target}")
+
+            target_x, target_y, target_z = pts[i_target]
+            self.pub_x_setpoint.publish(target_x)
+            self.pub_y_setpoint.publish(target_y)
+            self.pub_z_setpoint.publish(target_z)
+
+            if i_target == n - 1:
+                rospy.loginfo("Target reached.")
+                break
+
             rate.sleep()
-            continue
-
-        current_pos = np.array([self.x, self.y, self.z])
-        _, i_closest = tree.query(current_pos)
-        s_closest = arc_lengths[i_closest]
-
-        s_target = min(s_closest + lookahead, total_length)
-        i_target = np.searchsorted(arc_lengths, s_target)
-        i_target = min(i_target, n - 1)
-
-        target_x, target_y, target_z = pts[i_target]
-        self.pub_x_setpoint.publish(target_x)
-        self.pub_y_setpoint.publish(target_y)
-        self.pub_z_setpoint.publish(target_z)
-
-        if i_target == n - 1:
-            rospy.loginfo("Target reached.")
-            break
-
-        rate.sleep()
-
     
     
     
