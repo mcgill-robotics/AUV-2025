@@ -41,7 +41,7 @@ if __name__ == "__main__":
     front_cam_cur_image, down_cam_cur_image = None, None
 
     front_cam_image_sub = rospy.Subscriber(
-        "/vision/front_cam/color/image_raw", Image, front_cam_image_callback
+        "/zed2i/zed_node/stereo/image_rect_color", Image, front_cam_image_callback
     )
     down_cam_image_sub = rospy.Subscriber(
         "/vision/down_cam/image_raw", Image, down_cam_image_callback
