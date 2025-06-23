@@ -127,6 +127,6 @@ jobs:
         with:
           context: Docker/actions
           file: Docker/actions/Dockerfile
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64 #, linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:actions
