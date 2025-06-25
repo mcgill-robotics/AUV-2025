@@ -17,7 +17,7 @@ RUN apt-get -y update \
     && apt-get update \
     && add-apt-repository ppa:kisak/kisak-mesa \
     && apt-get update \
-    && apt-get -y upgrade \
+    # && apt-get -y upgrade \
     && apt-get install -y libglapi-mesa xvfb
 # && apt-get install -y mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev \
 # libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev
