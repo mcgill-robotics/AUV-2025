@@ -7,8 +7,7 @@ RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
     && apt-get update \
     && apt-get install -y --no-install-recommends ignition-fortress \
     && apt-get update \
-    && apt-get install -y libgz-tools-dev \
-    ros-noetic-ros-ign \
+    && apt install -y ros-noetic-ros-ign \
     ros-noetic-ros-ign-bridge \
     ros-noetic-ros-ign-gazebo \
     ros-noetic-gazebo-ros
