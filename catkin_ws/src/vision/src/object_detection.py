@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-
 import rospy
 import numpy as np
 import torch
 import ast
-from cv_bridge import CvBridge
-from ultralytics import YOLO
 
-from object_detection_utils import *
+# Critical: Import cv2 and related libs BEFORE sklearn (even indirectly)
+import cv2
+from cv_bridge import CvBridge
+
+# Now it's safe to import modules that may include sklearn (like object_detection_utils)
+from object_detection_utils import *  # Only after cv2
+
+# Vision/deep learning tools
+from ultralytics import YOLO
 from lane_marker_measure import measure_lane_marker
 
+# ROS messages
 from auv_msgs.msg import VisionObject, VisionObjectArray
 from std_msgs.msg import Int32MultiArray
 from sensor_msgs.msg import Image
@@ -45,6 +51,7 @@ def is_vision_ready(camera_id):
 
 def detection_frame(image, debug_image, detections, camera_id):
     # Initialize empty array for object detection frame message.
+    print("in detection frame")
     detection_frame_array = []
     image_h, image_w, _ = image.shape
     # Nested for loops get all predictions made by model.
@@ -69,6 +76,7 @@ def detection_frame(image, debug_image, detections, camera_id):
             bbox = list(box.xywh[0])
             cls_id = int(list(box.cls)[0])
             global_class_name = class_names[camera_id][cls_id]
+            print(global_class_name)
             # Add bbox visualization to image.
             debug_image = visualize_bbox(
                 debug_image, bbox, global_class_name + " " + str(conf * 100) + "%"
@@ -165,6 +173,7 @@ def publish_detection_frame(detection_frame_array):
 
 
 def vision_cb(raw_image, camera_id):
+    print("in callback")
     if not is_vision_ready(camera_id):
         return
 
@@ -243,6 +252,6 @@ if __name__ == "__main__":
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
     rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
-    rospy.Subscriber("/zed/zed_node/stereo/image_rect_color", Image, vision_cb, 1),
+    rospy.Subscriber("/zed2i/zed_node/stereo/image_rect_color", Image, vision_cb, 1),
 
     rospy.spin()
