@@ -1,57 +1,85 @@
 <launch>
-	<arg name="sim" default="false" />
-	<arg name="ekf" default="true" />
-	<param name="update_rate" value="100" />
-	<param name="z_pos_mount_offset" value="0" />
-	<param name="sensor_swap_warning_interval" value="5"/> <!-- secs -->
-	<include file="$(find state_estimation)/launch/hydrophones.launch"/>
-	<group unless="$(arg sim)">
+  <!-- Launch arguments -->
+  <arg name="sim" default="false" />
+  <arg name="ekf" default="true" />
 
-		<param name="auv_dvl_offset_x" value="0.0" />
-		<param name="auv_dvl_offset_y" value="0.0" />
-		<param name="auv_dvl_offset_z" value="-0.3" />
-		
-		<arg name="q_imunominalup_imuup_w" default="0.0" />
-		<arg name="q_imunominalup_imuup_x" default="0.0" />
-		<arg name="q_imunominalup_imuup_y" default="0.0" />
-		<arg name="q_imunominalup_imuup_z" default="1.0" />
+  <!-- General parameters -->
+  <param name="update_rate" value="100" />
+  <param name="z_pos_mount_offset" value="0" />
+  <param name="sensor_swap_warning_interval" value="5" />
 
-		<arg name="q_dvlnominalup_dvlup_w" default="0.707" />
-		<arg name="q_dvlnominalup_dvlup_x" default="0.0" />
-		<arg name="q_dvlnominalup_dvlup_y" default="0.0" />
-		<arg name="q_dvlnominalup_dvlup_z" default="-0.707" />
+  <!-- Include any hydrophone-related nodes -->
+  <include file="$(find state_estimation)/launch/hydrophones.launch"/>
 
-		<arg name="auv_dvl_offset_x" default="0.0" />
-		<arg name="auv_dvl_offset_y" default="0.0" />
-		<arg name="auv_dvl_offset_z" default="0.0" />
+  <!-- === Static Transform Configuration === -->
 
-		<node name="dvl_transform_pub" pkg="tf2_ros" type="static_transform_publisher" args="
-		$(arg auv_dvl_offset_x) $(arg auv_dvl_offset_y) $(arg auv_dvl_offset_z) 
-		$(arg q_dvlnominalup_dvlup_x) $(arg q_dvlnominalup_dvlup_y) $(arg q_dvlnominalup_dvlup_z) $(arg q_dvlnominalup_dvlup_w) 
-		auv dvl" />
-		<node name="imu_transform_pub" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 
-		$(arg q_imunominalup_imuup_x) $(arg q_imunominalup_imuup_y) $(arg q_imunominalup_imuup_z) $(arg q_imunominalup_imuup_w) 
-		auv imu" />
-		
-		<node pkg="tf2_ros" type="static_transform_publisher" name="depth_transform_pub" args="0 0 0 0 0 0 1 auv depth" />
+  <!-- === Quaternion from nominal-up to imu-up === -->
+  <!-- ENU: Quaternion (qx, qy, qz, qw) rotation from AUV frame to IMU frame -->
+  <!-- TODO: Replace with the actual rotation based on how the IMU is mounted -->
+  <arg name="q_imunominalup_imuup_w" default="1.0" />
+  <arg name="q_imunominalup_imuup_x" default="0.0" />
+  <arg name="q_imunominalup_imuup_y" default="0.0" />
+  <arg name="q_imunominalup_imuup_z" default="0.0" />
 
-		<param name="update_state_on_clock" value="false" />
-		<group if="$(arg ekf)">
-			<include file="$(find state_estimation)/launch/localization.launch">
-				<arg name="remove_gravity" value="true" />
-			</include>
-		</group>
-	</group>
+  <!-- === Quaternion from nominal-up to dvl-up === -->
+  <!-- ENU: Quaternion (qx, qy, qz, qw) rotation from AUV frame to DVL frame -->
+  <!-- TODO: Replace with the actual rotation based on how the DVL is mounted -->
+  <arg name="q_dvlnominalup_dvlup_w" default="1.0" />
+  <arg name="q_dvlnominalup_dvlup_x" default="0.0" />
+  <arg name="q_dvlnominalup_dvlup_y" default="0.0" />
+  <arg name="q_dvlnominalup_dvlup_z" default="0.0" />
 
-	<group if="$(arg sim)">
-		<param name="update_state_on_clock" value="true" />
-		<group if="$(arg ekf)">
-			<include file="$(find state_estimation)/launch/localization.launch">
-				<arg name="remove_gravity" value="false" />
-			</include>
-		</group>
-	</group>	
+  <!-- === AUV to DVL translation offset === -->
+  <!-- ENU: Translation (x, y, z) from AUV frame to DVL [meters] -->
+  <!-- TODO: Replace with the actual physical offset between AUV and DVL -->
+  <arg name="auv_dvl_offset_x" default="0.0" />
+  <arg name="auv_dvl_offset_y" default="0.0" />
+  <arg name="auv_dvl_offset_z" default="0.0" />
 
-	
-	
+  <!-- === AUV to IMU translation offset === -->
+  <!-- ENU: Translation (x, y, z) from AUV frame to IMU [meters] -->
+  <!-- TODO: Replace with the actual physical offset between AUV and IMU -->
+  <arg name="auv_imu_offset_x" default="0.0" />
+  <arg name="auv_imu_offset_y" default="0.0" />
+  <arg name="auv_imu_offset_z" default="0.0" />
+
+  <!-- === AUV to Depth Sensor translation offset === -->
+  <!-- ENU: Translation (x, y, z) from AUV frame to Depth Sensor [meters] -->
+  <!-- TODO: Replace with the actual physical offset between AUV and Depth sensor -->
+  <arg name="auv_depth_offset_x" default="0.0" />
+  <arg name="auv_depth_offset_y" default="0.0" />
+  <arg name="auv_depth_offset_z" default="0.0" />
+
+  <!-- === Static transform publishers for sensor frames === -->
+
+  <!-- DVL: Transform from AUV to DVL frame -->
+  <!-- ENU: Translation and quaternion define DVL frame in AUV coordinates -->
+  <node name="dvl_transform_pub" pkg="tf2_ros" type="static_transform_publisher"
+        args="$(arg auv_dvl_offset_x) $(arg auv_dvl_offset_y) $(arg auv_dvl_offset_z)
+              $(arg q_dvlnominalup_dvlup_x) $(arg q_dvlnominalup_dvlup_y) $(arg q_dvlnominalup_dvlup_z) $(arg q_dvlnominalup_dvlup_w)
+              auv dvl" />
+
+  <!-- IMU: Transform from AUV to IMU frame -->
+  <!-- ENU: Translation and quaternion define IMU frame in AUV coordinates -->
+  <node name="imu_transform_pub" pkg="tf2_ros" type="static_transform_publisher"
+        args="$(arg auv_imu_offset_x) $(arg auv_imu_offset_y) $(arg auv_imu_offset_z)
+              $(arg q_imunominalup_imuup_x) $(arg q_imunominalup_imuup_y) $(arg q_imunominalup_imuup_z) $(arg q_imunominalup_imuup_w)
+              auv imu" />
+
+  <!-- Depth Sensor: Transform from AUV to Depth frame -->
+  <!-- ENU: Translation only (no rotation), assumes aligned with AUV frame -->
+  <node name="depth_transform_pub" pkg="tf2_ros" type="static_transform_publisher"
+        args="$(arg auv_depth_offset_x) $(arg auv_depth_offset_y) $(arg auv_depth_offset_z)
+              0 0 0 1
+              auv depth" />
+
+  <!-- === EKF and Clock Management === -->
+
+  <param name="update_state_on_clock" value="$(eval arg('sim') == 'true')" />
+
+  <group if="$(arg ekf)">
+    <include file="$(find state_estimation)/launch/localization.launch">
+      <arg name="remove_gravity" value="$(eval 'false' if arg('sim') == 'true' else 'true')" />
+    </include>
+  </group>
 </launch>

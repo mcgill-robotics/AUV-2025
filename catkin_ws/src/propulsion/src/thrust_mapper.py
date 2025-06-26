@@ -67,7 +67,7 @@ class ThrusterMapper:
         Callback function that maps a received Wrench message into thruster forces.
         It first converts the wrench from global to body frame, then applies the
         pseudo-inverse of the thruster mapping matrix. We assume that all messages published on /controls/effort
-        are in the "base_link" or "auv" frame.
+        are in the "auv" frame.
 
         """
 
