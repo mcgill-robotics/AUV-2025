@@ -50,12 +50,11 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     pub_y.publish(y);
     pub_z.publish(z);
 
-    ROS_DEBUG("Euler angles: %f, %f, %f\n", 
-        msg->twist.twist.angular.x,
-        msg->twist.twist.angular.y,
-        msg->twist.twist.angular.z
-    );
-    
+    ROS_DEBUG("Euler angles: %f, %f, %f\n",
+              msg->twist.twist.angular.x,
+              msg->twist.twist.angular.y,
+              msg->twist.twist.angular.z);
+
     pub_pose.publish(pose);
 
     // publish angular velocity
@@ -100,17 +99,6 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
         }
         last_clock_msg = now;
     }
-
-    // static tf2_ros::TransformBroadcaster br;
-    // geometry_msgs::TransformStamped transformStamped;
-    // transformStamped1.header.stamp = ros::Time::now();
-    // transformStamped1.header.frame_id = "odom";
-    // transformStamped1.child_frame_id = "auv";
-    // transformStamped1.transform.translation.x = msg.position.x;
-    // transformStamped1.transform.translation.y = msg.position.y;
-    // transformStamped1.transform.translation.z = msg.position.z;
-    // transformStamped1.transform.rotation = msg.orientation;
-    // br.sendTransform(transformStamped);
 }
 
 int main(int argc, char **argv)

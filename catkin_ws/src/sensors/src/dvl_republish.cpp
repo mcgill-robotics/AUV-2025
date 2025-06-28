@@ -13,7 +13,7 @@ void rawDvlCb(const geometry_msgs::TwistStamped::ConstPtr &msg)
     out.twist.twist = msg->twist;
 
     // Zero all covariances…
-    out.twist.covariance.assign(36, 0.0);
+    std::fill_n(out.twist.covariance.begin(), 36, 0.0);
     // then set x, y, z variances
     out.twist.covariance[0] = variance;  // var(linear.x)
     out.twist.covariance[7] = variance;  // var(linear.y)
@@ -27,10 +27,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "dvl_republish");
     ros::NodeHandle nh("~");
 
-    nh.param("variance");
+    nh.param("variance", variance, 0.01); // Default variance if not set
 
     // Advertise the _with_covariance message
     pub_dvl = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/sensors/dvl/twist", 10);
+    ros::Subscriber raw_dvl_sub = nh.subscribe("/sensors/dvl/raw", 10, rawDvlCb);
 
     ros::spin();
     return 0;
