@@ -51,7 +51,7 @@ if __name__ == "__main__":
         "These are the following options:\n- To take a screen shot using front cam, press [z]\n- To take a screen shot using down cam, press [x]"
     )
     while not rospy.is_shutdown():
-        usr_choice = input("Select an option: ")
+        usr_choice = "z"
         if usr_choice == "z":
             save_image(FRONT_CAM_DATA_DIR, is_front_cam=True)
         elif usr_choice == "x":
