@@ -135,6 +135,7 @@ class QuaternionPID:
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665],
         #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
 
+# TODO: Update intertial matrix with real measurements from mech. This matrix assumes the AUV is a rectangular prism. 
         inertial_matrix = np.array(
             [
                 [1, 0.0, 0.0],

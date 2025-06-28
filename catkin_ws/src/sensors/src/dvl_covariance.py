@@ -10,6 +10,12 @@ RAD_PER_DEG = np.pi / 180.0
 
 #https://docs.waterlinked.com/dvl/dvl-protocol/
 
+"""
+WaterLinked DVL ROS driver
+Publishes TwistWithCovarianceStamped and PoseWithCovarianceStamped from DVL serial data.
+Converts from FRD (sensor) to ENU (AUV/ROS) frame conventions.
+"""
+
 def main():
     rospy.init_node("waterlinked_driver")
     pub_twist = rospy.Publisher("/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1)
@@ -44,27 +50,33 @@ def main():
 
         #velocity + covariance report (wrz)
         if line.startswith("wrz"):
-            #wrz,[vx],[vy],[vz],[valid],[altitude],[fom],[covariance],[time_of_validity],[time_of_transmission],[time],[status]
+            # wrz,[vx],[vy],[vz],[valid],[altitude],[fom],[covariance],[time_of_validity],[time_of_transmission],[time],[status]
+            # The DVL has +X forward, +Y right, +Z down. The AUV uses ENU: +X forward, +Y left, +Z up. 
             parts = line.replace("*","").split(",")
             try:
                 vx, vy, vz = map(float, parts[1:4])
                 cov3 = [float(c) for c in parts[7].split(";")]
+                # Format of covariance matrix: 
+                # [ vx_x,vx_y,vx_z,
+                #   vy_x, vy_y, vy_z
+                #   vz_x, vz_y, vz_z ] 
+
             except (ValueError, IndexError):
                 rospy.logwarn("Malformed wrz: %s", line)
                 continue
 
             # build 6×6 row‐major covariance with cov3 at upper-left
             cov6 = [0.0]*36
-            cov6[0:3] = cov3[0:3]
-            cov6[6:9] = cov3[3:6]
-            cov6[12:15] = cov3[6:9]
+            cov6[0:3] = cov3[0:3] # cov_xx, cov_xy, cov_xz
+            cov6[6:9] = cov3[3:6] # cov_yx, cov_yy, cov_yz 
+            cov6[12:15] = cov3[6:9] # cov_zx, cov_zy, cov_zz
 
             msg = TwistWithCovarianceStamped()
             msg.header.stamp = rospy.Time.now()
             msg.header.frame_id = "dvl"
             msg.twist.twist.linear.x = vx
-            msg.twist.twist.linear.y = vy
-            msg.twist.twist.linear.z = vz
+            msg.twist.twist.linear.y = -1 * vy
+            msg.twist.twist.linear.z = -1 * vz
             msg.twist.covariance = cov6
             pub_twist.publish(msg)
             continue
@@ -84,12 +96,12 @@ def main():
             # publish pose
             pose = PoseWithCovarianceStamped()
             pose.header.stamp    = rospy.Time.now()
-            pose.header.frame_id = "auv"
+            pose.header.frame_id = "dvl" # Dead reckoning is done in dvl frame onboard the DVL. 
             pose.pose.pose.position.x = x
-            pose.pose.pose.position.y = y
-            pose.pose.pose.position.z = z
+            pose.pose.pose.position.y = -1 * y
+            pose.pose.pose.position.z = -1 * z
 
-            q = transformations.quaternion_from_euler(roll* RAD_PER_DEG, pitch * RAD_PER_DEG, yaw* RAD_PER_DEG)
+            q = transformations.quaternion_from_euler(roll* RAD_PER_DEG, -1 * pitch * RAD_PER_DEG, -1 * yaw * RAD_PER_DEG)
             pose.pose.pose.orientation.x = q[0]
             pose.pose.pose.orientation.y = q[1]
             pose.pose.pose.orientation.z = q[2]
