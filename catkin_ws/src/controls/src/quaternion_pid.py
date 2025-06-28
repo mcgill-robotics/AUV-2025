@@ -87,6 +87,7 @@ class QuaternionPID:
                 self.pub_roll.publish(roll_effort)
                 self.pub_pitch.publish(pitch_effort)
                 self.pub_yaw.publish(yaw_effort)
+            rate.sleep()
 
     def calculateQuatError(self, q1, q2):
         return q1.inverse() * q2
