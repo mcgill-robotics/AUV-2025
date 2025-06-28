@@ -52,6 +52,7 @@ if __name__ == "__main__":
     )
     while not rospy.is_shutdown():
         usr_choice = "z"
+        rospy.sleep(2)
         if usr_choice == "z":
             save_image(FRONT_CAM_DATA_DIR, is_front_cam=True)
         elif usr_choice == "x":
