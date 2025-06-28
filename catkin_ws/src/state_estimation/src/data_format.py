@@ -65,7 +65,8 @@ def camera_info_callback(msg):
 
 def pose_callback(msg):
     global gps, depth, seen_pose, backwards, north_offset, east_offset, roll, pitch, yaw
-    new_north, new_east = north_offset + msg.position.x, east_offset - msg.position.y
+    new_east = east_offset + msg.position.x
+    new_north = north_offset + msg.position.y
     gps = backwards.transform(new_east, new_north)
     depth = msg.position.z
 
@@ -152,7 +153,7 @@ if __name__ == "__main__":
     utm_crs = CRS.from_epsg(utm_crs_list[0].code)
     forwards = Transformer.from_crs("EPSG:4326", utm_crs, always_xy=True)
     backwards = Transformer.from_crs(utm_crs, "EPSG:4326", always_xy=True)
-    east_offset, north_offset = forwards.transform(latitude_offset, longitude_offset)
+    east_offset, north_offset = forwards.transform(longitude_offset, latitude_offset)
 
     pose_sub = rospy.Subscriber("/state/pose", Pose, pose_callback)
     image_sub = rospy.Subscriber("/vision/down_cam/image_raw", Image, image_callback)
@@ -161,6 +162,8 @@ if __name__ == "__main__":
     )
 
     init_text_file()
-    while input("press any button to capture, x to finish") != "x":
+    rate = rospy.Rate(frame_rate)
+    while not rospy.is_shutdown():
         save_data()
+        rate.sleep()
     shutdown()
