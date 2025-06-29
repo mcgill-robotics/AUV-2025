@@ -28,28 +28,11 @@ include_directories(
   ${roscpp_INCLUDE_DIRS}
 )
 
-add_executable(depth_republisher
-  src/depth_republish.cpp
-)
-
-add_executable(imu_republisher
-  src/imu_republish.cpp
-)
-
-target_link_libraries(
-  depth_republisher
-  ${roscpp_LIBRARIES} 
-  ${geometry_msgs_LIBRARIES}
-)
-
-target_link_libraries(
-  imu_republisher
-  ${roscpp_LIBRARIES} 
-  ${geometry_msgs_LIBRARIES}
-)
-
 install(PROGRAMS
   src/start_zed_bridge.sh
   scripts/${PROJECT_NAME}
+  src/imu_covariancer.py
+  src/dvl_covariance.py
+
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
