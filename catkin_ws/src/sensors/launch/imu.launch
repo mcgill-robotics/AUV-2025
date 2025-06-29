@@ -1,6 +1,17 @@
 <launch>
-	<node name="sbg_device" pkg="sbg_driver" type="sbg_device" output="screen" respawn="true">
-		<rosparam command="load" file="$(find sensors)/config/sbg_imu.yaml"/>
-		<remap from="/imu/data" to="/sensors/imu/raw"/>
-	</node>
+  <arg name="in_topic" default="/sensors/imu/data"/>
+  <arg name="out_topic" default="/sensors/imu/data_cov"/>
+  <arg name="orientation_variance" default="0.01"/>
+  <arg name="acc_bandwidth" default="390"/>
+  <arg name="gyro_bandwidth" default="133"/>
+  <arg name="safety_factor" default="10"/>
 
+  <node pkg="sensors" type="imu_covariance.py" name="imu_covariance_republisher" output="screen">
+    <param name="in_topic" value="$(arg in_topic)" />
+    <param name="out_topic" value="$(arg out_topic)" />
+    <param name="orientation_variance"  value="$(arg orientation_variance)" />
+    <param name="acc_bandwidth" value="$(arg acc_bandwidth)" />
+    <param name="gyro_bandwidth" value="$(arg gyro_bandwidth)" />
+    <param name="safety_factor" value="$(arg safety_factor)" />
+  </node>
+</launch>
