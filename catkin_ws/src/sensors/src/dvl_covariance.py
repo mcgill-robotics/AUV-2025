@@ -95,8 +95,13 @@ def main():
 
             # publish pose
             pose = PoseWithCovarianceStamped()
+<<<<<<< HEAD
             pose.header.stamp    = rospy.Time.now()
             pose.header.frame_id = "dvl" # Dead reckoning is done in dvl frame onboard the DVL. 
+=======
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = "auv"
+>>>>>>> 7ca4322d (implemented same logic as dvl; subscrive to imu/data, load in last 200 samples of angular velocity and linear acc, recomputes the 3x3 covariance and publisshes on /sensors/imu/data_cov)
             pose.pose.pose.position.x = x
             pose.pose.pose.position.y = -1 * y
             pose.pose.pose.position.z = -1 * z
@@ -109,8 +114,8 @@ def main():
             
             pos_var = pos_std**2
             cov = [0.0]*36
-            cov[0]  = pos_var
-            cov[7]  = pos_var
+            cov[0] = pos_var
+            cov[7] = pos_var
             cov[14] = pos_var
             cov[21] = quat_var
             cov[28] = quat_var
