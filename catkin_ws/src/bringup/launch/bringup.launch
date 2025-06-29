@@ -10,11 +10,8 @@
 		<arg name="ekf" value="$(arg ekf)" />
 	</include>
 
-	<group unless="$(arg sim)">
-		<include file="$(find sensors)/launch/sensors.launch">
-			<arg name="vision" value="$(arg vision)" />
-		</include>
-	</group>
+	<include file="$(find sensors)/launch/sensors.launch"/>
+	
 	<group if="$(arg sim)">
 		<include file="$(find sensors)/launch/sensors_status.launch"/>
 		<node name="depth_republish" pkg="sensors" type="depth_republisher" output="screen">

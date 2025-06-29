@@ -6,7 +6,7 @@
   <arg name="gyro_bandwidth" default="133"/>
   <arg name="safety_factor" default="10"/>
 
-  <node pkg="sensors" type="imu_covariance.py" name="imu_covariance_republisher" output="screen">
+  <node pkg="sensors" name="imu_covariance_republisher" type="imu_covariance.py" output="screen">
     <param name="in_topic" value="$(arg in_topic)" />
     <param name="out_topic" value="$(arg out_topic)" />
     <param name="orientation_variance"  value="$(arg orientation_variance)" />

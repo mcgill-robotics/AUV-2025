@@ -6,9 +6,9 @@
 	
 	<include file="$(find sensors)/launch/tether_status.launch"/>
 	<include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
+	<include file="$(find sensors)/launch/hydrophones.launch"/>
 	<include file="$(find sensors)/launch/dvl.launch"/>
 	<include file="$(find sensors)/launch/imu.launch"/>
-	<include file="$(find sensors)/launch/hydrophones.launch"/>
 
 	<node pkg="rosbag" type="record" name="rosbag_imu"
 		if="$(arg record)"
