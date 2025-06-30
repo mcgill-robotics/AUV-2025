@@ -47,15 +47,24 @@ if __name__ == "__main__":
         "/vision/down_cam/image_raw", Image, down_cam_image_callback
     )
 
-    print(
-        "These are the following options:\n- To take a screen shot using front cam, press [z]\n- To take a screen shot using down cam, press [x]"
-    )
     while not rospy.is_shutdown():
-        usr_choice = "z"
-        rospy.sleep(2)
-        if usr_choice == "z":
-            save_image(FRONT_CAM_DATA_DIR, is_front_cam=True)
-        elif usr_choice == "x":
-            save_image(DOWN_CAM_DATA_DIR, is_front_cam=False)
-        else:
-            print("Not a valid option!!!")
+    usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c] ")
+    chosen_frontcam = True if input("Choose camera [0] if front, [1]] if down ") == "0" else False  
+    SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_frontcam else DOWN_CAM_DATA_DIR
+    time_delay = int(input("Enter time delay (seconds): ")) if usr_choice == "c" else 0
+
+    if usr_choice == "c":
+        print("Spam [p] to cancel")
+
+        while True:
+            save_image(SAVE_DIR, chosen_frontcam)
+            rospy.sleep(time_delay)
+
+            if keyboard.is_pressed('p'):
+                print("Stopping capture...")
+                break
+
+    elif usr_choice == "z":
+        save_image(SAVE_DIR, chosen_frontcam)
+    else:
+        print("Not a valid option!!!")
