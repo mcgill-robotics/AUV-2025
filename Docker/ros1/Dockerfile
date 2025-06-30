@@ -107,7 +107,7 @@ RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim ipu
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
+RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn && pip install dill
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
 RUN apt update \
@@ -138,5 +138,9 @@ RUN cd src && \
     catkin build && \
     source devel/setup.bash
 
+# Create a dynamic variable to fix TLS stack memory issue with imports
+RUN echo "export LD_PRELOAD=$(sudo find / -iname libgomp.so.1 | head -1)" >> ~/.bashrc
+
+# tmux stuff
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
