@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     {
         geometry_msgs::PoseWithCovarianceStamped pose_msg;
         pose_msg.header.stamp = ros::Time::now();
-        // Frame must match your EKF base_link_frame ("auv")
-        pose_msg.header.frame_id = "auv";
+        // Frame must match your EKF depth sensor frame ("depth")
+        pose_msg.header.frame_id = "depth";
 
         // Position: only Z changes (invert sign if your sensor convention requires)
         pose_msg.pose.pose.position.x = 0.0;
