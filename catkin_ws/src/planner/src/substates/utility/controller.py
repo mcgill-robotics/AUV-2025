@@ -24,8 +24,6 @@ from actionlib_msgs.msg import GoalStatus
 
 # === AUV Custom Messages ===
 from auv_msgs.msg import (
-    EffortAction,
-    EffortGoal,
     StateQuaternionAction,
     StateQuaternionGoal,
     ThrusterMicroseconds,
@@ -116,12 +114,6 @@ class Controller:
         self.pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 
         # Initialize action clients for actions
-        self.EffortClient = actionlib.SimpleActionClient(
-            "/controls/server/effort", EffortAction
-        )
-        self.clients.append(self.EffortClient)
-        # print("Waiting for EffortServer to come online...")
-        # self.EffortClient.wait_for_server()
 
         self.StateQuaternionStateClient = actionlib.SimpleActionClient(
             "/controls/server/state", StateQuaternionAction
@@ -185,34 +177,6 @@ class Controller:
         return math.atan2(sin(err), cos(err))
 
 
-
-    def get_effort_goal(self, dofs):
-        """
-        Method which returns target goal for the current effort being exerted by controls.
-        """
-
-        surge, sway, heave, roll, pitch, yaw = dofs
-
-        goal = EffortGoal()
-        goal.effort.force.x = 0 if surge is None else surge
-        goal.do_surge = Bool(False) if surge is None else Bool(True)
-
-        goal.effort.force.y = 0 if sway is None else sway
-        goal.do_sway = Bool(False) if sway is None else Bool(True)
-
-        goal.effort.force.z = 0 if heave is None else heave
-        goal.do_heave = Bool(False) if heave is None else Bool(True)
-
-        goal.effort.torque.x = 0 if roll is None else roll
-        goal.do_roll = Bool(False) if roll is None else Bool(True)
-
-        goal.effort.torque.y = 0 if pitch is None else pitch
-        goal.do_pitch = Bool(False) if pitch is None else Bool(True)
-
-        goal.effort.torque.z = 0 if yaw is None else yaw
-        goal.do_yaw = Bool(False) if yaw is None else Bool(True)
-
-        return goal
 
     def get_state_goal(self, state, displace, local=is_not_local):
         """
@@ -524,27 +488,6 @@ class Controller:
 
             rate.sleep()
     
-    
-    
-    
-    def torque(self, vel):
-        """
-        Sets a torque value (x, y, z) and sets this as the goal in the effort server
-        """
-        x, y, z = vel
-        goal = self.get_effort_goal([None, None, None, x, y, z])
-        self.EffortClient.send_goal(goal)
-
-    def forceLocal(self, vel):
-        """
-        Sets a positonal effort force in the local reference frame.
-
-        Note: z is unaffected bu this method (always heaving)
-        """
-
-        x, y = vel
-        goal = self.get_effort_goal([x, y, None, None, None, None])
-        self.EffortClient.send_goal(goal)
 
     def kill(self):
         """
@@ -553,8 +496,6 @@ class Controller:
 
         self.preempt_current_action()
 
-        goal = self.get_effort_goal([0, 0, 0, 0, 0, 0])
-        self.EffortClient.send_goal(goal)
         self.pub_x_enable.publish(Bool(False))
         self.pub_y_enable.publish(Bool(False))
         self.pub_z_enable.publish(Bool(False))

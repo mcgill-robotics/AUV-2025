@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import rospy
 from substates.utility.controller import Controller
-from substates.utility.yaw_controller import YawRamp
 
 def main():
     """
@@ -11,7 +10,6 @@ def main():
     rospy.init_node("pooltest")
 
     controls = Controller(rospy.Time(0))    
-    yaw_ctrl = YawRamp()
 
     try:
         rospy.loginfo("Executing square pattern movement.")
@@ -24,7 +22,9 @@ def main():
         controls.rotate(90.0,0.0,0.0)
         rospy.loginfo("Completed move successfully.")
 
+        rospy.loginfo("Attempting to move y by -2.0.")
         controls.moveDeltaLocal(0, -2, 0)
+        rospy.loginfo("Completed move successfully.")
 
         rospy.loginfo("Attempting to roll by -90 degrees")
         controls.rotate(-90.0,0.0,0.0)
@@ -41,7 +41,6 @@ def main():
     finally:
         rospy.loginfo("Shutting down controls…")
         controls.kill()
-        yaw_ctrl.kill()
         
 if __name__ == "__main__":
     main()
