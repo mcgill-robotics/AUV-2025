@@ -17,7 +17,9 @@ RUN apt-get update && apt-get install -y \
   ca-certificates \
   git \
   python3-pip \
-  python3-colcon-common-extensions \            
+  python3-colcon-common-extensions \
+  python3-rosdep2 \
+  python3-rosdistro-modules \  
   python3-flake8-docstrings \
   python3-flake8-blind-except \
   python3-flake8-builtins \
