@@ -55,7 +55,10 @@ RUN git clone https://github.com/ros-drivers/nmea_msgs.git && \
 
 # Install Dependencies Using rosdep
 WORKDIR /root/ros2_ws
-RUN apt update && rosdep init && rosdep update && \
+RUN apt update && \
+  rm -f /etc/ros/rosdep/sources.list.d/20-default.list && \
+  rosdep init && \
+  rosdep update && \
   rosdep install --from-paths src --ignore-src -r -y && \
   rm -rf /var/lib/apt/lists/*
 
