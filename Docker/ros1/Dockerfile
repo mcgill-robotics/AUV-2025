@@ -120,7 +120,7 @@ RUN apt update \
     && apt install -y zstd
 
 # Install torchvision, this only works after the shell for some reason i dont know
-RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV_2025/catkin_ws" >> ~/.bashrc
+RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV_2025/catkin_ws && rm -rf /torchvision" >> ~/.bashrc
 
 # Create New User for Jetson, tag ensures dockerfile keeps working regardless of any changes in base img
 RUN adduser jetson --disabled-password --gecos "" 
