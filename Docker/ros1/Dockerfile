@@ -59,6 +59,9 @@ RUN apt-get update && apt-get install -y wget \
 
 RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
+    ros-noetic-rtabmap \
+    ros-noetic-rtabmap-ros \
+    ros-noetic-foxglove-bridge \
     ros-noetic-joy \
     ros-noetic-joy-teleop \
     ros-noetic-sbg-driver \
@@ -132,9 +135,6 @@ RUN cd src && \
     rosdep install --from-paths src --ignore-src -r -y && \
     catkin build && \
     source devel/setup.bash
-
-# Placed here for quick building prior to pool test, should be pushed up
-RUN sudo apt-get update && sudo apt-get install -y ros-noetic-foxglove-bridge
 
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
