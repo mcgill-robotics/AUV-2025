@@ -71,7 +71,9 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-robot-localization \
     ros-noetic-foxglove-bridge \
     ros-noetic-xacro \
-    ros-noetic-robot-state-publisher
+    ros-noetic-robot-state-publisher \
+    ros-noetic-rtabmap \
+    ros-noetic-rtabmap-ros
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
