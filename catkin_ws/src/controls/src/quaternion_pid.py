@@ -45,7 +45,7 @@ class QuaternionPID:
             "/controls/torque/yaw", Float64, queue_size=1
         )
         self.pub_error_quat = rospy.Publisher(
-            "/controls/pid/quat/error", Vector3, queue_size=1
+            "/controls/pid/quat/error", Quaternion, queue_size=1
         )
 
     def set_pose(self, data):
@@ -99,10 +99,11 @@ class QuaternionPID:
         if error_quat.w < 0:
             error_quat = -error_quat
 
-        self.pub_error_quat.publish(Vector3(
+        self.pub_error_quat.publish(Quaternion(
             x=error_quat.x,
             y=error_quat.y,
-            z=error_quat.z
+            z=error_quat.z,
+            w=error_quat.w
             ))
 
 
