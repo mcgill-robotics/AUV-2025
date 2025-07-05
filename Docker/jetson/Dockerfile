@@ -100,6 +100,7 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
 RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
+RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 \
     && pip3 install keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean

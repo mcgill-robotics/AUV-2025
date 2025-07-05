@@ -102,6 +102,8 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
 
 RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
     && pip3 install numpy-quaternion keyboard \
+RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+    && pip3 install numpy-quaternion keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -113,11 +115,21 @@ RUN curl -o ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl https:/
    sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libopenblas-dev libavcodec-dev libavformat-dev libswscale-dev
 
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn && pip install dill
+ENV BUILD_VERSION=0.16.1
+RUN curl -o ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
+   python3 -m pip install --no-cache ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
+   sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libopenblas-dev libavcodec-dev libavformat-dev libswscale-dev
+
+RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn && pip install dill
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
+RUN git clone --branch v0.16.1 --recursive https://github.com/pytorch/vision.git /torchvision
 RUN git clone --branch v0.16.1 --recursive https://github.com/pytorch/vision.git /torchvision
 
 RUN apt update \
     && apt install -y zstd
+
+# Install torchvision, this only works after the shell for some reason i dont know
+RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV_2025/catkin_ws && rm -rf /torchvision" >> ~/.bashrc
 
 # Install torchvision, this only works after the shell for some reason i dont know
 RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV_2025/catkin_ws && rm -rf /torchvision" >> ~/.bashrc
@@ -149,7 +161,10 @@ RUN cd src && \
 
 # Create a dynamic variable to fix TLS stack memory issue with imports
 RUN echo "export LD_PRELOAD=$(sudo find / -iname libgomp.so.1 | head -1)" >> ~/.bashrc
+# Create a dynamic variable to fix TLS stack memory issue with imports
+RUN echo "export LD_PRELOAD=$(sudo find / -iname libgomp.so.1 | head -1)" >> ~/.bashrc
 
+# tmux stuff
 # tmux stuff
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
