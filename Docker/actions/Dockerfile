@@ -1,8 +1,6 @@
 # Use the official ROS Noetic base image
 FROM mcgillrobotics/auv_2025:base
-
-RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' \
-    && curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends ignition-fortress \
@@ -17,7 +15,7 @@ RUN apt-get -y update \
     && apt-get update \
     && add-apt-repository ppa:kisak/kisak-mesa \
     && apt-get update \
-    # && apt-get -y upgrade \
+    && apt-get -y upgrade \
     && apt-get install -y libglapi-mesa xvfb
 # && apt-get install -y mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev \
 # libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev
