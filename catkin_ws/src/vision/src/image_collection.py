@@ -48,23 +48,23 @@ if __name__ == "__main__":
     )
 
     while not rospy.is_shutdown():
-    usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c] ")
-    chosen_frontcam = True if input("Choose camera [0] if front, [1]] if down ") == "0" else False  
-    SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_frontcam else DOWN_CAM_DATA_DIR
-    time_delay = int(input("Enter time delay (seconds): ")) if usr_choice == "c" else 0
+        usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c] ")
+        chosen_frontcam = True if input("Choose camera [0] if front, [1]] if down ") == "0" else False  
+        SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_frontcam else DOWN_CAM_DATA_DIR
+        time_delay = int(input("Enter time delay (seconds): ")) if usr_choice == "c" else 0
 
-    if usr_choice == "c":
-        print("Spam [p] to cancel")
+        if usr_choice == "c":
+            print("Spam [p] to cancel")
 
-        while True:
+            while True:
+                save_image(SAVE_DIR, chosen_frontcam)
+                rospy.sleep(time_delay)
+
+                if keyboard.is_pressed('p'):
+                    print("Stopping capture...")
+                    break
+
+        elif usr_choice == "z":
             save_image(SAVE_DIR, chosen_frontcam)
-            rospy.sleep(time_delay)
-
-            if keyboard.is_pressed('p'):
-                print("Stopping capture...")
-                break
-
-    elif usr_choice == "z":
-        save_image(SAVE_DIR, chosen_frontcam)
-    else:
-        print("Not a valid option!!!")
+        else:
+            print("Not a valid option!!!")
