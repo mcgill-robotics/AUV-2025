@@ -36,11 +36,11 @@ sensorParameters:
   # Initial altitude (above WGS84 ellipsoid) (m)
   initAlt: 0.0
   # Year at startup
-  year: 2024
+  year: 2025
   # month in year at startup
   month: 07
   # day in month at startup
-  day: 27
+  day: 05
 
   # Montion profile ID
   # 1 GENERAL_PURPOSE Should be used as a default when other profiles do not apply
@@ -115,7 +115,7 @@ magnetometer:
   # Magnetometer model ID
   # 201 Should be used in most applications
   # 202 Should be used in disturbed magnetic environment
-  magnetometerModel: 201
+  magnetometerModel: 202
   # Magnetometer rejection mode
   # 0 Measurement is not taken into account
   # 1 Measurement is rejected if inconsistent with current estimate (depending on error model)
