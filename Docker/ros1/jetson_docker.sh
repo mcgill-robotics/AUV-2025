@@ -5,11 +5,23 @@ set -e
 # Get the absolute path of the script's directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+ROS_MASTER_LINE='export ROS_MASTER_URI=http://localhost:11311'
+ROS_HOST_LINE='export ROS_HOSTNAME=localhost'
+
+inject_env() {
+    local line="$1"
+    # only add if it doesn't already exist
+    docker exec "$CONTAINER_NAME" bash -c "grep -qxF '$line' ~/.bashrc || echo '$line' >> ~/.bashrc"
+}
+
 CONTAINER_NAME="ros1-douglas-1"
 
 # Step 1: Check if the container is already running
 if docker ps --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
     echo "[INFO] Container '$CONTAINER_NAME' is already running."
+    inject_env "$ROS_MASTER_LINE"
+    inject_env "$ROS_HOST_LINE"
+    echo "[INFO] Attaching to the running container..."
     docker exec -it "$CONTAINER_NAME" bash
     exit 0
 fi
@@ -40,7 +52,10 @@ fi
 echo "[INFO] Starting container using docker compose..."
 docker compose -f "$SCRIPT_DIR/compose.yml" up -d
 
+echo "[INFO] Injecting ROS env vars into ~/.bashrc"
+inject_env "$ROS_MASTER_LINE"
+inject_env "$ROS_HOST_LINE"
+
 # Step 5: Exec into the container
 echo "[INFO] Attaching to container '$CONTAINER_NAME'..."
 docker exec -it "$CONTAINER_NAME" bash
-
