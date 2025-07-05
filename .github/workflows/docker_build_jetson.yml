@@ -64,7 +64,7 @@ jobs:
         with:
           context: Docker/jetson
           file: Docker/jetson/Dockerfile.bridge
-          platforms: linux/arm64
+          platforms: linux/arm64, linux/amd64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:rosbridge
   
