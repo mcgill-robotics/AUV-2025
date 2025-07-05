@@ -15,9 +15,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
     > /etc/apt/sources.list.d/ros1.list
 
 # setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV ROS_DISTRO noetic
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV ROS_DISTRO=noetic
 
 RUN apt update \
     && apt install -y openssh-server xauth \
