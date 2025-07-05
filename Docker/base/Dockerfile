@@ -1,41 +1,52 @@
 # Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
 
-RUN apt-get update && apt-get install -y locales\
-    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-ENV LC_ALL en_US.UTF-8 
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en     
+ENV DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en
 
-# Install all needed deps and compile the mesa llvmpipe driver from source.
-# Delete previous GPG key retrieval
-RUN apt-get update && apt-get install -y wget \
-    && apt-get update \
-    && apt-get install -y python3-catkin-tools python3-pip python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+RUN apt-get update \
+    && apt-get install -y locales \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
     && apt-get install -y --no-install-recommends \
-    ros-noetic-rosserial-arduino \
-    ros-noetic-pid \
-    ros-noetic-joy \
-    ros-noetic-joy-teleop \
-    ros-noetic-sbg-driver \
-    ros-noetic-cv-bridge \
-    ros-noetic-image-view \
-    ros-noetic-rqt-gui \
-    ros-noetic-rviz \
-    ros-noetic-smach-ros \
-    ros-noetic-robot-localization \ 
-    ros-noetic-foxglove-bridge \
-    git-lfs \
-    git \
-    && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash 
+        wget \
+        git \
+        git-lfs \
+        python3-catkin-tools \
+        python3-pip \
+        python-is-python3 \
+        kmod \
+        kbd \
+        tmux \
+        vim \
+        iputils-ping \
+        iproute2 \
+        ros-noetic-rosserial-arduino \
+        ros-noetic-pid \
+        ros-noetic-joy \
+        ros-noetic-joy-teleop \
+        ros-noetic-sbg-driver \
+        ros-noetic-cv-bridge \
+        ros-noetic-image-view \
+        ros-noetic-rqt-gui \
+        ros-noetic-rviz \
+        ros-noetic-smach-ros \
+        ros-noetic-robot-localization \
+        ros-noetic-foxglove-bridge \
+        ros-noetic-xacro \
+        ros-noetic-robot-state-publisher \
+        ros-noetic-rtabmap \
+        ros-noetic-rtabmap-ros \
+    && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir numpy-quaternion keyboard \
-    && pip install --no-cache-dir --upgrade numpy
-
-RUN rm -f /usr/local/bin/cmake  \
-    && sudo apt-get autoremove -y  \
-    && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && rm -f /usr/local/bin/cmake \
     && rm -rf /root/.cache/pip \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
+    && rm requirements.txt
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc

@@ -1,21 +1,25 @@
-name: Docker Build & Push for jetson
+name: Docker Build & Push for base and dependencies
 
 on:
   push:
     branches: [noetic]
     paths:
-      - 'Docker/jetson/**'
+      - 'Docker/base/**'
+      - 'Docker/sim/**'
+      - 'Docker/poolside/**'
   pull_request:
     branches: [noetic]
     paths:
-      - 'Docker/jetson/**'
+      - 'Docker/base/**'
+      - 'Docker/sim/**'
+      - 'Docker/poolside/**'
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  build-and-push-jetson:
-    name: Build and optionally push jetson Docker image
+  build-and-push-base:
+    name: Build and optionally push base Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -35,15 +39,16 @@ jobs:
       - name: Build and optionally push image
         uses: docker/build-push-action@v5
         with:
-          context: Docker/jetson
-          file: Docker/jetson/Dockerfile
-          platforms: linux/arm64
+          context: Docker/base
+          file: Docker/base/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
-          tags: mcgillrobotics/auv_2025:jetson
-  
-  build-and-push-bridge:
-    name: Build and optionally push bridge Docker image
+          tags: mcgillrobotics/auv_2025:base
+          
+  build-and-push-sim:
+    name: Build and optionally push sim Docker image
     runs-on: ubuntu-22.04-arm
+    needs: build-and-push-base
 
     steps:
       - name: Checkout code
@@ -62,15 +67,16 @@ jobs:
       - name: Build and optionally push image
         uses: docker/build-push-action@v5
         with:
-          context: Docker/jetson
-          file: Docker/jetson/Dockerfile.bridge
-          platforms: linux/arm64, linux/amd64
+          context: Docker/sim
+          file: Docker/sim/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
-          tags: mcgillrobotics/auv_2025:rosbridge
-  
-  build-and-push-zed:
-    name: Build and optionally push zed Docker image
+          tags: mcgillrobotics/auv_2025:sim
+
+  build-and-push-poolside:
+    name: Build and optionally push poolside Docker image
     runs-on: ubuntu-22.04-arm
+    needs: build-and-push-sim
 
     steps:
       - name: Checkout code
@@ -89,8 +95,8 @@ jobs:
       - name: Build and optionally push image
         uses: docker/build-push-action@v5
         with:
-          context: Docker/jetson
-          file: Docker/jetson/Dockerfile.zed
-          platforms: linux/arm64
+          context: Docker/poolside
+          file: Docker/poolside/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
-          tags: mcgillrobotics/auv_2025:zed
+          tags: mcgillrobotics/auv_2025:poolside
