@@ -15,9 +15,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
     > /etc/apt/sources.list.d/ros1.list
 
 # setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV ROS_DISTRO noetic
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV ROS_DISTRO=noetic
 
 RUN apt update \
     && apt install -y openssh-server xauth \
@@ -71,7 +71,12 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-rviz \
     ros-noetic-smach-ros \
     ros-noetic-usb-cam \
-    ros-noetic-robot-localization
+    ros-noetic-robot-localization \
+    ros-noetic-foxglove-bridge \
+    ros-noetic-xacro \
+    ros-noetic-robot-state-publisher \
+    ros-noetic-rtabmap \
+    ros-noetic-rtabmap-ros
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -98,8 +103,8 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y tmux vim iputils-ping iproute2 ros-noetic-robot-localization \
-    && pip3 install keyboard \
+RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+    && pip3 install numpy-quaternion keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

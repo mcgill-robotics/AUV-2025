@@ -1,14 +1,20 @@
-name: Integration Test
+name: Catkin Integration Test
 
 on:
+  push:
+    branches: [noetic]
   pull_request:
     branches: [noetic]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  CI:
-    runs-on: ubuntu-22.04
+  catkin-build:
+    name: Build catkin workspace
+    runs-on: ubuntu-22.04-arm
     container:
-        image: mcgillrobotics/auv_2024:actions
+        image: mcgillrobotics/auv_2025:base
     steps:
       - uses: actions/checkout@v3
       - name: catkin build
@@ -17,9 +23,7 @@ jobs:
             git config --global --add safe.directory /__w/AUV-2025/AUV-2025
             git submodule update --init --recursive
             source /opt/ros/noetic/setup.bash
-            cd catkin_ws/src
-            git clone https://github.com/mcgill-robotics/auv-sim-gazebo.git
-            cd ..
+            cd catkin_ws
             catkin build
       # - name: state test
       #   shell: bash
