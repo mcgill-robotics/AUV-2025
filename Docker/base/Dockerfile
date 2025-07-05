@@ -35,6 +35,10 @@ RUN apt-get update \
         ros-noetic-smach-ros \
         ros-noetic-robot-localization \
         ros-noetic-foxglove-bridge \
+        ros-noetic-xacro \
+        ros-noetic-robot-state-publisher \
+        ros-noetic-rtabmap \
+        ros-noetic-rtabmap-ros \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
     && rm -rf /var/lib/apt/lists/*
 
