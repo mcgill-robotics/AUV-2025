@@ -5,8 +5,11 @@ from auv_msgs.msg import ThrusterMicroseconds
 # Define PWM values for different movements
 #I will use proper naming conventions and coordinate frames in the future, pls dont shoot me im really tired rn  
 FORWARD_PWMS = [1700, 1500, 1500, 1230, 1250, 1500, 1500, 1700] #from last pool test, these make robot very straight
+U_FORWARD_PWMS= [1700, 1650, 1600, 1290, 1300, 1600, 1650, 1700]
 STOP_PWMS = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500] 
 TURN_LEFT_PWMS = [1500, 1500, 1500, 1230, 1500, 1500, 1500, 1500] # YAW TODO: adjust this pls
+DOWN_PWMS = [1500, 1600, 1600, 1500, 1500, 1600, 1600, 1500] 
+HOVER_PWMS = [1500, 1550, 1550, 1500, 1500, 1550, 1550, 1500] #change this
 
 def publish_pwm_for_duration(publisher, msg, duration, rate):
     """
@@ -28,7 +31,7 @@ def prequal():
     rospy.loginfo("Starting prequal publisher...")
 
     # Create a ThrusterMicroseconds message for various movements
-    msg_forward = ThrusterMicroseconds(microseconds=FORWARD_PWMS)
+    msg_forward = ThrusterMicroseconds(microseconds=U_FORWARD_PWMS)
     msg_turn_left = ThrusterMicroseconds(microseconds=TURN_LEFT_PWMS)
     msg_stop=ThrusterMicroseconds(microseconds=STOP_PWMS)
 
@@ -38,16 +41,16 @@ def prequal():
     #Also that we cannot submerge. If we need to stay underwater, 
     # replace STOP by [1500, x, x, 1500, 1500, x, x, 1500] where x is whatever value
     # and add that same x for the forward and left PWMs
-    publish_pwm_for_duration(pub, msg_forward, 10.0, rate)     # Go forward for 10 seconds
-    publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
-    publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    publish_pwm_for_duration(pub, msg_forward, 2.0, rate)
-    publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
-    publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
+    # publish_pwm_for_duration(pub, msg_forward, 10.0, rate)     # Go forward for 10 seconds
+    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
+    # publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
+    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
+    # publish_pwm_for_duration(pub, msg_forward, 2.0, rate)
+    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
+    # publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
+    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
     publish_pwm_for_duration(pub, msg_forward, 10.0, rate)
-
+    
     publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
 
 
