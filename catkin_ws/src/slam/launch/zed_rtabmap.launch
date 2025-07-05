@@ -1,16 +1,14 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="svo_file" default="" /> <!-- <arg name="svo_file" default="path/to/svo/file.svo"> -->
+    <arg name="svo_file" default="" /> <!-- <arg name="svo_file" default="path/to/svo/file.svo">. Seems like svo files are not used anymore -->
     <arg name="stream" default="" /> <!-- <arg name="stream" default="<ip_address>:<port>"> -->
 
     <arg name="zed_node_name" default="zed_node" />
     <arg name="camera_model" default="zed2i" />
     <arg name="publish_urdf" default="true" />
-
     <arg name="camera_name" default="zed" />
-
-    <arg name="base_frame" default="base_link" />
+    <arg name="base_frame" default="auv" />
 
     <group ns="$(arg camera_name)">
         <!-- ZED Wrapper Node-->
@@ -24,16 +22,16 @@
             <arg name="publish_urdf" value="$(arg publish_urdf)" />
         </include>    
   
-        <arg name="custom_rtabmap_launch_file" default="$(find zed_rtabmap_example)/launch/include/sl_rtabmap.launch.xml"/>
+        <arg name="custom_rtabmap_launch_file" default="$(find slam)/launch/include/sl_rtabmap.launch.xml"/>
         <include file="$(arg custom_rtabmap_launch_file)">
-            <arg name="odom_topic" default="$(arg zed_node_name)/odom" />
-            <arg name="rgb_topic" default="$(arg zed_node_name)/rgb/image_rect_color" />
-            <arg name="depth_topic" default="$(arg zed_node_name)/depth/depth_registered" />
-            <arg name="camera_info_topic" default="$(arg zed_node_name)/rgb/camera_info" />
-            <arg name="depth_camera_info_topic" default="$(arg zed_node_name)/depth/camera_info" />
+            <arg name="odom_topic" default="/odometry/filtered" />
+            <arg name="rgb_topic" default="/zed/zed_node/stereo/image_rect_color" />
+            <arg name="depth_topic" default="/zed/zed_node/depth/depth_registered" />
+            <arg name="camera_info_topic" default="/zed/zed_node/depth/camera_info" />
+            <arg name="depth_camera_info_topic" default="/zed/zed_node/depth/camera_info" />
         </include>   
 
         <!-- Rviz -->
-        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find zed_rtabmap_example)/rviz/zed-rtabmap.rviz" output="screen" /> 
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find slam)/rviz/zed-rtabmap.rviz" output="screen" /> 
     </group>
 </launch>

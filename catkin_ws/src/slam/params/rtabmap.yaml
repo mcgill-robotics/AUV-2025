@@ -12,7 +12,7 @@ subscribe_odom_info:    false
 database_path:      "~/.ros/rtabmap.db"
 config_path:        "~/.ros/rtabmap.cfg"
 
-frame_id:       "base_link"
+frame_id:       "auv"
 map_frame_id:   "map"
 odom_frame_id:  "odom"                   # odometry from odom msg to have covariance - Remapped by launch file
 odom_tf_angular_variance:  0.001     # If TF is used to get odometry, this is the default angular variance
@@ -52,8 +52,9 @@ Grid:
     NoiseFilteringMinNeighbors: 5
     NoiseFilteringRadius:   0.1
     NormalK:                20
-    RangeMin:               0.7
-    RangeMax:               3.0
+    RangeMin:               0.1
+    RangeMax:               5.0
+    MaxDepth:               5.0
 
 GridGlobal:
     Eroded:                 false       # Erode obstacle cells
