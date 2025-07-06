@@ -31,8 +31,8 @@ if __name__ == "__main__":
     rospy.init_node("image_collection")
 
     bridge = CvBridge()
-    FRONT_CAM_DATA_DIR = rospy.get_param("~image_data_dir/front_cam")
-    DOWN_CAM_DATA_DIR = rospy.get_param("~image_data_dir/down_cam")
+    FRONT_CAM_DATA_DIR = rospy.get_param("image_data_dir/front_cam")
+    DOWN_CAM_DATA_DIR = rospy.get_param("image_data_dir/down_cam")
     if not os.path.exists(FRONT_CAM_DATA_DIR):
         os.makedirs(FRONT_CAM_DATA_DIR)
     if not os.path.exists(DOWN_CAM_DATA_DIR):
