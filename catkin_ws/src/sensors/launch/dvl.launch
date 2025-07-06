@@ -1,6 +1,6 @@
 <launch>
   <!-- Waterlinked DVL driver with dynamic covariance -->
-  <arg name="port" default="/dev/ttyUSB0"/>
+  <arg name="port" default="/dev/dvl"/>
   <arg name="baudrate" default="115200"/>
   <arg name="quat_variance" default="0.01"/>
 

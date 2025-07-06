@@ -1,5 +1,10 @@
 <launch>
-  <arg name="in_topic" default="/sensors/imu/data"/>
+	<node name="sbg_device" pkg="sbg_driver" type="sbg_device" output="screen" respawn="true">
+		<rosparam command="load" file="$(find sensors)/config/sbg_imu.yaml"/>
+		<remap from="/imu/data" to="/sensors/imu/raw"/>
+	</node>
+
+  <arg name="in_topic" default="/sensors/imu/raw"/>
   <arg name="out_topic" default="/sensors/imu/data_cov"/>
   <arg name="orientation_variance" default="0.01"/>
   <arg name="acc_bandwidth" default="390"/>
