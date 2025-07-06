@@ -24,8 +24,8 @@ from sensor_msgs.msg import Imu
 class IMUCovarianceRepublisher:
     def __init__(self):
         # Load ROS parameters for topics and variances
-        self.raw_topic = rospy.get_param("~in_topic", "/sensors/imu/data")
-        self.out_topic = rospy.get_param("~out_topic", "/sensors/imu/data_cov")
+        self.raw_topic = rospy.get_param("~in_topic", "/sensors/imu/raw")
+        self.out_topic = rospy.get_param("~out_topic", "/sensors/imu/data")
         self.orientation_var = rospy.get_param("~orientation_variance", 0.01)  # fallback if no dynamic orientation covariance available
 
         # Load manufacturer-based IMU noise specs, with safety factor applied

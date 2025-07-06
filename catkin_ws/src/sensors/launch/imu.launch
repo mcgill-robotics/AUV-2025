@@ -5,7 +5,7 @@
 	</node>
 
   <arg name="in_topic" default="/sensors/imu/raw"/>
-  <arg name="out_topic" default="/sensors/imu/data_cov"/>
+  <arg name="out_topic" default="/sensors/imu/data"/>
   <arg name="orientation_variance" default="0.01"/>
   <arg name="acc_bandwidth" default="390"/>
   <arg name="gyro_bandwidth" default="133"/>

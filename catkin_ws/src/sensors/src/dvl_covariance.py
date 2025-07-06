@@ -6,6 +6,11 @@ import numpy as np
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from tf import transformations
 
+
+#https://docs.waterlinked.com/dvl/dvl-protocol/
+
+
+
 RAD_PER_DEG = np.pi / 180.0
 
 def main():
