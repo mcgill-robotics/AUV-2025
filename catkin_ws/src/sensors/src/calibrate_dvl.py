@@ -3,46 +3,79 @@
 import rospy
 import serial
 
-
 def main():
     rospy.init_node("calibrate_dvl")
 
+    # Load parameters
     port = rospy.get_param("~port")
-    baudrate = rospy.get_param("~baudrate")
+    baudrate = rospy.get_param("~baudrate", 115200)
 
-    conn = serial.Serial(port)
-    conn.timeout = 10
-    # dvl's baud has been set to 115200 but its default is 9600.
-    # There is a way to set the baudrate of the dvl through a command.
-    conn.baudrate = baudrate
+    try:
+        conn = serial.Serial(port, baudrate=baudrate, timeout=1)
+    except serial.SerialException:
+        rospy.logerr("ERR: cannot open serial port %s", port)
+        return
 
-    if not conn.isOpen():
-        conn.open()
-
+    #gyro calibration
+    rospy.loginfo("Starting DVL gyro calibration...")
     conn.send_break()
+    rospy.sleep(0.5)
     conn.flush()
 
-    print("Calibrating DVL...")
-
-    conn.write("wcg\r\n".encode("utf-8"))
+    rospy.loginfo("Sending gyro calibration command (wcg)...")
+    conn.write(b"wcg\r\n")
     conn.flush()
 
+    start_time = rospy.Time.now()
     while conn.is_open and not rospy.is_shutdown():
+        if (rospy.Time.now() - start_time).to_sec() > 5.0:
+            rospy.logerr("Timeout waiting for gyro calibration response")
+            break
         try:
-            line = conn.readline().decode("utf-8")
-            if line.startswith("wra"):
-                print("INFO: DVL gyro calibration successful.")
-                break
-            elif line.startswith("wrn"):
-                print("WARN: DVL gyro calibration failed.")
-                break
+            line = conn.readline().decode("utf-8", errors="ignore").strip()
         except Exception as e:
-            print(e)
+            rospy.logerr("Serial read error during gyro calibration: %s", e)
             break
 
+        if line.startswith("wra"):
+            rospy.loginfo("DVL gyro calibration successful.")
+            break
+        elif line.startswith("wrn"):
+            rospy.logwarn("DVL gyro calibration failed.")
+            break
+
+    #magnetometer calibration
+    rospy.loginfo("Starting DVL magnetometer calibration...")
+    conn.send_break()
+    rospy.sleep(0.5)
+    conn.flush()
+
+    rospy.loginfo("Sending mag calibration command (wcm)...")
+    conn.write(b"wcm\r\n")
+    conn.flush()
+
+    start_time = rospy.Time.now()
+    while conn.is_open and not rospy.is_shutdown():
+        if (rospy.Time.now() - start_time).to_sec() > 5.0:
+            rospy.logerr("Timeout waiting for mag calibration response")
+            break
+        try:
+            line = conn.readline().decode("utf-8", errors="ignore").strip()
+        except Exception as e:
+            rospy.logerr("Serial read error during mag calibration: %s", e)
+            break
+
+        if line.startswith("wra"):
+            rospy.loginfo("DVL magnetometer calibration successful.")
+            break
+        elif line.startswith("wrn"):
+            rospy.logwarn("DVL magnetometer calibration failed.")
+            break
+
+    conn.close()
 
 if __name__ == "__main__":
     try:
         main()
-    except KeyboardInterrupt:
-        exit()
+    except rospy.ROSInterruptException:
+        pass
