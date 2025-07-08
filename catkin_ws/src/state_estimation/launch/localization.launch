@@ -1,10 +1,12 @@
 <launch>
 
+<!-- https://docs.ros.org/en/noetic/api/robot_localization/html/state_estimation_nodes.html -->
+
     <arg name="remove_gravity" default="true"/>
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
       <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
-      <param name="frequency" value="50"/>  
+      <param name="frequency" value="25"/>  
       <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
 
@@ -18,9 +20,14 @@
 
       <param name="twist0" value="/sensors/dvl/twist"/>
       <param name="imu0" value="/sensors/imu/data"/> 
-      <param name="depth0" value="/sensors/depth/pose"/>
+      <param name="pose0" value="/sensors/depth/pose"/>
 
-      <param name="debug" value="true" />
+
+      <!-- [x, y, z, 
+      roll, pitch, yaw, 
+      vx, vy, vz, 
+      vroll, vpitch, vyaw, 
+      ax, ay, az] -->
 
       <rosparam param="twist0_config">[false,  false,  false, 
                                       false, false, false, 
@@ -34,7 +41,7 @@
                                      true,  true,  true,
                                      true,  true,  true]</rosparam>
       
-      <rosparam param="depth0_config">
+      <rosparam param="pose0_config">
       [false, false, true, 
        false, false, false, 
        false, false, false, 
@@ -50,7 +57,7 @@
        0.0,  0.0,  0.0]
        </rosparam>
 
-      <param name="depth0_relative" value="false"/>
+      <param name="pose0_relative" value="false"/>
 
       <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
       

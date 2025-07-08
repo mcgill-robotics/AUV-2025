@@ -135,7 +135,7 @@ magnetometer:
     # 1 MEDIUM_BW Tell the device that medium dynamics will be observed during the magnetic calibration process. 
     #     It can be used in case of medium magnetic noise during calibration process. Medium dynamics are used during calibration.
     # 2 HIGH_BW This parameter is suitable to most applications. It can be used when the dynamics during calibration are relatively high.
-    bandwidth: 2
+    bandwidth: 0
 
 
 # GNSS configuration
