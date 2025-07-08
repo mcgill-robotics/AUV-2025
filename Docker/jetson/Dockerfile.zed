@@ -67,5 +67,7 @@ RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.2/ZED_SDK_T
 RUN ./ZED_SDK_Tegra_L4T36.4_v4.2.3.zstd.run -- silent && \
   chown -R jetson:jetson /usr/local/zed
 
+COPY SN33688213.conf /usr/local/zed/settings/
+
 #keep Container Running (Change if You Need a Different Entry Point)
 CMD ["bash", "-c", "tail -f /dev/null"]
