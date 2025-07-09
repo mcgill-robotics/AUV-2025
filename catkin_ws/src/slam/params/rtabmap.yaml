@@ -1,13 +1,14 @@
 # RTAB-Map configuration
 
-subscribe_depth:        true
+subscribe_depth:       false #zed2i gives its own depth via stereo 
 subscribe_rgbd:         false
-subscribe_stereo:       false
+subscribe_stereo:       true 
 subscribe_stereo:       false
 subscribe_scan:         false
 subscribe_scan_cloud:   false
 subscribe_user_data:    false
-subscribe_odom_info:    false
+subscribe_odom_info:    true
+subscribe_odom:         false #may not need both subscribe_odom and subscribe_odom_info
 
 database_path:      "~/.ros/rtabmap.db"
 config_path:        "~/.ros/rtabmap.cfg"
@@ -15,16 +16,16 @@ config_path:        "~/.ros/rtabmap.cfg"
 frame_id:       "auv"
 map_frame_id:   "map"
 odom_frame_id:  "odom"                   # odometry from odom msg to have covariance - Remapped by launch file
-odom_tf_angular_variance:  0.001     # If TF is used to get odometry, this is the default angular variance
-odom_tf_linear_variance:   0.001     # If TF is used to get odometry, this is the default linear variance
+odom_tf_angular_variance:  0.001     #TUNE this value if using TF to get odometry, this is the default angular variance
+odom_tf_linear_variance:   0.001     #TUNE this value if using TF to get odometry, this is the default linear variance
 tf_delay:       0.02
-publish_tf:     false                # Set to false if fusing different poses (map->odom) with UKF
+publish_tf:     true                # Set to false if fusing different poses (map->odom) with UKF
 
 odom_sensor_sync:               true
 wait_for_transform_duration:    0.2
 approx_sync:                    true
 
-queue_size: 10
+queue_size: 20
 
 scan_normal_k:  0
 
@@ -37,11 +38,11 @@ Grid:
     RayTracing:             true
     FromDepth:              true
     NormalsSegmentation:    false
-    CellSize:               0.05
-    ClusterRadius:          0.1
-    MinClusterSize:         3
-    DepthDecimation:        1
-    DepthRoiRatios:         [0.0, 0.0, 0.0, 0.0]
+    CellSize:               0.1 #larger cells -> fewer voxels(representation of voluemetric data)[3D grid of px]
+    ClusterRadius:          0.2 #radius of the cluster to be considered as a single object(cluster points within 20cm of each other )
+    MinClusterSize:         5 #minimum number of points in a cluster to be considered as an object
+    DepthDecimation:        1 #higher depthDecomations means less points, but faster processing - would need to test this 
+    DepthRoiRatios:         [0.2,0.2,0.8,0.8]  # [left, top, right, bottom] ratios of the image width and height
     FootprintHeight:        2.0
     FootprintLength:        0.18
     FootprintWidth:         0.18
@@ -52,13 +53,13 @@ Grid:
     NoiseFilteringMinNeighbors: 5
     NoiseFilteringRadius:   0.1
     NormalK:                20
-    RangeMin:               0.1
-    RangeMax:               5.0
+    RangeMin:               0.2 #ignore anything closer than this(sensor noise)
+    RangeMax:               5.0 #im assuming we wont need to see anything further than this
     MaxDepth:               5.0
 
 GridGlobal:
     Eroded:                 false       # Erode obstacle cells
-    FootprintRadius:        0.18        # Footprint radius (m) used to clear all obstacles under the graph
+    FootprintRadius:        0.3        #Footprint radius (m) used to clear all obstacles under the graph
     FullUpdate:             true        # When the graph is changed, the whole map will be reconstructed instead of moving individually each cells of the map. Also, data added to cache won't be released after updating the map. This process is longer but more robust to drift that would erase some parts of the map when it should not
     MaxNodes:               0           # Maximum nodes assembled in the map starting from the last node (0=unlimited)
     MinSize:                1.0        # Minimum map size (m)
