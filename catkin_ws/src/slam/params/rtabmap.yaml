@@ -43,9 +43,9 @@ Grid:
     MinClusterSize:         5 #minimum number of points in a cluster to be considered as an object
     DepthDecimation:        1 #higher depthDecomations means less points, but faster processing - would need to test this 
     DepthRoiRatios:         [0.2,0.2,0.8,0.8]  # [left, top, right, bottom] ratios of the image width and height
-    FootprintHeight:        2.0
-    FootprintLength:        0.18
-    FootprintWidth:         0.18
+    FootprintHeight:        0.40375 #HEIGHT
+    FootprintLength:        0.5648 #LENTGH OF ROBT
+    FootprintWidth:         0.5737 #WIDTH OF ROBOT
     MaxGroundAngle:         30.0
     MinGroundHeight:        -0.5
     MaxGroundHeight:        -0.4
