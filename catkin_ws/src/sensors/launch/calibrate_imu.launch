@@ -8,14 +8,6 @@
 <!--  
 Excerpt from https://github.com/SBG-Systems/sbg_ros_driver:
 
-Calibrate the magnetometers
-ELLIPSE products can use magnetometers to determine the heading. A calibration is then required to compensate for soft and hard iron distortions due to the vehicle the product is installed on. The magnetic calibration procedure should be held in a clean magnetic environnement (outside of buildings).
-
-You can read more information about magnetic field calibration procedure from the SBG Systems Support Center.
-
-The ROS driver provides a dedicated node to easily use ELLIPSE on board magnetic field calibration algorithms.
-The ELLIPSE offers both a 2D and 3D magnetic field calibration mode.
-
 1. Make sure you have selected the desired 2D or 3D magnetic field calibration mode (calibration.mode in the configuration yaml file).
 2. Start a new magnetic calibration session once you are ready to map the magnetic field:
 roslaunch sbg_driver sbg_device_mag_calibration.launch
