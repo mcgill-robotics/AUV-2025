@@ -28,7 +28,7 @@ def main():
 
     start_time = rospy.Time.now()
     while conn.is_open and not rospy.is_shutdown():
-        if (rospy.Time.now() - start_time).to_sec() > 5.0:
+        if (rospy.Time.now() - start_time).to_sec() > 15.0:
             rospy.logerr("Timeout waiting for gyro calibration response")
             break
         try:
@@ -42,34 +42,6 @@ def main():
             break
         elif line.startswith("wrn"):
             rospy.logwarn("DVL gyro calibration failed.")
-            break
-
-    #magnetometer calibration
-    rospy.loginfo("Starting DVL magnetometer calibration...")
-    conn.send_break()
-    rospy.sleep(0.5)
-    conn.flush()
-
-    rospy.loginfo("Sending mag calibration command (wcm)...")
-    conn.write(b"wcm\r\n")
-    conn.flush()
-
-    start_time = rospy.Time.now()
-    while conn.is_open and not rospy.is_shutdown():
-        if (rospy.Time.now() - start_time).to_sec() > 5.0:
-            rospy.logerr("Timeout waiting for mag calibration response")
-            break
-        try:
-            line = conn.readline().decode("utf-8", errors="ignore").strip()
-        except Exception as e:
-            rospy.logerr("Serial read error during mag calibration: %s", e)
-            break
-
-        if line.startswith("wra"):
-            rospy.loginfo("DVL magnetometer calibration successful.")
-            break
-        elif line.startswith("wrn"):
-            rospy.logwarn("DVL magnetometer calibration failed.")
             break
 
     conn.close()
