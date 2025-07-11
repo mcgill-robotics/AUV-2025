@@ -30,17 +30,17 @@ uartConf:
 # Sensor Parameters
 sensorParameters:
   # Initial latitude (°)
-  initLat: 48.419727
+  initLat: 45.5019
   # Initial longitude (°)
-  initLong: -4.472119
+  initLong: -73.5674
   # Initial altitude (above WGS84 ellipsoid) (m)
-  initAlt: 0.0
+  initAlt: 20
   # Year at startup
   year: 2025
   # month in year at startup
   month: 07
   # day in month at startup
-  day: 05
+  day: 11
 
   # Montion profile ID
   # 1 GENERAL_PURPOSE Should be used as a default when other profiles do not apply
@@ -135,7 +135,7 @@ magnetometer:
     # 1 MEDIUM_BW Tell the device that medium dynamics will be observed during the magnetic calibration process. 
     #     It can be used in case of medium magnetic noise during calibration process. Medium dynamics are used during calibration.
     # 2 HIGH_BW This parameter is suitable to most applications. It can be used when the dynamics during calibration are relatively high.
-    bandwidth: 0
+    bandwidth: 1   
 
 
 # GNSS configuration
