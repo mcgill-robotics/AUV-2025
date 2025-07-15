@@ -34,6 +34,7 @@ sensorParameters:
   # Initial longitude (°)
   initLong: -73.5674
   # Initial altitude (above WGS84 ellipsoid) (m)
+
   initAlt: 20.0
   # Year at startup
   year: 2025
@@ -135,8 +136,8 @@ magnetometer:
     # 1 MEDIUM_BW Tell the device that medium dynamics will be observed during the magnetic calibration process. 
     #     It can be used in case of medium magnetic noise during calibration process. Medium dynamics are used during calibration.
     # 2 HIGH_BW This parameter is suitable to most applications. It can be used when the dynamics during calibration are relatively high.
-    bandwidth: 1
 
+    bandwidth: 1
 
 # GNSS configuration
 # Note: Secondary level arms should only be considered in case of dual antenna GNSS receiver. It can be left to 0 otherwise.
