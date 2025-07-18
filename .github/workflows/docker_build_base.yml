@@ -41,6 +41,6 @@ jobs:
         with:
           context: Docker/base
           file: Docker/base/Dockerfile
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/arm64
           push: true
           tags: mcgillrobotics/auv_2025:base
