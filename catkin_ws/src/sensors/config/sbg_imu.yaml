@@ -6,7 +6,7 @@ driver:
   #       output frequency.
   #       The frequency can be reduced in order to reduce CPU consumption but
   #       it can lead to miss data frame and less accurate time stamping.
-  frequency: 401
+  frequency: 50
 
 # Configuration of the device with ROS.
 confWithRos: true
@@ -257,13 +257,13 @@ output:
   # Status general, clock, com aiding, solution, heave
   log_status: 0
   # Includes IMU status, acc., gyro, temp delta speeds and delta angles values
-  log_imu_data: 1
+  log_imu_data: 8
   # Includes roll, pitch, yaw and their accuracies on each axis
-  log_ekf_euler: 1
+  log_ekf_euler: 8
   # Includes the 4 quaternions values
-  log_ekf_quat: 1
+  log_ekf_quat: 8
   # Position and velocities in NED coordinates with the accuracies on each axis
-  log_ekf_nav: 1 
+  log_ekf_nav: 8
   # Heave, surge and sway and accelerations on each axis for up to 4 points
   log_ship_motion: 0
   # Provides UTC time reference
