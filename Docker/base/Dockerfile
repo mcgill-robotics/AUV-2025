@@ -41,6 +41,7 @@ RUN apt-get update \
         ros-noetic-rtabmap-ros \
         ros-noetic-nmea-msgs \
         ros-noetic-mavros-msgs \
+        zstd \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
     && rm -rf /var/lib/apt/lists/*
 
