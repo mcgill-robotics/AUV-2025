@@ -168,6 +168,11 @@ def cb_unity_state(msg):
         dvl_msg = TwistWithCovarianceStamped()
         dvl_msg.twist.twist.linear = Vector3(*velocity_dvl)
 
+        dvl_msg.twist.covariance = [0.0]*36
+        dvl_msg.twist.covariance[0] = 1e-7  # vx
+        dvl_msg.twist.covariance[7] = 1e-7  # vy
+        dvl_msg.twist.covariance[14] = 1e-7 # vz
+
         dvl_msg.header.stamp = rospy.Time.now()
         dvl_msg.header.frame_id = "dvl"
 
@@ -194,6 +199,18 @@ def cb_unity_state(msg):
 
         imu_msg.angular_velocity = Vector3(*twist_imu)
         imu_msg.linear_acceleration = Vector3(*acceleration_imu)
+
+        imu_msg.orientation_covariance[0] = 1e-7
+        imu_msg.orientation_covariance[4] = 1e-7
+        imu_msg.orientation_covariance[8] = 1e-7
+
+        imu_msg.angular_velocity_covariance[0] = 1e-7
+        imu_msg.angular_velocity_covariance[4] = 1e-7
+        imu_msg.angular_velocity_covariance[8] = 1e-7
+
+        imu_msg.linear_acceleration_covariance[0] = 1e-7
+        imu_msg.linear_acceleration_covariance[4] = 1e-7
+        imu_msg.linear_acceleration_covariance[8] = 1e-7
         
         imu_msg.header.stamp = rospy.Time.now()
         imu_msg.header.frame_id = "imu"

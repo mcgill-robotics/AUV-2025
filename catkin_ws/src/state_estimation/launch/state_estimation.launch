@@ -75,11 +75,20 @@
 
   <!-- === EKF and Clock Management === -->
 
-  <param name="update_state_on_clock" value="$(eval arg('sim') == 'true')" />
+<param name="update_state_on_clock" value="$(arg sim)" />
 
-  <group if="$(arg ekf)">
+<group if="$(arg ekf)">
+  <group if="$(arg sim)">
     <include file="$(find state_estimation)/launch/localization.launch">
-      <arg name="remove_gravity" value="$(eval 'false' if arg('sim') == 'true' else 'true')" />
+      <arg name="remove_gravity" value="false" />
     </include>
   </group>
+  <group unless="$(arg sim)">
+    <include file="$(find state_estimation)/launch/localization.launch">
+      <arg name="remove_gravity" value="true" />
+    </include>
+  </group>
+</group>
+
+
 </launch>

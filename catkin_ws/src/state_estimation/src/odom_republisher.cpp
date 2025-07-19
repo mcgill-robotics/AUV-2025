@@ -38,14 +38,14 @@ void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     std_msgs::Float64 x, y, z;
     x.data = msg->pose.pose.position.x;
     y.data = msg->pose.pose.position.y;
-    z.data = depth; // use the depth from the depth callback
+    z.data = msg->pose.pose.position.z; // use the depth from the depth callback
 
     // get orientation and angular velocoty
     geometry_msgs::Quaternion q_nwu_auv = msg->pose.pose.orientation;
     geometry_msgs::Vector3 av = msg->twist.twist.angular;
 
     geometry_msgs::Pose pose = msg->pose.pose;
-    pose.position.z = depth;
+
     pub_x.publish(x);
     pub_y.publish(y);
     pub_z.publish(z);
