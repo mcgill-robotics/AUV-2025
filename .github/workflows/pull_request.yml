@@ -40,4 +40,4 @@ jobs:
             bash -c "source /opt/ros/noetic/setup.bash && \
                     rosdep update && \
                     rosdep install --from-paths src --ignore-src -r -y && \
-                    catkin build"
+                    catkin build --exclude zed-ros-wrapper zed-ros-examples"
