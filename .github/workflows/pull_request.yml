@@ -11,7 +11,7 @@ on:
 
 jobs:
   catkin-build:
-    name: Catkin Build Workpsace
+    name: Catkin Build Workspace
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -31,17 +31,11 @@ jobs:
           load: true
           tags: local-base-image:latest
 
-      - name: Clone AUV-2025 repo
-        run: |
-          git clone https://github.com/mcgill-robotics/AUV-2025.git
-          ls AUV-2025
-
       - name: Run catkin build inside container
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}/AUV-2025:/ws \
+            -v ${{ github.workspace }}:/ws \
             -w /ws/catkin_ws \
             local-base-image:latest \
             bash -c "source /opt/ros/noetic/setup.bash && \
-                    cd /ws && \
-                    cd catkin_ws && catkin build"
+                    catkin build"
