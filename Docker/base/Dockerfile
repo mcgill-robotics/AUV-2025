@@ -53,9 +53,9 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 RUN adduser jetson --disabled-password --gecos "" 
 WORKDIR /root/
-RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
-    chmod +x ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run
-RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
+RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
+    chmod +x ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run
+RUN ./ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run -- silent && \
     chown -R jetson:jetson /usr/local/zed
 USER root
 
