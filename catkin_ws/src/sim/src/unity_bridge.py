@@ -219,8 +219,16 @@ def cb_unity_state(msg):
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        depth_msg = Float64() 
-        depth_msg.data = pose_z
+        depth_msg = PoseWithCovarianceStamped()
+        depth_msg.header.stamp = rospy.Time.now()
+        depth_msg.header.frame_id = "odom"
+
+        cov = [0.0] * 36 #Covariance matrix for pose
+        cov[14] = 1e-10
+
+        depth_msg.pose.pose.position.z = -pose_z
+        depth_msg.pose.covariance = cov
+
 
         pub_depth_sensor.publish(depth_msg)
 
@@ -271,7 +279,7 @@ if __name__ == "__main__":
     pub_dvl_sensor = rospy.Publisher(
         "/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
+    pub_depth_sensor = rospy.Publisher("/sensors/depth/pose", PoseWithCovarianceStamped, queue_size=1)
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
     )
