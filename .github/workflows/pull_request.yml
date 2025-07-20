@@ -38,6 +38,4 @@ jobs:
             -w /ws/catkin_ws \
             local-base-image:latest \
             bash -c "source /opt/ros/noetic/setup.bash && \
-                    rosdep update && \
-                    rosdep install --from-paths src --ignore-src -r -y && \
-                    catkin build --exclude zed-ros-wrapper zed-ros-examples"
+                    catkin build"
