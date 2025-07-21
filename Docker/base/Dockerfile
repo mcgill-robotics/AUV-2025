@@ -64,7 +64,11 @@ RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
 USER root
 WORKDIR /AUV-2025/catkin_ws
 
-RUN source /opt/ros/noetic/setup.bash && \
+RUN cd src && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-examples.git && \
+    cd .. && \
+    source /opt/ros/noetic/setup.bash && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     catkin build && \
