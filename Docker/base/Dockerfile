@@ -7,6 +7,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en
 
+ARG TARGETPLATFORM
+
+RUN echo "Target platform: $TARGETPLATFORM" && \
+    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+        echo "Installing x86_64-specific dependencies"; \
+    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        echo "Installing ARM64-specific dependencies"; \
+    fi
+
 # Install apt packages
 RUN apt-get update \
     && apt-get install -y locales \
