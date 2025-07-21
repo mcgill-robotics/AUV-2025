@@ -7,14 +7,23 @@ import os
 
 from sensor_msgs.msg import Image
 
-
 def front_cam_image_callback(msg):
     global front_cam_cur_image
-    front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    try:
+        front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    except CvBridgeError as e:
+        rospy.logerr(f"CvBridge Error (front cam): {e}")
+    # global front_cam_cur_image
+    # front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
 
 def down_cam_image_callback(msg):
     global down_cam_cur_image
-    down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    try:
+        down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    except CvBridgeError as e:
+        rospy.logerr(f"CvBridge Error (down cam): {e}")
+    # global down_cam_cur_image
+    # down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
 
 def save_image(output_dir, is_front_cam):
     if is_front_cam:
@@ -46,6 +55,8 @@ if __name__ == "__main__":
     down_cam_image_sub = rospy.Subscriber(
         "/vision/down_cam/image_raw", Image, down_cam_image_callback
     )
+
+    rospy.sleep(10) #TODO: add loop that checks if images ar being published
 
     while not rospy.is_shutdown():
         usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c] ")
