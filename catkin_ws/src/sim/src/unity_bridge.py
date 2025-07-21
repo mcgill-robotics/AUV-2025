@@ -252,10 +252,6 @@ if __name__ == "__main__":
         q_dvlnominalup_dvlup_w, q_dvlnominalup_dvlup_x, q_dvlnominalup_dvlup_y, q_dvlnominalup_dvlup_z
     )
 
-    auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
-    auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
-    auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
-
     q_imunominalup_imuup_w = rospy.get_param("q_imunominalup_imuup_w")
     q_imunominalup_imuup_x = rospy.get_param("q_imunominalup_imuup_x")
     q_imunominalup_imuup_y = rospy.get_param("q_imunominalup_imuup_y")
