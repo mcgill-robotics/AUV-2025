@@ -53,6 +53,15 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 SHELL ["/bin/bash", "-c"]
 
+RUN wget https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run && \
+    chmod +x cuda_11.4.0_470.42.01_linux_sbsa.run && \
+    ./cuda_11.4.0_470.42.01_linux_sbsa.run --silent --toolkit && \
+    rm cuda_11.4.0_470.42.01_linux_sbsa.run
+
+# Set environment variables
+ENV PATH=/usr/local/cuda-11.4/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/cuda-11.4/lib64:$LD_LIBRARY_PATH
+
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
 RUN adduser jetson --disabled-password --gecos "" 
