@@ -51,6 +51,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && rm -rf /root/.cache/pip \
     && rm requirements.txt
 
+SHELL ["/bin/bash", "-c"]
+
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
 RUN adduser jetson --disabled-password --gecos "" 
