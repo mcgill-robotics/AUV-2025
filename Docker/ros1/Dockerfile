@@ -59,6 +59,9 @@ RUN apt-get update && apt-get install -y wget \
 
 RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
+    ros-noetic-rtabmap \
+    ros-noetic-rtabmap-ros \
+    ros-noetic-foxglove-bridge \
     ros-noetic-joy \
     ros-noetic-joy-teleop \
     ros-noetic-sbg-driver \
