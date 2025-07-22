@@ -24,21 +24,14 @@ ros::Publisher pub_imu_status;
 ros::Publisher pub_dvl_status;
 ros::Publisher pub_depth_status;
 
-double depth;
-
 void broad_cast_pose(const geometry_msgs::Pose &msg);
-
-void depth_cb(const std_msgs::Float64::ConstPtr &msg)
-{
-    depth = msg->data * -1;
-}
 
 void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
     std_msgs::Float64 x, y, z;
     x.data = msg->pose.pose.position.x;
     y.data = msg->pose.pose.position.y;
-    z.data = msg->pose.pose.position.z; // use the depth from the depth callback
+    z.data = msg->pose.pose.position.z;
 
     // get orientation and angular velocoty
     geometry_msgs::Quaternion q_nwu_auv = msg->pose.pose.orientation;
@@ -108,7 +101,6 @@ int main(int argc, char **argv)
 
     // Subscribers
     ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, odom_cb);
-    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z", 100, depth_cb);
 
     // Publishers for state information
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose", 1);
