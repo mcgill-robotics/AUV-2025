@@ -164,7 +164,17 @@ def publish_detection_frame(detection_frame_array):
         pub_viewframe_detection.publish(detection_frame_arrayMsg)
 
 
-def vision_cb(raw_image, camera_id):
+def vision_cb(raw_image: Image, camera_id: int) -> None:
+    """
+    Processes raw image streams on a specific camera, and publishes object detection messages using
+    a global pubs_visualization array. 
+    
+    Keyword arguments:
+        raw_Image -- RGB-D colorized raw image from a camera
+        camera_id -- id of the camera the callback function operates on
+    Return: None
+    """
+    
     if not is_vision_ready(camera_id):
         return
 

@@ -25,6 +25,8 @@
         <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
         <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
         <param name="lane_marker_blur_2_amt" value="0.04" /> <!-- second blur amount -->
+
+        <include file="$(find zed_wrapper)/launch/zed2i.launch" />
     </group>
     <group if="$(arg sim)">
         <param name="front_cam_x_offset" value="0.312" />
@@ -67,11 +69,11 @@
     <param name="debug_lane_marker_thresholding" value="false" />
     <param name="debug_point_cloud_cleaning" value="false" />
 
-    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen">
-        <param name="sim" value="$(arg sim)" />
-    </node>
-    <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/>
-    <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true"  output="screen"/>
+    <!-- <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"> -->
+        <!-- <param name="sim" value="$(arg sim)" /> -->
+    <!-- </node> -->
+    <!-- <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/> -->
+    <!-- <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true"  output="screen"/> -->
 
     <!-- <node name="point_cloud" pkg="vision" type="point_cloud.py" respawn="true"  output="screen"/> -->
 </launch>
