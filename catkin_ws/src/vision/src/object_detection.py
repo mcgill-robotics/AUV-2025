@@ -29,6 +29,8 @@ def is_vision_ready(camera_id):
         return False
     # Reset cameras_image_count.
     cameras_image_count[camera_id] = 0
+    return True
+
 
     states[camera_id].pause()
     current_states = {
@@ -56,6 +58,8 @@ def detection_frame(image, debug_image, detections, camera_id):
     image_h, image_w, _ = image.shape
     # Nested for loops get all predictions made by model.
     for detection in detections:
+        names = [detection.names[cls.item()] for cls in detection.boxes.cls.int()]  # class name of each box
+        print(names)
         boxes = (
             detection.boxes.cpu().numpy()
             if is_cuda_available

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>slam</name>
+  <version>0.0.1</version>
+  <description>SLAM integration using ZED, RTAB-Map, and ORB-SLAM.</description>
+
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Core dependencies -->
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <!-- RTAB-Map dependencies -->
+  <depend>rtabmap_ros</depend>
+
+  <!-- ZED support -->
+  <depend>zed_wrapper</depend>
+
+  <!-- Visualization -->
+  <depend>rviz</depend>
+
+  <!-- Launch system -->
+  <depend>launch</depend>
+
+  <export>
+  </export>
+</package>
+

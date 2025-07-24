@@ -38,7 +38,7 @@
         <param name="down_cam_model_file" 
             value="$(find vision)/src/models/down_cam_sim.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/front_cam_sim.pt" />
+            value="$(find vision)/src/models/front_cam_comp.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />

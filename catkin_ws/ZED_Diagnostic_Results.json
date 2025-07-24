@@ -1,0 +1,306 @@
+{
+    "AI Models": {
+        "info": [
+            "MULTI CLASS DETECTION is not optimized",
+            "MULTI CLASS MEDIUM DETECTION is not optimized",
+            "MULTI CLASS ACCURATE DETECTION is not optimized",
+            "HUMAN BODY FAST DETECTION is not optimized",
+            "HUMAN BODY MEDIUM DETECTION is not optimized",
+            "HUMAN BODY ACCURATE DETECTION is not optimized",
+            "HUMAN BODY 38 FAST DETECTION is not optimized",
+            "HUMAN BODY 38 MEDIUM DETECTION is not optimized",
+            "HUMAN BODY 38 ACCURATE DETECTION is not optimized",
+            "PERSON HEAD DETECTION is not optimized",
+            "PERSON HEAD ACCURATE DETECTION is not optimized",
+            "REID ASSOCIATION is not optimized",
+            "NEURAL DEPTH is not optimized",
+            "NEURAL PLUS DEPTH is not optimized"
+        ]
+    },
+    "Camera Test": {
+        "InternalDevicesCount": 2,
+        "ZEDCount": 1,
+        "camera": {
+            "Device ID": 0,
+            "Firmware": 1523,
+            "Init Output": "OK",
+            "Model": "ZED 2i",
+            "Serial Number": 33688213,
+            "valid": [
+                "<b>Camera: </b>ZED 2i",
+                "<b>Firmware: </b>1523"
+            ]
+        },
+        "resolutions": {
+            "HD1080@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 1080,
+                "height (output)": 1080,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1920,
+                "width (output)": 1920
+            },
+            "HD1080@30": {
+                "fps (input)": 30,
+                "fps (output)": 30,
+                "height (input)": 1080,
+                "height (output)": 1080,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1920,
+                "width (output)": 1920
+            },
+            "HD2K@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 1242,
+                "height (output)": 1242,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 2208,
+                "width (output)": 2208
+            },
+            "HD720@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 720,
+                "height (output)": 720,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "HD720@30": {
+                "fps (input)": 30,
+                "fps (output)": 30,
+                "height (input)": 720,
+                "height (output)": 720,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "HD720@60": {
+                "dropCount": -1,
+                "fps (input)": 60,
+                "fps (output)": 60,
+                "height (input)": 720,
+                "height (output)": 720,
+                "imageCount": 502,
+                "initialization": "OK",
+                "status": true,
+                "tearingCount": 0,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "VGA@100": {
+                "fps (input)": 100,
+                "fps (output)": 95,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@30": {
+                "fps (input)": 30,
+                "fps (output)": 28,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@60": {
+                "fps (input)": 60,
+                "fps (output)": 57,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            }
+        },
+        "sensors": {
+            "Firmware": 777,
+            "Init Output": "OK",
+            "Model": "ZED 2i (MCU)",
+            "Serial Number": 33688213
+        }
+    },
+    "Devices": {
+        "CorruptedFirmware": false,
+        "GMSL driver": "",
+        "GMSL driver compatiblity": "Unknown",
+        "GMSLList": [
+        ],
+        "MCUDetected": true,
+        "USBList": [
+            {
+                "USB_path": "/3",
+                "idProduct": "0x0420",
+                "idVendor": "0x0bda"
+            },
+            {
+                "USBMode": 3,
+                "USB_path": "/2/2",
+                "bDescriptorType": 1,
+                "bDeviceProtocol": 1,
+                "bLength": 18,
+                "bMaxPacketSize0": 9,
+                "bNumConfigurations": 1,
+                "bcdDevice": "1.0",
+                "bcdUSB": "3.0",
+                "bcdUSBClass": 239,
+                "bcdUSBSubClass": 2,
+                "busNumber": 2,
+                "device": "ZED2i",
+                "iManufacturer": 1,
+                "iProduct": 2,
+                "iSerial": 4,
+                "idProduct": "0xf880",
+                "idVendor": "0x2b03"
+            },
+            {
+                "USB_path": "/2",
+                "idProduct": "0x0626",
+                "idVendor": "0x05e3"
+            },
+            {
+                "USB_path": "/3",
+                "idProduct": "0x3549",
+                "idVendor": "0x13d3"
+            },
+            {
+                "USB_path": "/1/4",
+                "idProduct": "0x6001",
+                "idVendor": "0x0403"
+            },
+            {
+                "USBMode": 2,
+                "USB_path": "/1/2/2",
+                "bDescriptorType": 1,
+                "bDeviceProtocol": 0,
+                "bLength": 18,
+                "bMaxPacketSize0": 64,
+                "bNumConfigurations": 1,
+                "bcdDevice": "3.9",
+                "bcdUSB": "2.0",
+                "bcdUSBClass": 0,
+                "bcdUSBSubClass": 0,
+                "busNumber": 1,
+                "device": "ZED2i MCU",
+                "iManufacturer": 1,
+                "iProduct": 2,
+                "iSerial": 3,
+                "idProduct": "0xf881",
+                "idVendor": "0x2b03"
+            },
+            {
+                "USB_path": "/1/2",
+                "idProduct": "0x2514",
+                "idVendor": "0x0424"
+            },
+            {
+                "USB_path": "/1/1",
+                "idProduct": "0x0483",
+                "idVendor": "0x16c0"
+            },
+            {
+                "USB_path": "/1",
+                "idProduct": "0x0610",
+                "idVendor": "0x05e3"
+            }
+        ],
+        "USBMode": 3,
+        "ZED Camera Module Detected": 63616,
+        "ZED MCU Module Detected": 63617,
+        "ZEDDetected": true,
+        "valid": [
+            "<b>USB Bandwidth: </b> OK"
+        ],
+        "warning": [
+            "<b>No GMSL driver found.</b><br/> USB camera are not impacted by this."
+        ]
+    },
+    "Graphics Card": {
+        "deviceCount": 1,
+        "deviceDriverVersion": 11040,
+        "devices": [
+            {
+                "arch": "Ampere",
+                "computeCapability": "8.7",
+                "cores": 2048,
+                "name": "Orin",
+                "totalMemoryBytes": "65850966016",
+                "totalMemoryMB": 62800.375
+            }
+        ],
+        "glx_info": "",
+        "initResult": 0,
+        "valid": [
+            "<b>Graphics card: </b> Orin"
+        ]
+    },
+    "Processor": {
+        "L4T version": "unknown",
+        "OS": "Ubuntu 20.04.6 LTS ",
+        "avxSupported": false,
+        "coreCount": "12",
+        "cpu": " ARMv8 Processor rev 1 (v8l)",
+        "datetime": "2025-07-22 23:54:53",
+        "hyperThreading": "0",
+        "motherboard": "Jetson AGX Orin Developer Kit, Unknown",
+        "ramCapacity": "65.850966",
+        "ramUsage": "",
+        "ramUsed": "3.862671",
+        "threadCount": "12",
+        "valid": [
+            "<b>Processor: </b>  ARMv8 Processor rev 1 (v8l)",
+            "<b>Motherboard: </b> Jetson AGX Orin Developer Kit, Unknown"
+        ]
+    },
+    "ZED SDK": {
+        "CUDA Toolkit version": "V11.4.315 -->located in /usr/local/cuda-11.4/bin/nvcc",
+        "CUDA loading": false,
+        "ZED SDK Version (Diag)": "4.1.4",
+        "ZED SDK Version (RT)": "4.1.4",
+        "ai": {
+            "checkAI": true,
+            "cudaVersion": 11040,
+            "cudnnCudartVersion": 11040,
+            "cudnnVersion": 8600,
+            "cudnnVersionExpected": 8600,
+            "tensorVersion": 8502
+        },
+        "binFiles": [
+            "libsl_ai.so",
+            "libsl_zed.so",
+            "libsl_zed_static.a"
+        ],
+        "resourcesFiles": [
+        ],
+        "resourcesFilesExpected": [
+            "objects_performance_3.2"
+        ],
+        "valid": [
+            "<b>ZED SDK version:</b> 4.1.4",
+            "<b>CUDA version:</b> V11.4.315"
+        ]
+    }
+}
