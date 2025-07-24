@@ -60,23 +60,57 @@ if __name__ == "__main__":
     rospy.sleep(10) #TODO: add loop that checks if images ar being published
 
     while not rospy.is_shutdown():
-        usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c] ")
-        chosen_frontcam = True if input("Choose camera [0] if front, [1]] if down ") == "0" else False  
-        SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_frontcam else DOWN_CAM_DATA_DIR
-        time_delay = int(input("Enter time delay (seconds): ")) if usr_choice == "c" else 0
+        camera_usr_choice = input("Choose camera [0] if front, [1] if down ")
+        if camera_usr_choice == "0":
+            chosen_cam = True
+        elif camera_usr_choice == "1":
+            chosen_cam = False
+        else: 
+            print("Not a valid option!!!")
+            continue
+        
+        SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_cam else DOWN_CAM_DATA_DIR
+        
+        while True: 
+            capture_method_usr_choice = input("-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c],\n-To go back to choosing the camera, press [b]: ")
 
-        if usr_choice == "c":
-            print("Spam [p] to cancel")
+            if capture_method_usr_choice == "c":
+                delay_choice = input("-To go back to choosing the camera capturing method press [b].\n-If you want to continue, enter time delay (seconds): ")
 
-            while True:
-                save_image(SAVE_DIR, chosen_frontcam)
-                rospy.sleep(time_delay)
+                if not delay_choice.strip():
+                    print("Empty input! Please enter a number or press [b] to go back: ")
+                    continue
 
-                if keyboard.is_pressed('p'):
-                    print("Stopping capture...")
+                if delay_choice == "b":
                     break
 
-        elif usr_choice == "z":
-            save_image(SAVE_DIR, chosen_frontcam)
-        else:
-            print("Not a valid option!!!")
+                try:
+                    delay_choice = int(delay_choice)
+                    # It's a valid int
+                except ValueError:
+                    # Not an int
+                    print("The time delay is not an integer.")
+                    continue
+
+                if delay_choice < 0:
+                    print("The time delay should be a positive integer.")
+                    continue
+                
+                print("Spam [p] to cancel")
+
+                while True:
+                    save_image(SAVE_DIR, chosen_cam)
+                    print("Image saved.")
+                    rospy.sleep(delay_choice)
+
+                    if keyboard.is_pressed('p'):
+                        print("Stopping capture...")
+                        break
+
+            elif capture_method_usr_choice == "z":
+                save_image(SAVE_DIR, chosen_cam)
+                print("Image saved.")
+            elif capture_method_usr_choice == "b":
+                break
+            else: 
+                print("Not a valid option!!!")
