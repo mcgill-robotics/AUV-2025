@@ -24,8 +24,6 @@ from actionlib_msgs.msg import GoalStatus
 
 # === AUV Custom Messages ===
 from auv_msgs.msg import (
-    EffortAction,
-    EffortGoal,
     StateQuaternionAction,
     StateQuaternionGoal,
     ThrusterMicroseconds,
@@ -67,7 +65,7 @@ class Controller:
 
         # Initialize pub/sub for quaternion controls in controls/quaternion_pid.py
         self.last_quat_error = None
-        self.sub_curr_quat_error = rospy.Subscriber("/controls/pid/quat/error", Vector3, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
+        self.sub_curr_quat_error = rospy.Subscriber("/controls/pid/quat/error", Quaternion, lambda msg: setattr(self, "last_quat_error", msg), queue_size=1)
         self.pub_quat_enable = rospy.Publisher( "/controls/pid/quat/enable", Bool, queue_size=1)
         self.pub_quat_setpoint = rospy.Publisher("/controls/pid/quat/setpoint", Quaternion, queue_size=1)
 
@@ -116,12 +114,6 @@ class Controller:
         self.pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
 
         # Initialize action clients for actions
-        self.EffortClient = actionlib.SimpleActionClient(
-            "/controls/server/effort", EffortAction
-        )
-        self.clients.append(self.EffortClient)
-        # print("Waiting for EffortServer to come online...")
-        # self.EffortClient.wait_for_server()
 
         self.StateQuaternionStateClient = actionlib.SimpleActionClient(
             "/controls/server/state", StateQuaternionAction
@@ -186,34 +178,6 @@ class Controller:
 
 
 
-    def get_effort_goal(self, dofs):
-        """
-        Method which returns target goal for the current effort being exerted by controls.
-        """
-
-        surge, sway, heave, roll, pitch, yaw = dofs
-
-        goal = EffortGoal()
-        goal.effort.force.x = 0 if surge is None else surge
-        goal.do_surge = Bool(False) if surge is None else Bool(True)
-
-        goal.effort.force.y = 0 if sway is None else sway
-        goal.do_sway = Bool(False) if sway is None else Bool(True)
-
-        goal.effort.force.z = 0 if heave is None else heave
-        goal.do_heave = Bool(False) if heave is None else Bool(True)
-
-        goal.effort.torque.x = 0 if roll is None else roll
-        goal.do_roll = Bool(False) if roll is None else Bool(True)
-
-        goal.effort.torque.y = 0 if pitch is None else pitch
-        goal.do_pitch = Bool(False) if pitch is None else Bool(True)
-
-        goal.effort.torque.z = 0 if yaw is None else yaw
-        goal.do_yaw = Bool(False) if yaw is None else Bool(True)
-
-        return goal
-
     def get_state_goal(self, state, displace, local=is_not_local):
         """
         Method which returns the state goal of the current state action server.
@@ -266,9 +230,9 @@ class Controller:
         PIDs are kept on after target is reached to maintain target heading. 
         '''
         # 1) Wait for first angle readings, otherwise sleep. Timeout if overtime.       
-        err= np.zeros(3)
         start = rospy.Time.now()
         rate = rospy.Rate(20)
+        angle_error = float('nan') 
         while (self.current_roll_value is None or
             self.current_pitch_value is None or
             self.current_yaw_value is None) and not rospy.is_shutdown():
@@ -286,6 +250,7 @@ class Controller:
 
         # 4) Publish correct quaternion setpoint to the controls server
         target_q = quaternion_multiply(current_q, delta_q)
+        print(f"target quat: x: {target_q[0]:.2f}, y: {target_q[1]:.2f}, z: {target_q[2]:.2f}, w: {target_q[3]:.2f}")
         qt = Quaternion(x=target_q[0], y=target_q[1], z=target_q[2], w=target_q[3])
         self.pub_quat_setpoint.publish(qt)
 
@@ -300,14 +265,18 @@ class Controller:
         while not rospy.is_shutdown():
             # Break the process if the error is below tolerance level
             if self.last_quat_error is not None:
-                err = np.array([self.last_quat_error.x, self.last_quat_error.y, self.last_quat_error.z])
-                if np.linalg.norm(err) < tol:
+                w = np.clip(self.last_quat_error.w, -1.0, 1.0)
+                angle_error = 2 * np.arccos(w)
+                if np.abs(angle_error) < tol:
                     break
 
             # Send warning if timeout.
             if (rospy.Time.now() - start).to_sec() > timeout:
-                err_norm = np.linalg.norm(err)
-                rospy.logwarn("rotate timed out: %.1f error", err_norm)       
+                err_norm = np.abs(angle_error)
+                rospy.logwarn("rotate timed out: %.1f error", err_norm)  
+                break  
+
+            rate.sleep()   
 
 
     def rotateYaw(self, delta_degrees: float, timeout: float = 10.0,tol_degrees: float = 1.0):
@@ -457,13 +426,17 @@ class Controller:
 
         rate = rospy.Rate(20)
         start_time = rospy.Time.now()
-        while (rospy.Time.now() - start_time).to_sec() < timeout and not rospy.is_shutdown():
+        while  not rospy.is_shutdown():
             err_x = abs(self.x - target_x)
             err_y = abs(self.y - target_y)
             err_z = abs(self.z - target_z)
 
             # rospy.loginfo(f"err_x: {err_x:.3f}, err_y: {err_y:.3f}")
             if err_x < tolerance and err_y < tolerance and err_z < tolerance:
+                break
+
+            if (rospy.Time.now() - start_time).to_sec() > timeout:
+                rospy.logwarn(f"Movedeltalocal timed out: err_x: {err_x:.3f}, err_y: {err_y:.3f}, err_z: {err_z:.3f}")
                 break
 
             rate.sleep()
@@ -524,27 +497,6 @@ class Controller:
 
             rate.sleep()
     
-    
-    
-    
-    def torque(self, vel):
-        """
-        Sets a torque value (x, y, z) and sets this as the goal in the effort server
-        """
-        x, y, z = vel
-        goal = self.get_effort_goal([None, None, None, x, y, z])
-        self.EffortClient.send_goal(goal)
-
-    def forceLocal(self, vel):
-        """
-        Sets a positonal effort force in the local reference frame.
-
-        Note: z is unaffected bu this method (always heaving)
-        """
-
-        x, y = vel
-        goal = self.get_effort_goal([x, y, None, None, None, None])
-        self.EffortClient.send_goal(goal)
 
     def kill(self):
         """
@@ -553,8 +505,6 @@ class Controller:
 
         self.preempt_current_action()
 
-        goal = self.get_effort_goal([0, 0, 0, 0, 0, 0])
-        self.EffortClient.send_goal(goal)
         self.pub_x_enable.publish(Bool(False))
         self.pub_y_enable.publish(Bool(False))
         self.pub_z_enable.publish(Bool(False))

@@ -31,7 +31,7 @@ include_directories(
 install(PROGRAMS
   src/start_zed_bridge.sh
   scripts/${PROJECT_NAME}
-  src/imu_covariancer.py
+  src/imu_covariance.py
   src/dvl_covariance.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

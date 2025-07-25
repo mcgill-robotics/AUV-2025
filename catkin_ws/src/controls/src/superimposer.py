@@ -33,7 +33,7 @@ class Superimposer:
 
         # avoid creating a new Header object for every update and just update the time
         # just update the time
-        self.header = Header(frame_id="auv")
+        self.header = Header(frame_id="odom")
 
         self.pub_effort = rospy.Publisher("/controls/effort", Wrench, queue_size=1)
 
@@ -64,10 +64,10 @@ class Superimposer:
 
         try:
             # convert global force vector into robot reference frame
-            # TODO use message filters to assure tf/data is available
+            # TODO: use message filters to time-synchronize transformation data
             trans = self.tf_buffer.lookup_transform(
-                "auv", "odom", rospy.Time.now()
-            )
+                "auv", "odom", rospy.Time(0) # Time(0) tells tf to use the most recent transform available. 
+            ) 
 
             force_global_transformed = tf2_geometry_msgs.do_transform_vector3(
                 force_global_stmp, trans
@@ -81,6 +81,7 @@ class Superimposer:
             )   
 
         except Exception as e:      # (AUV is not rotated), add the vectors without transform
+            rospy.logwarn(f"Wrench transform failed: {e}")
             force_auv = Vector3(
                 force_auv.x + self.global_x.val,
                 force_auv.y + self.global_y.val,
