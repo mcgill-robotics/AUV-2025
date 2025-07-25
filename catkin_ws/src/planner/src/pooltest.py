@@ -18,16 +18,16 @@ def main():
         controls.moveDeltaLocal(1.0, 0, -1.0)
         rospy.loginfo("Completed move successfully.")
 
-        rospy.loginfo("Attempting to roll by 90 degrees")
-        controls.rotate(90.0,0.0,0.0)
+        rospy.loginfo("Attempting to yaw by 90 degrees")
+        controls.rotate(0.0,0.0,90.0)
         rospy.loginfo("Completed move successfully.")
 
         rospy.loginfo("Attempting to move y by 1.0.")
         controls.moveDeltaLocal(0, 1.0, 0)
         rospy.loginfo("Completed move successfully.")
 
-        rospy.loginfo("Attempting to roll by 135 degrees")
-        controls.rotate(135.0,0.0,0.0)
+        rospy.loginfo("Attempting to yaw by 135 degrees")
+        controls.rotate(0.0,0.0,135.0)
         rospy.loginfo("Completed move successfully.")
         
         rospy.loginfo("Attempting to move x and y by -1.0.")
