@@ -1,7 +1,7 @@
 <launch>
 
-<!-- https://docs.ros.org/en/noetic/api/robot_localization/html/state_estimation_nodes.html -->
-
+<!-- https://roscon.ros.org/2015/presentations/robot_localization.pdf -->
+<!-- According to this, any parameter called depth0 would be ignored by EKF node as it doesnt seem to accept depth* as input, check slide 10 -->
     <arg name="remove_gravity" default="true"/>
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
