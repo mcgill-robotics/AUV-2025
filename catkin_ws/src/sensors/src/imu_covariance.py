@@ -15,6 +15,8 @@ and linear acceleration.
 
 Datasheet reference:
 https://support.sbg-systems.com/sc/el/latest/ellipse-documentation/performance-specifications/raw-imu-specifications 
+Github Documentation:
+https://github.com/SBG-Systems/sbg_ros_driver
 """
 
 import rospy

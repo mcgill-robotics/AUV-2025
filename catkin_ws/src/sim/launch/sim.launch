@@ -16,10 +16,6 @@
   <param name="q_imunominalup_imuup_y" value="0.0" />
   <param name="q_imunominalup_imuup_z" value="0.0" />
 
-  <param name="auv_dvl_offset_x" value="0.0" />
-  <param name="auv_dvl_offset_y" value="0.0" />
-  <param name="auv_dvl_offset_z" value="0.0" />
-
   <!-- Unity bridge node -->
   <node name="unity_bridge" pkg="sim" type="unity_bridge.py" output="screen">
     <param name="ekf" value="$(arg ekf)" />

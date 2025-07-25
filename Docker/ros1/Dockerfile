@@ -128,6 +128,8 @@ RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_T
 RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
     chown -R jetson:jetson /usr/local/zed
 
+COPY SN33688213.conf /usr/local/zed/settings/
+
 USER root
 WORKDIR /AUV-2025/catkin_ws
 
