@@ -20,7 +20,7 @@
 
       <param name="twist0" value="/sensors/dvl/twist"/>
       <param name="imu0" value="/sensors/imu/data"/> 
-      -<param name="imu1" value="/zed2i/zed_node/imu/data"/> <!-- ZED2i imu -->
+      <param name="imu1" value="/zed2i/zed_node/imu/data"/> <!-- ZED2i imu -->
       <param name="pose0" value="/sensors/depth/pose"/>
 
 
