@@ -64,7 +64,7 @@
        0.0,  0.0,  0.0]
        </rosparam>
 
-      <param name="pose0_relative" value="false"/> <!-- Consider setting this to true in pool tests -->
+      <param name="pose0_relative" value="true"/> <!-- Consider setting this to true in pool tests -->
 
       <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
       <param name="imu1_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
