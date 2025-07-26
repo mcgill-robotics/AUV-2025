@@ -130,6 +130,34 @@ RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
 
 COPY SN33688213.conf /usr/local/zed/settings/
 
+RUN apt-get update && \
+    apt-get install -y \
+    libepoxy-dev \
+    libgl1-mesa-dev \
+    libwayland-dev \
+    libxkbcommon-dev \
+    wayland-protocols \
+    libegl1-mesa-dev \
+    libc++-dev \
+    libglew-dev \
+    g++ \
+    ninja-build \
+    libjpeg-dev \
+    libpng-dev \
+    libavcodec-dev \
+    libavutil-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libavdevice-dev
+
+RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
+    cd Pangolin && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install
+
 USER root
 WORKDIR /AUV-2025/catkin_ws
 
