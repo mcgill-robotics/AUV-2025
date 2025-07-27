@@ -107,8 +107,6 @@ class Superimposer:
 if __name__ == "__main__":
     rospy.init_node("superimposer")
     si = Superimposer()
-
-    # Block-and-poll up to 5 s for odom→auv
     deadline = rospy.Time.now() + rospy.Duration(5.0)
     rospy.loginfo("Waiting up to 5s for odom au")
     while not rospy.is_shutdown() and rospy.Time.now() < deadline:
