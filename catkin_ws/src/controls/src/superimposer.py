@@ -107,9 +107,18 @@ class Superimposer:
 if __name__ == "__main__":
     rospy.init_node("superimposer")
     si = Superimposer()
-    timer = rospy.Timer(
-        rospy.Duration(1.0 / rospy.get_param("superimposer_loop_rate")),
-        si.update_effort,
-    )
+
+    # Block-and-poll up to 5 s for odom→auv
+    deadline = rospy.Time.now() + rospy.Duration(5.0)
+    rospy.loginfo("Waiting up to 5s for odom au")
+    while not rospy.is_shutdown() and rospy.Time.now() < deadline:
+        if si.tf_buffer.can_transform("auv", "odom", rospy.Time(0)):
+            rospy.loginfo("Got odom auv!!")
+            break
+        rospy.sleep(0.1)
+    else:
+        rospy.logwarn("Timeout waiting for odom auv")
+
+    timer = rospy.Timer(rospy.Duration(1.0 / rospy.get_param("superimposer_loop_rate")),si.update_effort)
     rospy.on_shutdown(timer.shutdown)
     rospy.spin()

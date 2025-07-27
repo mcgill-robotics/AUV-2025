@@ -9,6 +9,9 @@
       <param name="frequency" value="15"/>  
       <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
+      <param name="publish_tf" value="true"/>
+      <param name="transform_timeout" value="0.1"/>
+
 
       <param name="print_diagnostics" value="true"/>
 
