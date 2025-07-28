@@ -69,20 +69,46 @@ RUN echo "Target platform: $TARGETPLATFORM" && \
         echo "Installing ARM64-specific dependencies"; \
     fi
 
-# Install Cuda 11.4.0/11.8.0
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        echo "Installing CUDA 11.4 for ARM64"; \
-        wget -q https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run && \
-        chmod +x cuda_11.4.0_470.42.01_linux_sbsa.run && \
-        ./cuda_11.4.0_470.42.01_linux_sbsa.run --silent --toolkit && \
-        rm cuda_11.4.0_470.42.01_linux_sbsa.run; \
+ARG DISTRO=ubuntu2004
+ARG CUDA_URL=https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/x86_64/cuda-repo-${DISTRO}_11.8.0-520.61.05-1_amd64.deb
+ARG CUDA_DEB=cuda-repo-${DISTRO}_11.8.0-520.61.05-1_amd64.deb
+ARG CUDA_PACKAGES="cuda-toolkit-11-8"
+
+RUN set -ex; \
+    ARCH=$(uname -m); \
+    ARCH_TYPE=$ARCH; \
+    if [ "$ARCH" = "aarch64" ]; then \
+        if uname -a | grep -qi tegra; then \
+            ARCH_TYPE="tegra-aarch64"; \
+        fi; \
+    fi; \
+    echo "Detected architecture: ${ARCH_TYPE}"; \
+    apt-get update && apt-get install -y --no-install-recommends binutils xz-utils wget; \
+    rm -rf /var/lib/apt/lists/*; \
+    mkdir -p /tmp/cuda; cd /tmp/cuda; \
+    if [ "$ARCH_TYPE" = "tegra-aarch64" ]; then \
+        wget -q https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/arm64/cuda-${DISTRO}.pin -O /etc/apt/preferences.d/cuda-repository-pin-600; \
+        CUDA_URL="https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/arm64/cuda-repo-${DISTRO}_local_11.4.0-1_arm64.deb"; \
+        CUDA_DEB="cuda-repo-${DISTRO}_local_11.4.0-1_arm64.deb"; \
+        CUDA_PACKAGES="cuda-toolkit-11-4"; \
+    elif [ "$ARCH_TYPE" = "aarch64" ]; then \
+        wget -q https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/sbsa/cuda-${DISTRO}.pin -O /etc/apt/preferences.d/cuda-repository-pin-600; \
+        # Adjust CUDA_URL, CUDA_DEB and CUDA_PACKAGES for sbsa if needed \
     else \
-        echo "Installing CUDA 11.8 for x86_64"; \
-        wget -q https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run && \
-        chmod +x cuda_11.8.0_520.61.05_linux.run && \
-        ./cuda_11.8.0_520.61.05_linux.run --silent --toolkit --no-opengl-libs && \
-        rm cuda_11.8.0_520.61.05_linux.run; \
-    fi
+        wget -q https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/x86_64/cuda-${DISTRO}.pin -O /etc/apt/preferences.d/cuda-repository-pin-600; \
+    fi; \
+    wget -q $CUDA_URL -O $CUDA_DEB; \
+    dpkg -i $CUDA_DEB; \
+    cp /var/cuda-*-local/cuda-*-keyring.gpg /usr/share/keyrings/; \
+    if [ "$ARCH_TYPE" = "tegra-aarch64" ]; then \
+        ar x /var/cuda-tegra-repo-ubuntu*-local/cuda-compat-*.deb; \
+        tar xvf data.tar.xz -C /; \
+    fi; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends $CUDA_PACKAGES; \
+    rm -rf /var/lib/apt/lists/* /tmp/cuda; \
+    apt-get clean
+
 
 # Set Cuda environment variables
 # ENV PATH=/usr/local/cuda-11.4/bin:$PATH
