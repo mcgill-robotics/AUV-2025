@@ -20,7 +20,7 @@ on:
 jobs:
   build-and-push-base:
     name: Build and optionally push base Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
 
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
         with:
           context: Docker/base
           file: Docker/base/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:base
           
