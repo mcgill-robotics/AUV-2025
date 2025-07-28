@@ -10,11 +10,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
 ARG TARGETPLATFORM
 
 # Install apt packages
-RUN apt-get update \
+RUN apt-get update -qq \
     && apt-get install -y locales \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen \
-    && apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends -qq \
         wget \
         tar \
         perl \
@@ -54,7 +54,7 @@ RUN apt-get update \
 
 # Install python packages
 COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt \
+RUN pip install -qq --no-cache-dir -r requirements.txt \
     && rm -f /usr/local/bin/cmake \
     && rm -rf /root/.cache/pip \
     && rm requirements.txt
