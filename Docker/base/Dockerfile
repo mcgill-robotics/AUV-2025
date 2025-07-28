@@ -16,6 +16,9 @@ RUN apt-get update \
     && locale-gen \
     && apt-get install -y --no-install-recommends \
         wget \
+        tar \
+        perl \
+        build-essential \
         git \
         git-lfs \
         python3-catkin-tools \
