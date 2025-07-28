@@ -72,13 +72,13 @@ RUN echo "Target platform: $TARGETPLATFORM" && \
 # Install Cuda 11.4.0/11.8.0
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         echo "Installing CUDA 11.4 for ARM64"; \
-        wget https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run && \
+        wget -q https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run && \
         chmod +x cuda_11.4.0_470.42.01_linux_sbsa.run && \
         ./cuda_11.4.0_470.42.01_linux_sbsa.run --silent --toolkit && \
         rm cuda_11.4.0_470.42.01_linux_sbsa.run; \
     else \
         echo "Installing CUDA 11.8 for x86_64"; \
-        wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run && \
+        wget -q https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run && \
         chmod +x cuda_11.8.0_520.61.05_linux.run && \
         ./cuda_11.8.0_520.61.05_linux.run --silent --toolkit --no-opengl-libs && \
         rm cuda_11.8.0_520.61.05_linux.run; \
@@ -93,14 +93,14 @@ RUN adduser jetson --disabled-password --gecos ""
 WORKDIR /root/
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         echo "Installing ZED SDK for ARM64 Tegra"; \
-        wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
+        wget -q https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
         chmod +x ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run && \
         ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
         chown -R jetson:jetson /usr/local/zed; \
         rm ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run; \
     else \
         echo "Installing ZED SDK for x86_64 Ubuntu20 CUDA11.8"; \
-        wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
+        wget -q https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
         chmod +x ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
         ./ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run -- silent && \
         rm ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run; \
