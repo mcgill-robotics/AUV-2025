@@ -9,6 +9,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 ARG TARGETPLATFORM
 
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    | gpg --dearmor -o /usr/share/keyrings/ros1-archive-keyring.gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros1-archive-keyring.gpg] \
+    http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" \
+    > /etc/apt/sources.list.d/ros1.list
+
 # Install apt packages
 RUN apt-get update -qq \
     && apt-get install -y locales \
