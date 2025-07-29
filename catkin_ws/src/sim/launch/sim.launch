@@ -28,6 +28,8 @@
     <arg name="ekf" value="$(arg ekf)" />
   </include>
 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_broadcaster" args="0 0 0 0 0 0 auv camera" />
+
   <!-- Simulation-specific endpoint logic -->
   <include file="$(find sim)/launch/endpoint.launch" />
 </launch>

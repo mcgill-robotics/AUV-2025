@@ -6,7 +6,7 @@ services:
       - ../../../AUV-2025:/AUV-2025
     build:
       context: .
-      dockerfile: base.dockerfile
+      dockerfile: ./Dockerfile
     command: bash -c "tail -f /dev/null"
     ports:
       - "8765:8765"
