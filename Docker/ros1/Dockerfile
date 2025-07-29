@@ -148,7 +148,15 @@ RUN apt-get update && \
     libavutil-dev \
     libavformat-dev \
     libswscale-dev \
-    libavdevice-dev
+    libavdevice-dev \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       python3.9 python3.9-dev python3.9-venv python3.9-distutils \
+       pybind11-dev \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 - \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
 
 RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
     cd Pangolin && \
