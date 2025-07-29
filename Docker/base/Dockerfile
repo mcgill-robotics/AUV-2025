@@ -49,33 +49,35 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && rm requirements.txt
 
 # Install Pangolin and SLAM dependencies using custom script
-RUN apt-get update && \
-    apt-get install -y \
-    libepoxy-dev \
-    libgl1-mesa-dev \
-    libwayland-dev \
-    libxkbcommon-dev \
-    wayland-protocols \
-    libegl1-mesa-dev \
-    libc++-dev \
-    libglew-dev \
-    g++ \
-    ninja-build \
-    libjpeg-dev \
-    libpng-dev \
-    libavcodec-dev \
-    libavutil-dev \
-    libavformat-dev \
-    libswscale-dev \
-    libavdevice-dev
+# RUN apt-get update && \
+#     apt-get install -y \
+#     libepoxy-dev \
+#     libgl1-mesa-dev \
+#     libwayland-dev \
+#     libxkbcommon-dev \
+#     wayland-protocols \
+#     libegl1-mesa-dev \
+#     libc++-dev \
+#     libglew-dev \
+#     g++ \
+#     ninja-build \
+#     libjpeg-dev \
+#     libpng-dev \
+#     libavcodec-dev \
+#     libavutil-dev \
+#     libavformat-dev \
+#     libswscale-dev \
+#     libavdevice-dev
 
-RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
-    cd Pangolin && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    make install
+# RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
+#     cd Pangolin && \
+#     mkdir build && \
+#     cd build && \
+#     cmake .. && \
+#     make -j$(nproc) && \
+#     make install
+
+# RUN ["/bin/bash", "-c", "source /opt/ros/noetic/setup.bash && cd /AUV-2025/catkin_ws && catkin build"]
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc
