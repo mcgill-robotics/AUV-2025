@@ -109,5 +109,33 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
+RUN apt-get update && \
+    apt-get install -y \
+    libepoxy-dev \
+    libgl1-mesa-dev \
+    libwayland-dev \
+    libxkbcommon-dev \
+    wayland-protocols \
+    libegl1-mesa-dev \
+    libc++-dev \
+    libglew-dev \
+    g++ \
+    ninja-build \
+    libjpeg-dev \
+    libpng-dev \
+    libavcodec-dev \
+    libavutil-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libavdevice-dev
+
+RUN git clone --recursive https://github.com/alb33rt/pangolin.git && \
+    cd pangolin && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install
+
 CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && roscore"]
 RUN echo "tmux" >> ~/.bashrc
