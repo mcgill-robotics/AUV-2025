@@ -1,8 +1,7 @@
 # RTAB-Map configuration
 
-subscribe_depth:       false #zed2i gives its own depth via stereo 
+subscribe_depth:        true        #zed2i gives its own depth via stereo 
 subscribe_rgbd:         false
-subscribe_stereo:       true 
 subscribe_stereo:       false
 subscribe_scan:         false
 subscribe_scan_cloud:   false
@@ -25,7 +24,7 @@ odom_sensor_sync:               true
 wait_for_transform_duration:    0.2
 approx_sync:                    true
 
-queue_size: 20
+queue_size: 10
 
 scan_normal_k:  0
 

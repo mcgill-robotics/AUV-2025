@@ -7,10 +7,13 @@
     <arg name="zed_node_name" default="zed_node" />
     <arg name="camera_model" default="zed2i" />
     <arg name="publish_urdf" default="true" />
+
     <arg name="camera_name" default="zed" />
+
     <arg name="base_frame" default="auv" />
 
     <group ns="$(arg camera_name)">
+
         <!-- ZED Wrapper Node-->
         <include file="$(find zed_wrapper)/launch/include/zed_camera.launch.xml">
             <arg name="camera_name" value="$(arg camera_name)" />
@@ -24,11 +27,11 @@
   
         <arg name="custom_rtabmap_launch_file" default="$(find slam)/launch/include/sl_rtabmap.launch.xml"/>
         <include file="$(arg custom_rtabmap_launch_file)">
-            <arg name="odom_topic" default="/odometry/filtered" />
-            <arg name="rgb_topic" default="/zed/zed_node/stereo/image_rect_color" />
-            <arg name="depth_topic" default="/zed/zed_node/depth/depth_registered" />
-            <arg name="camera_info_topic" default="/zed/zed_node/depth/camera_info" />
-            <arg name="depth_camera_info_topic" default="/zed/zed_node/depth/camera_info" />
+            <arg name="odom_topic" default="/zed2i/zed_node/odom" />
+            <arg name="rgb_topic" default="/zed2i/zed_node/stereo/image_rect_color" />
+            <arg name="depth_topic" default="/zed2i/zed_node/depth/depth_registered" />
+            <arg name="camera_info_topic" default="/zed2i/zed_node/depth/camera_info" />
+            <arg name="depth_camera_info_topic" default="/zed2i/zed_node/depth/camera_info" />
         </include>   
 
         <!-- Rviz -->
