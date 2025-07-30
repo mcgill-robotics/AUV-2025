@@ -6,7 +6,7 @@ subscribe_stereo:       false
 subscribe_scan:         false
 subscribe_scan_cloud:   false
 subscribe_user_data:    false
-subscribe_odom_info:    true
+subscribe_odom_info:    false
 subscribe_odom:         false #may not need both subscribe_odom and subscribe_odom_info
 
 database_path:      "~/.ros/rtabmap.db"
@@ -24,7 +24,7 @@ odom_sensor_sync:               true
 wait_for_transform_duration:    0.2
 approx_sync:                    true
 
-queue_size: 10
+queue_size: 20
 
 scan_normal_k:  0
 
