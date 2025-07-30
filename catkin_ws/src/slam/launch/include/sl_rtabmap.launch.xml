@@ -4,10 +4,12 @@
 
     <arg if="$(arg localization)" name="args" default=""/>
     <arg unless="$(arg localization)" name="args" default="--delete_db_on_start"/>
-    <arg name="rgb_topic"= default="/zed/zed_node/stereo/image_rect_color" /> 
-    <arg name="depth_topic" default="/zed/zed_node/depth/depth_registered" /> 
-    <arg name="camera_info_topic" default="/zed/zed_node/rgb/camera_info" />
-    <arg name="depth_camera_info_topic" default="/zed/zed_node/depth/camera_info" />
+    <arg name="rgb_topic"= default="/zed2i/zed_node/stereo/image_rect_color" /> 
+    <arg name="depth_topic" default="/zed2i/zed_node/depth/depth_registered" /> 
+    <arg name="camera_info_topic" default="/zed2i/zed_node/rgb/camera_info" />
+    <arg name="depth_camera_info_topic" default="/zed2i/zed_node/depth/camera_info" />
+
+    <!-- Pick between /odometry/filtered or /zed2i/zed_node/odom -->
     <arg name="odom_topic" default="/odometry/filtered" />  
 
     <!--<arg name="odom_topic" default="odom" />-->
@@ -47,6 +49,8 @@
         <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
         <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
         <param name="Mem/InitWMWithAllNodes" type="string" value="$(arg localization)"/>
+
+        <param name="visual_odometry"  value="false" />
     </node>
 
 </launch>
