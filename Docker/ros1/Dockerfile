@@ -57,7 +57,7 @@ RUN apt-get update && apt-get install -y wget \
     && apt-get update \
     && apt-get install -y python3-catkin-tools python3-pip tmux vim
 
-RUN apt-get install -y ros-noetic-rosserial-arduino \
+RUN apt-get update && apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
     ros-noetic-rtabmap \
     ros-noetic-rtabmap-ros \
@@ -155,8 +155,6 @@ RUN apt-get update && \
        pybind11-dev \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 - \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
 
 RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
     cd Pangolin && \
