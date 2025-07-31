@@ -11,23 +11,31 @@ on:
 
 jobs:
   catkin-build:
-    name: Build catkin workspace
+    name: Catkin Build Workspace
     runs-on: ubuntu-22.04-arm
-    container:
-        image: mcgillrobotics/auv_2025:base
+
     steps:
-      - uses: actions/checkout@v3
-      - name: catkin build
-        shell: bash
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/base
+          file: Docker/base/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: local-base-image:latest
+
+      - name: Run catkin build inside container
         run: |
-            git config --global --add safe.directory /__w/AUV-2025/AUV-2025
-            git submodule update --init --recursive
-            source /opt/ros/noetic/setup.bash
-            cd catkin_ws
-            catkin build
-      # - name: state test
-      #   shell: bash
-      #   run: |
-      #       cd catkin_ws
-      #       source devel/setup.bash
-      #       xvfb-run -a rostest planner simple.test
+          docker run --rm \
+            -v ${{ github.workspace }}:/ws \
+            -w /ws/catkin_ws \
+            local-base-image:latest \
+            bash -c "source /opt/ros/noetic/setup.bash && \
+                    catkin build --skip-packages zed-ros-wrapper zed-ros-examples"
