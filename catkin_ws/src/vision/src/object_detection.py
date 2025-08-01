@@ -36,10 +36,10 @@ def is_vision_ready(camera_id):
             print(current_states)
             states[camera_id].resume()
             return False
-    if camera_id == 1 and states[camera_id].point_cloud is None:
-        print("Point cloud not yet published.")
-        states[camera_id].resume()
-        return False
+    # if camera_id == 1 and states[camera_id].point_cloud is None:
+    #     print("Point cloud not yet published.")
+    #     states[camera_id].resume()
+    #     return False
     return True
 
 
@@ -48,6 +48,7 @@ def detection_frame(image, debug_image, detections, camera_id):
     detection_frame_array = []
     image_h, image_w, _ = image.shape
     # Nested for loops get all predictions made by model.
+    print(detections)
     for detection in detections:
         boxes = (
             detection.boxes.cpu().numpy()
@@ -198,7 +199,7 @@ def vision_cb(raw_image: Image, camera_id: int) -> None:
 
 
 if __name__ == "__main__":
-    rospy.init_node("object_detection")
+    rospy.init_node("object_detection", anonymous=True)
 
     PRINT_DEBUG_INFO = rospy.get_param("log_model_prediction_info", False)
     NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
@@ -253,6 +254,6 @@ if __name__ == "__main__":
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
     rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
-    rospy.Subscriber("/zed/zed_node/stereo/image_rect_color", Image, vision_cb, 1),
+    rospy.Subscriber("/vision/front_cam/color/image_raw", Image, vision_cb, 1),
 
     rospy.spin()
