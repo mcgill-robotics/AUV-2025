@@ -1,0 +1,44 @@
+name: Catkin Integration Test
+
+on:
+  push:
+    branches: [noetic]
+  pull_request:
+    branches: [noetic]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # 4 AM Montreal time
+
+jobs:
+  catkin-build:
+    name: Catkin Build Workspace
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/base
+          file: Docker/base/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: local-base-image:latest
+
+      - name: Run catkin build inside container
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/ws \
+            -w /ws/catkin_ws \
+            local-base-image:latest \
+            bash -c "source /opt/ros/noetic/setup.bash && \
+                    cd src && \
+                    rm -rf zed-ros-* && \
+                    cd .. && \
+                    catkin build"
