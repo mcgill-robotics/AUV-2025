@@ -12,7 +12,7 @@
         <param name="down_cam_model_file" 
             value="$(find vision)/src/models/down_cam_comp.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/front_cam_comp.pt" />
+            value="$(find vision)/src/models/best.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
@@ -20,7 +20,7 @@
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
         <param name="down_cam_class_name_mappings" value="['Bin', 'Lane Marker', 'Octagon Table']"/>
-        <param name="front_cam_class_name_mappings" value="['Buoy', 'Gate', 'Octagon Table']"/>
+        <param name="front_cam_class_name_mappings" value="['shark', 'sawfish', 'gate_divider']"/>
         <param name="lane_marker_downscaling_size" value="100" /> <!-- largest size of either axis of image after downscaling -->
         <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
         <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
@@ -48,7 +48,7 @@
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
         <param name="down_cam_class_name_mappings" value="['Bin', 'Lane Marker', 'Octagon Table']"/>
-        <param name="front_cam_class_name_mappings" value="['Buoy', 'Gate', 'Octagon Table']"/>
+        <param name="front_cam_class_name_mappings" value="['shark', 'sawfish', 'gate_divider']"/>
         <param name="lane_marker_downscaling_size" value="100" /> <!-- largest size of either axis of image after downscaling -->
         <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
         <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
@@ -69,9 +69,9 @@
     <param name="debug_lane_marker_thresholding" value="false" />
     <param name="debug_point_cloud_cleaning" value="false" />
 
-    <!-- <node name="object_detection" pkg="vision" type="object_detection.py" respawn="true"  output="screen"> -->
-        <!-- <param name="sim" value="$(arg sim)" /> -->
-    <!-- </node> -->
+    <node name="object_detection" pkg="vision" type="object_detection.py" respawn="false" output="screen">
+        <param name="sim" value="$(arg sim)" />
+    </node>
     <!-- <node name="mapping" pkg="vision" type="object_map.py" respawn="true"  output="screen"/> -->
     <!-- <node name="debug_thresholding" pkg="vision" type="debug_thresholding.py" respawn="true"  output="screen"/> -->
 
