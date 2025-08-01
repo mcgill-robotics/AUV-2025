@@ -41,16 +41,7 @@ def prequal():
     #Also that we cannot submerge. If we need to stay underwater, 
     # replace STOP by [1500, x, x, 1500, 1500, x, x, 1500] where x is whatever value
     # and add that same x for the forward and left PWMs
-    # publish_pwm_for_duration(pub, msg_forward, 10.0, rate)     # Go forward for 10 seconds
-    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    # publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
-    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    # publish_pwm_for_duration(pub, msg_forward, 2.0, rate)
-    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
-    # publish_pwm_for_duration(pub, msg_turn_left, 1.0, rate)
-    # publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
     publish_pwm_for_duration(pub, msg_forward, 10.0, rate)
-    
     publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
 
 
