@@ -22,8 +22,9 @@
       <rosparam param="transform_orientation">[0, 0, 0, 1, 0, 0, 0]</rosparam> <!-- ENU orientation -->
 
       <param name="twist0" value="/sensors/dvl/twist"/>
-      <param name="imu0" value="/sensors/imu/data"/> 
+      <!-- <param name="imu0" value="/sensors/imu/data"/>   --> <!-- SBG IMU -->
       <!-- <param name="imu1" value="/zed2i/zed_node/imu/data"/> ZED2i imu -->
+      <param name="imu0" value="imu/data"/>   <!-- Movella IMU -->
       <param name="pose0" value="/sensors/depth/pose"/>
       <param name="pose1" value="/zed2i/zed_node/pose_with_covariance"/> <!-- ZED2i pose -->
 

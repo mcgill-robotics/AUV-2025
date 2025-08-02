@@ -30,11 +30,11 @@ def prequal():
 
     rospy.loginfo("Starting prequal publisher...")
 
-    # Create a ThrusterMicroseconds message for various movements
-    msg_down = ThrusterMicroseconds(microseconds=DOWN_PWMS)
+    # Create a ThrusterMicroseconds message for various movement
     msg_forward = ThrusterMicroseconds(microseconds=U_FORWARD_PWMS)
     msg_turn_left = ThrusterMicroseconds(microseconds=TURN_LEFT_PWMS)
     msg_stop=ThrusterMicroseconds(microseconds=STOP_PWMS)
+    msg_down=ThrusterMicroseconds(microseconds=DOWN_PWMS)
     msg_pitchup=ThrusterMicroseconds(microseconds=PITCHUP_PWMS)
 
     ###ACTUAL PREQUAL RUN ###
@@ -43,7 +43,6 @@ def prequal():
     #Also that we cannot submerge. If we need to stay underwater, 
     # replace STOP by [1500, x, x, 1500, 1500, x, x, 1500] where x is whatever value
     # and add that same x for the forward and left PWMs
-    #publish_pwm_for_duration(pub, msg_pitchup, 10.0, rate)
     publish_pwm_for_duration(pub, msg_down, 3.0, rate)
     publish_pwm_for_duration(pub, msg_forward, 15.0, rate)
     publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
@@ -60,4 +59,8 @@ if __name__ == '__main__':
 
 #HOW TO RUN THIS FILE (if you dont know):
 # roslaunch propulsion propulsion.launch
+<<<<<<< HEAD
 # rosrun planner raw_prequal.py
+=======
+# rosrun planner raw_prequal.py
+>>>>>>> b20b52bc10b77266497d8f744a329269522655d3
