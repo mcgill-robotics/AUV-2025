@@ -234,9 +234,9 @@ rotsensor_rotation_euler: [180.0, 0.0, 0.0]
 # Sensor Standard Deviation (Optional)
 # ------------------------------------
 # Override the covariance matrix in sensor_msgs/Imu and sensor_msgs/MagneticField messages:
-linear_acceleration_stddev: [0.0, 0.0, 0.0] # [m/s^2] Standard deviation for linear acceleration
-angular_velocity_stddev: [0.0, 0.0, 0.0]   # [rad/s] Standard deviation for angular velocity
-orientation_stddev: [0.0, 0.0, 0.0]        # [rad]   Standard deviation for orientation
+linear_acceleration_stddev: [0.0131615, 0.0131615, 0.0131615] # [m/s^2] Standard deviation for linear acceleration
+angular_velocity_stddev: [0.00278597, 0.00278597, 0.00278597]   # [rad/s] Standard deviation for angular velocity
+orientation_stddev: [0.00349, 0.00349, 0.0174533]        # [rad]   Standard deviation for orientation
 magnetic_field_stddev: [0.0, 0.0, 0.0]     # [Tesla] Standard deviation for magnetic field
 
 

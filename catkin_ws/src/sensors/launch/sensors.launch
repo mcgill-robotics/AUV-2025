@@ -9,7 +9,7 @@
 	<include file="$(find sensors)/launch/hydrophones.launch"/>
 	<include file="$(find sensors)/launch/dvl.launch"/>
 	<!-- <include file="$(find sensors)/launch/sbg_imu.launch"/> --> 
-	<include file="$(find xsens_ros_mti_driver)/launch/xsens_mti_node.launch"/>
+	<include file="/AUV-2025/catkin_ws/src/xsens_ros_mti_driver/launch/xsens_mti_node.launch"/>
 
 	<node pkg="rosbag" type="record" name="rosbag_imu"
 		if="$(arg record)"
