@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     auto depth_cb = [&](const std_msgs::Float64::ConstPtr &msg)
     {
         geometry_msgs::PoseWithCovarianceStamped pose_msg;
-        pose_msg.header.stamp = msg->header.stamp;
+        pose_msg.header.stamp = ros::Time::now();
         // Frame must match the frame of the depth value. i.e "odom"
         pose_msg.header.frame_id = "odom";
 
