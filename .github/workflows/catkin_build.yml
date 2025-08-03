@@ -38,7 +38,4 @@ jobs:
             -w /ws/catkin_ws \
             local-base-image:latest \
             bash -c "source /opt/ros/noetic/setup.bash && \
-                    cd src && \
-                    rm -rf zed-ros-* && \
-                    cd .. && \
                     catkin build"
