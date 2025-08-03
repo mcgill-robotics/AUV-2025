@@ -8,9 +8,6 @@
   <param name="z_pos_mount_offset" value="0" />
   <param name="sensor_swap_warning_interval" value="5" />
 
-  <!-- Include any hydrophone-related nodes -->
-  <!-- <include file="$(find state_estimation)/launch/hydrophones.launch"/> -->
-
   <!-- === Static Transform Configuration === -->
 
   <!-- === Quaternion from nominal-up to imu-up === -->
@@ -35,7 +32,7 @@
 
   <!-- === AUV to IMU translation offset === -->
   <!-- ENU: Translation (x, y, z) from AUV frame to IMU [meters] -->
-  <!-- IMU data transformation is handled in SBG config file -->
+  <!-- TODO: Put in offsets for Movella IMU  -->
   <arg name="auv_imu_offset_x" default="0.0" /> <!-- 0.0641 -->
   <arg name="auv_imu_offset_y" default="0.0" /> <!-- 0.002 -->
   <arg name="auv_imu_offset_z" default="0.0" /> <!-- -0.057956 -->

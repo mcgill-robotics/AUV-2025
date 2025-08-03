@@ -6,7 +6,6 @@
 	
 	<include file="$(find sensors)/launch/tether_status.launch"/>
 	<include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
-	<include file="$(find sensors)/launch/hydrophones.launch"/>
 	<include file="$(find sensors)/launch/dvl.launch"/>
 	<!-- <include file="$(find sensors)/launch/sbg_imu.launch"/> --> 
 	<include file="/AUV-2025/catkin_ws/src/xsens_ros_mti_driver/launch/xsens_mti_node.launch"/>
