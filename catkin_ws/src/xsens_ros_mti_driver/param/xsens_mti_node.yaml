@@ -59,7 +59,7 @@ enable_logging: false
 # Transform Frame ID
 # ------------------
 # Default frame_id is "imu_link". Change this if using multiple devices to avoid conflicts.
-frame_id: "imu"
+frame_id: "movella_dummy"
 
 
 # Sensor Configuration
@@ -228,7 +228,7 @@ manual_gyro_bias_param: [15, 5] # [event_interval, duration]
 # RotSensor Frame changes
 # roll, pitch, yaw values
 # if your MTi-630 is installed upside-down(connector to the upside), then use 180deg for the roll.
-enable_rotsensor_frame_config: false
+enable_rotsensor_frame_config: true
 rotsensor_rotation_euler: [180.0, 0.0, 0.0] 
 
 # Sensor Standard Deviation (Optional)
