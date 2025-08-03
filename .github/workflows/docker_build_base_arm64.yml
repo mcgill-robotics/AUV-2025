@@ -20,7 +20,7 @@ on:
 jobs:
   build-and-push-base:
     name: Build and optionally push base Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
 
     steps:
       - name: Free Disk Space
@@ -52,13 +52,13 @@ jobs:
         with:
           context: Docker/base
           file: Docker/base/Dockerfile
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:base
           
   build-and-push-sim:
     name: Build and optionally push sim Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     needs: build-and-push-base
 
     steps:
@@ -80,13 +80,13 @@ jobs:
         with:
           context: Docker/sim
           file: Docker/sim/Dockerfile
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:sim
 
   build-and-push-poolside:
     name: Build and optionally push poolside Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     needs: build-and-push-sim
 
     steps:
@@ -108,6 +108,6 @@ jobs:
         with:
           context: Docker/poolside
           file: Docker/poolside/Dockerfile
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:poolside
