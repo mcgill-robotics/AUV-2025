@@ -33,7 +33,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub (only if pushing)
-        if: true
+        if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -45,7 +45,7 @@ jobs:
           context: Docker/base
           file: Docker/base/Dockerfile
           platforms: linux/amd64
-          push: ${{ true }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:base-amd64-temp
 
   build-and-push-base-arm64:
@@ -63,7 +63,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub (only if pushing)
-        if: true
+        if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -75,7 +75,7 @@ jobs:
           context: Docker/base
           file: Docker/base/Dockerfile
           platforms: linux/arm64
-          push: ${{ true }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
           tags: mcgillrobotics/auv_2025:base-arm64-temp
 
   create-manifest:
@@ -84,7 +84,7 @@ jobs:
     needs:
       - build-and-push-base-amd64
       - build-and-push-base-arm64
-    if: true
+    if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
 
     steps:
       - name: Login to Docker Hub
