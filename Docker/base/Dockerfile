@@ -80,8 +80,9 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         echo "Installing CUDA 11.8 for x86_64"; \
         wget -q https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run && \
         chmod +x cuda_11.8.0_520.61.05_linux.run && \
-        TERM=dumb ./cuda_11.8.0_520.61.05_linux.run --silent --toolkit --no-opengl-libs </dev/null && \
-        rm cuda_11.8.0_520.61.05_linux.run; \
+        ./cuda_11.8.0_520.61.05_linux.run --extract=/tmp/cuda && \
+        dpkg -i /tmp/cuda/cuda-toolkit-11-8_11.8.89-1_amd64.deb && \
+        rm -rf /tmp/cuda cuda_11.8.0_520.61.05_linux.run
     fi
 
 # Set Cuda environment variables
