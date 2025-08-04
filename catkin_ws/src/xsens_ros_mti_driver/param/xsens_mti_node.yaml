@@ -229,7 +229,7 @@ manual_gyro_bias_param: [15, 5] # [event_interval, duration]
 # roll, pitch, yaw values
 # if your MTi-630 is installed upside-down(connector to the upside), then use 180deg for the roll.
 enable_rotsensor_frame_config: true
-rotsensor_rotation_euler: [180.0, 0.0, 0.0] 
+rotsensor_rotation_euler: [180.0, 0.0, 180.0] 
 
 # Sensor Standard Deviation (Optional)
 # ------------------------------------
