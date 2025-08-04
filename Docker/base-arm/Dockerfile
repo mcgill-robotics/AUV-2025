@@ -1,4 +1,3 @@
-# Use the official ROS Noetic base image
 FROM ros:noetic-ros-base
 
 # Setup environment
@@ -69,7 +68,7 @@ RUN echo "Target platform: $TARGETPLATFORM" && \
         echo "Installing ARM64-specific dependencies"; \
     fi
 
-# Install Cuda 11.4.0/11.8.0
+# Install CUDA 11.4.0 for ARM64 or CUDA 11.8.0 for x86_64
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         echo "Installing CUDA 11.4 for ARM64"; \
         wget -q https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run && \
@@ -84,9 +83,16 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         rm cuda_11.8.0_520.61.05_linux.run; \
     fi
 
-# Set Cuda environment variables
-# ENV PATH=/usr/local/cuda-11.4/bin:$PATH
-# ENV LD_LIBRARY_PATH=/usr/local/cuda-11.4/lib64:$LD_LIBRARY_PATH
+# Create CUDA symlink and set environment variables
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        ln -s /usr/local/cuda-11.4 /usr/local/cuda; \
+    else \
+        ln -s /usr/local/cuda-11.8 /usr/local/cuda; \
+    fi
+
+ENV CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
+    PATH=/usr/local/cuda/bin:$PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
 # Install ZED SDK
 RUN adduser jetson --disabled-password --gecos "" 
@@ -108,6 +114,6 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 USER root
 WORKDIR /
 
-# Add source to bashrc
+# Add ROS sourcing to bashrc
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc
