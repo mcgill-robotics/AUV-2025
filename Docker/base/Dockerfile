@@ -81,7 +81,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
         dpkg -i cuda-keyring_1.0-1_all.deb && \
         apt-get update && \
-        apt-get install -y --no-install-recommends cuda‑11‑8; \
+        apt-get install -y --no-install-recommends cuda-11-8; \
     fi
 
 # Set Cuda environment variables
