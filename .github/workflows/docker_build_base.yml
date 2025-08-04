@@ -18,41 +18,13 @@ on:
     - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
-  build-and-push-base:
-    name: Build and optionally push base Docker image
+  build-and-push-base-amd64:
+    name: Build and optionally push base-amd64 Docker image
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Free it!
-        uses: netbrain/free-disk-space-action@v0.0.1
-
-      - name : more cleanup
-        run: |
-          echo "After after cleanup:"
-          df -h
       - name: Free Disk Space
-        run: |
-          echo "Before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/lib/jvm
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf /usr/local/lib/android
-          docker system prune -af || true
-          docker builder prune -af || true
-          echo "After cleanup:"
-          df -h
-      - name: Even more
-        uses: mathio/gha-cleanup@v1
-
-      - name : more and more cleanup
-        run: |
-          echo "more After after cleanup:"
-          df -h
-        
+        uses: netbrain/free-disk-space-action@v0.0.1
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -61,7 +33,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub (only if pushing)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/noetic'
+        if: true
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -72,14 +44,67 @@ jobs:
         with:
           context: Docker/base
           file: Docker/base/Dockerfile
-          platforms: linux/amd64, linux/arm64
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/noetic' }}
+          platforms: linux/amd64
+          push: ${{ true }}
+          tags: mcgillrobotics/auv_2025:base-amd64-temp
+
+  build-and-push-base-arm64:
+    name: Build and optionally push base-arm64 Docker image
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Free Disk Space
+        uses: netbrain/free-disk-space-action@v0.0.1
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub (only if pushing)
+        if: true
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and optionally push image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/base
+          file: Docker/base/Dockerfile
+          platforms: linux/arm64
+          push: ${{ true }}
+          tags: mcgillrobotics/auv_2025:base-arm64-temp
+
+  create-manifest:
+    name: Create and push multi-arch base image manifest
+    runs-on: ubuntu-22.04
+    needs:
+      - build-and-push-base-amd64
+      - build-and-push-base-arm64
+    if: true
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create multi-arch base image manifest
+        uses: int128/docker-manifest-create-action@v2
+        with:
           tags: mcgillrobotics/auv_2025:base
+          sources: |
+            mcgillrobotics/auv_2025:base-amd64-temp
+            mcgillrobotics/auv_2025:base-arm64-temp
           
   build-and-push-sim:
     name: Build and optionally push sim Docker image
     runs-on: ubuntu-22.04-arm
-    needs: build-and-push-base
+    needs: build-and-push-base-amd64
 
     steps:
       - name: Checkout code
