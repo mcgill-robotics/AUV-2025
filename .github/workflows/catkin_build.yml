@@ -39,7 +39,7 @@ jobs:
           echo "After cleanup:"
           df -h
       - name: Even more
-      - uses: mathio/gha-cleanup@v1
+        uses: mathio/gha-cleanup@v1
 
       - name : more and more cleanup
         run: |
