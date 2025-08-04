@@ -81,12 +81,10 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
         dpkg -i cuda-keyring_1.0-1_all.deb && \
         apt-get update && \
-        apt-get install -y --no-install-recommends cuda-11-8; \
+        apt-get install -y --no-install-recommends cuda-11-8 && \
+        rm -f cuda-keyring_1.0-1_all.deb && \
+        apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*; \
     fi
-
-# Set Cuda environment variables
-# ENV PATH=/usr/local/cuda-11.4/bin:$PATH
-# ENV LD_LIBRARY_PATH=/usr/local/cuda-11.4/lib64:$LD_LIBRARY_PATH
 
 # Install ZED SDK
 RUN adduser jetson --disabled-password --gecos "" 
