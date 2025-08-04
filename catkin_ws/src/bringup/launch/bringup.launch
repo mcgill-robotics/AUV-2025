@@ -16,6 +16,11 @@
 		</include>
 	</group>
 
+    <!-- Launch depth sensor and display only if sim=true -->
+    <group if="$(arg sim)">
+        <include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
+    </group>
+
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />
 		<arg name="actions" value="$(arg actions)" />
