@@ -100,10 +100,10 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         rm ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run; \
     else \
         echo "Installing ZED SDK for x86_64 Ubuntu20 CUDA11.8"; \
-        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
-        dpkg -i cuda-keyring_1.0-1_all.deb && \
-        apt-get update && \
-        apt-get install -y --no-install-recommends cuda; \
+        wget -q https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/4.1/ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
+        chmod +x ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run && \
+        ./ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run -- silent && \
+        rm ZED_SDK_Ubuntu20_cuda11.8_v4.1.4.zstd.run; \
     fi
 USER root
 WORKDIR /
