@@ -15,6 +15,37 @@ jobs:
     runs-on: ubuntu-22.04-arm
 
     steps:
+      - name: Free it!
+        uses: netbrain/free-disk-space-action@v0.0.1
+        
+      - name : more cleanup
+        run: |
+          echo "After after cleanup:"
+          df -h
+
+      - name: Free Disk Space
+        run: |
+          echo "Before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/lib/jvm
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/local/lib/android
+          docker system prune -af || true
+          docker builder prune -af || true
+          echo "After cleanup:"
+          df -h
+      - name: Even more
+      - uses: mathio/gha-cleanup@v1
+
+      - name : more and more cleanup
+        run: |
+          echo "more After after cleanup:"
+          df -h
+        
       - name: Checkout code
         uses: actions/checkout@v3
 
