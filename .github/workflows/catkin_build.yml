@@ -12,7 +12,7 @@ on:
 jobs:
   catkin-build:
     name: Catkin Build Workspace
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
 
     steps:
       - name: Free Disk Space
@@ -37,7 +37,7 @@ jobs:
         with:
           context: Docker/base
           file: Docker/base/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: false
           load: true
           tags: local-base-image:latest

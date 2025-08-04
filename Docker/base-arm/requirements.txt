@@ -1,0 +1,6 @@
+numpy>=1.22.2 # pinned by Snyk to avoid a vulnerability
+scipy>=1.4.1
+numpy-quaternion==2022.4.3
+ultralytics==8.0.207
+keyboard
+scikit-learn
