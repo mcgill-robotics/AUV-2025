@@ -42,6 +42,7 @@ jobs:
             local-base-arm64:latest \
             bash -c "source /opt/ros/noetic/setup.bash && \
                     catkin build"
+
   catkin-build-amd:
     name: Catkin Build AMD Workspace
     runs-on: ubuntu-22.04
