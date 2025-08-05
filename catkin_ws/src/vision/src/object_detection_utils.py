@@ -175,25 +175,30 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
 # Assumes cleaning was correct.
 def get_object_position_front_camera(bbox):
     point_cloud = states[1].get_point_cloud(bbox)
-    min_lx = np.nanmin(point_cloud[:, :, 0].flatten())
-    min_ly = np.nanmin(point_cloud[:, :, 1].flatten())
-    min_lz = np.nanmin(point_cloud[:, :, 2].flatten())
-    max_lx = np.nanmax(point_cloud[:, :, 0].flatten())
-    max_ly = np.nanmax(point_cloud[:, :, 1].flatten())
-    max_lz = np.nanmax(point_cloud[:, :, 2].flatten())
 
-    lx = (max_lx + min_lx) / 2
-    ly = (max_ly + min_ly) / 2
-    lz = (max_lz + min_lz) / 2
+    if (point_cloud):
+        min_lx = np.nanmin(point_cloud[:, :, 0].flatten())
+        min_ly = np.nanmin(point_cloud[:, :, 1].flatten())
+        min_lz = np.nanmin(point_cloud[:, :, 2].flatten())
+        max_lx = np.nanmax(point_cloud[:, :, 0].flatten())
+        max_ly = np.nanmax(point_cloud[:, :, 1].flatten())
+        max_lz = np.nanmax(point_cloud[:, :, 2].flatten())
 
-    global_obj_pos_offset = quaternion.rotate_vectors(
-        states[1].q_auv, np.array([lx, ly, lz])
-    )
+        lx = (max_lx + min_lx) / 2
+        ly = (max_ly + min_ly) / 2
+        lz = (max_lz + min_lz) / 2
 
-    # Get the best estimate of the mean.
-    x, y, z = global_obj_pos_offset + np.array(
-        [states[1].position.x, states[1].position.y, states[1].position.z]
-    )
+        global_obj_pos_offset = quaternion.rotate_vectors(
+            states[1].q_auv, np.array([lx, ly, lz])
+        )
+
+        # Get the best estimate of the mean.
+        x, y, z = global_obj_pos_offset + np.array(
+            [states[1].position.x, states[1].position.y, states[1].position.z]
+        )
+    else:
+        rospy.loginfo("PC: Not obtained")
+        
     
     return x, y, z
 

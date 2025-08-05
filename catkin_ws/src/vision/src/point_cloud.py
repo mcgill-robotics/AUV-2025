@@ -92,7 +92,7 @@ def get_xyz_rgb_image(color, z_map, width, height, x_over_z_map, y_over_z_map):
 
 
 def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
-    if y_over_z_map is not None:
+    if y_over_z_map is not None:    # Why is this here?
         xyz_image = np.zeros((height, width, 3))
 
         x_map = x_over_z_map * z_map
@@ -103,7 +103,6 @@ def get_xyz_image(z_map, width, height, x_over_z_map, y_over_z_map):
         xyz_image[:, :, 2] = y_map + rospy.get_param("front_cam_z_offset", 0)
 
         return xyz_image
-
 
 if __name__ == "__main__":
     rospy.init_node("point_cloud_sim")

@@ -24,6 +24,7 @@ RUN apt-get update \
         iputils-ping \
         iproute2 \
         ros-noetic-rosserial-arduino \
+        ros-noetic-ros-numpy \
         ros-noetic-pid \
         ros-noetic-joy \
         ros-noetic-joy-teleop \
@@ -48,7 +49,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && rm -rf /root/.cache/pip \
     && rm requirements.txt
 
-# Install Pangolin and SLAM dependencies using custom script
+# Install Pangolin and ORB-SLAM dependencies using custom script
 # RUN apt-get update && \
 #     apt-get install -y \
 #     libepoxy-dev \

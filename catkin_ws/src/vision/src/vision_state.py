@@ -50,10 +50,10 @@ class VisionState:
         )
         # Update the point cloud whenever the current image is updated.
         self.camera_info_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/camera_info", CameraInfo, self.update_camera_info
+            "/vision/front_cam/camera_info", CameraInfo, self.update_camera_info
         )
         self.depth_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/depth_registered",
+            "/vision/front_cam/aligned_depth_to_color/image_raw",
             Image,
             self.update_depth,
         )
@@ -138,6 +138,7 @@ class VisionState:
         return point_cloud
 
     def get_point_cloud(self, bbox=None):
+        print("Getting point_cloud...")
         if bbox is None:
             # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
             return self.clean_point_cloud(
@@ -168,8 +169,7 @@ class VisionState:
 
         self.x_over_z_map = (cx - u_map) / fx
         self.y_over_z_map = (cy - v_map) / fy
-        if self.depth is not None:
-            self.update_point_cloud()
+        # self.update_point_cloud()
 
     def pause(self):
         self.is_paused = True
