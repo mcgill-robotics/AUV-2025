@@ -11,7 +11,7 @@ on:
       - 'Docker/ros1/**'
   workflow_dispatch:
   schedule:
-    - cron: '0 8 * * *'  # 4 AM Montreal time
+    - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
 
 jobs:
   build-and-push:
