@@ -13,8 +13,6 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image, CameraInfo
 
-
-
 class VisionState:
     def __init__(self):
         self.is_paused = False
@@ -44,13 +42,21 @@ class VisionState:
             "max_distance_for_point_cloud_fill_cleaning"
         )  
 
-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.update_pose)
+        self.pose_sub = rospy.Subscriber(
+            "/state/pose",
+            Pose,
+            self.update_pose
+        )
         self.theta_z_sub = rospy.Subscriber(
-            "/state/theta/z", Float64, self.update_theta_z
+            "/state/theta/z", 
+            Float64, 
+            self.update_theta_z
         )
         # Update the point cloud whenever the current image is updated.
         self.camera_info_sub = rospy.Subscriber(
-            "/vision/front_cam/camera_info", CameraInfo, self.update_camera_info
+            "/vision/front_cam/camera_info", 
+            CameraInfo, 
+            self.update_camera_info
         )
         self.depth_sub = rospy.Subscriber(
             "/vision/front_cam/aligned_depth_to_color/image_raw",
@@ -65,6 +71,7 @@ class VisionState:
             self.theta_z = float(msg.data)
 
     def update_pose(self, msg):
+        rospy.logdebug(f"Current camera pose: {self.position}")
         if self.is_paused:
             self.position_while_paused = msg.position
             self.q_auv_while_paused = np.quaternion(

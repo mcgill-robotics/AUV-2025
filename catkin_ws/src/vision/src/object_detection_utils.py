@@ -9,6 +9,7 @@ import json
 
 from vision_state import VisionState
 
+from typing import List
 
 ############## Utils Parameters ###############
 MAX_DIST_TO_MEASURE = rospy.get_param("max_object_detection_distance")
@@ -24,7 +25,6 @@ DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
 MAX_COUNTS_PER_LABEL = json.loads(rospy.get_param("max_counts_per_label"))
 states = (VisionState(), VisionState())
 ###############################################
-
 
 def calculate_bbox_confidence(bbox, image_height, image_width):
     x_center, y_center, w, h = bbox
@@ -169,11 +169,10 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     z = z_pos
     return x, y, z
 
-
 # Given a bounding box, tells you where the main object in the
 # bounding box is in 3D space (world space).
 # Assumes cleaning was correct.
-def get_object_position_front_camera(bbox):
+def get_object_position_front_camera_point_cloud(bbox):
     point_cloud = states[1].get_point_cloud(bbox)
 
     if (point_cloud):
@@ -242,7 +241,18 @@ def measure_angle(bbox):
 # cam has two detections, it will remove the least confident one.
 # Selects highest confidence detection from duplicates and ignores
 # objects with no position measurement.
-def clean_detections(detectionFrameArray):
+def clean_detections(detectionFrameArray) -> List :
+    """
+    Given an array of detection frames, remove duplicates with priority with respect to
+    DetectionFrame.confidence. Frames with lower values are removed.
+
+    Args:
+        detectionFrameArray: List of DetectionFrames
+
+    Returns:
+        List of the DetectionFrames
+
+    """
     label_counts = {}
     selected_detections = []
 

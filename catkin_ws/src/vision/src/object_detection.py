@@ -5,6 +5,7 @@ import numpy as np
 
 import torch
 import ast
+import quaternion
 
 import cv2
 from cv_bridge import CvBridge
@@ -13,14 +14,17 @@ from ultralytics import YOLO
 from object_detection_utils import *
 from lane_marker_measure import measure_lane_marker
 
-from auv_msgs.msg import VisionObject, VisionObjectArray
-from std_msgs.msg import Int32MultiArray
-from sensor_msgs.msg import Image
+from vision_state import VisionState
 
+from auv_msgs.msg import VisionObject, VisionObjectArray
+from std_msgs.msg import Int32MultiArray, Float64
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Pose
 
 def is_vision_ready(camera_id):
     # Only predict if cameras_image_count has not reached DETECT_EVERY yet.
     global cameras_image_count
+    global states
     cameras_image_count[camera_id] += 1
     if cameras_image_count[camera_id] <= DETECT_EVERY:
         return False
@@ -39,10 +43,6 @@ def is_vision_ready(camera_id):
             print(current_states)
             states[camera_id].resume()
             return False
-    # if camera_id == 1 and states[camera_id].point_cloud is None:
-    #     print("Point cloud not yet published.")
-    #     states[camera_id].resume()
-    #     return False
     return True
 
 
@@ -60,6 +60,7 @@ def handle_detections(image: np.ndarray, detections, camera_id) -> np.ndarray:
         Image with bounding boxes drawn over
 
     """
+    global states
     
     # Initialize empty array for object detection frame message.
     detection_frame_array = []
@@ -117,8 +118,8 @@ def handle_detections(image: np.ndarray, detections, camera_id) -> np.ndarray:
             # Post process by adding to the point cloud 
             if global_class_name not in ["sawfish", "shark", "gate_divider"]:
                 continue
-            rospy.loginfo(f"Found: {global_class_name}")
-            if global_class_name == "Gate":
+
+            if global_class_name is "gate_divider":
                 theta_z = measure_angle(box)
                 
             # Calculate the mean depth over the depth image
@@ -126,11 +127,22 @@ def handle_detections(image: np.ndarray, detections, camera_id) -> np.ndarray:
             roi = roi[~np.isnan(roi)] 
             roi = roi[roi > 0]  
             mean_depth = np.nanmedian(roi) if roi.size else np.inf
-         
+
+            # Rotate based on the local to world frame difference
+            curr_state = states[camera_id]
+            
+            global_obj_pos_offset = quaternion.rotate_vectors(
+                curr_state.q_auv, np.array([x, y, mean_depth])
+            )
+            global_x, global_y, global_z = global_obj_pos_offset + np.array(
+                [curr_state.position.x, curr_state.position.y, curr_state.position.z]
+            )
+
+            # Set detection frame up for publishing
             detectionFrame.label = global_class_name
-            detectionFrame.x = x
-            detectionFrame.y = y
-            detectionFrame.z = mean_depth
+            detectionFrame.x = global_x
+            detectionFrame.y = global_y
+            detectionFrame.z = global_z
             detectionFrame.theta_z = theta_z
             detectionFrame.extra_field = extra_field
             detectionFrame.confidence = conf * calculate_bbox_confidence(
@@ -143,7 +155,16 @@ def handle_detections(image: np.ndarray, detections, camera_id) -> np.ndarray:
     publish_detection_frame(detection_frame_array)
     return image
 
-def publish_detection_frame(detection_frame_array):
+def publish_detection_frame(detection_frame_array) -> None:
+    """
+    Publishes an array of detection frames into ROS topics
+
+    Args:
+        detection_frame_array: List of DetectionFrames
+
+    Returns:
+        None
+    """
     for obj in detection_frame_array:
         obj.x = obj.x if obj.x is not None else NULL_PLACEHOLDER
         obj.theta_z = obj.theta_z if obj.theta_z is not None else NULL_PLACEHOLDER
@@ -153,7 +174,7 @@ def publish_detection_frame(detection_frame_array):
 
     if len(detection_frame_array) > 0:
         # Create object detection frame message and publish it.
-        # detection_frame_array = clean_detections(detection_frame_array)
+        detection_frame_array = clean_detections(detection_frame_array)
         detection_frame_arrayMsg = VisionObjectArray()
         detection_frame_arrayMsg.array = detection_frame_array
         pub_viewframe_detection.publish(detection_frame_arrayMsg)
@@ -169,7 +190,8 @@ def vision_cb(raw_image: Image, camera_id: int) -> None:
         camera_id -- id of the camera the callback function operates on
     Return: None
     """
-    
+    global states
+
     if not is_vision_ready(camera_id):
         return
 

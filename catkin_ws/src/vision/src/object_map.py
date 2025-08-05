@@ -58,7 +58,6 @@ def add_observation(msg):
                 ],
             )
 
-
 # Given an observation, find the object to which it pertains
 # to (object within a certain radius of same class).
 def find_closest_object(observation, indexToIgnore=-1):
