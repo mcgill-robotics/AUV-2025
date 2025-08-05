@@ -76,7 +76,9 @@ RUN apt-get update && apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-xacro \
     ros-noetic-robot-state-publisher \
     ros-noetic-rtabmap \
-    ros-noetic-rtabmap-ros
+    ros-noetic-rtabmap-ros \
+    ros-noetic-nmea-msgs \
+    ros-noetic-mavros-msgs
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -167,11 +169,7 @@ RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
 USER root
 WORKDIR /AUV-2025/catkin_ws
 
-RUN cd src && \
-    git clone --recursive https://github.com/stereolabs/zed-ros-wrapper.git && \
-    git clone --recursive https://github.com/stereolabs/zed-ros-examples.git && \
-    cd .. && \
-    source /opt/ros/noetic/setup.bash && \
+RUN source /opt/ros/noetic/setup.bash && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     catkin build && \
