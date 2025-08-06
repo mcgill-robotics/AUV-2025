@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-and-push-jetson:
-    name: Build and optionally push jetson Docker image
+    name: jetson Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -41,7 +41,7 @@ jobs:
           tags: mcgillrobotics/auv_2025:jetson
   
   build-and-push-bridge:
-    name: Build and optionally push bridge Docker image
+    name: bridge Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -68,7 +68,7 @@ jobs:
           tags: mcgillrobotics/auv_2025:rosbridge
   
   build-and-push-zed:
-    name: Build and optionally push zed Docker image
+    name: zed Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
