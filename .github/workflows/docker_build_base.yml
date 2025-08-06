@@ -3,16 +3,13 @@ name: Docker Build & Push for base and dependencies
 on:
   push:
     branches: [noetic]
-    paths:
-      - 'Docker/base/**'
-      - 'Docker/sim/**'
-      - 'Docker/poolside/**'
   pull_request:
     branches: [noetic]
     paths:
       - 'Docker/base/**'
       - 'Docker/sim/**'
       - 'Docker/poolside/**'
+      - '.github/workflows/docker_build_base.yml'
   workflow_dispatch:
   schedule:
     - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
