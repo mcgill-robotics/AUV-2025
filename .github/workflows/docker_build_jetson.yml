@@ -3,12 +3,11 @@ name: Docker Build & Push for jetson
 on:
   push:
     branches: [noetic]
-    paths:
-      - 'Docker/jetson/**'
   pull_request:
     branches: [noetic]
     paths:
       - 'Docker/jetson/**'
+      - '.github/workflows/docker_build_jetson.yml'
   workflow_dispatch:
   schedule:
     - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
