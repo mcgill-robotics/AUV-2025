@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-and-push:
-    name: Build and optionally push ros1 Docker image
+    name: ros1 Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
