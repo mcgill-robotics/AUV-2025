@@ -3,19 +3,18 @@ name: Docker Build & Push for ros1
 on:
   push:
     branches: [noetic]
-    paths:
-      - 'Docker/ros1/**'
   pull_request:
     branches: [noetic]
     paths:
       - 'Docker/ros1/**'
+      - '.github/workflows/docker_build_ros1.yml'
   workflow_dispatch:
   schedule:
     - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
 
 jobs:
   build-and-push:
-    name: Build and optionally push ros1 Docker image
+    name: ros1 Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
