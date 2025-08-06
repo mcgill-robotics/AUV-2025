@@ -112,6 +112,9 @@ jobs:
       - build-and-push-base-arm64
 
     steps:
+      - name: Free Disk Space
+        uses: netbrain/free-disk-space-action@v0.0.1
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -140,6 +143,9 @@ jobs:
     needs: build-and-push-sim
 
     steps:
+      - name: Free Disk Space
+        uses: netbrain/free-disk-space-action@v0.0.1
+
       - name: Checkout code
         uses: actions/checkout@v3
 
