@@ -32,10 +32,9 @@
 
   <!-- === AUV to IMU translation offset === -->
   <!-- ENU: Translation (x, y, z) from AUV frame to IMU [meters] -->
-  <!-- TODO: Put in offsets for Movella IMU  -->
-  <arg name="auv_imu_offset_x" default="0.0" /> <!-- 0.0641 -->
-  <arg name="auv_imu_offset_y" default="0.0" /> <!-- 0.002 -->
-  <arg name="auv_imu_offset_z" default="0.0" /> <!-- -0.057956 -->
+  <arg name="auv_imu_offset_x" default="0.14527" /> 
+  <arg name="auv_imu_offset_y" default="0.0077" /> 
+  <arg name="auv_imu_offset_z" default="0.039609" /> 
 
   <!-- === AUV to Depth Sensor translation offset === -->
   <!-- ENU: Translation (x, y, z) from AUV frame to Depth Sensor [meters] -->
