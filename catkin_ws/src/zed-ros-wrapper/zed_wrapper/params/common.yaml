@@ -23,7 +23,7 @@ general:
     zed_id:                     0
     serial_number:              0
     gpu_id:                     -1
-    base_frame:                 'base_link'                     # must be equal to the frame_id used in the URDF file
+    base_frame:                 'zed'                     # must be equal to the frame_id used in the URDF file
     sdk_verbose:                1                               # Set verbose level of the ZED SDK
     svo_compression:            2                               # `0`: LOSSLESS, `1`: AVCHD, `2`: HEVC
     self_calib:                 true                            # enable/disable self calibration at starting
