@@ -168,6 +168,11 @@ def cb_unity_state(msg):
         dvl_msg = TwistWithCovarianceStamped()
         dvl_msg.twist.twist.linear = Vector3(*velocity_dvl)
 
+        dvl_msg.twist.covariance = [0.0]*36
+        dvl_msg.twist.covariance[0] = 1e-7  # vx
+        dvl_msg.twist.covariance[7] = 1e-7  # vy
+        dvl_msg.twist.covariance[14] = 1e-7 # vz
+
         dvl_msg.header.stamp = rospy.Time.now()
         dvl_msg.header.frame_id = "dvl"
 
@@ -194,6 +199,18 @@ def cb_unity_state(msg):
 
         imu_msg.angular_velocity = Vector3(*twist_imu)
         imu_msg.linear_acceleration = Vector3(*acceleration_imu)
+
+        imu_msg.orientation_covariance[0] = 1e-7
+        imu_msg.orientation_covariance[4] = 1e-7
+        imu_msg.orientation_covariance[8] = 1e-7
+
+        imu_msg.angular_velocity_covariance[0] = 1e-7
+        imu_msg.angular_velocity_covariance[4] = 1e-7
+        imu_msg.angular_velocity_covariance[8] = 1e-7
+
+        imu_msg.linear_acceleration_covariance[0] = 1e-7
+        imu_msg.linear_acceleration_covariance[4] = 1e-7
+        imu_msg.linear_acceleration_covariance[8] = 1e-7
         
         imu_msg.header.stamp = rospy.Time.now()
         imu_msg.header.frame_id = "imu"
@@ -202,10 +219,22 @@ def cb_unity_state(msg):
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        depth_msg = Float64() 
-        depth_msg.data = pose_z
+        # depth_msg = PoseWithCovarianceStamped()
+        # depth_msg.header.stamp = rospy.Time.now()
+        # depth_msg.header.frame_id = "odom"
 
-        pub_depth_sensor.publish(depth_msg)
+        # cov = [0.0] * 36 #Covariance matrix for pose
+        # cov[14] = 1e-10
+
+        # depth_msg.pose.pose.position.z = -pose_z
+        # depth_msg.pose.covariance = cov
+
+
+        # pub_depth_sensor.publish(depth_msg)
+        depth_raw = Float64()
+        depth_raw.data = pose_z  # To be fliped by depth republisher
+        pub_depth_z.publish(depth_raw)
+
 
 
 if __name__ == "__main__":
@@ -226,10 +255,6 @@ if __name__ == "__main__":
     q_dvlnominalup_dvlup = np.quaternion(
         q_dvlnominalup_dvlup_w, q_dvlnominalup_dvlup_x, q_dvlnominalup_dvlup_y, q_dvlnominalup_dvlup_z
     )
-
-    auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
-    auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
-    auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
 
     q_imunominalup_imuup_w = rospy.get_param("q_imunominalup_imuup_w")
     q_imunominalup_imuup_x = rospy.get_param("q_imunominalup_imuup_x")
@@ -254,7 +279,9 @@ if __name__ == "__main__":
     pub_dvl_sensor = rospy.Publisher(
         "/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
+    # pub_depth_sensor = rospy.Publisher("/sensors/depth/pose", PoseWithCovarianceStamped, queue_size=1)
+    pub_depth_z = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
+
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
     )

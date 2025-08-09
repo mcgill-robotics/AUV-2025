@@ -75,7 +75,7 @@ class QuaternionPID:
         self.enabled = data.data
 
     def execute(self):
-        rate = rospy.Rate(100)
+        rate = rospy.Rate(20)
 
         while not rospy.is_shutdown():
             if self.enabled and self.goal_quat is not None:

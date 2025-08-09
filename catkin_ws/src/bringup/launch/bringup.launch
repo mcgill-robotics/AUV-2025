@@ -10,7 +10,16 @@
 		<arg name="ekf" value="$(arg ekf)" />
 	</include>
 
-	<include file="$(find sensors)/launch/sensors.launch"/>
+	<group unless="$(arg sim)">
+		<include file="$(find sensors)/launch/sensors.launch">
+			<arg name="vision" value="$(arg vision)" />
+		</include>
+	</group>
+
+    <!-- Launch depth sensor and display only if sim=true -->
+    <group if="$(arg sim)">
+        <include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
+    </group>
 
 	<include file="$(find controls)/launch/controls.launch">
 		<arg name="sim" value="$(arg sim)" />

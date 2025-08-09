@@ -16,5 +16,6 @@
     </include>
     
 	<node name="superimposer" pkg="controls" type="superimposer.py" respawn="true" output="screen"></node>
+
 	<node name="servers" pkg="controls" type="init_servers.py" respawn="false" output="screen"></node>
 </launch>

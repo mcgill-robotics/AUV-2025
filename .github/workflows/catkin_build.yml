@@ -1,0 +1,44 @@
+name: Catkin Integration Test
+
+on:
+  push:
+    branches: [noetic]
+  pull_request:
+    branches: [noetic]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
+
+jobs:
+  catkin-build-arm:
+    name: Catkin Build ARM Workspace
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Free Disk Space
+        uses: netbrain/free-disk-space-action@v0.0.1
+        
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/base
+          file: Docker/base/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: local-base-arm64:latest
+
+      - name: Run catkin build inside container
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/ws \
+            -w /ws/catkin_ws \
+            local-base-arm64:latest \
+            bash -c "source /opt/ros/noetic/setup.bash && \
+                    catkin build"
