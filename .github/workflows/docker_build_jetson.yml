@@ -3,19 +3,18 @@ name: Docker Build & Push for jetson
 on:
   push:
     branches: [noetic]
-    paths:
-      - 'Docker/jetson/**'
   pull_request:
     branches: [noetic]
     paths:
       - 'Docker/jetson/**'
+      - '.github/workflows/docker_build_jetson.yml'
   workflow_dispatch:
   schedule:
     - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
 
 jobs:
   build-and-push-jetson:
-    name: Build and optionally push jetson Docker image
+    name: jetson Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -42,7 +41,7 @@ jobs:
           tags: mcgillrobotics/auv_2025:jetson
   
   build-and-push-bridge:
-    name: Build and optionally push bridge Docker image
+    name: bridge Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -69,7 +68,7 @@ jobs:
           tags: mcgillrobotics/auv_2025:rosbridge
   
   build-and-push-zed:
-    name: Build and optionally push zed Docker image
+    name: zed Docker image
     runs-on: ubuntu-22.04-arm
 
     steps:
