@@ -6,7 +6,7 @@
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
       <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
-      <param name="frequency" value="15"/>  
+      <param name="frequency" value="15"/>  <!-- TODO: Choose appropriate frequency -->
       <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
       <param name="publish_tf" value="true"/>
@@ -25,7 +25,7 @@
       <!-- <param name="imu0" value="/sensors/imu/data"/>   --> <!-- SBG IMU -->
       <param name="imu0" value="/sensors/imu/data"/>   <!-- Movella IMU -->
       <param name="pose0" value="/sensors/depth/pose"/>
-
+      <param name="pose1" value="/sensors/zed/pose"/>
 
       <!-- [x, y, z, 
       roll, pitch, yaw, 
@@ -54,6 +54,15 @@
        false, false, false,
        false, false, false]
       </rosparam>
+
+      <rosparam param="pose1_config">
+      [true, true, true, 
+       false, false, false,  <!-- Rely on IMU for orientation, only take postion from ZED -->
+       false, false, false, 
+       false, false, false,
+       false, false, false]
+      </rosparam>
+
 
       <rosparam param="initial_state">
       [0.0,  0.0,  0.0,

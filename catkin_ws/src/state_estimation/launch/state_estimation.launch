@@ -42,6 +42,12 @@
   <arg name="auv_depth_offset_y" default="-0.058551307" />
   <arg name="auv_depth_offset_z" default="-0.088731" />
 
+  <!-- === AUV to Zed2i translation offset === -->
+  <!-- ENU: Translation (x, y, z) from AUV frame to Zed2i [meters] -->
+  <arg name="auv_zed_offset_x" default="0.15141" />
+  <arg name="auv_zed_offset_y" default="0.0" />
+  <arg name="auv_zed_offset_z" default="-0.016386" />
+
   <!-- === Static transform publishers for sensor frames === -->
 
 <group unless="$(arg sim)"> <!-- Use real world offets -->
@@ -65,6 +71,11 @@
         args="$(arg auv_depth_offset_x) $(arg auv_depth_offset_y) $(arg auv_depth_offset_z)
               0 0 0 1
               auv depth" />
+
+  <node name="zed_transform_pub" pkg="tf2_ros" type="static_transform_publisher"
+        args="$(arg auv_zed_offset_x) $(arg auv_zed_offset_y) $(arg auv_zed_offset_z)
+              0 0 0 1
+              auv zed" />
   </group>
 
 

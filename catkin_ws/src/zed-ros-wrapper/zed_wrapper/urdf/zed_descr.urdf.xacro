@@ -18,8 +18,8 @@
 
 <robot name="stereolabs_camera" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:arg name="camera_name"   default="zed" />
-  <xacro:arg name="camera_model"  default="zed" />
-  <xacro:arg name="base_frame"    default="zed" />
+  <xacro:arg name="camera_model"  default="zed2i" />
+  <xacro:arg name="base_frame"    default="zed_dummy" />
   <xacro:arg name="cam_pos_x"     default="0.0" />
   <xacro:arg name="cam_pos_y"     default="0.0" />
   <xacro:arg name="cam_pos_z"     default="0.0" />
