@@ -203,7 +203,7 @@ enable_inrun_compass_calibration: false
 # Set baudrate
 # ---------------
 #This is necessary if you have hig output rate, and if you see error message of 'data overflow' 
-enable_setting_baudrate: false
+enable_setting_baudrate: true
 #options: 115200, 230400, 460800, 921600, 2000000
 set_baudrate_value: 921600
 
