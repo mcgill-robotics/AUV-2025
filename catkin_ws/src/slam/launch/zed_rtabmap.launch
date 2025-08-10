@@ -37,4 +37,7 @@
         <!-- Rviz -->
         <node name="rviz" pkg="rviz" type="rviz" args="-d $(find slam)/rviz/zed-rtabmap.rviz" output="screen" /> 
     </group>
+
+    <!-- TODO: Add robot_localization launch inclusion for sensor-based localization -->
+
 </launch>
