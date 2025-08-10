@@ -4,17 +4,24 @@ import rospy
 import cv2
 from cv_bridge import CvBridge
 import os
+import keyboard
 
 from sensor_msgs.msg import Image
 
 
 def front_cam_image_callback(msg):
     global front_cam_cur_image
-    front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    try:
+        front_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    except CvBridgeError as e:
+        rospy.logerr(f"CvBridge Error (front cam): {e}")
 
 def down_cam_image_callback(msg):
     global down_cam_cur_image
-    down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    try:
+        down_cam_cur_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    except CvBridgeError as e:
+        rospy.logerr(f"CvBridge Error (down cam): {e}")
 
 def save_image(output_dir, is_front_cam):
     if is_front_cam:
@@ -41,20 +48,66 @@ if __name__ == "__main__":
     front_cam_cur_image, down_cam_cur_image = None, None
 
     front_cam_image_sub = rospy.Subscriber(
-        "/vision/front_cam/color/image_raw", Image, front_cam_image_callback
+        "/zed2i/zed_node/stereo/image_rect_color", Image, front_cam_image_callback
     )
     down_cam_image_sub = rospy.Subscriber(
         "/vision/down_cam/image_raw", Image, down_cam_image_callback
     )
 
-    print(
-        "These are the following options:\n- To take a screen shot using front cam, press [z]\n- To take a screen shot using down cam, press [x]"
-    )
+    rospy.sleep(2)
+    
     while not rospy.is_shutdown():
-        usr_choice = input("Select an option: ")
-        if usr_choice == "z":
-            save_image(FRONT_CAM_DATA_DIR, is_front_cam=True)
-        elif usr_choice == "x":
-            save_image(DOWN_CAM_DATA_DIR, is_front_cam=False)
-        else:
+        camera_usr_choice = input("\n\nChoose camera [0] if front, [1] if down ")
+        if camera_usr_choice == "0":
+            chosen_cam = True
+        elif camera_usr_choice == "1":
+            chosen_cam = False
+        else: 
             print("Not a valid option!!!")
+            continue
+        
+        SAVE_DIR = FRONT_CAM_DATA_DIR if chosen_cam else DOWN_CAM_DATA_DIR
+        
+        while True: 
+            capture_method_usr_choice = input("\n-To take manual screen shots, press [z]\n-To take automatic screenshots, press [c],\n-To go back to choosing the camera, press [b]: ")
+
+            if capture_method_usr_choice == "c":
+                
+                while True: 
+                    delay_choice = input("\n-To go back to choosing the camera capturing method press [b].\n-If you want to continue, enter time delay (seconds): ")
+                    
+                    if not delay_choice.strip():
+                        print("\nEmpty input! Please enter a number or press [b] to go back: ")
+                        continue
+
+                    if delay_choice == "b":
+                        break
+
+                    try:
+                        delay_choice = int(delay_choice)
+                        # It's a valid int
+                    except ValueError:
+                        # Not an int
+                        print("\nThe time delay is not an integer.")
+                        continue
+
+                    if delay_choice < 0:
+                        print("\nThe time delay should be a positive integer.")
+                        continue
+                    
+                    print("\nSpam [p] to cancel")
+
+                    while True:
+                        save_image(SAVE_DIR, chosen_cam)
+                        rospy.sleep(delay_choice)
+
+                        if keyboard.is_pressed('p'):
+                            print("Stopping capture...")
+                            break
+
+            elif capture_method_usr_choice == "z":
+                save_image(SAVE_DIR, chosen_cam)
+            elif capture_method_usr_choice == "b":
+                break
+            else: 
+                print("\nNot a valid option!!!")
