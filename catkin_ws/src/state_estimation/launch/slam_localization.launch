@@ -101,11 +101,12 @@
       <param name="odom0" value="/odometry/local"/>
       <rosparam param="odom0_config">
         [false, false, false,
-        false, false, false,
+        true, true, true,
         true, true, true,
         true, true, true,
         false, false, false]
       </rosparam>
+      
       <param name="odom0_differential" value="false"/>
       <param name="odom0_relative" value="false"/>
       <param name="odom0_queue_size" value="5"/>
@@ -113,20 +114,20 @@
       <param name="odom0_twist_rejection_threshold" value="5.0"/> <!-- m/s & rad/s (reasonable sanity gate) -->
       <param name="odom0_pose_rejection_threshold" value="5.0"/>
       
-      <!-- Odometry Input 1: ZED Visual Odometry -->
-      <param name="odom1" value="/sensors/zed2i/pose"/>
-      <rosparam param="odom1_config">
+      <!-- Pose Input 0: ZED Visual Pose -->
+      <param name="pose0" value="/sensors/zed2i/pose"/>
+      <rosparam param="pose0_config">
         [true, true, true,
         true, true, true,
         false, false, false,
         false, false, false,
         false, false, false]
       </rosparam>
-      <param name="odom1_relative" value="false"/>
-      <param name="odom1_queue_size" value="10"/>
-      <param name="odom1_differential" value="false"/>
-      <param name="odom1_nodelay" value="false"/>
-      <param name="odom1_pose_rejection_threshold" value="5.0"/>
+      <param name="pose0_relative" value="false"/>
+      <param name="pose0_queue_size" value="10"/>
+      <param name="pose0_differential" value="false"/>
+      <param name="pose0_nodelay" value="false"/>
+      <param name="pose0_pose_rejection_threshold" value="5.0"/>
       
       <!-- Advanced Configuration -->
       <param name="dynamic_process_noise_covariance" value="true"/>
