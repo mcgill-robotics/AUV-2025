@@ -13,4 +13,4 @@ depth:
 
 pos_tracking:
     publish_tf:                 false
-    publish_map_tf:             true        
+    publish_map_tf:             false        

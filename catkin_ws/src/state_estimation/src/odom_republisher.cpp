@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     // Subscribers
-    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, odom_cb);
+    ros::Subscriber odom_sub = n.subscribe("/odometry/local", 100, odom_cb);
 
     // Publishers for state information
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose", 1);

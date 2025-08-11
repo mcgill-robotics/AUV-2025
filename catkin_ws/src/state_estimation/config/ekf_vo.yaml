@@ -20,14 +20,11 @@ ekf_global:
     # Define TOPIC NAMES
     odom0: /odometry/local
     # Use TWIST to prevent odometric and map frame conflicts
-    odom0_config:
-    [
-      false, false, false,
-      false, false, false,
-      true,  true,  true, 
-      true,  true,  true,
-      false, false, false
-    ]
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  true,  true, 
+                   true,  true,  true,
+                   false, false, false]
     odom0_differential: false
     odom0_relative: false
     odom0_queue_size: 5
@@ -35,15 +32,12 @@ ekf_global:
     odom0_twist_rejection_threshold: 5.0   # m/s & rad/s (reasonable sanity gate)
     odom0_pose_rejection_threshold: 5.0
 
-    odom1: /zed2i/zed_node/odom
-    odom1_config:
-    [
-      true, true, true,
-      true, true, true,
-      false, false, false,
-      false, false, false,
-      false, false, false
-    ]
+    odom1: /zed2i/zed_node/pose
+    odom1_config: [true, true, true,
+                   true, true, true,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
     odom1_relative: false
     odom1_queue_size: 5
     odom1_differential: false

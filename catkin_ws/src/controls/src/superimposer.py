@@ -59,7 +59,7 @@ class Superimposer:
         force_auv = Vector3(surge, sway, heave)     
         torque_auv = Vector3(roll, pitch, yaw)
 
-        self.header.stamp = rospy.Time.now()
+        self.header.stamp = rospy.Time().now()
         force_global_stmp = Vector3Stamped(header=self.header, vector=force_global)
 
         try:
