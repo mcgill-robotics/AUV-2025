@@ -9,7 +9,10 @@ from tf.transformations import quaternion_matrix, quaternion_from_matrix
 ''' https://www.stereolabs.com/docs/ros '''
 
 def Rt(R, t):
-    T = np.eye(4); T[:3, :3] = R; T[:3, 3] = t; return T
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3] = t
+    return T
 
 def quat_to_R(q):  # geometry_msgs/Quaternion -> 3x3 rotation matrix
     return quaternion_matrix([q.x, q.y, q.z, q.w])[:3, :3]
@@ -22,14 +25,13 @@ class ZedToAuvCompose:
     Covariance: passed through unchanged (no rotation)
     """
     def __init__(self):
-        p = rospy.get_param
-        self.in_topic  = p("~input_topic",  "/zed/zed_node/pose_with_covariance") #TODO: verify the topic name. 
-        self.out_topic = p("~output_topic", "sensors/zed/pose")
-        self.map_frame = p("~map_frame", "map")
-        self.zed_frame = p("~zed_frame", "zed")
-        self.auv_frame = p("~auv_frame", "auv")
+        self.in_topic  = rospy.get_param("~input_topic",  "/zed/zed_node/pose_with_covariance") #TODO: verify the topic name. 
+        self.out_topic = rospy.get_param("~output_topic", "sensors/zed/pose")
+        self.map_frame = rospy.get_param("~map_frame", "map")
+        self.zed_frame = rospy.get_param("~zed_frame", "zed")
+        self.auv_frame = rospy.get_param("~auv_frame", "auv")
 
-        self.buf = tf2_ros.Buffer(cache_time=rospy.Duration(10.0))
+        self.buf = tf2_ros.Buffer(cache_time=rospy.Duration(30.0))
         self.listener = tf2_ros.TransformListener(self.buf)
         self.pub = rospy.Publisher(self.out_topic, PoseWithCovarianceStamped, queue_size=10)
         rospy.Subscriber(self.in_topic, PoseWithCovarianceStamped, self.cb, queue_size=10)
