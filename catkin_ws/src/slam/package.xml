@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>slam</name>
+  <version>0.1.0</version>
+  <description>
+    A collection of launch files for ORB‑SLAM, RTAB‑Map and ZED SLAM under ROS Noetic.
+  </description>
+  <maintainer email="you@example.com">McGill Robotics</maintainer>
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- core ROS dependencies -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>roslaunch</build_depend>
+
+  <!-- SLAM package dependencies -->
+  <build_depend>orb_slam3_ros</build_depend>
+
+  <!-- runtime dependencies -->
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
+  <exec_depend>orb_slam3_ros</exec_depend>
+  <exec_depend>zed_wrapper</exec_depend>
+
+  <export>
+    <build_type>catkin</build_type>
+  </export>
+</package>

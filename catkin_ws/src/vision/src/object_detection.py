@@ -2,22 +2,29 @@
 
 import rospy
 import numpy as np
+
 import torch
 import ast
+import quaternion
+
+import cv2
 from cv_bridge import CvBridge
 from ultralytics import YOLO
 
 from object_detection_utils import *
 from lane_marker_measure import measure_lane_marker
 
-from auv_msgs.msg import VisionObject, VisionObjectArray
-from std_msgs.msg import Int32MultiArray
-from sensor_msgs.msg import Image
+from vision_state import VisionState
 
+from auv_msgs.msg import VisionObject, VisionObjectArray
+from std_msgs.msg import Int32MultiArray, Float64
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Pose
 
 def is_vision_ready(camera_id):
     # Only predict if cameras_image_count has not reached DETECT_EVERY yet.
     global cameras_image_count
+    global states
     cameras_image_count[camera_id] += 1
     if cameras_image_count[camera_id] <= DETECT_EVERY:
         return False
@@ -36,17 +43,33 @@ def is_vision_ready(camera_id):
             print(current_states)
             states[camera_id].resume()
             return False
-    if camera_id == 1 and states[camera_id].point_cloud is None:
-        print("Point cloud not yet published.")
-        states[camera_id].resume()
-        return False
     return True
 
 
-def detection_frame(image, debug_image, detections, camera_id):
+def handle_detections(image: np.ndarray, detections, camera_id) -> np.ndarray:
+    """
+    Handles post-processing of Ultralytics image detections by mapping them over the depth-map and
+    extracting a point_cloud
+
+    Args:
+        image: Raw OpenCV image on which predictions were made
+        detections: Detection array coming from any Vision Model
+        camera_id: ID of the camera the detections were performed on
+    
+    Returns:
+        Image with bounding boxes drawn over
+
+    """
+    global states
+    
     # Initialize empty array for object detection frame message.
     detection_frame_array = []
     image_h, image_w, _ = image.shape
+
+    depth_img_msg: Image = rospy.wait_for_message(
+        "/vision/front_cam/aligned_depth_to_color/image_raw", Image)
+    depth_img = bridge.imgmsg_to_cv2(depth_img_msg, desired_encoding="32FC1")
+
     # Nested for loops get all predictions made by model.
     for detection in detections:
         boxes = (
@@ -54,87 +77,72 @@ def detection_frame(image, debug_image, detections, camera_id):
             if is_cuda_available
             else detection.boxes.numpy()
         )
+
         for box in boxes:
             conf = float(list(box.conf)[0])
-            # Only consider prediction if confidence is at least MIN_PREDICTION_CONFIDENCE.
+
             if conf < MIN_PREDICTION_CONFIDENCE:
-                if PRINT_DEBUG_INFO:
-                    print(
-                        "Confidence too low for camera {} ({}%)".format(
-                            camera_id, conf * 100
-                        )
-                    )
                 continue
 
-            bbox = list(box.xywh[0])
-            cls_id = int(list(box.cls)[0])
+            x, y, w, h = list(box.xywh[0])
+            cls_id = int(box.cls[0])
             global_class_name = class_names[camera_id][cls_id]
-            # Add bbox visualization to image.
-            debug_image = visualize_bbox(
-                debug_image, bbox, global_class_name + " " + str(conf * 100) + "%"
-            )
+            if global_class_name not in ["sawfish", "shark", "gate_divider"]:
+                continue
+
+            # --- Visualize the bounding boxes onto the image before publishing
+            cx, cy, bw, bh = float(x), float(y), float(w), float(h)
+            x1, y1 = int(cx - bw / 2), int(cy - bh / 2)
+            x2, y2 = int(cx + bw / 2), int(cy + bh / 2)
+            x1 = max(0, min(x1, image_w - 1))
+            y1 = max(0, min(y1, image_h - 1))
+            x2 = max(0, min(x2, image_w - 1))
+            y2 = max(0, min(y2, image_h - 1))
+
+            rng    = np.random.default_rng(hash(global_class_name) & 0xFFFFFFFF)
+            colour = tuple(int(c) for c in rng.integers(0, 255, size=3))
+
+            cv2.rectangle(image, (x1, y1), (x2, y2), colour, 2)
+            label_txt = f"{global_class_name}: {conf:.2f}"
+            (txt_w, txt_h), bl = cv2.getTextSize(label_txt, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            cv2.rectangle(image, (x1, y1 - txt_h - bl), (x1 + txt_w, y1), colour, cv2.FILLED)
+            cv2.putText(image, label_txt, (x1, y1 - bl), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (255, 255, 255), 1, cv2.LINE_AA)
+            # --- End of Visualization
 
             # Initialize a new detection frame object.
             detectionFrame = VisionObject()
-            pred_obj_x, pred_obj_y, pred_obj_z = 0, 0, 0
-            extra_field, theta_z = None, None
+            pred_obj_x = pred_obj_y = pred_obj_z = 0
+            extra_field = theta_z = None
 
-            if camera_id == 0:  # Down camera.
-                if global_class_name == "Lane Marker":
-                    headings, center, debug_image = measure_lane_marker(
-                        image, bbox, debug_image
-                    )
-                    if None not in headings:
-                        bbox = center
-                        heading_auv = [0, 0]
-                        for i in range(2):
-                            offset = (
-                                270 if headings[i] + DOWN_CAM_YAW_OFFSET < -90 else -90
-                            )
-                            heading_auv[i] = (
-                                states[camera_id].theta_z + headings[i] + offset
-                            )
-                        theta_z = heading_auv[0] + DOWN_CAM_YAW_OFFSET
-                        extra_field = heading_auv[1] + DOWN_CAM_YAW_OFFSET
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_down_camera(
-                            bbox[0], bbox[1], image_h, image_w, lane_marker_top_z
-                        )
-                    )
-                elif global_class_name == "Octagon Table":
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_down_camera(
-                            bbox[0], bbox[1], image_h, image_w, octagon_table_top_z
-                        )
-                    )
-                elif global_class_name == "Bin":
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_down_camera(
-                            bbox[0], bbox[1], image_h, image_w, bin_top_z
-                        )
-                    )
-                bbox_message = Int32MultiArray()
-                bbox_message.data = [int(bbox[0]),int(bbox[1]), len(image[0]), len(image)]
-                pub_bbox_centering.publish(bbox_message)
-            else:  # Forward camera.
-                if global_class_name == "Octagon Table":
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_front_camera(bbox)
-                    )
-                elif global_class_name == "Gate":
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_front_camera(bbox)
-                    )
-                    theta_z = measure_angle(bbox)
-                elif global_class_name == "Buoy":
-                    pred_obj_x, pred_obj_y, pred_obj_z = (
-                        get_object_position_front_camera(bbox)
-                    )
+            # Post process by adding to the point cloud 
+            if global_class_name not in ["sawfish", "shark", "gate_divider"]:
+                continue
 
+            if global_class_name is "gate_divider":
+                theta_z = measure_angle(box)
+                
+            # Calculate the mean depth over the depth image
+            roi = depth_img[y1:y2, x1:x2]
+            roi = roi[~np.isnan(roi)] 
+            roi = roi[roi > 0]  
+            mean_depth = np.nanmedian(roi) if roi.size else np.inf
+
+            # Rotate based on the local to world frame difference
+            curr_state = states[camera_id]
+            
+            global_obj_pos_offset = quaternion.rotate_vectors(
+                curr_state.q_auv, np.array([x, y, mean_depth])
+            )
+            global_x, global_y, global_z = global_obj_pos_offset + np.array(
+                [curr_state.position.x, curr_state.position.y, curr_state.position.z]
+            )
+
+            # Set detection frame up for publishing
             detectionFrame.label = global_class_name
-            detectionFrame.x = pred_obj_x
-            detectionFrame.y = pred_obj_y
-            detectionFrame.z = pred_obj_z
+            detectionFrame.x = global_x
+            detectionFrame.y = global_y
+            detectionFrame.z = global_z
             detectionFrame.theta_z = theta_z
             detectionFrame.extra_field = extra_field
             detectionFrame.confidence = conf * calculate_bbox_confidence(
@@ -145,9 +153,18 @@ def detection_frame(image, debug_image, detections, camera_id):
             detection_frame_array.append(detectionFrame)
 
     publish_detection_frame(detection_frame_array)
+    return image
 
+def publish_detection_frame(detection_frame_array) -> None:
+    """
+    Publishes an array of detection frames into ROS topics
 
-def publish_detection_frame(detection_frame_array):
+    Args:
+        detection_frame_array: List of DetectionFrames
+
+    Returns:
+        None
+    """
     for obj in detection_frame_array:
         obj.x = obj.x if obj.x is not None else NULL_PLACEHOLDER
         obj.theta_z = obj.theta_z if obj.theta_z is not None else NULL_PLACEHOLDER
@@ -155,40 +172,53 @@ def publish_detection_frame(detection_frame_array):
             obj.extra_field if obj.extra_field is not None else NULL_PLACEHOLDER
         )
 
-    detection_frame_array = clean_detections(detection_frame_array)
-
     if len(detection_frame_array) > 0:
         # Create object detection frame message and publish it.
+        detection_frame_array = clean_detections(detection_frame_array)
         detection_frame_arrayMsg = VisionObjectArray()
         detection_frame_arrayMsg.array = detection_frame_array
         pub_viewframe_detection.publish(detection_frame_arrayMsg)
 
 
-def vision_cb(raw_image, camera_id):
+def vision_cb(raw_image: Image, camera_id: int) -> None:
+    """
+    Processes raw image streams on a specific camera, and publishes object detection messages using
+    a global pubs_visualization array. 
+    
+    Keyword arguments:
+        raw_Image -- RGB-D colorized raw image from a camera
+        camera_id -- id of the camera the callback function operates on
+    Return: None
+    """
+    global states
+
     if not is_vision_ready(camera_id):
         return
 
     # Convert image to cv2.
-    image = bridge.imgmsg_to_cv2(raw_image, "bgr8")
-    debug_image = np.copy(image)
+    try:
+        image = bridge.imgmsg_to_cv2(raw_image, "bgr8")
+    except Exception as e:
+        rospy.logerr(f"cv_bridge conversion failed: {e}")
+
+    # Copy the OpenCV image type to a stateful store globally in the node
     states[camera_id].bgr_image = np.copy(image)
 
-    # Run model on image.
-    detections = model[camera_id].predict(
+    detection_results = model[camera_id].predict(
         image, device=device, verbose=PRINT_DEBUG_INFO
     )
+    detection_img : np.ndarray = np.copy(
+        handle_detections(image, detection_results, camera_id)
+    )
+    # TODO: Add an alternative segmentation model that runs parallel
 
-    detection_frame(image, debug_image, detections, camera_id)
-
-    # Convert visualization image to sensor_msg image and
-    # publish it to corresponding cameras visualization topic.
-    debug_image = bridge.cv2_to_imgmsg(debug_image, "bgr8")
-    pubs_visualisation[camera_id].publish(debug_image)
+    # Convert OpenCV image type back to ROS msg type to be published
+    detection_img_msg : Image = bridge.cv2_to_imgmsg(detection_img, "bgr8")
+    pubs_visualisation[camera_id].publish(detection_img_msg)
     states[camera_id].resume()
 
-
 if __name__ == "__main__":
-    rospy.init_node("object_detection")
+    rospy.init_node("object_detection", anonymous=True)
 
     PRINT_DEBUG_INFO = rospy.get_param("log_model_prediction_info", False)
     NULL_PLACEHOLDER = rospy.get_param("NULL_PLACEHOLDER")
@@ -242,7 +272,7 @@ if __name__ == "__main__":
     bridge = CvBridge()
 
     # The int argument is used to index debug publisher, model, class names, and cameras_image_count.
-    rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
+    # rospy.Subscriber("/vision/down_cam/image_raw", Image, vision_cb, 0),
     rospy.Subscriber("/zed2i/zed_node/stereo/image_rect_color", Image, vision_cb, 1),
 
     rospy.spin()

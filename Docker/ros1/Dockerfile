@@ -57,8 +57,11 @@ RUN apt-get update && apt-get install -y wget \
     && apt-get update \
     && apt-get install -y python3-catkin-tools python3-pip tmux vim
 
-RUN apt-get install -y ros-noetic-rosserial-arduino \
+RUN apt-get update && apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
+    ros-noetic-rtabmap \
+    ros-noetic-rtabmap-ros \
+    ros-noetic-foxglove-bridge \
     ros-noetic-joy \
     ros-noetic-joy-teleop \
     ros-noetic-sbg-driver \
@@ -128,6 +131,40 @@ RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
     chown -R jetson:jetson /usr/local/zed
 
 COPY SN33688213.conf /usr/local/zed/settings/
+
+RUN apt-get update && \
+    apt-get install -y \
+    libepoxy-dev \
+    libgl1-mesa-dev \
+    libwayland-dev \
+    libxkbcommon-dev \
+    wayland-protocols \
+    libegl1-mesa-dev \
+    libc++-dev \
+    libglew-dev \
+    g++ \
+    ninja-build \
+    libjpeg-dev \
+    libpng-dev \
+    libavcodec-dev \
+    libavutil-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libavdevice-dev \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       python3.9 python3.9-dev python3.9-venv python3.9-distutils \
+       pybind11-dev \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 - \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
+    cd Pangolin && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install
 
 USER root
 WORKDIR /AUV-2025/catkin_ws

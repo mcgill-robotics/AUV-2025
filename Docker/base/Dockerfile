@@ -32,6 +32,7 @@ RUN apt-get update -qq \
         iproute2 \
         zstd \
         ros-noetic-rosserial-arduino \
+        ros-noetic-ros-numpy \
         ros-noetic-pid \
         ros-noetic-joy \
         ros-noetic-joy-teleop \

@@ -3,4 +3,6 @@
         <param name="image_data_dir/front_cam" value="$(find vision)/data_front_cam" />
         <param name="image_data_dir/down_cam" value="$(find vision)/data_down_cam" />
     </node>
+
+    <include file="$(find zed_wrapper)/launch/zed2i.launch" />
 </launch>

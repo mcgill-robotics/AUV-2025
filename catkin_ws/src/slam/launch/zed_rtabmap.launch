@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="svo_file" default="" /> <!-- <arg name="svo_file" default="path/to/svo/file.svo">. Seems like svo files are not used anymore -->
+    <arg name="stream" default="" /> <!-- <arg name="stream" default="<ip_address>:<port>"> -->
+
+    <arg name="zed_node_name" default="zed_node" />
+    <arg name="camera_model" default="zed2i" />
+    <arg name="publish_urdf" default="true" />
+
+    <arg name="camera_name" default="zed2i" />
+
+    <arg name="base_frame" default="auv" />
+
+    <group ns="$(arg camera_name)">
+
+        <!-- ZED Wrapper Node-->
+        <include file="$(find zed_wrapper)/launch/include/zed_camera.launch.xml">
+            <arg name="camera_name" value="$(arg camera_name)" />
+            <arg name="svo_file" value="$(arg svo_file)" />
+            <arg name="stream" value="$(arg stream)" />
+            <arg name="node_name" value="$(arg zed_node_name)" />
+            <arg name="camera_model" value="$(arg camera_model)" />
+            <arg name="base_frame" value="$(arg base_frame)" />
+            <arg name="publish_urdf" value="$(arg publish_urdf)" />
+        </include>    
+  
+        <arg name="custom_rtabmap_launch_file" default="$(find slam)/launch/include/sl_rtabmap.launch.xml"/>
+        <include file="$(arg custom_rtabmap_launch_file)">
+            <arg name="odom_topic" default="$(arg zed_node_name)/odom" />
+            <arg name="rgb_topic" default="$(arg zed_node_name)/rgb/image_rect_color" />
+            <arg name="depth_topic" default="$(arg zed_node_name)/depth/depth_registered" />
+            <arg name="camera_info_topic" default="$(arg zed_node_name)/rgb/camera_info" />
+            <arg name="depth_camera_info_topic" default="$(arg zed_node_name)/depth/camera_info" />
+        </include>   
+
+        <!-- Rviz -->
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find slam)/rviz/zed-rtabmap.rviz" output="screen" /> 
+    </group>
+
+    <!-- TODO: Add robot_localization launch inclusion for sensor-based localization -->
+
+</launch>

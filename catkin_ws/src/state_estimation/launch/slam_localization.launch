@@ -1,0 +1,26 @@
+<launch>
+
+<!-- https://docs.ros.org/en/noetic/api/robot_localization/html/state_estimation_nodes.html -->
+
+    <arg name="sim"            default="false" />
+    <arg name="remove_gravity" default="true"/>
+    <arg name="zed_node_name"  default="zed2i" />
+
+    <!-- TODO: Add zed_node_name to topic name evaluation -->
+
+    <!-- Local EKF -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_local" output="screen">
+      <rosparam command="load" file="$(find your_pkg)/config/ekf_local.yaml"/>
+      <param name="imu0_remove_gravitational_acceleration" value="$(arg remove_gravity)"/>
+      <remap from="odometry/filtered" to="/odometry/local"/>
+    </node>
+
+    <!-- Visual Odometry Assisted EKF -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_vo" output="screen">
+      <rosparam command="load" file="$(find your_pkg)/config/ekf_vo.yaml"/>
+      <remap from="odometry/filtered" to="/odometry/vo"/>
+    </node>
+
+    <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
+
+</launch>
