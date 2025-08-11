@@ -11,7 +11,7 @@
 	<include file="/AUV-2025/catkin_ws/src/xsens_ros_mti_driver/launch/xsens_mti_node.launch"/>
 	<include file="/AUV-2025/catkin_ws/src/zed-ros-wrapper/zed_wrapper/launch/zed2i.launch"/>
 
-	<node pkg="sensors" type="movella_republisher.py" name="movella_republisher" output="screen"/>
+	<node pkg="sensors" type="Movella_republisher.py" name="movella_republisher" output="screen"/>
 	<node pkg="sensors" type="zed_pose_publisher.py" name="zed_pose_republisher" output="screen"/>
 
 	<node pkg="rosbag" type="record" name="rosbag_imu"
