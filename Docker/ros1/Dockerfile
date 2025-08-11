@@ -57,11 +57,8 @@ RUN apt-get update && apt-get install -y wget \
     && apt-get update \
     && apt-get install -y python3-catkin-tools python3-pip tmux vim
 
-RUN apt-get update && apt-get install -y ros-noetic-rosserial-arduino \
+RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-pid \
-    ros-noetic-rtabmap \
-    ros-noetic-rtabmap-ros \
-    ros-noetic-foxglove-bridge \
     ros-noetic-joy \
     ros-noetic-joy-teleop \
     ros-noetic-sbg-driver \
