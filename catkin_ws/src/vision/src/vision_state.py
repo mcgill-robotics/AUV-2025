@@ -50,10 +50,10 @@ class VisionState:
         )
         # Update the point cloud whenever the current image is updated.
         self.camera_info_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/camera_info", CameraInfo, self.update_camera_info
+            "/zed2i/zed_node/depth/camera_info", CameraInfo, self.update_camera_info
         )
         self.depth_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/depth_registered",
+            "/zed2i/zed_node/depth/depth_registered",
             Image,
             self.update_depth,
         )

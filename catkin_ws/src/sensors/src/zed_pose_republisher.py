@@ -25,8 +25,8 @@ class ZedToAuvCompose:
     Covariance: passed through unchanged (no rotation)
     """
     def __init__(self):
-        self.in_topic  = rospy.get_param("~input_topic",  "/zed/zed_node/pose_with_covariance") #TODO: verify the topic name. 
-        self.out_topic = rospy.get_param("~output_topic", "sensors/zed/pose")
+        self.in_topic  = rospy.get_param("~input_topic",  "/zed2i/zed_node/pose_with_covariance") #TODO: verify the topic name. 
+        self.out_topic = rospy.get_param("~output_topic", "sensors/zed2i/pose")
         self.map_frame = rospy.get_param("~map_frame", "map")
         self.zed_frame = rospy.get_param("~zed_frame", "zed")
         self.auv_frame = rospy.get_param("~auv_frame", "auv")
