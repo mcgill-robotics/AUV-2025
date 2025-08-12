@@ -19,10 +19,129 @@
     },
     "Camera Test": {
         "InternalDevicesCount": 2,
-        "ZEDCount": 0,
-        "error": [
-            "<b>Camera not detected</b> <br/> Make sure the camera is plugged in or try another USB 3.0 port."
-        ]
+        "ZEDCount": 1,
+        "camera": {
+            "Device ID": 0,
+            "Firmware": 1523,
+            "Init Output": "OK",
+            "Model": "ZED 2i",
+            "Serial Number": 33688213,
+            "valid": [
+                "<b>Camera: </b>ZED 2i",
+                "<b>Firmware: </b>1523"
+            ]
+        },
+        "resolutions": {
+            "HD1080@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 1080,
+                "height (output)": 1080,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1920,
+                "width (output)": 1920
+            },
+            "HD1080@30": {
+                "fps (input)": 30,
+                "fps (output)": 26,
+                "height (input)": 1080,
+                "height (output)": 1080,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1920,
+                "width (output)": 1920
+            },
+            "HD2K@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 1242,
+                "height (output)": 1242,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 2208,
+                "width (output)": 2208
+            },
+            "HD720@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 720,
+                "height (output)": 720,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "HD720@30": {
+                "fps (input)": 30,
+                "fps (output)": 30,
+                "height (input)": 720,
+                "height (output)": 720,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "HD720@60": {
+                "dropCount": 0,
+                "fps (input)": 60,
+                "fps (output)": 60,
+                "height (input)": 720,
+                "height (output)": 720,
+                "imageCount": 500,
+                "initialization": "OK",
+                "status": true,
+                "tearingCount": 0,
+                "width (input)": 1280,
+                "width (output)": 1280
+            },
+            "VGA@100": {
+                "fps (input)": 100,
+                "fps (output)": 99,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@15": {
+                "fps (input)": 15,
+                "fps (output)": 15,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@30": {
+                "fps (input)": 30,
+                "fps (output)": 30,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            },
+            "VGA@60": {
+                "fps (input)": 60,
+                "fps (output)": 60,
+                "height (input)": 376,
+                "height (output)": 376,
+                "initialization": "OK",
+                "status": true,
+                "width (input)": 672,
+                "width (output)": 672
+            }
+        },
+        "sensors": {
+            "Firmware": 777,
+            "Init Output": "OK",
+            "Model": "ZED 2i (MCU)",
+            "Serial Number": 33688213
+        }
     },
     "Devices": {
         "CorruptedFirmware": false,
@@ -127,6 +246,9 @@
         "ZED Camera Module Detected": 63616,
         "ZED MCU Module Detected": 63617,
         "ZEDDetected": true,
+        "valid": [
+            "<b>USB Bandwidth: </b> OK"
+        ],
         "warning": [
             "<b>No GMSL driver found.</b><br/> USB camera are not impacted by this."
         ]
@@ -140,8 +262,8 @@
                 "computeCapability": "8.7",
                 "cores": 2048,
                 "name": "Orin",
-                "totalMemoryBytes": "65850929152",
-                "totalMemoryMB": 62800.33984375
+                "totalMemoryBytes": "65850920960",
+                "totalMemoryMB": 62800.33203125
             }
         ],
         "glx_info": "",
@@ -156,12 +278,12 @@
         "avxSupported": false,
         "coreCount": "12",
         "cpu": " ARMv8 Processor rev 1 (v8l)",
-        "datetime": "2025-08-11 23:42:21",
+        "datetime": "2025-08-12 14:13:40",
         "hyperThreading": "0",
         "motherboard": "Jetson AGX Orin Developer Kit, Unknown",
-        "ramCapacity": "65.850929",
+        "ramCapacity": "65.850921",
         "ramUsage": "",
-        "ramUsed": "5.925421",
+        "ramUsed": "5.072445",
         "threadCount": "12",
         "valid": [
             "<b>Processor: </b>  ARMv8 Processor rev 1 (v8l)",
@@ -187,7 +309,6 @@
             "libsl_zed_static.a"
         ],
         "resourcesFiles": [
-            "positional_tracking_2.2.model"
         ],
         "resourcesFilesExpected": [
             "objects_performance_3.2"
