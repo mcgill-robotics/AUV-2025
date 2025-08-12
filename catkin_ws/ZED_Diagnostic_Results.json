@@ -44,7 +44,7 @@
             },
             "HD1080@30": {
                 "fps (input)": 30,
-                "fps (output)": 26,
+                "fps (output)": 30,
                 "height (input)": 1080,
                 "height (output)": 1080,
                 "initialization": "OK",
@@ -83,12 +83,12 @@
                 "width (output)": 1280
             },
             "HD720@60": {
-                "dropCount": 0,
+                "dropCount": -1,
                 "fps (input)": 60,
                 "fps (output)": 60,
                 "height (input)": 720,
                 "height (output)": 720,
-                "imageCount": 500,
+                "imageCount": 502,
                 "initialization": "OK",
                 "status": true,
                 "tearingCount": 0,
@@ -97,7 +97,7 @@
             },
             "VGA@100": {
                 "fps (input)": 100,
-                "fps (output)": 99,
+                "fps (output)": 100,
                 "height (input)": 376,
                 "height (output)": 376,
                 "initialization": "OK",
@@ -152,24 +152,14 @@
         "MCUDetected": true,
         "USBList": [
             {
-                "USB_path": "/1",
-                "idProduct": "0x1790",
-                "idVendor": "0x0b95"
-            },
-            {
                 "USB_path": "/3",
                 "idProduct": "0x3549",
                 "idVendor": "0x13d3"
             },
             {
-                "USB_path": "/1/4",
+                "USB_path": "/1/1",
                 "idProduct": "0x0483",
                 "idVendor": "0x16c0"
-            },
-            {
-                "USB_path": "/1/3",
-                "idProduct": "0x0300",
-                "idVendor": "0x2639"
             },
             {
                 "USB_path": "/1",
@@ -178,7 +168,7 @@
             },
             {
                 "USBMode": 3,
-                "USB_path": "/3",
+                "USB_path": "/1/1",
                 "bDescriptorType": 1,
                 "bDeviceProtocol": 1,
                 "bLength": 18,
@@ -203,12 +193,12 @@
             },
             {
                 "USB_path": "/4",
-                "idProduct": "0x0483",
-                "idVendor": "0x16c0"
+                "idProduct": "0x0300",
+                "idVendor": "0x2639"
             },
             {
                 "USBMode": 2,
-                "USB_path": "/3/2",
+                "USB_path": "/1/1/2",
                 "bDescriptorType": 1,
                 "bDeviceProtocol": 0,
                 "bLength": 18,
@@ -227,14 +217,9 @@
                 "idVendor": "0x2b03"
             },
             {
-                "USB_path": "/3",
+                "USB_path": "/1/1",
                 "idProduct": "0x2514",
                 "idVendor": "0x0424"
-            },
-            {
-                "USB_path": "/2",
-                "idProduct": "0x9520",
-                "idVendor": "0x32e4"
             },
             {
                 "USB_path": "/1",
@@ -262,8 +247,8 @@
                 "computeCapability": "8.7",
                 "cores": 2048,
                 "name": "Orin",
-                "totalMemoryBytes": "65850920960",
-                "totalMemoryMB": 62800.33203125
+                "totalMemoryBytes": "65850957824",
+                "totalMemoryMB": 62800.3671875
             }
         ],
         "glx_info": "",
@@ -278,12 +263,12 @@
         "avxSupported": false,
         "coreCount": "12",
         "cpu": " ARMv8 Processor rev 1 (v8l)",
-        "datetime": "2025-08-12 14:13:40",
+        "datetime": "2025-08-12 15:53:22",
         "hyperThreading": "0",
         "motherboard": "Jetson AGX Orin Developer Kit, Unknown",
-        "ramCapacity": "65.850921",
+        "ramCapacity": "65.850958",
         "ramUsage": "",
-        "ramUsed": "5.072445",
+        "ramUsed": "4.321370",
         "threadCount": "12",
         "valid": [
             "<b>Processor: </b>  ARMv8 Processor rev 1 (v8l)",
@@ -309,6 +294,7 @@
             "libsl_zed_static.a"
         ],
         "resourcesFiles": [
+            "positional_tracking_2.2.model"
         ],
         "resourcesFilesExpected": [
             "objects_performance_3.2"

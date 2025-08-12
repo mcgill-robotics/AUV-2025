@@ -5,6 +5,8 @@ from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3Stamped
 from message_filters import Subscriber, ApproximateTimeSynchronizer
 
+THRESHOLD = 0.025
+
 """
 Movella IMU Free Acceleration Republisher Node
 
@@ -28,7 +30,7 @@ Intended use:
   - Sampling rate expected at ~25 Hz for both topics.
 """
 
-def callback(imu_msg, free_acc_msg, pub):
+def callback(imu_msg, free_acc_msg, pub, threshold=THRESHOLD):
     new_imu = Imu()
 
     # Keep IMU timestamp
@@ -44,7 +46,9 @@ def callback(imu_msg, free_acc_msg, pub):
     new_imu.angular_velocity_covariance = imu_msg.angular_velocity_covariance
 
     # Overwrite linear acceleration with free accel
-    new_imu.linear_acceleration = free_acc_msg.vector
+    new_imu.linear_acceleration.x = 0.0 if abs(free_acc_msg.vector.x) < THRESHOLD else free_acc_msg.vector.x
+    new_imu.linear_acceleration.y = 0.0 if abs(free_acc_msg.vector.y) < THRESHOLD else free_acc_msg.vector.y
+    new_imu.linear_acceleration.z = 0.0 if abs(free_acc_msg.vector.z) < THRESHOLD else free_acc_msg.vector.z
     new_imu.linear_acceleration_covariance = imu_msg.linear_acceleration_covariance
 
     # Diagnostic: warn if timestamps differ more than 20 ms
