@@ -45,3 +45,6 @@ catkin_ws/src/sim/devel
 catkin_ws/src/zed
 catkin_ws/src/vision/model_pipeline/data/
 catkin_ws/src/vision/model_pipeline/data.yaml
+
+# movella driver libraries
+catkin_ws/src/xsens_ros_mti_driver/lib/**
