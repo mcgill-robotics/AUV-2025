@@ -56,5 +56,3 @@ if __name__ == '__main__':
         rospy.loginfo("epic failure")
     except Exception as e:
         rospy.logerr(f"An error occurred: {e}")
-
-
