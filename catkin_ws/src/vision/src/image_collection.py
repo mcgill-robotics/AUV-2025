@@ -8,6 +8,8 @@ import keyboard
 
 from sensor_msgs.msg import Image
 
+from datetime import datetime
+
 def front_cam_image_callback(msg):
     global front_cam_cur_image
     try:
@@ -32,7 +34,11 @@ def save_image(output_dir, is_front_cam):
     else:
         cur_image = down_cam_cur_image
 
-    filename = os.path.join(output_dir, "image_{}.jpg".format(rospy.Time.now()))
+    ros_time = rospy.Time.now()
+    stamp = ros_time.to_sec()
+    time_str = datetime.fromtimestamp(stamp).strftime("%Y-%m-%d_%H-%M-%S")
+
+    filename = os.path.join(output_dir, f"image_{time_str}.jpg")
     cv2.imwrite(filename, cur_image)
     print(f'{"Front cam" if is_front_cam else "Down cam"} image saved')
 
