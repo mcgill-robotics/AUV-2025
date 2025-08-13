@@ -12,11 +12,11 @@
     <!-- Local EKF -->
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
       <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
-      <param name="frequency" value="20"/>  <!-- TODO: Choose appropriate frequency -->
+      <param name="frequency" value="45.0"/>  <!-- TODO: Choose appropriate frequency -->
       <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
       <param name="publish_tf" value="true"/>
-      <param name="transform_timeout" value="0.1"/>
+      <param name="transform_timeout" value="0.4"/>
 
 
       <param name="print_diagnostics" value="true"/>
@@ -25,7 +25,7 @@
       <param name="map_frame" value="map"/>
       <param name="odom_frame" value="odom"/>
       <param name="base_link_frame" value="auv"/>
-      <rosparam param="transform_orientation">[0, 0, 0, 1, 0, 0, 0]</rosparam> <!-- ENU orientation -->
+      <!-- <rosparam param="transform_orientation">[0, 0, 0, 1, 0, 0, 0]</rosparam> ENU orientation. This doesnt do anyhting as transform_orientation is not a robot_localization param-->
 
       <!-- <param name="twist0" value="/sensors/dvl/twist"/> -->
       <param name="imu0" value="/sensors/imu/data"/>   <!-- Movella IMU -->
@@ -70,8 +70,6 @@
        0.0,  0.0,  0.0]
        </rosparam>
 
-      <param name="pose0_relative" value="false"/> <!-- Consider setting this to true in pool tests. majd: I dont see why? Z is absolute not relative, treating it as such could lead to weird drifts/resets. -->
-
       <param name="imu0_remove_gravitational_acceleration" value="false"/> <!-- Movella outputs free acceleration -->
       
       <remap from="odometry/filtered" to="odometry/local" />
@@ -82,11 +80,11 @@
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_global" output="screen">
     
       <!-- Basic Configuration -->
-      <param name="frequency" value="20.0"/>
+      <param name="frequency" value="45.0"/>
       <param name="sensor_timeout" value="0.1"/>
       <param name="two_d_mode" value="false"/>
       <param name="transform_time_offset" value="0.0"/>
-      <param name="transform_timeout" value="0.0"/>
+      <param name="transform_timeout" value="0.4"/>
       <param name="print_diagnostics" value="true"/>
       <param name="debug" value="false"/>
       
@@ -125,7 +123,7 @@
         false, false, false]
       </rosparam>
       <param name="pose0_relative" value="false"/>
-      <param name="pose0_queue_size" value="10"/>
+      <param name="pose0_queue_size" value="30"/>
       <param name="pose0_differential" value="false"/>
       <param name="pose0_nodelay" value="false"/>
       <param name="pose0_pose_rejection_threshold" value="5.0"/>
@@ -136,7 +134,6 @@
       <remap from="odometry/filtered" to="odometry/global" />
       
     </node>
-
     <node name="odom_republisher" pkg="state_estimation" type="odom_republisher" output="screen" />
 
 </launch>
