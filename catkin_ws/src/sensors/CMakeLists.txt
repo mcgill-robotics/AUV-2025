@@ -11,7 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   sbg_driver
   rosserial_arduino
   rosserial_client
+  tf2
+  message_filters
 )
+
+find_package(Boost REQUIRED COMPONENTS system)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -31,10 +35,15 @@ include_directories(
 
 ## Compile depth_republish.cpp into a ROS node
 add_executable(depth_republisher src/depth_republish.cpp)
+add_executable(waterlinked_driver src/waterlinked_driver.cpp)
+add_executable(movella_republisher src/movella_republisher.cpp)
 target_link_libraries(depth_republisher ${catkin_LIBRARIES})
+target_link_libraries(movella_republisher ${catkin_LIBRARIES})   # <<< ADD THIS
+target_link_libraries(waterlinked_driver ${catkin_LIBRARIES})
+
 
 ## Install the compiled node
-install(TARGETS depth_republisher
+install(TARGETS depth_republisher waterlinked_driver movella_republisher
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

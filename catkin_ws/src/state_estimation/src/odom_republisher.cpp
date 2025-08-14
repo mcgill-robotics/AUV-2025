@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <sstream>
+#include <node_handle.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Int32.h>
