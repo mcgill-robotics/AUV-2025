@@ -2,56 +2,49 @@
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-// Node that republishes a depth (Float64) reading as a PoseWithCovarianceStamped on /sensors/depth/pose
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "depth_republisher");
-    ros::NodeHandle nh;
-    ros::NodeHandle pnh("~"); // private
+    ros::NodeHandle nh, pnh("~");
 
-    // Load variance parameter (default to 0.01 if not set)
-    double variance;
-    pnh.param("variance", variance, 0.01);
+    double z_variance;
+    pnh.param("z_variance", z_variance, 0.01); // basically just saying really trust z, but everything else dont bother
+    double big_variance;
+    pnh.param("big_variance", big_variance, 1e6);
+    double z_sign;
+    pnh.param("z_sign", z_sign, -1.0);
+    std::string frame_id;
+    pnh.param<std::string>("frame_id", frame_id, "odom");
 
-    // Publisher for the depth as a PoseWithCovarianceStamped
-    ros::Publisher pub_pose = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(
-        "/sensors/depth/pose", 10);
+    ros::Publisher pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/sensors/depth/pose", 10);
 
-    // Callback: convert Float64 depth to PoseWithCovarianceStamped
-    auto depth_cb = [&](const std_msgs::Float64::ConstPtr &msg)
+    auto cb = [&](const std_msgs::Float64::ConstPtr &msg)
     {
-        geometry_msgs::PoseWithCovarianceStamped pose_msg;
-        pose_msg.header.stamp = ros::Time::now();
-        // Frame must match the frame of the depth value. i.e "odom"
-        pose_msg.header.frame_id = "odom";
+        geometry_msgs::PoseWithCovarianceStamped out;
+        out.header.stamp = ros::Time::now();
+        out.header.frame_id = frame_id;
 
-        // Position: only Z changes (invert sign if your sensor convention requires)
-        pose_msg.pose.pose.position.x = 0.0;
-        pose_msg.pose.pose.position.y = 0.0;
-        pose_msg.pose.pose.position.z = -msg->data;
+        out.pose.pose.position.x = 0.0;
+        out.pose.pose.position.y = 0.0;
+        out.pose.pose.position.z = z_sign * msg->data;
 
-        // Orientation: identity quaternion (no rotation)
-        pose_msg.pose.pose.orientation.x = 0.0;
-        pose_msg.pose.pose.orientation.y = 0.0;
-        pose_msg.pose.pose.orientation.z = 0.0;
-        pose_msg.pose.pose.orientation.w = 1.0;
+        out.pose.pose.orientation.x = 0.0;
+        out.pose.pose.orientation.y = 0.0;
+        out.pose.pose.orientation.z = 0.0;
+        out.pose.pose.orientation.w = 1.0;
 
-        // Initialize all covariances to zero
-        for (size_t i = 0; i < 36; ++i)
-        {
-            pose_msg.pose.covariance[i] = 0.0;
-        }
-        // Set variance on Z-axis (index 2*6 + 3 - 1 = 14)
-        pose_msg.pose.covariance[14] = variance;
-
-        pub_pose.publish(pose_msg);
+        for (int i = 0; i < 36; ++i)
+            out.pose.pose.covariance[i] = 0.0;
+        out.pose.pose.covariance[0] = big_variance;
+        out.pose.pose.covariance[7] = big_variance;
+        out.pose.pose.covariance[14] = z_variance;
+        out.pose.pose.covariance[21] = big_variance;
+        out.pose.pose.covariance[28] = big_variance;
+        out.pose.pose.covariance[35] = big_variance;
+        pub.publish(out);
     };
 
-    // Subscriber for the raw depth value
-    ros::Subscriber sub_depth = nh.subscribe<std_msgs::Float64>(
-        "/sensors/depth/z", 10, depth_cb);
-
+    auto sub = nh.subscribe<std_msgs::Float64>("/sensors/depth/z", 10, cb);
     ros::spin();
     return 0;
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-
 import rospy
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3Stamped
 from message_filters import Subscriber, ApproximateTimeSynchronizer
 
+<<<<<<< HEAD
 THRESHOLD = 0.025
 
 """
@@ -31,27 +31,30 @@ Intended use:
 """
 
 def callback(imu_msg, free_acc_msg, pub, threshold=THRESHOLD):
+=======
+def callback(imu_msg, free_acc_msg, pub):
+>>>>>>> bb8abd67 (added debug statements in superimposer, and made the following changes to the republisher files. In depth republisher, we assign big cov to everything but z -> avoid confclits, also the type is float which has no head. for dvl cov we capture a stamp once per line and reuse it, we used to have seperate call())
     new_imu = Imu()
+    new_imu.header.stamp = imu_msg.header.stamp  # preserve measurement time
 
-    # Keep IMU timestamp
-    new_imu.header.stamp = imu_msg.header.stamp
+    frame_override = rospy.get_param("~frame_id", "")
+    new_imu.header.frame_id = frame_override if frame_override else imu_msg.header.frame_id
 
-    # Explicitly remap frame_id to "imu"
-    new_imu.header.frame_id = "imu"
-
-    # Copy orientation & angular velocity from IMU
     new_imu.orientation = imu_msg.orientation
     new_imu.orientation_covariance = imu_msg.orientation_covariance
     new_imu.angular_velocity = imu_msg.angular_velocity
     new_imu.angular_velocity_covariance = imu_msg.angular_velocity_covariance
 
+<<<<<<< HEAD
     # Overwrite linear acceleration with free accel
     new_imu.linear_acceleration.x = 0.0 if abs(free_acc_msg.vector.x) < THRESHOLD else free_acc_msg.vector.x
     new_imu.linear_acceleration.y = 0.0 if abs(free_acc_msg.vector.y) < THRESHOLD else free_acc_msg.vector.y
     new_imu.linear_acceleration.z = 0.0 if abs(free_acc_msg.vector.z) < THRESHOLD else free_acc_msg.vector.z
+=======
+    new_imu.linear_acceleration = free_acc_msg.vector
+>>>>>>> bb8abd67 (added debug statements in superimposer, and made the following changes to the republisher files. In depth republisher, we assign big cov to everything but z -> avoid confclits, also the type is float which has no head. for dvl cov we capture a stamp once per line and reuse it, we used to have seperate call())
     new_imu.linear_acceleration_covariance = imu_msg.linear_acceleration_covariance
 
-    # Diagnostic: warn if timestamps differ more than 20 ms
     dt = abs((imu_msg.header.stamp - free_acc_msg.header.stamp).to_sec())
     if dt > 0.03:
         rospy.logwarn_throttle(5, f"IMU vs FreeAccel timestamp diff: {dt*1000:.1f} ms")
@@ -66,7 +69,6 @@ def main():
     sub_free_acc = Subscriber("filter/free_acceleration", Vector3Stamped)
     sub_imu = Subscriber("imu/data", Imu)
 
-    # Use slop tuned for 25 Hz ( 0.04 s)
     ats = ApproximateTimeSynchronizer([sub_imu, sub_free_acc], queue_size=10, slop=0.04)
     ats.registerCallback(callback, pub_imu)
 

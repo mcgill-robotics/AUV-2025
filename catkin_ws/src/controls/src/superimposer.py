@@ -107,8 +107,8 @@ class Superimposer:
 if __name__ == "__main__":
     rospy.init_node("superimposer")
     si = Superimposer()
-    deadline = rospy.Time.now() + rospy.Duration(5.0)
-    rospy.loginfo("Waiting up to 5s for odom au")
+    deadline = rospy.Time().now() + rospy.Duration(5.0)
+    rospy.loginfo("Waiting up to 5s for odom auv")
     while not rospy.is_shutdown() and rospy.Time.now() < deadline:
         if si.tf_buffer.can_transform("auv", "odom", rospy.Time(0)):
             rospy.loginfo("Got odom auv!!")
