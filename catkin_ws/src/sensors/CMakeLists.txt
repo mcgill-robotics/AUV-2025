@@ -5,7 +5,6 @@ set(MSG_DEP_SET std_msgs sensor_msgs auv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
   ${MSG_DEP_SET}
-  rospy
   roscpp
   geometry_msgs
   sbg_driver
@@ -21,7 +20,6 @@ catkin_package(
   CATKIN_DEPENDS
     ${MSG_DEP_SET}
     roscpp
-    rospy
     geometry_msgs
     sbg_driver
     rosserial_arduino
@@ -35,23 +33,21 @@ include_directories(
 
 ## Compile depth_republish.cpp into a ROS node
 add_executable(depth_republisher src/depth_republish.cpp)
-add_executable(waterlinked_driver src/waterlinked_driver.cpp)
-add_executable(movella_republisher src/movella_republisher.cpp)
+add_executable(movella_republish src/movella_republish.cpp)
 target_link_libraries(depth_republisher ${catkin_LIBRARIES})
-target_link_libraries(movella_republisher ${catkin_LIBRARIES})   # <<< ADD THIS
-target_link_libraries(waterlinked_driver ${catkin_LIBRARIES})
+target_link_libraries(movella_republish ${catkin_LIBRARIES})
 
 
 ## Install the compiled node
-install(TARGETS depth_republisher waterlinked_driver movella_republisher
+install(TARGETS depth_republisher movella_republish
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## Install your Python and shell scripts
 install(PROGRAMS
-  src/start_zed_bridge.sh
-  scripts/${PROJECT_NAME}
-  src/imu_covariance.py
+  src/sensors_status.py
+  src/tether_status.py
   src/dvl_covariance.py
+  src/zed_pose_republish.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

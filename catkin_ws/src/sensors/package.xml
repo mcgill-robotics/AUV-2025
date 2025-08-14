@@ -27,7 +27,8 @@
   <build_depend>sbg_driver</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>python3-numpy</build_depend>
-  
+  <build_depend>message_filters</build_depend> 
+  <build_depend>tf2</build_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rosserial_arduino</exec_depend>
@@ -43,5 +44,7 @@
   <exec_depend>python3-serial</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>message_filters</exec_depend> 
+  <exec_depend>tf2</exec_depend> 
 </package>
 

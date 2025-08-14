@@ -107,10 +107,7 @@ RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim ipu
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-SHELL ["/bin/bash", "-c"]
-
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
-RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
 RUN apt update \
     && apt install -y zstd
@@ -149,28 +146,10 @@ RUN apt-get update && \
     libswscale-dev \
     libavdevice-dev \
     && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get update && apt-get install -y --no-install-recommends \
-       python3.9 python3.9-dev python3.9-venv python3.9-distutils \
-       pybind11-dev \
-    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 - \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
-    cd Pangolin && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    make install
 
 USER root
 WORKDIR /AUV-2025/catkin_ws
-
-RUN source /opt/ros/noetic/setup.bash && \
-    rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
-    catkin build && \
-    source devel/setup.bash
 
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc

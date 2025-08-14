@@ -284,7 +284,7 @@ class Actuator(Sensor):
 def update_state(_):
     pub_depth_sensor_status.publish(depth_sensor.get_is_active())
     pub_imu_sensor_status.publish(imu.get_is_active())
-    pub_imu_front_camera_sensor_status.publish(imu_front_camera.get_is_active())
+    # pub_imu_front_camera_sensor_status.publish(imu_front_camera.get_is_active())
     pub_dvl_sensor_status.publish(dvl.get_is_active())
     pub_front_camera_sensor_status.publish(front_camera_image.get_is_active())
     pub_down_camera_sensor_status.publish(down_camera.get_is_active())

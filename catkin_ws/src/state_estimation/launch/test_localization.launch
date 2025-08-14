@@ -84,7 +84,7 @@
     
       <!-- Basic Configuration -->
       <param name="frequency" value="25.0"/>
-      <param name="sensor_timeout" value="0.1"/>
+      <param name="sensor_timeout" value="0.05"/>
       <param name="two_d_mode" value="false"/>
       <param name="transform_time_offset" value="0.0"/>
       <param name="transform_timeout" value="0.4"/>
@@ -97,39 +97,68 @@
       <param name="odom_frame" value="odom"/>
       <param name="base_link_frame" value="auv"/>
       <param name="publish_tf" value="true"/> <!-- publishes the `map` -> `odom` transform -->
-      
-      <!-- Odometry Input 0: Local Odometry. I thnk we should let the global filter use only twist from the local EKF as pose/orientation from local odom can fight the ZED map pose.-->
-      <!-- Want avoid double-counting pose and creating a tug-of-war in the global filter-->
-      <param name="odom0" value="/odometry/local"/>
-      <rosparam param="odom0_config">
-        [false, false, false,
-        false, false, false, 
-        true, true, true, <!-- vx, vy, vz-->
-        true, true, true, <!-- vroll, vpitch, vyaw -->
-        false, false, false]
+
+      <!-- <param name="twist0" value="/sensors/dvl/twist"/> -->
+      <param name="imu0" value="/sensors/imu/data"/>   <!-- Movella IMU -->
+      <param name="pose0" value="/sensors/depth/pose"/>
+
+      <!-- [x, y, z, 
+      roll, pitch, yaw, 
+      vx, vy, vz, 
+      vroll, vpitch, vyaw, 
+      ax, ay, az] -->
+
+      <rosparam param="twist0_config">
+      [false, false, false, 
+       false, false, false, 
+       true,  true,  true, 
+       false, false, false,
+       false, false, false]
       </rosparam>
-      <!-- CHEAP BUT GOOD FIX for short term: if zed slam doesnt gave features - then slam will drop vo to lose tracking -. no loop closeures so no map -> odom transform. We could increase covariacne to account for tihs or not feeding pose0(I dont like the latter - at least for short term )-->
-      <param name="odom0_differential" value="false"/>
-      <param name="odom0_relative" value="false"/>
-      <param name="odom0_queue_size" value="5"/>
-      <param name="odom0_nodelay" value="false"/>
-      <param name="odom0_twist_rejection_threshold" value="5.0"/> <!-- m/s & rad/s (reasonable sanity gate) -->
-      <param name="odom0_pose_rejection_threshold" value="5.0"/>
+
+      <rosparam param="imu0_config">
+      [false, false, false, 
+       true,  true,  true, 
+       false, false, false, 
+       true,  true,  true,
+       true,  true,  true]
+      </rosparam>
+      <param name="imu0_differential" value="false"/>
+      <param name="imu0_relative" value="false"/>
+      <param name="imu0_queue_size" value="10"/>
+      <param name="imu0_nodelay" value="false"/>
+      
+      <rosparam param="pose0_config">
+      [false, false, true, 
+       false, false, false, 
+       false, false, false, 
+       false, false, false,
+       false, false, false]
+      </rosparam>
+      <param name="pose0_relative" value="false"/>
+
+      <rosparam param="initial_state">
+      [0.0,  0.0,  0.0,
+       0.0,  0.0,  0.0,
+       0.0,  0.0,  0.0,
+       0.0,  0.0,  0.0,
+       0.0,  0.0,  0.0]
+       </rosparam>
       
       <!-- Pose Input 0: ZED Visual Pose -->
-      <param name="pose0" value="/sensors/zed2i/pose"/>
-      <rosparam param="pose0_config">
+      <param name="pose1" value="/sensors/zed2i/pose"/>
+      <rosparam param="pose1_config">
         [true, true, true,
         true, true, true,
         false, false, false,
         false, false, false,
         false, false, false]
       </rosparam>
-      <param name="pose0_relative" value="true"/>
-      <param name="pose0_queue_size" value="10"/>
-      <param name="pose0_differential" value="false"/>
-      <param name="pose0_nodelay" value="false"/>
-      <param name="pose0_pose_rejection_threshold" value="5.0"/>
+      <param name="pose1_relative" value="true"/>
+      <param name="pose1_queue_size" value="10"/>
+      <param name="pose1_differential" value="false"/>
+      <param name="pose1_nodelay" value="false"/>
+      <param name="pose1_pose_rejection_threshold" value="5.0"/>
       
       <!-- Advanced Configuration -->
       <param name="dynamic_process_noise_covariance" value="true"/>
