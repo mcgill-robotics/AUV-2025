@@ -12,7 +12,7 @@
 	<include file="/AUV-2025/catkin_ws/src/zed-ros-wrapper/zed_wrapper/launch/zed2i.launch"/>
 
 	<node pkg="sensors" type="movella_republish" name="movella_republish" output="screen"/>
-	<node pkg="sensors" type="zed_pose_republish.py" name="zed_pose_republish" output="screen"/>
+	<node pkg="sensors" type="zed_pose_republisher" name="zed_pose_republish" output="screen"/>
 
 	<node pkg="rosbag" type="record" name="rosbag_imu"
 		if="$(arg record)"
