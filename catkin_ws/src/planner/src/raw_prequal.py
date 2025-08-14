@@ -5,11 +5,11 @@ from auv_msgs.msg import ThrusterMicroseconds
 # Define PWM values for different movements
 #I will use proper naming conventions and coordinate frames in the future, pls dont shoot me im really tired rn  
 FORWARD_PWMS = [1700, 1500, 1500, 1230, 1250, 1500, 1500, 1700] #from last pool test, these make robot very straight
-U_FORWARD_PWMS= [1700, 1685, 1595, 1283, 1300, 1590, 1675, 1700]
+U_FORWARD_PWMS= [1697, 1710, 1595, 1279, 1300, 1590, 1720, 1700]
 STOP_PWMS = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500] 
 TURN_LEFT_PWMS = [1500, 1500, 1500, 1230, 1500, 1500, 1500, 1500] # YAW TODO: adjust this pls
-DOWN_PWMS = [1500, 1637, 1637, 1500, 1500, 1600, 1600, 1500] 
-PITCHUP_PWMS = [1500, 1650, 1500, 1500, 1500, 1500, 1660, 1500] #change this
+DOWN_PWMS = [1500, 1600, 1600, 1500, 1500, 1615, 1615, 1500] 
+PITCHUP_PWMS = [1500, 1680, 1500, 1500, 1500, 1500, 1680, 1500] #change this
 
 def publish_pwm_for_duration(publisher, msg, duration, rate):
     """
@@ -43,9 +43,10 @@ def prequal():
     #Also that we cannot submerge. If we need to stay underwater, 
     # replace STOP by [1500, x, x, 1500, 1500, x, x, 1500] where x is whatever value
     # and add that same x for the forward and left PWMs
-    publish_pwm_for_duration(pub, msg_down, 3.0, rate)
-    publish_pwm_for_duration(pub, msg_forward, 15.0, rate)
-    publish_pwm_for_duration(pub, msg_stop, 2.0, rate)
+    publish_pwm_for_duration(pub, msg_stop, 15.0, rate) 
+    publish_pwm_for_duration(pub, msg_down, 1.0, rate)
+    publish_pwm_for_duration(pub, msg_forward, 20.0, rate)
+    publish_pwm_for_duration(pub, msg_stop, 3.0, rate)
 
 
 if __name__ == '__main__':

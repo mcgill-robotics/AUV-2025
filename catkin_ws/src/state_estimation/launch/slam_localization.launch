@@ -12,11 +12,12 @@
     <!-- Local EKF -->
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
       <param name="debug" value="true" /> <!-- Logs to /tmp/ekf_debug.txt -->
-      <param name="frequency" value="30.0"/>  <!-- TODO: Choose appropriate frequency -->
-      <param name="sensor_timeout" value="0.015"/>  
+      <param name="frequency" value="45.0"/>  <!-- TODO: Choose appropriate frequency -->
+      <param name="sensor_timeout" value="0.5"/>  
       <param name="two_d_mode" value="false"/>
       <param name="publish_tf" value="true"/>
       <param name="transform_timeout" value="0.4"/>
+
 
       <param name="print_diagnostics" value="true"/>
 
@@ -83,7 +84,7 @@
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_global" output="screen">
     
       <!-- Basic Configuration -->
-      <param name="frequency" value="25.0"/>
+      <param name="frequency" value="20.0"/>
       <param name="sensor_timeout" value="0.1"/>
       <param name="two_d_mode" value="false"/>
       <param name="transform_time_offset" value="0.0"/>
@@ -125,7 +126,7 @@
         false, false, false,
         false, false, false]
       </rosparam>
-      <param name="pose0_relative" value="true"/>
+      <param name="pose0_relative" value="false"/>
       <param name="pose0_queue_size" value="10"/>
       <param name="pose0_differential" value="false"/>
       <param name="pose0_nodelay" value="false"/>
