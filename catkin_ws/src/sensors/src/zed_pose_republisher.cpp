@@ -20,7 +20,7 @@ public:
         pnh.param<double>("tf_timeout", tf_timeout_sec_, 0.2);
         pnh.param<bool>("use_adjoint_covariance", use_adjoint_covariance_, false);
 
-        pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(out_topic_, 10);
+        pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(out_topic_, 100);
         sub_ = nh.subscribe(in_topic_, 10, &ZedToAuvCompose::cb, this);
 
         ROS_INFO_STREAM("zed_pose_to_auv_pose_tf2_compose: input=" << in_topic_ << " output=" << out_topic_ << " map=" << map_frame_ << " zed=" << zed_frame_ << " auv=" << auv_frame_ << " adjoint_cov=" << (use_adjoint_covariance_ ? "true" : "false"));
@@ -87,11 +87,7 @@ private:
             for (int j = 0; j < 6; ++j)
                 cov_out[i * 6 + j] = Crot(i, j);
     }
-    static void rotate_pose_cov_adjoint(const geometry_msgs::PoseWithCovariance::_covariance_type &cov_in,
-                                        const Eigen::Matrix3d &R_pose,
-                                        const Eigen::Matrix3d &R_za,
-                                        const Eigen::Vector3d &t_za,
-                                        geometry_msgs::PoseWithCovariance::_covariance_type &cov_out)
+    static void rotate_pose_cov_adjoint(const geometry_msgs::PoseWithCovariance::_covariance_type &cov_in, const Eigen::Matrix3d &R_pose, const Eigen::Matrix3d &R_za, const Eigen::Vector3d &t_za, geometry_msgs::PoseWithCovariance::_covariance_type &cov_out)
     {
         Eigen::Matrix<double, 6, 6> C;
         for (int i = 0; i < 6; ++i)
@@ -121,8 +117,7 @@ private:
 
         if (!buffer_.canTransform(zed_frame_, auv_frame_, msg->header.stamp, ros::Duration(tf_timeout_sec_)))
         {
-            ROS_WARN_STREAM_THROTTLE(1.0, "No TF " << zed_frame_ << "->" << auv_frame_
-                                                   << " at t=" << msg->header.stamp.toSec());
+            ROS_WARN_STREAM_THROTTLE(1.0, "No TF " << zed_frame_ << "->" << auv_frame_ << " at t=" << msg->header.stamp.toSec());
             return;
         }
 
@@ -143,9 +138,7 @@ private:
             tf_msg.transform.rotation.y,
             tf_msg.transform.rotation.z,
             tf_msg.transform.rotation.w});
-        Eigen::Vector3d t_za(tf_msg.transform.translation.x,
-                             tf_msg.transform.translation.y,
-                             tf_msg.transform.translation.z);
+        Eigen::Vector3d t_za(tf_msg.transform.translation.x, tf_msg.transform.translation.y, tf_msg.transform.translation.z);
         Eigen::Matrix4d T_zed_auv = Rt(R_za, t_za);
 
         // Compose: T_map_auv = T_map_zed * T_zed_auv

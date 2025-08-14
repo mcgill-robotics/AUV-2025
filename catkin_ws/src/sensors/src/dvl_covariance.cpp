@@ -15,7 +15,6 @@
 
 namespace wl
 {
-
     using boost::asio::buffer;
     using boost::asio::io_service;
     using boost::asio::read_until;
