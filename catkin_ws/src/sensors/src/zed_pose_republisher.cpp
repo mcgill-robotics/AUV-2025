@@ -18,7 +18,7 @@ public:
         pnh.param<std::string>("zed_frame", zed_frame_, std::string("zed"));
         pnh.param<std::string>("auv_frame", auv_frame_, std::string("auv"));
         pnh.param<double>("tf_timeout", tf_timeout_sec_, 0.2);
-        pnh.param<bool>("use_adjoint_covariance", use_adjoint_covariance_, false);
+        pnh.param<bool>("use_adjoint_covariance", use_adjoint_covariance_, true);
 
         pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(out_topic_, 100);
         sub_ = nh.subscribe(in_topic_, 10, &ZedToAuvCompose::cb, this);
@@ -133,11 +133,7 @@ private:
         }
 
         // T_zed_auv from TF
-        Eigen::Matrix3d R_za = quat_to_R(geometry_msgs::Quaternion{
-            tf_msg.transform.rotation.x,
-            tf_msg.transform.rotation.y,
-            tf_msg.transform.rotation.z,
-            tf_msg.transform.rotation.w});
+        Eigen::Matrix3d R_za = quat_to_R(geometry_msgs::Quaternion{tf_msg.transform.rotation.x, tf_msg.transform.rotation.y, tf_msg.transform.rotation.z, tf_msg.transform.rotation.w});
         Eigen::Vector3d t_za(tf_msg.transform.translation.x, tf_msg.transform.translation.y, tf_msg.transform.translation.z);
         Eigen::Matrix4d T_zed_auv = Rt(R_za, t_za);
 
@@ -176,7 +172,7 @@ private:
     // Params / state
     std::string in_topic_, out_topic_, map_frame_, zed_frame_, auv_frame_;
     double tf_timeout_sec_{0.3};
-    bool use_adjoint_covariance_{false};
+    bool use_adjoint_covariance_{true};
 
     tf2_ros::Buffer buffer_;
     tf2_ros::TransformListener listener_;
