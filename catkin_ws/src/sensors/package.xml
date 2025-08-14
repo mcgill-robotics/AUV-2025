@@ -29,6 +29,10 @@
   <build_depend>python3-numpy</build_depend>
   <build_depend>message_filters</build_depend> 
   <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>eigen</build_depend>
+
+  <build_export_depend>eigen</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rosserial_arduino</exec_depend>
@@ -46,5 +50,7 @@
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>message_filters</exec_depend> 
   <exec_depend>tf2</exec_depend> 
+  <exec_depend>tf2_ros</exec_depend> 
+  <exec_depend>eigen</exec_depend>
 </package>
 

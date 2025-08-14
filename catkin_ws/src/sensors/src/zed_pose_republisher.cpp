@@ -1,5 +1,6 @@
 // zed_pose_to_auv_pose.cpp
 #include <ros/ros.h>
+#include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -133,7 +134,14 @@ private:
         }
 
         // T_zed_auv from TF
-        Eigen::Matrix3d R_za = quat_to_R(geometry_msgs::Quaternion{tf_msg.transform.rotation.x, tf_msg.transform.rotation.y, tf_msg.transform.rotation.z, tf_msg.transform.rotation.w});
+        auto quat_ptr = boost::make_shared<geometry_msgs::Quaternion>();
+quat_ptr->x = tf_msg.transform.rotation.x;
+quat_ptr->y = tf_msg.transform.rotation.y;
+quat_ptr->z = tf_msg.transform.rotation.z;
+quat_ptr->w = tf_msg.transform.rotation.w;
+
+Eigen::Matrix3d R_za = quat_to_R(*quat_ptr);
+
         Eigen::Vector3d t_za(tf_msg.transform.translation.x, tf_msg.transform.translation.y, tf_msg.transform.translation.z);
         Eigen::Matrix4d T_zed_auv = Rt(R_za, t_za);
 

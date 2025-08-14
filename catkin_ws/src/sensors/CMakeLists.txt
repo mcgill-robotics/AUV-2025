@@ -11,10 +11,12 @@ find_package(catkin REQUIRED COMPONENTS
   rosserial_arduino
   rosserial_client
   tf2
-  message_filters
+  tf2_ros
+  message_filters 
 )
 
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 3.3 REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -24,6 +26,8 @@ catkin_package(
     sbg_driver
     rosserial_arduino
     rosserial_client
+    tf2
+    tf2_ros
 )
 
 include_directories(
@@ -31,15 +35,24 @@ include_directories(
   ${roscpp_INCLUDE_DIRS}
 )
 
+include_directories(
+  ${Eigen3_INCLUDE_DIRS}
+)
+
+
 ## Compile depth_republish.cpp into a ROS node
 add_executable(depth_republisher src/depth_republish.cpp)
 add_executable(movella_republish src/movella_republish.cpp)
+add_executable(zed_pose_republisher src/zed_pose_republisher.cpp)
 target_link_libraries(depth_republisher ${catkin_LIBRARIES})
 target_link_libraries(movella_republish ${catkin_LIBRARIES})
-
+target_link_libraries(zed_pose_republisher
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+)
 
 ## Install the compiled node
-install(TARGETS depth_republisher movella_republish
+install(TARGETS depth_republisher movella_republish zed_pose_republisher
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

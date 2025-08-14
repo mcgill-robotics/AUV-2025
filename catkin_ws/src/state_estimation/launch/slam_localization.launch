@@ -127,7 +127,7 @@
 
       <param name="pose0_relative" value="false"/>
       <param name="pose0_queue_size" value="30"/>
-      <param name="pose0_differential" value="true"/>
+      <param name="pose0_differential" value="false"/>
       <param name="pose0_nodelay" value="false"/>
       <param name="pose0_pose_rejection_threshold" value="5.0"/>
       
