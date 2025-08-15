@@ -7,15 +7,21 @@ import torch
 import ast
 import quaternion
 
+
+# Critical: Import cv2 and related libs BEFORE sklearn (even indirectly)
 import cv2
 from cv_bridge import CvBridge
-from ultralytics import YOLO
 
-from object_detection_utils import *
+# Now it's safe to import modules that may include sklearn (like object_detection_utils)
+from object_detection_utils import *  # Only after cv2
+
+# Vision/deep learning tools
+from ultralytics import YOLO
 from lane_marker_measure import measure_lane_marker
 
 from vision_state import VisionState
 
+# ROS messages
 from auv_msgs.msg import VisionObject, VisionObjectArray
 from std_msgs.msg import Int32MultiArray, Float64
 from sensor_msgs.msg import Image
@@ -31,18 +37,23 @@ def is_vision_ready(camera_id):
     # Reset cameras_image_count.
     cameras_image_count[camera_id] = 0
 
-    states[camera_id].pause()
-    current_states = {
-        "position": states[camera_id].position,
-        "q": states[camera_id].q_auv,
-        "theta_z": states[camera_id].theta_z,
-    }
-    for v in current_states.values():
-        if v is None:
-            print("State information missing. Skipping detection.")
-            print(current_states)
-            states[camera_id].resume()
-            return False
+    #the bloc that is commented out below hasn't been tested
+    # states[camera_id].pause()
+    # current_states = {
+    #     "position": states[camera_id].position,
+    #     "q": states[camera_id].q_auv,
+    #     "theta_z": states[camera_id].theta_z,
+    # }
+    # for v in current_states.values():
+    #     if v is None:
+    #         print("State information missing. Skipping detection.")
+    #         print(current_states)
+    #         states[camera_id].resume()
+    #         return False
+    # if camera_id == 1 and states[camera_id].point_cloud is None:
+    #     print("Point cloud not yet published.")
+    #     states[camera_id].resume()
+    #     return False
     return True
 
 

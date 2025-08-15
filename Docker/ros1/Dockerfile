@@ -89,25 +89,24 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
     && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
 
-RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pytorch/vision torchvision && \
-    cd torchvision && \
-    git checkout release/0.16 && \
-    python3 setup.py bdist_wheel && \
-    cp dist/torchvision*.whl /opt && \
-    pip3 install --no-cache-dir --verbose /opt/torchvision*.whl && \
-    cd ../ && \
-    rm -rf torchvision \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/jetson/docker_aliases.bash" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y python-is-python3 kmod kbd tmux vim iputils-ping iproute2 \
+RUN apt-get update && apt-get install -y python-is-python3 kmod kbd iputils-ping iproute2 \
     && pip3 install numpy-quaternion keyboard \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
+ENV BUILD_VERSION=0.16.1
+RUN curl -o ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
+   python3 -m pip install --no-cache ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
+   sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libopenblas-dev libavcodec-dev libavformat-dev libswscale-dev
+
+RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn && pip install dill
+RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
+RUN git clone --branch v0.16.1 --recursive https://github.com/pytorch/vision.git /torchvision
 
 RUN apt update \
     && apt install -y zstd
@@ -150,6 +149,10 @@ RUN apt-get update && \
 
 USER root
 WORKDIR /AUV-2025/catkin_ws
+
+# Create a dynamic variable to fix TLS stack memory issue with imports and activate torchvision
+RUN echo "export LD_PRELOAD=$(sudo find / -iname libgomp.so.1 | head -1)" >> ~/.bashrc
+RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV-2025/catkin_ws && rm -rf /torchvision" >> ~/.bashrc
 
 SHELL ["/bin/bash", "-c"]
 RUN echo "tmux" >> ~/.bashrc
