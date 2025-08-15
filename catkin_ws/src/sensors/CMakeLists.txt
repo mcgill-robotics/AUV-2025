@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_ros
   message_filters 
+  serial
 )
 
 find_package(Boost REQUIRED COMPONENTS system)
@@ -28,39 +29,49 @@ catkin_package(
     rosserial_client
     tf2
     tf2_ros
+    message_filters
+    serial
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${roscpp_INCLUDE_DIRS}
-)
-
-include_directories(
+  ${serial_INCLUDE_DIRS}
   ${Eigen3_INCLUDE_DIRS}
 )
 
-
-## Compile depth_republish.cpp into a ROS node
+## Compile executables
 add_executable(depth_republisher src/depth_republish.cpp)
 add_executable(movella_republish src/movella_republish.cpp)
 add_executable(zed_pose_republisher src/zed_pose_republisher.cpp)
-target_link_libraries(depth_republisher ${catkin_LIBRARIES})
-target_link_libraries(movella_republish ${catkin_LIBRARIES})
+add_executable(waterlinked_driver src/dvl_covariance.cpp)
+
+## Link libraries
+target_link_libraries(depth_republisher 
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(movella_republish 
+  ${catkin_LIBRARIES}
+)
+
 target_link_libraries(zed_pose_republisher
   ${catkin_LIBRARIES}
   Eigen3::Eigen
 )
 
-## Install the compiled node
-install(TARGETS depth_republisher movella_republish zed_pose_republisher
+target_link_libraries(waterlinked_driver 
+  ${catkin_LIBRARIES}
+  ${serial_LIBRARIES}
+)
+
+## Install the compiled nodes
+install(TARGETS depth_republisher movella_republish zed_pose_republisher waterlinked_driver
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-## Install your Python and shell scripts
+## Install Python and shell scripts
 install(PROGRAMS
   src/sensors_status.py
   src/tether_status.py
-  src/dvl_covariance.py
-  src/zed_pose_republish.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

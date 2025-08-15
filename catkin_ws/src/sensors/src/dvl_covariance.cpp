@@ -57,7 +57,8 @@ public:
         try {
             conn_.setPort(port_);
             conn_.setBaudrate(baudrate_);
-            conn_.setTimeout(serial::Timeout::simpleTimeout(1000));
+            serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
+            conn_.setTimeout(timeout);
             conn_.open();
         } catch (const serial::IOException& e) {
             ROS_ERROR("ERR: cannot open serial port %s: %s", port_.c_str(), e.what());
@@ -74,7 +75,7 @@ public:
             std::string line = conn_.readline();
             boost::trim(line);
             if (boost::starts_with(line, "wra") || boost::starts_with(line, "wrn")) {
-                break;
+              break;
             }
         }
         
