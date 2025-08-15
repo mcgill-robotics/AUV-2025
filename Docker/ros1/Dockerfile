@@ -79,7 +79,6 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-mavros-msgs \
     ros-noetic-serial \
     python3-serial \ 
-    # ^^^^^^^^^^^^ ensure runtime python serial too  # <-- CHANGED
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
@@ -94,7 +93,6 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
     && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt
 
-# safer sourcing (only if files exist)  # <-- CHANGED
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "[ -f /AUV-2025/catkin_ws/devel/setup.bash ] && source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/scripts/set_env.bash" >> ~/.bashrc \
@@ -114,10 +112,8 @@ RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn &
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 RUN git clone --branch v0.16.1 --recursive https://github.com/pytorch/vision.git /torchvision
 
-# create /ws/catkin_ws symlink so build scripts that expect it won't break  # <-- CHANGED
 RUN mkdir -p /ws && ln -s /AUV-2025/catkin_ws /ws/catkin_ws
 
-# ensure deps for THIS workspace (incl. serial) are resolved in this image   # <-- CHANGED
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && rosdep update --rosdistro $ROS_DISTRO \
     && rosdep install --from-paths /AUV-2025/catkin_ws/src --ignore-src -r -y
 
@@ -163,7 +159,6 @@ RUN apt-get update && \
 USER root
 WORKDIR /AUV-2025/catkin_ws
 
-# fix LD_PRELOAD line (remove sudo) + defer torchvision build to shell startup  # <-- CHANGED
 RUN echo "export LD_PRELOAD=\$(find / -iname libgomp.so.1 | head -1)" >> ~/.bashrc
 RUN echo "[ -d /torchvision ] && cd /torchvision && python3 setup.py install --user && cd /AUV-2025/catkin_ws && rm -rf /torchvision" >> ~/.bashrc
 
