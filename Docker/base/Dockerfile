@@ -50,6 +50,7 @@ RUN apt-get update -qq \
         ros-noetic-rtabmap-ros \
         ros-noetic-nmea-msgs \
         ros-noetic-mavros-msgs \
+        ros-noetic-serial \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
