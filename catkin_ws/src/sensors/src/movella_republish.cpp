@@ -20,7 +20,7 @@ public:
             SyncPolicy;
 
         sync_.reset(new message_filters::Synchronizer<SyncPolicy>(SyncPolicy(20), sub_imu_, sub_free_acc_));
-        sync_->setMaxIntervalDuration(ros::Duration(0.025));
+        sync_->setMaxIntervalDuration(ros::Duration(0.05));
         sync_->setInterMessageLowerBound(ros::Duration(0.010)); // applies to all inputs
         sync_->registerCallback(boost::bind(&MovellaRepublisher::callback, this, _1, _2));
         pnh.param<std::string>("frame_id", frame_override_, "imu");
