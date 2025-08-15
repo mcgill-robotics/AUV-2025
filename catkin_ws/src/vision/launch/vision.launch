@@ -12,15 +12,15 @@
         <param name="down_cam_model_file" 
             value="$(find vision)/src/models/down_cam_comp.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/new.pt" />
+            value="$(find vision)/src/models/best.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
         <param name="bin_height" value="0.2" />
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
-        <param name="down_cam_class_name_mappings" value="['bin', 'path_marker', 'octagon']"/> 
-        <param name="front_cam_class_name_mappings" value="['gate', 'octagon']"/>
+        <param name="down_cam_class_name_mappings" value="['gate', 'octagon', 'octagon top', 'path_marker', 'sawfish', 'shark']"/> 
+        <param name="front_cam_class_name_mappings" value="['gate', 'octagon', 'octagon top', 'path_marker', 'sawfish', 'shark']"/>
         <param name="lane_marker_downscaling_size" value="100" /> <!-- largest size of either axis of image after downscaling -->
         <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
         <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
@@ -40,15 +40,15 @@
         <param name="down_cam_model_file" 
             value="$(find vision)/src/models/down_cam_sim.pt" />
         <param name="front_cam_model_file" 
-            value="$(find vision)/src/models/new.pt" />
+            value="$(find vision)/src/models/comp.pt" />
         <param name="pool_depth" value="-5" />
         <param name="octagon_table_height" value="1.25" />
         <param name="lane_marker_height" value="0.4" />
         <param name="bin_height" value="0.5" />
         <param name="down_cam_hfov" value="129.4904" />
         <param name="down_cam_vfov" value="100" />
-        <param name="down_cam_class_name_mappings" value="['bin', 'path_marker', 'octagon']"/>
-        <param name="front_cam_class_name_mappings" value="['gate', 'octagon']"/>
+        <param name="down_cam_class_name_mappings" value="['gate', 'octagon', 'octagon top', 'path_marker', 'sawfish', 'shark']"/>
+        <param name="front_cam_class_name_mappings" value="['gate', 'octagon', 'octagon top', 'path_marker', 'sawfish', 'shark']"/>
         <param name="lane_marker_downscaling_size" value="100" /> <!-- largest size of either axis of image after downscaling -->
         <param name="lane_marker_blur_1_amt" value="0.1" /> <!-- first blur amount -->
         <param name="lane_marker_color_tolerance" value="0.08" /> <!-- color tolerance (to check if pixel is orange or not) -->
