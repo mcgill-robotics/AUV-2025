@@ -111,6 +111,8 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
+RUN python3.9 -m pip install --upgrade pip setuptools wheel importlib_metadata
+
 RUN apt-get update && \
     apt-get install -y \
     libepoxy-dev \
