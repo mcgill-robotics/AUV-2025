@@ -75,7 +75,8 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-rtabmap \
     ros-noetic-rtabmap-ros \
     ros-noetic-nmea-msgs \
-    ros-noetic-mavros-msgs
+    ros-noetic-mavros-msgs \
+    ros-noetic-serial
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -101,8 +102,8 @@ RUN apt-get update && apt-get install -y python-is-python3 kmod kbd iputils-ping
 
 ENV BUILD_VERSION=0.16.1
 RUN curl -o ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
-   python3 -m pip install --no-cache ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
-   sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libopenblas-dev libavcodec-dev libavformat-dev libswscale-dev
+    python3 -m pip install --no-cache ~/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl && \
+    sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libopenblas-dev libavcodec-dev libavformat-dev libswscale-dev
 
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn && pip install dill
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
