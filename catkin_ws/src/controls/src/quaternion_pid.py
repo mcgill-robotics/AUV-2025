@@ -146,6 +146,8 @@ class QuaternionPID:
         )
 
         torque = np.matmul(inertial_matrix, control_effort)
+        torque[0] = 0.0
+        torque[1] = 0.0
         return torque
 
 
