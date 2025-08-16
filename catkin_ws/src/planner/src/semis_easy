@@ -11,9 +11,9 @@ def update_display(status):
     print(status)
 
 def main():
-    rospy.init_node("semis")
+    rospy.init_node("semis_easy")
 
-    timer = 5
+    timer = 30
     update_display(f"{timer} COUNTDOWN",)
     rospy.loginfo(f"Starting {timer} countdown")
     countdown(timer)
@@ -24,25 +24,16 @@ def main():
         #rotate(self, x: float, y: float, z: float, timeout: float = 20, tol_degrees: float = 1.0) 
         #positive = CCW rotation
 
+        # rospy.sleep(10)
+
         #SUBMERGE
         controls.moveDeltaLocal(0,0, -1)
 
-        #TASK: COIN FLIP 300
-        #Tails = 180
-        #Heads = 90
-        # controls.rotate(0,0, 180)   #TODO
-
         #TASK: GATE 250 + SLALOM
-        controls.moveDeltaLocal(19, 0, 0, tolerance = 0.1, timeout = 60)
-        rospy.sleep(2)
-        
-        #TASK: OCTAGON
-        controls.moveDeltaLocal(0,0,1, tolerance = 0.1, timeout = 60)
-        rospy.sleep(2)
-        controls.moveDeltaLocal(0, 0, -1, tolerance = 0.1, timeout = 60)
+        controls.moveDeltaLocal(10, 0, 0, tolerance = 0.1, timeout = 60)
 
         #TASK: RETURN HOME
-        controls.moveDeltaLocal(-16, 0, 0, tolerance = 0.1, timeout = 60)
+        controls.moveDeltaLocal(-8, 0, 0, tolerance = 0.1, timeout = 60)
 
         rospy.sleep(2)
 
