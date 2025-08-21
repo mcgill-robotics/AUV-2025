@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:22.04
 
 # 1. Install general build tools and Python packages
 RUN apt-get update && apt-get install -y \
@@ -35,22 +35,3 @@ RUN cd / \
     && . /opt/ros/noetic/setup.bash \
     && . /ros2_humble/install/setup.bash \
     && colcon build --packages-select ros1_bridge --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-# 5. Create a runtime image
-FROM ubuntu:22.04
-
-# Install minimal ROS dependencies
-RUN apt-get update && apt-get install -y \
-    ros-noetic-ros-base \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy built ROS 2 / bridge from builder
-COPY --from=builder /ros2_humble /ros2_humble
-COPY --from=builder /ros1_bridge /ros1_bridge
-
-# Setup entrypoint to source both ROS environments
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bash"]
