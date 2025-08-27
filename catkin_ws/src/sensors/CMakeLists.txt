@@ -5,51 +5,73 @@ set(MSG_DEP_SET std_msgs sensor_msgs auv_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
   ${MSG_DEP_SET}
-  rospy
   roscpp
   geometry_msgs
   sbg_driver
   rosserial_arduino
   rosserial_client
+  tf2
+  tf2_ros
+  message_filters 
+  serial
 )
 
-catkin_package( CATKIN_DEPENDS
-  ${MSG_DEP_SET}
-  roscpp
-  rospy
-  geometry_msgs
-  sbg_driver
-  rosserial_arduino
-  rosserial_client
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 3.3 REQUIRED)
+
+catkin_package(
+  CATKIN_DEPENDS
+    ${MSG_DEP_SET}
+    roscpp
+    geometry_msgs
+    sbg_driver
+    rosserial_arduino
+    rosserial_client
+    tf2
+    tf2_ros
+    message_filters
+    serial
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${roscpp_INCLUDE_DIRS}
+  ${serial_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
 )
 
-add_executable(depth_republisher
-  src/depth_republish.cpp
+## Compile executables
+add_executable(depth_republisher src/depth_republish.cpp)
+add_executable(movella_republish src/movella_republish.cpp)
+add_executable(zed_pose_republisher src/zed_pose_republisher.cpp)
+add_executable(waterlinked_driver src/dvl_covariance.cpp)
+
+## Link libraries
+target_link_libraries(depth_republisher 
+  ${catkin_LIBRARIES}
 )
 
-add_executable(imu_republisher
-  src/imu_republish.cpp
+target_link_libraries(movella_republish 
+  ${catkin_LIBRARIES}
 )
 
-target_link_libraries(
-  depth_republisher
-  ${roscpp_LIBRARIES} 
-  ${geometry_msgs_LIBRARIES}
+target_link_libraries(zed_pose_republisher
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
 )
 
-target_link_libraries(
-  imu_republisher
-  ${roscpp_LIBRARIES} 
-  ${geometry_msgs_LIBRARIES}
+target_link_libraries(waterlinked_driver 
+  ${catkin_LIBRARIES}
+  ${serial_LIBRARIES}
 )
 
+## Install the compiled nodes
+install(TARGETS depth_republisher movella_republish zed_pose_republisher waterlinked_driver
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+## Install Python and shell scripts
 install(PROGRAMS
-  src/start_zed_bridge.sh
-  scripts/${PROJECT_NAME}
+  src/sensors_status.py
+  src/tether_status.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

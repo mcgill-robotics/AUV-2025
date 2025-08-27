@@ -4,6 +4,7 @@ import rospy
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose, Quaternion, Vector3
 import numpy as np
+import quaternion
 
 """
 This class servers as an abstract class for the action lib servers the controls use to
@@ -16,7 +17,6 @@ publishers and subscribers, a default preempt callback that sets the pids to the
 methods to check if a goal pose has been entered, a method to automatically turn off pids,
 and a method to publish setpoints to the pids.
 """
-
 
 class BaseServer:
     def __init__(self) -> None:

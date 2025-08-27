@@ -14,17 +14,18 @@ class QuaternionPID:
         self.Kp = rospy.get_param("~Kp")
         self.Ki = rospy.get_param("~Ki")
         self.Kd = rospy.get_param("~Kd")
+        self.windup_limit = rospy.get_param("~windup_limit")    # windup_limit is the accumulation limit for the integral
 
-        self.windup_limit = rospy.get_param("~windup_limit")
-
-        self.body_quat = np.quaternion(1, 0, 0, 0)
-        self.angular_velocity = np.array([0.0, 0.0, 0.0])
-        self.goal_quat = None
+        self.body_quat = np.quaternion(1, 0, 0, 0)              # quaternion orientation of the body
+        self.angular_velocity = np.array([0.0, 0.0, 0.0])       # angular velocity from the PID
+        self.goal_quat = None                                   # goal quaternion orientation
         self.enabled = False
         self.previous_time = rospy.get_time()
-        self.torque_integral = np.array([0.0, 0.0, 0.0])
+        self.torque_integral = np.array([0.0, 0.0, 0.0])        # torque field used for integral accumulation during computing
 
-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.set_pose)
+        self.pose_sub = rospy.Subscriber(
+            "/state/pose", Pose, self.set_pose
+        )
         self.angular_velocity_sub = rospy.Subscriber(
             "/state/angular_velocity", Vector3, self.set_ang_vel
         )
@@ -34,15 +35,17 @@ class QuaternionPID:
         self.enable_sub = rospy.Subscriber(
             "/controls/pid/quat/enable", Bool, self.set_enabled
         )
-
-        self.pub_roll = rospy.Publisher("/controls/torque/roll", Float64, queue_size=1)
+        self.pub_roll = rospy.Publisher(
+            "/controls/torque/roll", Float64, queue_size=1
+        )
         self.pub_pitch = rospy.Publisher(
             "/controls/torque/pitch", Float64, queue_size=1
         )
-        self.pub_yaw = rospy.Publisher("/controls/torque/yaw", Float64, queue_size=1)
-
+        self.pub_yaw = rospy.Publisher(
+            "/controls/torque/yaw", Float64, queue_size=1
+        )
         self.pub_error_quat = rospy.Publisher(
-            "/controls/pid/quat/error", Float64, queue_size=1
+            "/controls/pid/quat/error", Quaternion, queue_size=1
         )
 
     def set_pose(self, data):
@@ -72,7 +75,7 @@ class QuaternionPID:
         self.enabled = data.data
 
     def execute(self):
-        rate = rospy.Rate(100)
+        rate = rospy.Rate(20)
 
         while not rospy.is_shutdown():
             if self.enabled and self.goal_quat is not None:
@@ -92,10 +95,18 @@ class QuaternionPID:
     def controlEffort(self):
         # Calculate error values
         error_quat = self.calculateQuatError(self.body_quat, self.goal_quat)
-        self.pub_error_quat.publish(error_quat.w)
 
         if error_quat.w < 0:
             error_quat = -error_quat
+
+        self.pub_error_quat.publish(Quaternion(
+            x=error_quat.x,
+            y=error_quat.y,
+            z=error_quat.z,
+            w=error_quat.w
+            ))
+
+
 
         curr_time = rospy.get_time()
         delta_t = curr_time - self.previous_time
@@ -125,6 +136,7 @@ class QuaternionPID:
         #                             [0.000000000000000,  0.709487776484284, 0.003794052280665],
         #                             [-0.016440893216213, 0.003794052280665, 0.727193353794052]])
 
+# TODO: Update intertial matrix with real measurements from mech. This matrix assumes the AUV is a rectangular prism. 
         inertial_matrix = np.array(
             [
                 [1, 0.0, 0.0],
@@ -134,6 +146,8 @@ class QuaternionPID:
         )
 
         torque = np.matmul(inertial_matrix, control_effort)
+        torque[0] = 0.0
+        torque[1] = 0.0
         return torque
 
 

@@ -24,33 +24,30 @@ ros::Publisher pub_imu_status;
 ros::Publisher pub_dvl_status;
 ros::Publisher pub_depth_status;
 
-double depth;
-
-double RAD_TO_DEG = 180.0 / 3.14159265;
-
 void broad_cast_pose(const geometry_msgs::Pose &msg);
-
-void depth_cb(const std_msgs::Float64::ConstPtr &msg)
-{
-    depth = msg->data * -1;
-}
 
 void odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
     std_msgs::Float64 x, y, z;
     x.data = msg->pose.pose.position.x;
     y.data = msg->pose.pose.position.y;
-    z.data = depth; // use the depth from the depth callback
+    z.data = msg->pose.pose.position.z;
 
     // get orientation and angular velocoty
     geometry_msgs::Quaternion q_nwu_auv = msg->pose.pose.orientation;
     geometry_msgs::Vector3 av = msg->twist.twist.angular;
 
     geometry_msgs::Pose pose = msg->pose.pose;
-    pose.position.z = depth;
+
     pub_x.publish(x);
     pub_y.publish(y);
     pub_z.publish(z);
+
+    ROS_DEBUG("Euler angles: %f, %f, %f\n",
+              msg->twist.twist.angular.x,
+              msg->twist.twist.angular.y,
+              msg->twist.twist.angular.z);
+
     pub_pose.publish(pose);
 
     // publish angular velocity
@@ -95,27 +92,6 @@ void broad_cast_pose(const geometry_msgs::Pose &msg)
         }
         last_clock_msg = now;
     }
-
-    static tf2_ros::TransformBroadcaster br;
-    geometry_msgs::TransformStamped transformStamped1;
-    transformStamped1.header.stamp = ros::Time::now();
-    transformStamped1.header.frame_id = "odom";
-    transformStamped1.child_frame_id = "base_link";
-    transformStamped1.transform.translation.x = msg.position.x;
-    transformStamped1.transform.translation.y = msg.position.y;
-    transformStamped1.transform.translation.z = msg.position.z;
-    transformStamped1.transform.rotation = msg.orientation;
-    br.sendTransform(transformStamped1);
-
-    geometry_msgs::TransformStamped transformStamped2;
-    transformStamped2.header.stamp = ros::Time::now();
-    transformStamped2.header.frame_id = "base_link";
-    transformStamped2.child_frame_id = "auv_rotation";
-    transformStamped2.transform.translation.x = 0;
-    transformStamped2.transform.translation.y = 0;
-    transformStamped2.transform.translation.z = 0;
-    transformStamped2.transform.rotation = msg.orientation;
-    br.sendTransform(transformStamped2);
 }
 
 int main(int argc, char **argv)
@@ -124,8 +100,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     // Subscribers
-    ros::Subscriber odom_sub = n.subscribe("/odometry/filtered", 100, odom_cb);
-    ros::Subscriber depth_sub = n.subscribe("/sensors/depth/z", 100, depth_cb);
+    ros::Subscriber odom_sub = n.subscribe("/odometry/global", 100, odom_cb);
 
     // Publishers for state information
     pub_pose = n.advertise<geometry_msgs::Pose>("/state/pose", 1);

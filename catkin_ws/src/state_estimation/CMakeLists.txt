@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensors
   roscpp REQUIRED
 	rospy
+  planner
   tf
 	tf2
 	tf2_geometry_msgs
@@ -20,6 +21,7 @@ catkin_package( CATKIN_DEPENDS
   sensors
   roscpp
 	rospy
+  planner
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
@@ -35,8 +37,6 @@ include_directories(
   ${tf2_INCLUDE_DIRS}
 )
 
-
-
 add_executable(odom_republisher
   src/odom_republisher.cpp
 )
@@ -51,8 +51,6 @@ target_link_libraries(
   ${nav_msgs_LIBRARIES}
 )
 
-
-
 install(
   TARGETS odom_republisher
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -62,4 +60,14 @@ install(
 install(
   DIRECTORY include/odom_republisher
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
 )

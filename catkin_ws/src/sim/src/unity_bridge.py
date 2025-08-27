@@ -76,11 +76,11 @@ def publish_bypass(pose, ang_vel):
 
 def cb_unity_state(msg):
     global reseted
-    pose_x = -msg.position.z
+    # Flips to the right-hand rule
+    pose_x = msg.position.z
     pose_y = -msg.position.x
-    # pose_x = 0
-    # pose_y = 0
     pose_z = msg.position.y
+
     q_ESD_imunominaldown_x = msg.orientation.x
     q_ESD_imunominaldown_y = msg.orientation.y
     q_ESD_imunominaldown_z = msg.orientation.z
@@ -92,11 +92,26 @@ def cb_unity_state(msg):
 
     q_ENU_imunominalup = q_ENU_ESD * q_ESD_imunominaldown * q_imunominaldown_imunominalup
 
-    twist_angular_e = msg.angular_velocity.z
-    twist_angular_n = msg.angular_velocity.x
-    twist_angular_u = -msg.angular_velocity.y
-    twist_enu = [-twist_angular_e,twist_angular_n,twist_angular_u]
+    # TODO: Rename coordinate frames because they are not ENU
+    twist_enu = [
+        -msg.angular_velocity.z, 
+        msg.angular_velocity.x,
+        msg.angular_velocity.y
+    ]
 
+    # Flips to the right-hand rule
+    velocity_enu = [
+        msg.velocity.z, 
+        -msg.velocity.x, 
+        msg.velocity.y
+    ]
+
+    # Flips to the right-hand rule
+    acceleration_enu = [
+        msg.linear_acceleration.z, 
+        -msg.linear_acceleration.x,
+        msg.linear_acceleration.y
+    ]
 
     frequencies = msg.frequencies
     times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
@@ -106,11 +121,6 @@ def cb_unity_state(msg):
     isDepthSensorActive = msg.isDepthSensorActive
     isHydrophonesActive = msg.isHydrophonesActive
 
-
-    velocity_enu = [-msg.velocity.z, -msg.velocity.x, msg.velocity.y]
-
-    acceleration_enu = [msg.linear_acceleration.z, -msg.linear_acceleration.x,msg.linear_acceleration.y]
-
     # HYDROPHONES
     if isHydrophonesActive:
         for i in range(NUMBER_OF_PINGERS):
@@ -118,7 +128,6 @@ def cb_unity_state(msg):
             hydrophones_msg.frequency = frequencies[i]
             hydrophones_msg.times = times[i]
             pub_hydrophones_sensor.publish(hydrophones_msg)
-
 
     if bypass:
         pose = Pose()
@@ -135,7 +144,7 @@ def cb_unity_state(msg):
         
         ang_vel = Vector3(*ang_vel_auv)
 
-        publish_bypass(pose, ang_vel)
+        publish_bypass(pose, ang_vel)   # bypasses the actual conversion and uses direct positions from the sim
         
         return
     elif not reseted:
@@ -159,6 +168,11 @@ def cb_unity_state(msg):
         dvl_msg = TwistWithCovarianceStamped()
         dvl_msg.twist.twist.linear = Vector3(*velocity_dvl)
 
+        dvl_msg.twist.covariance = [0.0]*36
+        dvl_msg.twist.covariance[0] = 1e-7  # vx
+        dvl_msg.twist.covariance[7] = 1e-7  # vy
+        dvl_msg.twist.covariance[14] = 1e-7 # vz
+
         dvl_msg.header.stamp = rospy.Time.now()
         dvl_msg.header.frame_id = "dvl"
 
@@ -175,7 +189,6 @@ def cb_unity_state(msg):
             x=q_ENU_imuup.x, y=q_ENU_imuup.y, z=q_ENU_imuup.z, w=q_ENU_imuup.w
         )
 
-
         twist_imu = quaternion.rotate_vectors(
             q_ENU_imuup.inverse(), twist_enu
         )
@@ -186,6 +199,18 @@ def cb_unity_state(msg):
 
         imu_msg.angular_velocity = Vector3(*twist_imu)
         imu_msg.linear_acceleration = Vector3(*acceleration_imu)
+
+        imu_msg.orientation_covariance[0] = 1e-7
+        imu_msg.orientation_covariance[4] = 1e-7
+        imu_msg.orientation_covariance[8] = 1e-7
+
+        imu_msg.angular_velocity_covariance[0] = 1e-7
+        imu_msg.angular_velocity_covariance[4] = 1e-7
+        imu_msg.angular_velocity_covariance[8] = 1e-7
+
+        imu_msg.linear_acceleration_covariance[0] = 1e-7
+        imu_msg.linear_acceleration_covariance[4] = 1e-7
+        imu_msg.linear_acceleration_covariance[8] = 1e-7
         
         imu_msg.header.stamp = rospy.Time.now()
         imu_msg.header.frame_id = "imu"
@@ -194,10 +219,22 @@ def cb_unity_state(msg):
 
     # DEPTH SENSOR
     if isDepthSensorActive:
-        depth_msg = Float64() 
-        depth_msg.data = pose_z
+        # depth_msg = PoseWithCovarianceStamped()
+        # depth_msg.header.stamp = rospy.Time.now()
+        # depth_msg.header.frame_id = "odom"
 
-        pub_depth_sensor.publish(depth_msg)
+        # cov = [0.0] * 36 #Covariance matrix for pose
+        # cov[14] = 1e-10
+
+        # depth_msg.pose.pose.position.z = -pose_z
+        # depth_msg.pose.covariance = cov
+
+
+        # pub_depth_sensor.publish(depth_msg)
+        depth_raw = Float64()
+        depth_raw.data = pose_z  # To be fliped by depth republisher
+        pub_depth_z.publish(depth_raw)
+
 
 
 if __name__ == "__main__":
@@ -218,10 +255,6 @@ if __name__ == "__main__":
     q_dvlnominalup_dvlup = np.quaternion(
         q_dvlnominalup_dvlup_w, q_dvlnominalup_dvlup_x, q_dvlnominalup_dvlup_y, q_dvlnominalup_dvlup_z
     )
-
-    auv_dvl_offset_x = rospy.get_param("auv_dvl_offset_x")
-    auv_dvl_offset_y = rospy.get_param("auv_dvl_offset_y")
-    auv_dvl_offset_z = rospy.get_param("auv_dvl_offset_z")
 
     q_imunominalup_imuup_w = rospy.get_param("q_imunominalup_imuup_w")
     q_imunominalup_imuup_x = rospy.get_param("q_imunominalup_imuup_x")
@@ -246,7 +279,9 @@ if __name__ == "__main__":
     pub_dvl_sensor = rospy.Publisher(
         "/sensors/dvl/twist", TwistWithCovarianceStamped, queue_size=1
     )
-    pub_depth_sensor = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
+    # pub_depth_sensor = rospy.Publisher("/sensors/depth/pose", PoseWithCovarianceStamped, queue_size=1)
+    pub_depth_z = rospy.Publisher("/sensors/depth/z", Float64, queue_size=1)
+
     pub_imu_sensor = rospy.Publisher(
         "/sensors/imu/data", Imu, queue_size=1
     )

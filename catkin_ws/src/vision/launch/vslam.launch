@@ -1,0 +1,10 @@
+<launch>
+    <!-- Launch ZED Camera Configurations along with Object Detection defaults -->
+    <include file="$(find vision)/launch/other.launch">
+    </include>
+
+    <!-- Launch Visual Odometry from ZED 2i-->
+    <node pkg="vision" type="zed_tracking_subscriber.py" name='zed_tracking_subscriber' output="screen"/>
+
+
+</launch>

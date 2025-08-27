@@ -7,8 +7,12 @@
 	<include file="$(find sensors)/launch/tether_status.launch"/>
 	<include file="$(find sensors)/launch/depth_sensor_and_display.launch"/>
 	<include file="$(find sensors)/launch/dvl.launch"/>
-	<include file="$(find sensors)/launch/imu.launch"/>
-	<include file="$(find sensors)/launch/hydrophones.launch"/>
+	<!-- <include file="$(find sensors)/launch/sbg_imu.launch"/> --> 
+	<include file="/AUV-2025/catkin_ws/src/xsens_ros_mti_driver/launch/xsens_mti_node.launch"/>
+	<include file="/AUV-2025/catkin_ws/src/zed-ros-wrapper/zed_wrapper/launch/zed2i.launch"/>
+
+	<node pkg="sensors" type="movella_republish" name="movella_republish" output="screen"/>
+	<node pkg="sensors" type="zed_pose_republisher" name="zed_pose_republish" output="screen"/>
 
 	<node pkg="rosbag" type="record" name="rosbag_imu"
 		if="$(arg record)"
@@ -27,7 +31,6 @@
 
 	<group if="$(arg vision)">
      	<include file="$(find sensors)/launch/stream-down-cam.launch"/>
-     	<include file="$(find sensors)/launch/stream-front-cam.launch"/>
 	</group>
 
 </launch>

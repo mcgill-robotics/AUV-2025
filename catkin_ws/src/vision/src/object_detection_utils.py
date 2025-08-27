@@ -9,6 +9,7 @@ import json
 
 from vision_state import VisionState
 
+from typing import List
 
 ############## Utils Parameters ###############
 MAX_DIST_TO_MEASURE = rospy.get_param("max_object_detection_distance")
@@ -24,7 +25,6 @@ DOWN_CAM_YAW_OFFSET = rospy.get_param("down_cam_yaw_offset")
 MAX_COUNTS_PER_LABEL = json.loads(rospy.get_param("max_counts_per_label"))
 states = (VisionState(), VisionState())
 ###############################################
-
 
 def calculate_bbox_confidence(bbox, image_height, image_width):
     x_center, y_center, w, h = bbox
@@ -169,31 +169,35 @@ def get_object_position_down_camera(pixel_x, pixel_y, image_height, image_width,
     z = z_pos
     return x, y, z
 
-
 # Given a bounding box, tells you where the main object in the
 # bounding box is in 3D space (world space).
 # Assumes cleaning was correct.
-def get_object_position_front_camera(bbox):
+def get_object_position_front_camera_point_cloud(bbox):
     point_cloud = states[1].get_point_cloud(bbox)
-    min_lx = np.nanmin(point_cloud[:, :, 0].flatten())
-    min_ly = np.nanmin(point_cloud[:, :, 1].flatten())
-    min_lz = np.nanmin(point_cloud[:, :, 2].flatten())
-    max_lx = np.nanmax(point_cloud[:, :, 0].flatten())
-    max_ly = np.nanmax(point_cloud[:, :, 1].flatten())
-    max_lz = np.nanmax(point_cloud[:, :, 2].flatten())
 
-    lx = (max_lx + min_lx) / 2
-    ly = (max_ly + min_ly) / 2
-    lz = (max_lz + min_lz) / 2
+    if (point_cloud):
+        min_lx = np.nanmin(point_cloud[:, :, 0].flatten())
+        min_ly = np.nanmin(point_cloud[:, :, 1].flatten())
+        min_lz = np.nanmin(point_cloud[:, :, 2].flatten())
+        max_lx = np.nanmax(point_cloud[:, :, 0].flatten())
+        max_ly = np.nanmax(point_cloud[:, :, 1].flatten())
+        max_lz = np.nanmax(point_cloud[:, :, 2].flatten())
 
-    global_obj_pos_offset = quaternion.rotate_vectors(
-        states[1].q_auv, np.array([lx, ly, lz])
-    )
+        lx = (max_lx + min_lx) / 2
+        ly = (max_ly + min_ly) / 2
+        lz = (max_lz + min_lz) / 2
 
-    # Get the best estimate of the mean.
-    x, y, z = global_obj_pos_offset + np.array(
-        [states[1].position.x, states[1].position.y, states[1].position.z]
-    )
+        global_obj_pos_offset = quaternion.rotate_vectors(
+            states[1].q_auv, np.array([lx, ly, lz])
+        )
+
+        # Get the best estimate of the mean.
+        x, y, z = global_obj_pos_offset + np.array(
+            [states[1].position.x, states[1].position.y, states[1].position.z]
+        )
+    else:
+        rospy.loginfo("PC: Not obtained")
+        
     
     return x, y, z
 
@@ -237,7 +241,18 @@ def measure_angle(bbox):
 # cam has two detections, it will remove the least confident one.
 # Selects highest confidence detection from duplicates and ignores
 # objects with no position measurement.
-def clean_detections(detectionFrameArray):
+def clean_detections(detectionFrameArray) -> List :
+    """
+    Given an array of detection frames, remove duplicates with priority with respect to
+    DetectionFrame.confidence. Frames with lower values are removed.
+
+    Args:
+        detectionFrameArray: List of DetectionFrames
+
+    Returns:
+        List of the DetectionFrames
+
+    """
     label_counts = {}
     selected_detections = []
 

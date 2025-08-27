@@ -5,7 +5,6 @@ import math
 
 from auv_msgs.msg import VisionObject, VisionObjectArray
 
-
 # Callback when a new object detection frame is published.
 def object_detect_cb(msg):
     try:
@@ -58,7 +57,6 @@ def add_observation(msg):
                     detection_frame.confidence,
                 ],
             )
-
 
 # Given an observation, find the object to which it pertains
 # to (object within a certain radius of same class).

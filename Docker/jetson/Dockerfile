@@ -111,5 +111,41 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get install -y docker.io && pip install scikit-learn 
 RUN git clone --recursive https://github.com/mcgill-robotics/AUV-2025.git
 
+RUN python3.9 -m pip install --upgrade pip setuptools wheel importlib_metadata
+
+RUN apt-get update && \
+    apt-get install -y \
+    libepoxy-dev \
+    libgl1-mesa-dev \
+    libwayland-dev \
+    libxkbcommon-dev \
+    wayland-protocols \
+    libegl1-mesa-dev \
+    libc++-dev \
+    libglew-dev \
+    g++ \
+    ninja-build \
+    libjpeg-dev \
+    libpng-dev \
+    libavcodec-dev \
+    libavutil-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libavdevice-dev \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       python3.9 python3.9-dev python3.9-venv python3.9-distutils \
+       pybind11-dev \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 - \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --recursive https://github.com/Alb33rt/Pangolin.git && \
+    cd Pangolin && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install
+
 CMD ["bash", "-c", "source /opt/ros/noetic/setup.bash && roscore"]
 RUN echo "tmux" >> ~/.bashrc

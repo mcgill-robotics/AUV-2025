@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     {
         geometry_msgs::PoseWithCovarianceStamped pose_msg;
         pose_msg.header.stamp = ros::Time::now();
-        // Frame must match your EKF base_link_frame ("auv")
-        pose_msg.header.frame_id = "auv";
+        // Frame must match the frame of the depth value. i.e "odom"
+        pose_msg.header.frame_id = "odom";
 
         // Position: only Z changes (invert sign if your sensor convention requires)
         pose_msg.pose.pose.position.x = 0.0;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         {
             pose_msg.pose.covariance[i] = 0.0;
         }
-        // Set variance on Z-axis (index 2*6 + 2 = 14)
+        // Set variance on Z-axis (index 2*6 + 3 - 1 = 14)
         pose_msg.pose.covariance[14] = variance;
 
         pub_pose.publish(pose_msg);

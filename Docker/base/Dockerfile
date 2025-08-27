@@ -32,6 +32,7 @@ RUN apt-get update -qq \
         iproute2 \
         zstd \
         ros-noetic-rosserial-arduino \
+        ros-noetic-ros-numpy \
         ros-noetic-pid \
         ros-noetic-joy \
         ros-noetic-joy-teleop \
@@ -49,6 +50,7 @@ RUN apt-get update -qq \
         ros-noetic-rtabmap-ros \
         ros-noetic-nmea-msgs \
         ros-noetic-mavros-msgs \
+        ros-noetic-serial \
     && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 

@@ -13,8 +13,6 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image, CameraInfo
 
-
-
 class VisionState:
     def __init__(self):
         self.is_paused = False
@@ -44,16 +42,22 @@ class VisionState:
             "max_distance_for_point_cloud_fill_cleaning"
         )  
 
-        self.pose_sub = rospy.Subscriber("/state/pose", Pose, self.update_pose)
+        self.pose_sub = rospy.Subscriber(
+            "/state/pose",
+            Pose,
+            self.update_pose
+        )
         self.theta_z_sub = rospy.Subscriber(
-            "/state/theta/z", Float64, self.update_theta_z
+            "/state/theta/z", 
+            Float64, 
+            self.update_theta_z
         )
         # Update the point cloud whenever the current image is updated.
         self.camera_info_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/camera_info", CameraInfo, self.update_camera_info
+            "/zed2i/zed_node/depth/camera_info", CameraInfo, self.update_camera_info
         )
         self.depth_sub = rospy.Subscriber(
-            "/zed/zed_node/depth/depth_registered",
+            "/zed2i/zed_node/depth/depth_registered",
             Image,
             self.update_depth,
         )
@@ -65,6 +69,7 @@ class VisionState:
             self.theta_z = float(msg.data)
 
     def update_pose(self, msg):
+        rospy.logdebug(f"Current camera pose: {self.position}")
         if self.is_paused:
             self.position_while_paused = msg.position
             self.q_auv_while_paused = np.quaternion(
@@ -138,6 +143,7 @@ class VisionState:
         return point_cloud
 
     def get_point_cloud(self, bbox=None):
+        print("Getting point_cloud...")
         if bbox is None:
             # bbox is bounding box: surrounds bounds an object or a specific area of interest in a robot's perception system
             return self.clean_point_cloud(
@@ -168,8 +174,7 @@ class VisionState:
 
         self.x_over_z_map = (cx - u_map) / fx
         self.y_over_z_map = (cy - v_map) / fy
-        if self.depth is not None:
-            self.update_point_cloud()
+        # self.update_point_cloud()
 
     def pause(self):
         self.is_paused = True
