@@ -1,0 +1,12 @@
+<launch>
+  <!-- Waterlinked DVL driver with dynamic covariance -->
+  <arg name="port" default="/dev/dvl"/>
+  <arg name="baudrate" default="115200"/>
+  <arg name="quat_variance" default="0.01"/>
+
+  <node pkg="sensors" name="dvl_covariance_driver" type="dvl_covariance.py" output="screen">
+    <param name="port" value="$(arg port)" />
+    <param name="baudrate" value="$(arg baudrate)" />
+    <param name="quat_variance" value="$(arg quat_variance)" />
+  </node>
+</launch>
