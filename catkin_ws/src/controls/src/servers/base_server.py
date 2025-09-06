@@ -4,6 +4,7 @@ import rospy
 from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Pose, Quaternion, Vector3
 import numpy as np
+import quaternion
 
 """
 This class servers as an abstract class for the action lib servers the controls use to

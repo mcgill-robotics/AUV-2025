@@ -4,6 +4,7 @@ import actionlib
 import rospy
 
 import numpy as np
+import quaternion
 from servers.base_server import BaseServer
 
 from std_msgs.msg import Bool
