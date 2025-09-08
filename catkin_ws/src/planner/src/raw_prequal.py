@@ -57,7 +57,3 @@ if __name__ == '__main__':
     except Exception as e:
         rospy.logerr(f"An error occurred: {e}")
 
-
-#HOW TO RUN THIS FILE (if you dont know):
-# roslaunch propulsion propulsion.launch
-# rosrun planner raw_prequal.py

@@ -129,7 +129,7 @@ class FrontCameraIMU(Sensor):
         self.current_reading = [np.quaternion(1, 0, 0, 0), [0, 0, 0]]
         self.last_reading = [np.quaternion(1, 0, 0, 0), [0, 0, 0]]
 
-        rospy.Subscriber("/zed/zed_node/imu/data", Imu, self.front_camera_imu_cb)
+        rospy.Subscriber("/zed2i/zed_node/imu/data", Imu, self.front_camera_imu_cb)
 
     def front_camera_imu_cb(self, msg):
         self.current_reading[0] = np.quaternion(
@@ -191,7 +191,7 @@ class FrontCameraImage(Sensor):
         super().__init__("Front Camera Image")
 
         rospy.Subscriber(
-            "/zed/zed_node/stereo/image_rect_color", Image, self.front_camera_cb
+            "/zed2i/zed_node/stereo/image_rect_color", Image, self.front_camera_cb
         )
 
     def front_camera_cb(self, msg):
@@ -284,7 +284,7 @@ class Actuator(Sensor):
 def update_state(_):
     pub_depth_sensor_status.publish(depth_sensor.get_is_active())
     pub_imu_sensor_status.publish(imu.get_is_active())
-    pub_imu_front_camera_sensor_status.publish(imu_front_camera.get_is_active())
+    # pub_imu_front_camera_sensor_status.publish(imu_front_camera.get_is_active())
     pub_dvl_sensor_status.publish(dvl.get_is_active())
     pub_front_camera_sensor_status.publish(front_camera_image.get_is_active())
     pub_down_camera_sensor_status.publish(down_camera.get_is_active())
@@ -297,7 +297,6 @@ if __name__ == "__main__":
 
     depth_sensor = DepthSensor()
     imu = IMU()
-    imu_front_camera = FrontCameraIMU()
     dvl = DVL()
     front_camera_image = FrontCameraImage()
     down_camera = DownCamera()
