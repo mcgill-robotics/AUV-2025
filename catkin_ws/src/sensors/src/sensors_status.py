@@ -297,7 +297,6 @@ if __name__ == "__main__":
 
     depth_sensor = DepthSensor()
     imu = IMU()
-    # imu_front_camera = FrontCameraIMU()
     dvl = DVL()
     front_camera_image = FrontCameraImage()
     down_camera = DownCamera()

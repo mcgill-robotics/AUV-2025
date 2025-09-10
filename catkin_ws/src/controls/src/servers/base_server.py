@@ -18,6 +18,7 @@ methods to check if a goal pose has been entered, a method to automatically turn
 and a method to publish setpoints to the pids.
 """
 
+
 class BaseServer:
     def __init__(self) -> None:
         self.cancelled = False

@@ -42,8 +42,6 @@ include_directories(
 ## Compile executables
 add_executable(depth_republisher src/depth_republish.cpp)
 add_executable(movella_republish src/movella_republish.cpp)
-add_executable(zed_pose_republisher src/zed_pose_republisher.cpp)
-add_executable(waterlinked_driver src/dvl_covariance.cpp)
 
 ## Link libraries
 target_link_libraries(depth_republisher 
@@ -54,18 +52,8 @@ target_link_libraries(movella_republish
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(zed_pose_republisher
-  ${catkin_LIBRARIES}
-  Eigen3::Eigen
-)
-
-target_link_libraries(waterlinked_driver 
-  ${catkin_LIBRARIES}
-  ${serial_LIBRARIES}
-)
-
 ## Install the compiled nodes
-install(TARGETS depth_republisher movella_republish zed_pose_republisher waterlinked_driver
+install(TARGETS depth_republisher movella_republish
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
