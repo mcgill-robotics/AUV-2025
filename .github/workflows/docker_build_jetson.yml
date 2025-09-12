@@ -10,7 +10,7 @@ on:
       - '.github/workflows/docker_build_jetson.yml'
   workflow_dispatch:
   schedule:
-    - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
+    - cron: '0 0 * * *'
 
 jobs:
   build-and-push-jetson:
