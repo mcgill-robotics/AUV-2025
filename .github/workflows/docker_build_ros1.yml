@@ -14,7 +14,7 @@ on:
       - '.github/workflows/docker_build_ros1.yml'
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   build-and-push:
