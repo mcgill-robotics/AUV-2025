@@ -11,7 +11,7 @@ on:
       - stateEstimationv1-squashed
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   catkin-build-arm:
