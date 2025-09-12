@@ -134,8 +134,8 @@ RUN ./ZED_SDK_Tegra_L4T35.4_v4.1.4.zstd.run -- silent && \
 
 COPY SN33688213.conf /usr/local/zed/settings/
 
-RUN apt-get update && \
-    apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libepoxy-dev \
     libgl1-mesa-dev \
     libwayland-dev \
@@ -153,8 +153,8 @@ RUN apt-get update && \
     libavformat-dev \
     libswscale-dev \
     libavdevice-dev \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
+
 
 USER root
 WORKDIR /AUV-2025/catkin_ws
