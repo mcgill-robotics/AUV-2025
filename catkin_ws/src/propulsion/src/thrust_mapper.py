@@ -19,18 +19,17 @@ a = rospy.get_param("distance_thruster_middle_length")
 # Matrix mapping from thruster forces to wrench (6x8) 
 T = np.array([
     # SURGE (X)
-    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0,  np.cos(alpha)],
+    [ cos45, 0, 0, -cos45, -cos45, 0, 0, cos45],
     # SWAY (Y)
-    [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
+    [ -sin45, 0, 0, -sin45, sin45, 0, 0, sin45],
     # HEAVE (Z)
-    [ 0, -1, -1, 0, 0, -1,-1,0],
+    [ 0, -1, -1, 0, 0, -1, -1, 0],
     # ROLL (X-rotation)
-    [0,  w/2,w/2,0,0, -w/2,-w/2,0],
+    [ sin45*e, b, b, sin45*e, -sin45*e, -b, -b, -sin45*e],
     # PITCH (Y-rotation)
-    [0,-a,a,0,0,a,-a,0],
+    [ cos45*e, -a, a, -cos45*e, -cos45*e, a, -a, cos45*e],
     # YAW (Z-rotation)
-    [ - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)),
-      - (a*np.sin(alpha) - (w/2)*np.cos(alpha)),  0,  0, + (a*np.sin(alpha) - (w/2)*np.cos(alpha)) ]
+    [ (cos45*c+sin45*d), 0, 0, -(cos45*c+sin45*d), (cos45*c+sin45*d), 0, 0, -(cos45*c+sin45*d)]
 ])
 T_inv = np.linalg.pinv(T)
 #print("T =", T)
