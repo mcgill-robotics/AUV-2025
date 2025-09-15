@@ -10,26 +10,31 @@ from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
 # Constant parameters of the thruster positions
-#TODO: Replace these parameters with a,b,c,d,e 
-l = rospy.get_param("distance_thruster_thruster_length")
-w = rospy.get_param("distance_thruster_thruster_width")
-alpha = np.radians(rospy.get_param("angle_thruster"))
-a = rospy.get_param("distance_thruster_middle_length")
+# Consult AUV_Controls_Pipeline.pptx for reference axes and dimensions used to declare variables and create allocation matrix below
+# Units are in degrees and mm
+# CG taken at (90.549, -289.93, -35.045)
+a = 80.619
+b = 226.341
+c = 202.572
+d = 228.205
+e = 4.945
+alpha = 44.323007
+
 
 # Matrix mapping from thruster forces to wrench (6x8) 
 T = np.array([
     # SURGE (X)
-    [ cos45, 0, 0, -cos45, -cos45, 0, 0, cos45],
+    [ cos(alpha), 0, 0, -cos(alpha), -cos(alpha), 0, 0, cos(alpha)],
     # SWAY (Y)
-    [ -sin45, 0, 0, -sin45, sin45, 0, 0, sin45],
+    [ -sin(alpha), 0, 0, -sin(alpha), sin(alpha), 0, 0, sin(alpha)],
     # HEAVE (Z)
     [ 0, -1, -1, 0, 0, -1, -1, 0],
     # ROLL (X-rotation)
-    [ sin45*e, b, b, sin45*e, -sin45*e, -b, -b, -sin45*e],
+    [ sin(alpha)*e, b, b, sin(alpha)*e, -sin(alpha)*e, -b, -b, -sin(alpha)*e],
     # PITCH (Y-rotation)
-    [ cos45*e, -a, a, -cos45*e, -cos45*e, a, -a, cos45*e],
+    [ cos(alpha)*e, -a, a, -cos(alpha)*e, -cos(alpha)*e, a, -a, cos(alpha)*e],
     # YAW (Z-rotation)
-    [ (cos45*c+sin45*d), 0, 0, -(cos45*c+sin45*d), (cos45*c+sin45*d), 0, 0, -(cos45*c+sin45*d)]
+    [ (cos(alpha)*c+sin(alpha)*d), 0, 0, -(cos(alpha)*c+sin(alpha)*d), (cos(alpha)*c+sin(alpha)*d), 0, 0, -(cos(alpha)*c+sin(alpha)*d)]
 ])
 T_inv = np.linalg.pinv(T)
 #print("T =", T)
