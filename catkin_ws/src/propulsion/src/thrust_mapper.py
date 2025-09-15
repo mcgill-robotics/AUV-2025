@@ -13,28 +13,28 @@ from geometry_msgs.msg import Wrench
 # Consult AUV_Controls_Pipeline.pptx for reference axes and dimensions used to declare variables and create allocation matrix below
 # CG taken at (90.549, -289.93, -35.045) mm
 # Units are in radians and m
-a = 80.619/1000
-b = 226.341/1000
-c = 202.572/1000
-d = 228.205/1000
-e = 4.945/1000
-alpha = np.deg2rad(44.323007)
+a = rospy.get_param("~a")
+b = rospy.get_param("~b")
+c = rospy.get_param("~c")
+d = rospy.get_param("~d")
+e = rospy.get_param("~e")
+alpha = np.deg2rad(rospy.get_param("~alpha"))
 
 
 # Matrix mapping from thruster forces to wrench (6x8) 
 T = np.array([
     # SURGE (X)
-    [ cos(alpha), 0, 0, -cos(alpha), -cos(alpha), 0, 0, cos(alpha)],
+    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
     # SWAY (Y)
-    [ -sin(alpha), 0, 0, -sin(alpha), sin(alpha), 0, 0, sin(alpha)],
+    [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
     # HEAVE (Z)
     [ 0, -1, -1, 0, 0, -1, -1, 0],
     # ROLL (X-rotation)
-    [ sin(alpha)*e, b, b, sin(alpha)*e, -sin(alpha)*e, -b, -b, -sin(alpha)*e],
+    [ np.sin(alpha)*e, b, b, np.sin(alpha)*e, -np.sin(alpha)*e, -b, -b, -np.sin(alpha)*e],
     # PITCH (Y-rotation)
-    [ cos(alpha)*e, -a, a, -cos(alpha)*e, -cos(alpha)*e, a, -a, cos(alpha)*e],
+    [ np.cos(alpha)*e, -a, a, -np.cos(alpha)*e, -np.cos(alpha)*e, a, -a, np.cos(alpha)*e],
     # YAW (Z-rotation)
-    [ (cos(alpha)*c+sin(alpha)*d), 0, 0, -(cos(alpha)*c+sin(alpha)*d), (cos(alpha)*c+sin(alpha)*d), 0, 0, -(cos(alpha)*c+sin(alpha)*d)]
+    [ (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d), (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d)]
 ])
 T_inv = np.linalg.pinv(T)
 #print("T =", T)

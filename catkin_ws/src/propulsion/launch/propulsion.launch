@@ -10,14 +10,6 @@
         </node>
     </group>
 
-    <!-- Thruster parameters -->
-    <param name="thruster_PWM_lower_limit" value="1228" />
-    <param name="thruster_PWM_upper_limit" value="1768" />
-    <param name="distance_thruster_thruster_length" value="0.4" />
-    <param name="distance_thruster_thruster_width" value="0.47" />
-    <param name="angle_thruster" value="45" />
-    <param name="distance_thruster_middle_length" value="0.0925" />
-
     <!-- Record propulsion values -->
     <node pkg="rosbag" type="record" name="rosbag_propulsion"
         if="$(arg record)"
@@ -30,5 +22,15 @@
     />
 
     <!-- Thruster allocation nodes -->
-    <node name="thrust_mapper" pkg="propulsion" type="thrust_mapper.py" output="screen"/>
+    <node name="thrust_mapper" pkg="propulsion" type="thrust_mapper.py" output="screen">
+        <!-- Thruster parameters -->
+        <param name="thruster_PWM_lower_limit" value="1228" /> <!-- [μs] -->
+        <param name="thruster_PWM_upper_limit" value="1768" /> <!-- [μs] -->
+        <param name="a" value="0.080619" /> <!-- [m] -->
+        <param name="b" value="0.226341" /> <!-- [m] -->
+        <param name="c" value="0.202572" /> <!-- [m] -->
+        <param name="d" value="0.228205" /> <!-- [m] -->
+        <param name="e" value="0.004945" /> <!-- [m] -->
+        <param name="alpha" value="45" /> <!-- [degrees] -->
+    </node>
 </launch>
