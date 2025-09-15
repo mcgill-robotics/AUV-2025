@@ -11,14 +11,14 @@ from geometry_msgs.msg import Wrench
 
 # Constant parameters of the thruster positions
 # Consult AUV_Controls_Pipeline.pptx for reference axes and dimensions used to declare variables and create allocation matrix below
-# Units are in degrees and mm
-# CG taken at (90.549, -289.93, -35.045)
-a = 80.619
-b = 226.341
-c = 202.572
-d = 228.205
-e = 4.945
-alpha = 44.323007
+# CG taken at (90.549, -289.93, -35.045) mm
+# Units are in radians and m
+a = 80.619/1000
+b = 226.341/1000
+c = 202.572/1000
+d = 228.205/1000
+e = 4.945/1000
+alpha = np.deg2rad(44.323007)
 
 
 # Matrix mapping from thruster forces to wrench (6x8) 
