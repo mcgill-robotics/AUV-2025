@@ -56,7 +56,7 @@ The propulsion package is not for direct use, it is used through publishing effo
 Publishing a `geometry_msgs/Wrench` message onto `/controls/effort` topic:
 
 
-	rostopic pub -1 /effort geometry_msgs/Wrench "{force: {x: 1.0, y: 0.0, z: -0.5}, torque: {x: 1.0, y: -0.5, z: -2.0}}"
+	rostopic pub -1 /controls/effort geometry_msgs/Wrench "{force: {x: 1.0, y: 0.0, z: -0.5}, torque: {x: 1.0, y: -0.5, z: -2.0}}"
 
 
 ## Nodes
