@@ -9,9 +9,8 @@ from thrust_mapper_utils import force_to_pwm_thruster
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
-# Constant parameters of the thruster positions
-# Consult AUV_Controls_Pipeline.pptx for reference axes and dimensions used to declare variables and create allocation matrix below
-# CG taken at (90.549, -289.93, -35.045) mm
+# Geometric parameters of the thruster positions
+# Consult README for reference axes and dimensions used to declare variables and create allocation matrix below
 # Units are in radians and m
 a = rospy.get_param("~a")
 b = rospy.get_param("~b")
