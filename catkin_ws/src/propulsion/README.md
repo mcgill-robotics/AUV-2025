@@ -41,7 +41,7 @@ The [wrench](https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Wrench.ht
 
 ---
 
-The resulting thruster forces (in Newtons) are converted to PWM microseconds using per-thruster calibration functions. These functions were obtained from a thruster test campaign conducted by the Mech & Elec team in May 2025.
+The resulting thruster forces (in Newtons) are converted to PWM microseconds using per-thruster calibration functions. These functions were obtained from a thruster test conducted by the Mech & Elec team in May 2025.
 
 Comparison of calibration curves across thrusters:
 
