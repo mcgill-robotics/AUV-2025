@@ -5,7 +5,7 @@ The **propulsion** package handles low-level actuation for the AUV. It transform
 This process occurs in two stages:
 
 1. **Thrust allocation** – map the wrench vector (forces and torques along X, Y, Z) into individual thruster forces using an allocation matrix.  
-2. **Force-to-PWM mapping** – convert thruster forces (in Newtons) into PWM microseconds using per-thruster calibration curves.  
+2. **Force-to-PWM mapping** – convert thruster forces (in Newtons) into PWM signals (µs) using per-thruster calibration curves.  
 
 
 ## Table of Contents
