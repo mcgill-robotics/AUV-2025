@@ -103,10 +103,6 @@ After build is complete, make the packages visible to ROS
 
 ### Running
 
-Flash arduino
-
-	catkin build --no-deps  propulsion --make-args propulsion_embedded_thrusters-upload
-
 Launch all package nodes
 
 	roslaunch propulsion propulsion.launch
