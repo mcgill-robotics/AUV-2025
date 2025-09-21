@@ -9,39 +9,6 @@ from thrust_mapper_utils import force_to_pwm_thruster
 from auv_msgs.msg import ThrusterForces, ThrusterMicroseconds
 from geometry_msgs.msg import Wrench
 
-# Geometric parameters of the thruster positions
-# Consult README for reference axes and dimensions used to declare variables and create allocation matrix below
-# Units are in radians and m
-a = rospy.get_param("~a")
-b = rospy.get_param("~b")
-c = rospy.get_param("~c")
-d = rospy.get_param("~d")
-e = rospy.get_param("~e")
-alpha = np.deg2rad(rospy.get_param("~alpha"))
-
-
-# Matrix mapping from thruster forces to wrench (6x8) 
-T = np.array([
-    # SURGE (X)
-    [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
-    # SWAY (Y)
-    [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
-    # HEAVE (Z)
-    [ 0, -1, -1, 0, 0, -1, -1, 0],
-    # ROLL (X-rotation)
-    [ np.sin(alpha)*e, b, b, np.sin(alpha)*e, -np.sin(alpha)*e, -b, -b, -np.sin(alpha)*e],
-    # PITCH (Y-rotation)
-    [ np.cos(alpha)*e, -a, a, -np.cos(alpha)*e, -np.cos(alpha)*e, a, -a, np.cos(alpha)*e],
-    # YAW (Z-rotation)
-    [ (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d), (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d)]
-])
-T_inv = np.linalg.pinv(T)
-#print("T =", T)
-#print("T_inv =", T_inv)
-
-# Temporary wait to allow sync with Arduino (adjust as needed)
-rospy.sleep(4.0)
-
 
 class ThrusterMapper:
     def __init__(self):
@@ -52,11 +19,46 @@ class ThrusterMapper:
 
 
         # Retrieve PWM limits from parameters
-        self.thruster_lower_limit = rospy.get_param("thruster_PWM_lower_limit")
-        self.thruster_upper_limit = rospy.get_param("thruster_PWM_upper_limit")
+        self.thruster_lower_limit = rospy.get_param("~thruster_PWM_lower_limit")
+        self.thruster_upper_limit = rospy.get_param("~thruster_PWM_upper_limit")
         
         # Subscribe to the effort command topic
         rospy.Subscriber("/controls/effort", Wrench, self.wrench_to_thrust, queue_size = 1)
+
+
+        # Geometric parameters of the thruster positions
+        # Consult README for reference axes and dimensions used to declare variables and create allocation matrix below
+        # Units are in radians and m
+        a = rospy.get_param("~a")
+        b = rospy.get_param("~b")
+        c = rospy.get_param("~c")
+        d = rospy.get_param("~d")
+        e = rospy.get_param("~e")
+        alpha = np.deg2rad(rospy.get_param("~alpha"))
+
+
+        #Matrix mapping from thruster forces to wrench (6x8) 
+        T = np.array([
+            # SURGE (X)
+            [ np.cos(alpha), 0, 0, -np.cos(alpha), -np.cos(alpha), 0, 0, np.cos(alpha)],
+            # SWAY (Y)
+            [ -np.sin(alpha), 0, 0, -np.sin(alpha), np.sin(alpha), 0, 0, np.sin(alpha)],
+            # HEAVE (Z)
+            [ 0, -1, -1, 0, 0, -1, -1, 0],
+            # ROLL (X-rotation)
+            [ np.sin(alpha)*e, b, b, np.sin(alpha)*e, -np.sin(alpha)*e, -b, -b, -np.sin(alpha)*e],
+            # PITCH (Y-rotation)
+            [ np.cos(alpha)*e, -a, a, -np.cos(alpha)*e, -np.cos(alpha)*e, a, -a, np.cos(alpha)*e],
+            # YAW (Z-rotation)
+            [ (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d), (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d)]
+        ])
+        self.T_inv = np.linalg.pinv(T)
+        #print("T =", T)
+        #print("T_inv =", T_inv)
+
+        # Temporary wait to allow sync with Arduino (adjust as needed)
+        rospy.sleep(4.0)
+
 
 
     def wrench_to_thrust(self, wrench_msg):
@@ -78,7 +80,7 @@ class ThrusterMapper:
         ])
         
         # Calculate the thruster forces using the pseudo-inverse
-        thrust_forces = np.matmul(T_inv, wrench_vec) # Shape (8,)
+        thrust_forces = np.matmul(self.T_inv, wrench_vec) # Shape (8,)
 
         tf_msg = ThrusterForces()
         tf_msg.BACK_RIGHT = thrust_forces[0]
