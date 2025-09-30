@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 '''
 Script to interactively test and adjust the thrust allocation matrix.
@@ -39,28 +38,6 @@ def safe_sleep(duration):
         elapsed += interval
 
 
-# --- ROS SETUP ---
-rospy.init_node("allocation_test_node")
-
-# --- CONSTANTS ---
-reset_cmd = ThrusterMicroseconds(microseconds=[1500]*8)
-
-#CHECK
-TEST_SURGE_FORCE = 5.0 
-
-# Publisher for safety reset (sends microsecond signals directly to hardware)
-pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
-
-# Publisher for the test command (sends Wrench to Thrust Mapper)
-effort_pub = rospy.Publisher("/controls/effort", Wrench, queue_size=1) 
-
-#CHECK
-# Give time for publishers/subscribers to connect
-rospy.sleep(1.0) 
-
-# --- START SAFETY THREAD ---
-safety_thread = threading.Thread(target=emergency_reset_loop, daemon=True)
-safety_thread.start()
 
 # --- MAIN TEST FUNCTION ---
 def run_allocation_test(effort_pub, pwm_pub, reset_cmd):
@@ -100,10 +77,12 @@ def run_allocation_test(effort_pub, pwm_pub, reset_cmd):
         # 3. Publish the Wrench command
         # We publish the command once every 0.1s to keep the thrust_mapper node active
         start_time = rospy.Time.now()
-        duration = 5.0
+        duration = 20
         rate = rospy.Rate(10) # 10 Hz
 
-        while (rospy.Time.now() - start_time).to_sec() < duration and not emergency_triggered:
+        while ((rospy.Time.now() - start_time).to_sec() < duration 
+               and not emergency_triggered
+               and not rospy.is_shutdown()):
             effort_pub.publish(test_wrench)
             rate.sleep()
 
@@ -114,3 +93,24 @@ def run_allocation_test(effort_pub, pwm_pub, reset_cmd):
         pwm_pub.publish(reset_cmd)
         print("[INFO] Test complete. Thrusters reset to neutral.")
         print("[OBSERVE] Check the AUV's pitch tendency. If it pitches, the 'e' parameter needs adjustment.")
+
+
+if __name__ == "__main__":
+    # --- ROS SETUP ---
+    rospy.init_node("allocation_test_node")
+    # Publisher for safety reset (sends microsecond signals directly to hardware)
+    pwm_pub = rospy.Publisher("/propulsion/microseconds", ThrusterMicroseconds, queue_size=1)
+
+    # Publisher for the test command (sends Wrench to Thrust Mapper)
+    effort_pub = rospy.Publisher("/controls/effort", Wrench, queue_size=1) 
+
+    # --- CONSTANTS ---
+    reset_cmd = ThrusterMicroseconds(microseconds=[1500]*8) 
+
+    rospy.sleep(1.0)  # warm-up for connections
+
+    # --- START SAFETY THREAD ---
+    safety_thread = threading.Thread(target=emergency_reset_loop, daemon=True)
+    safety_thread.start()
+
+    run_allocation_test(effort_pub,pwm_pub, reset_cmd)
