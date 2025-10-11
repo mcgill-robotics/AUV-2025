@@ -4,10 +4,10 @@ geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 angular_velocity
 geometry_msgs/Vector3 linear_acceleration
 int32[] frequencies
-uint32[] times_pinger_1
-uint32[] times_pinger_2
-uint32[] times_pinger_3
-uint32[] times_pinger_4
+uint32[] hydrophone_one_freqs
+uint32[] hydrophone_two_freqs
+uint32[] hydrophone_three_freqs
+uint32[] hydrophone_four_freqs
 
 int32 isDVLActive
 int32 isDepthSensorActive
