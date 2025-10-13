@@ -1,0 +1,146 @@
+FROM ros:humble-ros-base-jammy
+
+# Use bash shell and catch errors
+SHELL ["/bin/bash", "-o", "pipefail", "-o", "errexit", "-c"]
+
+# Update and Install ROS2 Humble
+RUN apt-get -y update -qq && \
+    apt-get -y upgrade -qq && \
+    apt-get -y install ros-humble-desktop -qq
+
+# Temporarily disable ROS2 apt repository and comment catkin conflict
+RUN mv /etc/apt/sources.list.d/ros2.sources /root/ && \
+    apt-get -y update -qq && \
+    sed  -i -e 's|^Conflicts: catkin|#Conflicts: catkin|' /var/lib/dpkg/status && \
+    apt-get install -f
+
+# Force install required ROS1 packages
+RUN apt-get download python3-catkin-pkg python3-rospkg python3-rosdistro && \
+    dpkg --force-overwrite -i python3-catkin-pkg*.deb python3-rospkg*.deb python3-rosdistro*.deb && \
+    apt-get install -f
+
+# Install ROS1 desktop
+RUN apt-get -y install ros-desktop-dev -qq
+
+# Fix ARM64 pkgconfig path issue
+RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
+      cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
+    fi
+
+# Restore ROS2 apt repository
+RUN mv /root/ros2.sources /etc/apt/sources.list.d/ && \
+    apt-get -y update -qq
+
+# Add ROS1 tutorial messages and services
+RUN git clone -b noetic-devel --depth=1 https://github.com/ros/ros_tutorials.git && \
+    cd ros_tutorials && \
+    unset ROS_DISTRO && \
+    time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
+    cd .. && \
+    source ros_tutorials/install/setup.bash && \
+    git clone -b fuerte-devel --depth=1 https://github.com/ros/common_tutorials.git && \
+    cd common_tutorials && \
+    unset ROS_DISTRO && \
+    time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# Build custom AUV messages
+RUN git clone -b custom_message_patch https://github.com/mcgill-robotics/AUV-2025.git /AUV-2025 && \
+    cd /AUV-2025/catkin_ws/src/auv_msgs && \
+    unset ROS_DISTRO && \
+    time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
+    git clone -b custom_messages https://github.com/mcgill-robotics/AUV-2026.git /AUV-2026 && \
+    cd /AUV-2026/ros2_ws/src/auv_msgs && \
+    source /opt/ros/humble/setup.bash && \
+    time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# Build ros1_bridge
+RUN source /opt/ros/humble/setup.bash && \
+    source ros_tutorials/install/setup.bash && \
+    source common_tutorials/install/setup.bash && \
+    apt-get -y install -qq ros-humble-example-interfaces \
+			   ros-humble-action-tutorials-interfaces \
+			   ros-humble-action-tutorials-cpp \
+			   ros-humble-action-tutorials-py && \
+    source /opt/ros/humble/setup.bash && \
+    source /AUV-2025/catkin_ws/src/auv_msgs/install/setup.bash && \
+    source /AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash && \
+    mkdir -p /ros-humble-ros1-bridge/src && \
+    cd /ros-humble-ros1-bridge/src && \
+    git clone -b action_bridge_humble --depth=1 https://github.com/smith-doug/ros1_bridge.git && \
+    cd ros1_bridge && \
+    cd ../.. && \
+    MEMG=$(printf "%.0f" $(free -g | awk '/^Mem:/{print $2}')) && \
+    NPROC=$(nproc);  MIN=$((MEMG<NPROC ? MEMG : NPROC)) && \
+    echo "Please wait...  running $MIN concurrent jobs to build ros1_bridge" && \
+    time MAKEFLAGS="-j $MIN" colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# Clean up
+RUN apt-get -y clean -qq && apt-get -y update -qq
+
+# Fix ARM64 pkgconfig path issue
+RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
+      cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
+    fi
+
+# Pack all ROS1 dependent libraries
+RUN ROS1_LIBS="libxmlrpcpp.so \
+               librostime.so \
+               libroscpp.so \
+               libroscpp_serialization.so \
+               librosconsole.so \
+               librosconsole_log4cxx.so \
+               librosconsole_backend_interface.so \
+               liblog4cxx.so \
+               libcpp_common.so \
+               libb64.so \
+               libaprutil-1.so \
+               libapr-1.so \
+               libactionlib.so.1d" && \
+     cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
+     for soFile in $ROS1_LIBS; do \
+       soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') && \
+       cp $soFilePath ./; \
+     done
+
+# Create a tarball of the ros1_bridge install
+RUN tar czf /ros-humble-ros1-bridge.tgz \
+     --exclude '*/build/*' --exclude '*/src/*' /ros-humble-ros1-bridge
+
+# Install pip
+RUN apt-get install -y --no-install-recommends -qq python3-pip
+
+# Build AUV-2026, rosdep install, and clean up
+RUN git clone https://github.com/mcgill-robotics/AUV-2026.git /tmp/AUV-2026 && \
+    cd /tmp/AUV-2026/ros2_ws && \
+    source /opt/ros/humble/setup.bash && \
+    apt-get update && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -y && \
+    colcon build && \
+    source install/local_setup.bash && \
+    rm -rf /tmp/AUV-2026
+
+# Setup environment
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install apt packages
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends -qq \
+        wget \
+        tar \
+        perl \
+        build-essential \
+        git \
+        git-lfs \
+        python-is-python3 \
+        kmod \
+        kbd \
+        tmux \
+        vim \
+        iputils-ping \
+        iproute2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
+
+# Final Setup
+ENTRYPOINT []
+CMD cat /ros-humble-ros1-bridge.tgz; sync
