@@ -9,7 +9,7 @@ uint32[] hydrophone_two_freqs
 uint32[] hydrophone_three_freqs
 uint32[] hydrophone_four_freqs
 
-int32 isDVLActive
-int32 isDepthSensorActive
-int32 isIMUActive
-int32 isHydrophonesActive
+int32 is_dvl_active
+int32 is_depth_sensor_active
+int32 is_imu_active
+int32 is_hydrophones_active
