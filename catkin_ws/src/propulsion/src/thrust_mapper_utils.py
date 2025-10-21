@@ -49,14 +49,14 @@ thruster_poly_coeffs = [
 ]
 
 thruster_mount_dirs = [ #rep physical orientation of thrusters
-    1,   # BACK_LEFT (CCW)
-    1,  # HEAVE_BACK_LEFT (CW)
-    1,   # HEAVE_FRONT_LEFT (CCW)
-    1,  # FRONT_LEFT (CW)
-    1,   # FRONT_RIGHT (CCW)
-    1,  # HEAVE_FRONT_RIGHT (CW)
-    1,   # HEAVE_BACK_RIGHT (CCW)
-    1   # BACK_RIGHT (CW)
+    1,   # BACK_RIGHT (CCW)
+    1,  # HEAVE_BACK_RIGHT (CW)
+    1,   # HEAVE_FRONT_RIGHT (CCW)
+    1,  # FRONT_RIGHT (CW)
+    1,   # FRONT_LEFT (CCW)
+    1,  # HEAVE_FRONT_LEFT (CW)
+    1,   # HEAVE_BACK_LEFT (CCW)
+    1   # BACK_LEFT (CW)
 ]
 # 1 is forward, -1 is backward, 0.5 is half thrust in specific direction
 # If force is exactly zero, returns 1500 μs (neutral signal, no movement).

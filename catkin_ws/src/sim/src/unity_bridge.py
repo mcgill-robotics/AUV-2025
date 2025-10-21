@@ -114,15 +114,15 @@ def cb_unity_state(msg):
     ]
 
     frequencies = msg.frequencies
-    times = [msg.times_pinger_1, msg.times_pinger_2, msg.times_pinger_3, msg.times_pinger_4]
+    times = [msg.hydrophone_one_freqs, msg.hydrophone_two_freqs, msg.hydrophone_three_freqs, msg.hydrophone_four_freqs]
 
-    isDVLActive = msg.isDVLActive
-    isIMUActive = msg.isIMUActive
-    isDepthSensorActive = msg.isDepthSensorActive
-    isHydrophonesActive = msg.isHydrophonesActive
+    is_dvl_active = msg.is_dvl_active
+    is_imu_active = msg.is_imu_active
+    is_depth_sensor_active = msg.is_depth_sensor_active
+    is_hydrophones_active = msg.is_hydrophones_active
 
     # HYDROPHONES
-    if isHydrophonesActive:
+    if is_hydrophones_active:
         for i in range(NUMBER_OF_PINGERS):
             hydrophones_msg = PingerTimeDifference()
             hydrophones_msg.frequency = frequencies[i]
@@ -159,7 +159,7 @@ def cb_unity_state(msg):
         reseted = True
 
     # DVL - NWU
-    if isDVLActive:
+    if is_dvl_active:
 
         q_ENU_dvlup =  q_ENU_imunominalup * q_imunominalup_dvlnominalup * q_dvlnominalup_dvlup
 
@@ -180,7 +180,7 @@ def cb_unity_state(msg):
 
 
     # IMU - NED
-    if isIMUActive:
+    if is_imu_active:
         imu_msg = Imu()
 
         q_ENU_imuup = q_ENU_imunominalup * q_imunominalup_imuup
@@ -218,7 +218,7 @@ def cb_unity_state(msg):
         pub_imu_sensor.publish(imu_msg)
 
     # DEPTH SENSOR
-    if isDepthSensorActive:
+    if is_depth_sensor_active:
         # depth_msg = PoseWithCovarianceStamped()
         # depth_msg.header.stamp = rospy.Time.now()
         # depth_msg.header.frame_id = "odom"

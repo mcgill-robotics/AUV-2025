@@ -17,14 +17,14 @@ import threading
 import keyboard
 
 # -------------------- Thruster Indices --------------------
-BACK_LEFT = 0
-HEAVE_BACK_LEFT = 1
-HEAVE_FRONT_LEFT = 2
-FRONT_LEFT = 3
-FRONT_RIGHT = 4
-HEAVE_FRONT_RIGHT = 5
-HEAVE_BACK_RIGHT = 6
-BACK_RIGHT = 7
+BACK_RIGHT=0
+HEAVE_BACK_RIGHT=1
+HEAVE_FRONT_RIGHT=2
+FRONT_RIGHT=3
+FRONT_LEFT=4
+HEAVE_FRONT_LEFT=5
+HEAVE_BACK_LEFT=6
+BACK_LEFT=7
 
 # -------------------- Global Safety Flag --------------------
 emergency_triggered = False
