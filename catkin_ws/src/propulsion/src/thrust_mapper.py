@@ -35,6 +35,8 @@ class ThrusterMapper:
         d = rospy.get_param("~d")
         e = rospy.get_param("~e")
         alpha = np.deg2rad(rospy.get_param("~alpha"))
+        dx = rospy.get_param("~dx")
+        dy = rospy.get_param("~dy")
 
 
         #Matrix mapping from thruster forces to wrench (6x8) 
@@ -46,11 +48,11 @@ class ThrusterMapper:
             # HEAVE (Z)
             [ 0, -1, -1, 0, 0, -1, -1, 0],
             # ROLL (X-rotation)
-            [ np.sin(alpha)*e, b, b, np.sin(alpha)*e, -np.sin(alpha)*e, -b, -b, -np.sin(alpha)*e],
+            [ np.sin(alpha)*e, (b+dy), (b+dy), np.sin(alpha)*e, -np.sin(alpha)*e, -(b-dy), -(b-dy), -np.sin(alpha)*e],
             # PITCH (Y-rotation)
-            [ np.cos(alpha)*e, -a, a, -np.cos(alpha)*e, -np.cos(alpha)*e, a, -a, np.cos(alpha)*e],
+            [ np.cos(alpha)*e, -(a+dx), (a-dx), -np.cos(alpha)*e, -np.cos(alpha)*e, (a-dx), -(a+dx), np.cos(alpha)*e],
             # YAW (Z-rotation)
-            [ (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d), (np.cos(alpha)*c + np.sin(alpha)*d), 0, 0, -(np.cos(alpha)*c + np.sin(alpha)*d)]
+            [ (np.cos(alpha)*(c+dy) + np.sin(alpha)*(d+dx)), 0, 0, -(np.cos(alpha)*(c+dy) + np.sin(alpha)*(d-dx)), (np.cos(alpha)*(c-dy) + np.sin(alpha)*(d-dx)), 0, 0, -(np.cos(alpha)*(c-dy) + np.sin(alpha)*(d+dx))]
         ])
         self.T_inv = np.linalg.pinv(T)
         #print("T =", T)
