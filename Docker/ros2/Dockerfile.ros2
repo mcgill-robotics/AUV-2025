@@ -48,7 +48,7 @@ RUN git clone -b custom_message_patch https://github.com/mcgill-robotics/AUV-202
     cd /AUV-2025/catkin_ws/src/auv_msgs && \
     unset ROS_DISTRO && \
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    git clone -b custom_messages https://github.com/mcgill-robotics/AUV-2026.git /AUV-2026 && \
+    git clone https://github.com/mcgill-robotics/AUV-2026.git /AUV-2026 && \
     cd /AUV-2026/ros2_ws/src/auv_msgs && \
     source /opt/ros/humble/setup.bash && \
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
@@ -102,23 +102,9 @@ RUN ROS1_LIBS="libxmlrpcpp.so \
        cp $soFilePath ./; \
      done
 
-# Create a tarball of the ros1_bridge install
-RUN tar czf /ros-humble-ros1-bridge.tgz \
-     --exclude '*/build/*' --exclude '*/src/*' /ros-humble-ros1-bridge
 
 # Install pip
 RUN apt-get install -y --no-install-recommends -qq python3-pip
-
-# Build AUV-2026, rosdep install, and clean up
-RUN git clone https://github.com/mcgill-robotics/AUV-2026.git /tmp/AUV-2026 && \
-    cd /tmp/AUV-2026/ros2_ws && \
-    source /opt/ros/humble/setup.bash && \
-    apt-get update && \
-    rosdep update && \
-    rosdep install --from-paths src --ignore-src -y && \
-    colcon build && \
-    source install/local_setup.bash && \
-    rm -rf /tmp/AUV-2026
 
 # Setup environment
 ENV DEBIAN_FRONTEND=noninteractive
@@ -141,6 +127,13 @@ RUN apt-get update -qq && \
         iproute2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
-# Final Setup
-ENTRYPOINT []
-CMD cat /ros-humble-ros1-bridge.tgz; sync
+# Set shell to bash
+SHELL ["/bin/bash", "-c"]
+
+# Add source to bashrc
+RUN echo "source ros_entrypoint.sh" >> ~/.bashrc \
+    && echo "source ros_tutorials/install/setup.bash" >> ~/.bashrc \
+    && echo "source common_tutorials/install/setup.bash" >> ~/.bashrc \
+    && echo "source AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash" >> ~/.bashrc \
+    && echo "source ros-humble-ros1-bridge/install/setup.bash " >> ~/.bashrc \
+    && echo "set +e" >> ~/.bashrc
