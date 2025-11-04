@@ -73,3 +73,5 @@ SHELL ["/bin/bash", "-c"]
 # Add source to bashrc
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc \
     && echo "source /AUV-2025/catkin_ws/devel/setup.bash" >> ~/.bashrc
+
+RUN echo "tmux" >> ~/.bashrc

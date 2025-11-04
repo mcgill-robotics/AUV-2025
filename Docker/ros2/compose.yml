@@ -27,8 +27,8 @@ services:
       - /dev:/dev
       - /var/run/docker.sock:/var/run/docker.sock
       - type: bind
-        source: ../../../AUV-2025
-        target: /AUV-2025
+        source: ../../../AUV-2026
+        target: /AUV-2026
     privileged: true
     container_name: ros2-humble
     environment:

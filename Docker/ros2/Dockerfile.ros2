@@ -45,12 +45,18 @@ RUN git clone -b noetic-devel --depth=1 https://github.com/ros/ros_tutorials.git
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # Build custom AUV messages
-RUN git clone -b ros1_ros2_bridge_custom_messages https://github.com/mcgill-robotics/AUV-2025.git /AUV-2025 && \
-    cd /AUV-2025/catkin_ws/src/auv_msgs && \
+RUN mkdir -p custom_messages/ros1_messages custom_messages/ros2_messages && \
+    git clone -b ros1_ros2_bridge_custom_messages https://github.com/mcgill-robotics/AUV-2025.git /temp/AUV-2025 && \
+    cp -rf /temp/AUV-2025/catkin_ws/src/auv_msgs/* custom_messages/ros1_messages && \
+    rm -rf /temp/AUV-2025 && \
+    cd custom_messages/ros1_messages/ && \
     unset ROS_DISTRO && \
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    git clone https://github.com/mcgill-robotics/AUV-2026.git /AUV-2026 && \
-    cd /AUV-2026/ros2_ws/src/auv_msgs && \
+    cd ../.. && \
+    git clone https://github.com/mcgill-robotics/AUV-2026.git /temp/AUV-2026 && \
+    cp -rf /temp/AUV-2026/ros2_ws/src/auv_msgs/* custom_messages/ros2_messages/ && \
+    rm -rf /temp/AUV-2026 && \
+    cd custom_messages/ros2_messages && \
     source /opt/ros/humble/setup.bash && \
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
@@ -63,8 +69,8 @@ RUN source /opt/ros/humble/setup.bash && \
 			    ros-humble-action-tutorials-cpp \
 			    ros-humble-action-tutorials-py && \
     source /opt/ros/humble/setup.bash && \
-    source /AUV-2025/catkin_ws/src/auv_msgs/install/setup.bash && \
-    source /AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash && \
+    source /custom_messages/ros1_messages/install/setup.bash && \
+    source /custom_messages/ros2_messages/install/setup.bash && \
     mkdir -p /ros-humble-ros1-bridge/src && \
     cd /ros-humble-ros1-bridge/src && \
     git clone -b action_bridge_humble --depth=1 https://github.com/mcgill-robotics/ros1_bridge.git && \
@@ -141,7 +147,9 @@ SHELL ["/bin/bash", "-c"]
 RUN echo "source ros_entrypoint.sh" >> ~/.bashrc \
     && echo "source ros_tutorials/install/setup.bash" >> ~/.bashrc \
     && echo "source common_tutorials/install/setup.bash" >> ~/.bashrc \
-    && echo "source AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash" >> ~/.bashrc \
+    && echo "source custom_messages/ros1_messages/install/setup.bash" >> ~/.bashrc \
+    && echo "source custom_messages/ros2_messages/install/setup.bash" >> ~/.bashrc \
     && echo "source ros-humble-ros1-bridge/install/setup.bash " >> ~/.bashrc \
-    && echo "source /AUV-2026/ros2_ws/install/setup.bash" >> ~/.bashrc
     && echo "set +e" >> ~/.bashrc
+
+RUN echo "tmux" >> ~/.bashrc
