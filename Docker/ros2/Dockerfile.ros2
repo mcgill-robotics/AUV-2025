@@ -45,7 +45,7 @@ RUN git clone -b noetic-devel --depth=1 https://github.com/ros/ros_tutorials.git
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # Build custom AUV messages
-RUN git clone -b custom_message_patch https://github.com/mcgill-robotics/AUV-2025.git /AUV-2025 && \
+RUN git clone -b ros1_ros2_bridge_custom_messages https://github.com/mcgill-robotics/AUV-2025.git /AUV-2025 && \
     cd /AUV-2025/catkin_ws/src/auv_msgs && \
     unset ROS_DISTRO && \
     time colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
