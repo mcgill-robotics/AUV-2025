@@ -1,3 +1,4 @@
+# Use the official ROS2 Humble base image
 FROM ros:humble-ros-base-jammy
 
 # Use bash shell and catch errors
@@ -24,7 +25,7 @@ RUN apt-get -y install ros-desktop-dev -qq
 
 # Fix ARM64 pkgconfig path issue
 RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
-      cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
+        cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
     fi
 
 # Restore ROS2 apt repository
@@ -58,15 +59,15 @@ RUN source /opt/ros/humble/setup.bash && \
     source ros_tutorials/install/setup.bash && \
     source common_tutorials/install/setup.bash && \
     apt-get -y install -qq ros-humble-example-interfaces \
-			   ros-humble-action-tutorials-interfaces \
-			   ros-humble-action-tutorials-cpp \
-			   ros-humble-action-tutorials-py && \
+			    ros-humble-action-tutorials-interfaces \
+			    ros-humble-action-tutorials-cpp \
+			    ros-humble-action-tutorials-py && \
     source /opt/ros/humble/setup.bash && \
     source /AUV-2025/catkin_ws/src/auv_msgs/install/setup.bash && \
     source /AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash && \
     mkdir -p /ros-humble-ros1-bridge/src && \
     cd /ros-humble-ros1-bridge/src && \
-    git clone -b action_bridge_humble --depth=1 https://github.com/smith-doug/ros1_bridge.git && \
+    git clone -b action_bridge_humble --depth=1 https://github.com/mcgill-robotics/ros1_bridge.git && \
     cd ros1_bridge && \
     cd ../.. && \
     MEMG=$(printf "%.0f" $(free -g | awk '/^Mem:/{print $2}')) && \
@@ -79,7 +80,7 @@ RUN apt-get -y clean -qq && apt-get -y update -qq
 
 # Fix ARM64 pkgconfig path issue
 RUN if [[ $(uname -m) = "arm64" || $(uname -m) = "aarch64" ]]; then \
-      cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
+        cp /usr/lib/x86_64-linux-gnu/pkgconfig/* /usr/lib/aarch64-linux-gnu/pkgconfig/; \
     fi
 
 # Pack all ROS1 dependent libraries
@@ -96,12 +97,11 @@ RUN ROS1_LIBS="libxmlrpcpp.so \
                libaprutil-1.so \
                libapr-1.so \
                libactionlib.so.1d" && \
-     cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
-     for soFile in $ROS1_LIBS; do \
-       soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') && \
-       cp $soFilePath ./; \
-     done
-
+    cd /ros-humble-ros1-bridge/install/ros1_bridge/lib && \
+    for soFile in $ROS1_LIBS; do \
+        soFilePath=$(ldd libros1_bridge.so | grep $soFile | awk '{print $3;}') && \
+        cp $soFilePath ./; \
+    done
 
 # Install pip
 RUN apt-get install -y --no-install-recommends -qq python3-pip
@@ -127,6 +127,13 @@ RUN apt-get update -qq && \
         iproute2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
+# Install python packages
+COPY requirements.txt requirements.txt
+RUN pip install -qq --no-cache-dir -r requirements.txt \
+    && rm -f /usr/local/bin/cmake \
+    && rm -rf /root/.cache/pip \
+    && rm requirements.txt
+
 # Set shell to bash
 SHELL ["/bin/bash", "-c"]
 
@@ -136,4 +143,5 @@ RUN echo "source ros_entrypoint.sh" >> ~/.bashrc \
     && echo "source common_tutorials/install/setup.bash" >> ~/.bashrc \
     && echo "source AUV-2026/ros2_ws/src/auv_msgs/install/setup.bash" >> ~/.bashrc \
     && echo "source ros-humble-ros1-bridge/install/setup.bash " >> ~/.bashrc \
+    && echo "source /AUV-2026/ros2_ws/install/setup.bash" >> ~/.bashrc
     && echo "set +e" >> ~/.bashrc
